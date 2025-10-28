@@ -56,6 +56,19 @@ export default function RequestCreateTaskStaticTest() {
       hilog.info(domain, tag, '%{public}s', 'beforeAll end');
     })
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_on_callback_Static_0100
+     * @tc.desc: Test binding and unbinding of completed event for download task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_on_callback_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       hilog.info(0x0000, 'testTag', "-------zbw----testCase001---start---");
       (request.agent.create(context, config) as Promise<request.agent.Task>)
@@ -74,6 +87,19 @@ export default function RequestCreateTaskStaticTest() {
         });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_on_fail_Static_0100
+     * @tc.desc: Test binding of failed event for download task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_on_fail_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       hilog.info(0x0000, 'testTag', "-------zbw----testCase002------");
       config.url = 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt';
@@ -90,6 +116,19 @@ export default function RequestCreateTaskStaticTest() {
         });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_on_pause_Static_0100
+     * @tc.desc: Test binding of pause event for download task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_on_pause_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       hilog.info(0x0000, 'testTag', "-------zbw----testCase003------");
       (request.agent.create(context, config) as Promise<request.agent.Task>)
@@ -106,6 +145,19 @@ export default function RequestCreateTaskStaticTest() {
         });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_on_resume_Static_0100
+     * @tc.desc: Test binding and unbinding of pause and resume events for download task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_on_resume_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       hilog.info(0x0000, 'testTag', "-------zbw----testCase004------");
       config.url = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip';
@@ -129,6 +181,19 @@ export default function RequestCreateTaskStaticTest() {
         });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_on_progress_Static_0100
+     * @tc.desc: Test binding of progress event for download task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_on_progress_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       hilog.info(0x0000, 'testTag', "-------zbw----testCase005----start--");
       request.agent.create(context, config, (err, task) => {
@@ -144,6 +209,19 @@ export default function RequestCreateTaskStaticTest() {
       });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Download_overwrite_Static_0000
+     * @tc.desc: Test binding of remove event for download task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Download_overwrite_Static_0000', Level.LEVEL1, async (done: () => void): Promise<void> => {
       hilog.info(0x0000, 'testTag', "-------zbw----testCase006------");
       (request.agent.create(context, config) as Promise<request.agent.Task>)
@@ -160,6 +238,19 @@ export default function RequestCreateTaskStaticTest() {
         });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Download_overwrite_Static_0100
+     * @tc.desc: Test binding of faultOccur event for download task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Download_overwrite_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       hilog.info(0x0000, 'testTag', "-------zbw----testCase008------");
       (request.agent.create(context, config) as Promise<request.agent.Task>)
@@ -175,6 +266,19 @@ export default function RequestCreateTaskStaticTest() {
         });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Download_overwrite_Static_0200
+     * @tc.desc: Test create download task with overwrite set to true
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Download_overwrite_Static_0200', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
       let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
@@ -200,72 +304,124 @@ export default function RequestCreateTaskStaticTest() {
         });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Download_overwrite_Static_0300
+     * @tc.desc: Test duplicate start of the same download task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Download_overwrite_Static_0300', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
       let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
       // let baseContext: common.UIAbilityContext;
       hilog.info(domain, tag, "====>--zbw-------010BEGIN--------------");
-  hilog.info(domain, tag, "====>-----SUB_Misc_REQUEST_Download_overwrite_Static_0300 is starting--------------");
-  let config1: request.agent.Config = {
-    action: request.agent.Action.DOWNLOAD,
-    url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
-    saveas: './SUB_Misc_REQUEST_Download_overwrite_Static_0300',
-    overwrite: true
-  };
-  try {
-    let task: request.agent.Task = await request.agent.create(context, config1);
-    hilog.info(domain, tag, "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 create success");
-    let on_completedCallback = async (pro: request.agent.Progress): void => {
+      hilog.info(domain, tag, "====>-----SUB_Misc_REQUEST_Download_overwrite_Static_0300 is starting--------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
+        saveas: './SUB_Misc_REQUEST_Download_overwrite_Static_0300',
+        overwrite: true
+      };
       try {
-        hilog.info(domain, tag, "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 task.start twice");
+        let task: request.agent.Task = await request.agent.create(context, config1);
+        hilog.info(domain, tag, "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 create success");
+        let on_completedCallback = async (pro: request.agent.Progress): void => {
+          try {
+            hilog.info(domain, tag, "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 task.start twice");
+            await task.start();
+            hilog.info(domain, tag, "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 task start twice success");
+            expect().assertFail();
+          } catch (err: BusinessError) {
+            try {
+              hilog.info(domain, tag,
+                "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 second download err: " + JSON.stringify(err));
+              expect(err.code).assertEqual(21900007);
+            } catch (err: BusinessError) {
+              hilog.info(domain, tag,
+                "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 err: " + JSON.stringify(err));
+            }
+          }
+        };
+        task.on('completed', on_completedCallback);
         await task.start();
-        hilog.info(domain, tag, "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 task start twice success");
+        hilog.info(domain, tag, "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 task.start");
+      } catch (err: BusinessError) {
+        hilog.info(domain, tag,
+          "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 create catch err: " + JSON.stringify(err));
+        expect().assertFail();
+      }
+    });
+
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_Static_0500
+     * @tc.desc: Test create download task with invalid save path
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('SUB_Request_Agent_TaskSaveas_Static_0500', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
+      let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
+      hilog.info(domain, tag,
+        "====>-----------------------SUB_Request_Agent_TaskSaveas_Static_0500 is starting-----------------------");
+      let config1: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
+        saveas: '/ request/SUB_Request_Agent_TaskSaveas_Static_0500',
+      };
+      try {
+        let task: request.agent.Task = await request.agent.create(context, config1);
+        hilog.info(domain, tag, "====>SUB_Request_Agent_TaskSaveas_Static_0500 create not err");
         expect().assertFail();
       } catch (err: BusinessError) {
-        try {
-          hilog.info(domain, tag,
-            "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 second download err: " + JSON.stringify(err));
-          expect(err.code).assertEqual(21900007);
-        } catch (err: BusinessError) {
-          hilog.info(domain, tag,
-            "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 err: " + JSON.stringify(err));
-        }
+        hilog.info(domain, tag,
+          "====>SUB_Request_Agent_TaskSaveas_Static_0500 create catch err: " + err.code + JSON.stringify(err));
+        // expect(err.code).assertEqual(401);
       }
-    }
-    task.on('completed', on_completedCallback);
-    await task.start();
-    hilog.info(domain, tag, "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 task.start");
-  } catch (err: BusinessError) {
-    hilog.info(domain, tag,
-      "====>SUB_Misc_REQUEST_Download_overwrite_Static_0300 create catch err: " + JSON.stringify(err));
-    expect().assertFail();
-  }
-});
+    });
 
-it('SUB_Request_Agent_TaskSaveas_Static_0500', Level.LEVEL1, async (done: () => void): Promise<void> => {
-  let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
-  let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
-  hilog.info(domain, tag,
-    "====>-----------------------SUB_Request_Agent_TaskSaveas_Static_0500 is starting-----------------------");
-  let config1: request.agent.Config = {
-    action: request.agent.Action.DOWNLOAD,
-    url: 'https://gitee.com/murphy1984/download/releases/download/V1/test.hap',
-    saveas: '/ request/SUB_Request_Agent_TaskSaveas_Static_0500',
-  };
-  try {
-    let task: request.agent.Task = await request.agent.create(context, config1);
-    hilog.info(domain, tag, "====>SUB_Request_Agent_TaskSaveas_Static_0500 create not err");
-    expect().assertFail();
-  } catch (err: BusinessError) {
-    hilog.info(domain, tag,
-      "====>SUB_Request_Agent_TaskSaveas_Static_0500 create catch err: " + err.code + JSON.stringify(err));
-    // expect(err.code).assertEqual(401);
-  }
-});
-
-it('SUB_Request_Agent_TaskSaveas_Static_0600', Level.LEVEL1, async (done: () => void): Promise<void> => {
-  let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
-  let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_Static_0600
+     * @tc.desc: Test create download task with invalid save path using callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_Static_0600
+     * @tc.desc: Test task saveas functionality with invalid path format
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('SUB_Request_Agent_TaskSaveas_Static_0600', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
+      let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
   hilog.info(domain, tag, "====>--------------SUB_Request_Agent_TaskSaveas_Static_0600 is starting-------------");
   let config1: request.agent.Config = {
     action: request.agent.Action.DOWNLOAD,
@@ -292,9 +448,35 @@ it('SUB_Request_Agent_TaskSaveas_Static_0600', Level.LEVEL1, async (done: () => 
     });
 });
 
-it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
-  let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
-  let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
+    /**
+     * @tc.name: SUB_Misc_REQUEST_On_Download_Progress_Static_0040
+     * @tc.desc: Test download progress event handling for download task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    /**
+     * @tc.name: SUB_Misc_REQUEST_On_Download_Progress_Static_0040
+     * @tc.desc: Test download progress event handling for download task (second occurrence)
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
+      let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
+      let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
   hilog.info(domain, tag,
     "====>-----------------------SUB_Misc_REQUEST_On_Download_Progress_Static_0040 is starting-----------------------");
   let config1: request.agent.Config = {
@@ -331,7 +513,20 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
   }
 });
 
-it('SUB_Request_Agent_onResponse_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
+    /**
+     * @tc.name: SUB_Request_Agent_onResponse_Static_0100
+     * @tc.desc: Test onResponse event handler for download task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('SUB_Request_Agent_onResponse_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
   let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
   let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
   hilog.info(domain, tag, "====>-------SUB_Request_Agent_onResponse_Static_0100 is starting-----------");
@@ -407,6 +602,19 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
       }
     });
 
+    /**
+     * @tc.name: SUB_REQUEST_create_STAGE_API_CALLBACK_0006
+     * @tc.desc: Test create download task with various configuration options using callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_create_STAGE_API_CALLBACK_0006', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
       let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
@@ -448,6 +656,19 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
       })
     });
 
+    /**
+     * @tc.name: SUB_REQUEST_create_STAGE_API_CALLBACK_0005
+     * @tc.desc: Test create download task using callback with basic configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_create_STAGE_API_CALLBACK_0005', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
       let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
@@ -504,6 +725,19 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
       });
     });
 
+    /**
+     * @tc.name: SUB_REQUEST_create_STAGE_API_CALLBACK_0004
+     * @tc.desc: Test create download task using callback with different configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_create_STAGE_API_CALLBACK_0004', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
       let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
@@ -546,6 +780,19 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
       })
     });
 
+    /**
+     * @tc.name: SUB_REQUEST_create_STAGE_API_CALLBACK_0003
+     * @tc.desc: Test create download task using callback with specific options
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_create_STAGE_API_CALLBACK_0003', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
       let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
@@ -582,6 +829,19 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
       })
     });
 
+    /**
+     * @tc.name: SUB_REQUEST_create_STAGE_API_CALLBACK_0002
+     * @tc.desc: Test create download task using callback with alternative options
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_create_STAGE_API_CALLBACK_0002', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
       let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
@@ -618,6 +878,19 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
       })
     });
 
+    /**
+     * @tc.name: SUB_REQUEST_create_STAGE_API_CALLBACK_0001
+     * @tc.desc: Test create download task using callback with minimal configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_create_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
       let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
@@ -654,6 +927,19 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
       })
     });
 
+    /**
+     * @tc.name: SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0006
+     * @tc.desc: Test download file using API callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0006', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
       let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
@@ -758,6 +1044,19 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
       }
     });
 
+    /**
+     * @tc.name: SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0005
+     * @tc.desc: Test download file using API callback with fail handling
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0005', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
       let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
@@ -798,6 +1097,19 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
       }
     });
 
+    /**
+     * @tc.name: SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0004
+     * @tc.desc: Test upload file using callback with file creation
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0004', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
       let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
@@ -876,7 +1188,20 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
   // 0
 });
 
-it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0003', Level.LEVEL1, async (done: () => void): Promise<void> => {
+    /**
+     * @tc.name: SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0003
+     * @tc.desc: Test upload file using callback with error handling
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0003', Level.LEVEL1, async (done: () => void): Promise<void> => {
   let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
   let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
 
@@ -924,7 +1249,20 @@ it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0003', Level.LEVEL1, async (done: 
   }
 });
 
-it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0002', Level.LEVEL1, async (done: () => void): Promise<void> => {
+    /**
+     * @tc.name: SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0002
+     * @tc.desc: Test upload file using callback with specific headers
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0002', Level.LEVEL1, async (done: () => void): Promise<void> => {
   let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
   let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
 
@@ -972,7 +1310,20 @@ it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0002', Level.LEVEL1, async (done: 
   }
 });
 
-it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done: () => void): Promise<void> => {
+    /**
+     * @tc.name: SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001
+     * @tc.desc: Test upload file using callback with minimal configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done: () => void): Promise<void> => {
   let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
   let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
 
@@ -1020,7 +1371,20 @@ it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done: 
   }
 });
 
-it('SUB_Request_Agent_onResponse_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
+    /**
+     * @tc.name: SUB_Request_Agent_onResponse_Static_0100
+     * @tc.desc: Test agent on response event handling
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('SUB_Request_Agent_onResponse_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
   let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
   let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
   hilog.info(domain, tag, "====>-------testCase028 is starting-----------");
@@ -1052,7 +1416,20 @@ it('SUB_Request_Agent_onResponse_Static_0100', Level.LEVEL1, async (done: () => 
   }
 });
 
-it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done: () => void): Promise<void> => {
+    /**
+     * @tc.name: SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001
+     * @tc.desc: Test download file using callback with foreground mode
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done: () => void): Promise<void> => {
   let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
   let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
   hilog.info(domain, tag, "====>-------testCase029 is starting-----------");
@@ -1079,6 +1456,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
   }
 });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_0100
+     * @tc.desc: Test task saveas functionality with file operations
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_0100 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1133,6 +1523,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_0200
+     * @tc.desc: Test task saveas functionality with nested directory path
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_0200 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1187,6 +1590,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_0100
+     * @tc.desc: Test task saveas functionality with specified path
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_0300 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1242,6 +1658,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_0100
+     * @tc.desc: Test task saveas functionality with root directory path
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_0400 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1297,6 +1726,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_0500
+     * @tc.desc: Test task saveas functionality with specific filename
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_0500', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_0500 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1355,6 +1797,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_0100
+     * @tc.desc: Test task saveas functionality with filename only
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_0600 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1410,6 +1865,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_0100
+     * @tc.desc: Test task saveas functionality with different filename configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_0700 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1465,6 +1933,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_0100
+     * @tc.desc: Test task saveas functionality with directory and filename configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_0800 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1520,6 +2001,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_0100
+     * @tc.desc: Test task saveas functionality with internal cache path
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_0900 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1574,6 +2068,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_0100
+     * @tc.desc: Test task saveas functionality with absolute directory path
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_1000 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1601,6 +2108,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_0100
+     * @tc.desc: Test task saveas functionality with path containing relative elements
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_1100 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1655,6 +2175,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_1200
+     * @tc.desc: Test task saveas functionality with specific download configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_1200', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_1200 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1682,6 +2215,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_1300
+     * @tc.desc: Test task saveas functionality with file:// protocol path
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_1300', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_1300 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1736,6 +2282,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_1400
+     * @tc.desc: Test task saveas functionality with specific file URL configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_1400', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_1400 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1763,6 +2322,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_1500
+     * @tc.desc: Test task saveas functionality with el5 storage path
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_1500', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_1500 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1817,6 +2389,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_onResponse_0100
+     * @tc.desc: Test onResponse event functionality for download task
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_onResponse_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_onResponse_0100 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1847,6 +2432,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_onResponse_0200
+     * @tc.desc: Test onResponse event with 404 error response
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_onResponse_0200', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_onResponse_0200 is starting-----------------------");
       let config1:request.agent.Config = {
@@ -1878,6 +2476,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_onResponse_0300
+     * @tc.desc: Test onResponse event with event listener removal
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_onResponse_0300', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_onResponse_0300 is starting-----------------------");
       let config1:request.agent.Config = {
@@ -1910,6 +2521,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_onResponse_0500
+     * @tc.desc: Test onResponse event with multiple callbacks
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_onResponse_0500', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_onResponse_0500 is starting-----------------------");
       let config1:request.agent.Config = {
@@ -1951,6 +2575,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_onResponse_0700
+     * @tc.desc: Test onResponse event with large file download
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_onResponse_0700', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_onResponse_0700 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -1995,6 +2632,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_proxy_0200
+     * @tc.desc: Test task with proxy configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_proxy_0200', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_proxy_0200 is starting-----------------------");
       let config1:request.agent.Config = {
@@ -2018,6 +2668,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_proxy_0400
+     * @tc.desc: Test download task with proxy configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_proxy_0400', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info('====>-----------------------SUB_Request_Agent_proxy_0400 is starting-----------------------');
       let config1:request.agent.Config = {
@@ -2041,6 +2704,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_ErrorDetailed_0100
+     * @tc.desc: Test error details when URL is invalid
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_ErrorDetailed_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info('====>-----------------------SUB_Request_Agent_ErrorDetailed_0100 is starting-----------------------');
       let config1:request.agent.Config = {
@@ -2073,6 +2749,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_ContinueDown_0300
+     * @tc.desc: Test continue download functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_ContinueDown_0300', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_ContinueDown_0300 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2114,6 +2803,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     });
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_ContinueDown_0500
+     * @tc.desc: Test continue download with pause functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_ContinueDown_0500', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_ContinueDown_0500 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2157,6 +2859,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     });
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_PauseError_callback_0100
+     * @tc.desc: Test pause error callback handling
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_PauseError_callback_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_PauseError_callback_0100 is starting-----------------------");
       let config1:request.agent.Config = {
@@ -2192,6 +2907,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Request_Agent_PauseError_promise_0100
+     * @tc.desc: Test pause error handling with promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_PauseError_promise_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_Agent_PauseError_promise_0100 is starting-----------------------");
       let config1:request.agent.Config = {
@@ -2220,6 +2948,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Request_Download_off_faultOccur_0100
+     * @tc.desc: Test download with fault occur callbacks
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Download_off_faultOccur_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("-----------------------SUB_Request_Download_off_faultOccur_0100 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2264,6 +3005,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       await task.start();
     });
 
+    /**
+     * @tc.name: SUB_Request_Download_off_faultOccur_0200
+     * @tc.desc: Test download with fault occur event off without callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Download_off_faultOccur_0200', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("-----------------------SUB_Request_Download_off_faultOccur_0200 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2300,6 +3054,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       // }, 1000)
     });
 
+    /**
+     * @tc.name: SUB_Request_Download_on_faultOccur_0300
+     * @tc.desc: Test download with multiple fault occur callbacks
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Download_on_faultOccur_0300', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("-----------------------SUB_Request_Download_on_faultOccur_0300 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2336,6 +3103,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
       await task.start();
     });
 
+    /**
+     * @tc.name: SUB_MISC_REQUEST_DOWNLOAD_state_0010
+     * @tc.desc: Test download task state enumeration values
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_MISC_REQUEST_DOWNLOAD_state_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_MISC_REQUEST_DOWNLOAD_state_0010 is starting-----------------------");
       try {
@@ -2355,6 +3135,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     console.info("====>-----------------------SUB_MISC_REQUEST_DOWNLOAD_state_0010 end-----------------------");
     });
 
+    /**
+     * @tc.name: SUB_MISC_REQUEST_DOWNLOAD_faults_0010
+     * @tc.desc: Test download task faults enumeration values
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_MISC_REQUEST_DOWNLOAD_faults_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_MISC_REQUEST_DOWNLOAD_faults_0010 is starting-----------------------");
       try {
@@ -2387,6 +3180,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     console.info("====>-----------------------SUB_MISC_REQUEST_DOWNLOAD_faults_0010 end-----------------------");
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_Download_Callback_0010
+     * @tc.desc: Test create download task using callback with basic configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_Download_Callback_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("-----------------------SUB_Misc_REQUEST_Create_Download_Callback_0010 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2418,6 +3224,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_Download_Promise_0010
+     * @tc.desc: Test create download task using promise with basic configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_Download_Promise_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("-----------------------SUB_Misc_REQUEST_Create_Download_Promise_0010 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2446,6 +3265,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     console.info("-----------------------SUB_Misc_REQUEST_Create_Download_Promise_0010 end-----------------------");
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Remove_Download_Callback_0010
+     * @tc.desc: Test remove download task using callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Remove_Download_Callback_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Misc_REQUEST_Remove_Download_Callback_0010 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2479,6 +3311,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     console.info("-----------------------SUB_Misc_REQUEST_Remove_Download_Callback_0010 end-----------------------");
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Remove_Download_Promise_0010
+     * @tc.desc: Test remove download task using promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Remove_Download_Promise_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Misc_REQUEST_Remove_Download_Promise_0010 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2502,6 +3347,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     console.info("-----------------------SUB_Misc_REQUEST_Remove_Download_Promise_0010 end-----------------------");
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Start_Download_Callback_0010
+     * @tc.desc: Test start download task using callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Start_Download_Callback_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Misc_REQUEST_Start_Download_Callback_0010 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2533,6 +3391,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Start_Download_Promise_0010
+     * @tc.desc: Test start download task using promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Start_Download_Promise_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Misc_REQUEST_Start_Download_Promise_0010 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2561,6 +3432,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     console.info("-----------------------SUB_Misc_REQUEST_Start_Download_Promise_0010 end-----------------------");
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_On_Download_Progress_0040
+     * @tc.desc: Test download progress event listener
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_On_Download_Progress_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Misc_REQUEST_On_Download_Progress_0040 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2600,6 +3484,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Off_Download_Progress_0040
+     * @tc.desc: Test download progress event listener removal
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Off_Download_Progress_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Misc_REQUEST_Off_Download_Progress_0040 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2649,6 +3546,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_On_Download_Completed_0040
+     * @tc.desc: Test download completed event listener
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_On_Download_Completed_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Misc_REQUEST_On_Download_Completed_0040 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2692,6 +3602,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Off_Download_Completed_0040
+     * @tc.desc: Test download completed event listener removal
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Off_Download_Completed_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Misc_REQUEST_Off_Download_Completed_0040 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2743,6 +3666,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_On_Download_Failed_0040
+     * @tc.desc: Test download failed event listener
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_On_Download_Failed_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Misc_REQUEST_On_Download_Failed_0040 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2786,6 +3722,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Off_Download_Failed_0040
+     * @tc.desc: Test download failed event listener removal
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Off_Download_Failed_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Misc_REQUEST_Off_Download_Failed_0040 is starting-----------------------");
       let config1: request.agent.Config = {
@@ -2837,6 +3786,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Request_DownloadManagement_Download_0100
+     * @tc.desc: Test download management functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_DownloadManagement_Download_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>-----------------------SUB_Request_DownloadManagement_Download_0100 is starting-----------------------");
       let config1:request.agent.Config = {
@@ -2872,6 +3834,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_create_Callback_0140
+     * @tc.desc: Test create download task with range request using callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_create_Callback_0140', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
       let tag: string = 'testTag';
@@ -2924,6 +3899,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_Promise_0140
+     * @tc.desc: Test create download task with range request using promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_Promise_0140', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let config1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
@@ -2969,6 +3957,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_create_Callback_0160
+     * @tc.desc: Test create download task with partial range request using callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_create_Callback_0160', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let config1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
@@ -3006,6 +4007,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_Promise_0160
+     * @tc.desc: Test create download task with partial range request using promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_Promise_0160', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let config1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
@@ -3039,6 +4053,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_create_Callback_0170
+     * @tc.desc: Test create download task with specific range request using callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_create_Callback_0170', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let config1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
@@ -3089,6 +4116,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_create_Callback_0180
+     * @tc.desc: Test create download task with range request using callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_create_Callback_0180', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let config1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
@@ -3124,6 +4164,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     });
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_Promise_0180
+     * @tc.desc: Test create download task with invalid range request using promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_Promise_0180', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let config1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
@@ -3155,6 +4208,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_create_Callback_0090
+     * @tc.desc: Test create download task with all undefined configuration using callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_create_Callback_0090', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let config1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
@@ -3204,6 +4270,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_Promise_0090
+     * @tc.desc: Test create download task with all undefined configuration using promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_Promise_0090', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let config1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
@@ -3308,6 +4387,19 @@ it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_Callback_0110
+     * @tc.desc: Test create task when overwrite is not given and file exists
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_Callback_0110', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let des = 'x';
       for (let i = 0; i < 1025; i++){
