@@ -509,7 +509,7 @@ public:
         }
         for (std::size_t i = 0; i < length; i++) {
             ani_ref itemRef;
-            status = env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &itemRef, (ani_int)i);
+            status = env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:Y", &itemRef, (ani_int)i);
             if (ANI_OK != status) {
                 return status;
             }

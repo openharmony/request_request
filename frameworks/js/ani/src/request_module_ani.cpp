@@ -45,7 +45,7 @@ bool UnionAccessor::TryConvertArray<ani_ref>(std::vector<ani_ref> &value)
 
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:Y", &ref, (ani_int)i)) {
             return false;
         }
         value.push_back(ref);
