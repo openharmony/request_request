@@ -76,6 +76,7 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testSetMaxSpeed002
      * @tc.name: testSetMaxSpeed002
@@ -83,7 +84,12 @@ export default function requestHttpLimitTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSetMaxSpeed002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -102,6 +108,7 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testSetMaxSpeed003
      * @tc.name: testSetMaxSpeed003
@@ -109,7 +116,12 @@ export default function requestHttpLimitTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSetMaxSpeed003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -130,12 +142,17 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testSetMaxSpeed004
-     * @tc.precon: start https download server
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. create a task with minSpeed 16 * 1024 + 1.
-     2. setMaxSpeed is 16 * 1024
-     3. setMaxSpeed failed with errorcode 401.
+     *           2. setMaxSpeed is 16 * 1024
+     *           3. setMaxSpeed failed with errorcode 401.
      * @tc.expect: errorcode is 401.
      * @tc.type: Func
      * @tc.level: Level 1
@@ -162,12 +179,17 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testSetMaxSpeed005
-     * @tc.precon: start https download server
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. create a task with minSpeed 16 * 1024.
-     2. setMaxSpeed is 16 * 1024
-     3. setMaxSpeed succeed.
+     *           2. setMaxSpeed is 16 * 1024
+     *           3. setMaxSpeed succeed.
      * @tc.expect: setMaxSpeed succeed.
      * @tc.type: Func
      * @tc.level: Level 1
@@ -194,12 +216,17 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testLowSpeed001
      * @tc.desc: Tests the task can be completed normally when MinSpeed is not set.
-     * @tc.precon: start https download server
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. start a download task when MinSpeed is not set.
-     2. check if the complete callback is triggered.
+     *           2. check if the complete callback is triggered.
      * @tc.expect: complete callback is triggered.
      * @tc.type: Func
      * @tc.level: Level 1
@@ -227,9 +254,13 @@ export default function requestHttpLimitTest() {
     /**
      * @tc.name: testLowSpeed002
      * @tc.desc: Tests the task can be completed normally when MinSpeed.speed is 0.
-     * @tc.precon: start https download server
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. start a download task when MinSpeed.speed is 0.
-     2. check if the complete callback is triggered.
+     *           2. check if the complete callback is triggered.
      * @tc.expect: complete callback is triggered.
      * @tc.type: Func
      * @tc.level: Level 1
@@ -258,12 +289,17 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testLowSpeed003
      * @tc.desc: Tests the task can be completed normally when MinSpeed.duration is 0.
-     * @tc.precon: start https download server
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. start a download task when MinSpeed.duration is 0.
-     2. check if the complete callback is triggered.
+     *           2. check if the complete callback is triggered.
      * @tc.expect: complete callback is triggered.
      * @tc.type: Func
      * @tc.level: Level 1
@@ -292,12 +328,17 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testLowSpeed004
      * @tc.desc: Tests the task creates fail when MinSpeed.duration is -1.
-     * @tc.precon: start https download server
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. start a download task when MinSpeed.duration is -1.
-     2. check the error code.
+     *           2. check the error code.
      * @tc.expect: error code equals 401.
      * @tc.type: Func
      * @tc.level: Level 1
@@ -324,12 +365,17 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testLowSpeed005
      * @tc.desc: Tests the task creates fail when MinSpeed.speed is -1.
-     * @tc.precon: start https download server
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. start a download task when MinSpeed.speed is -1.
-     2. check the error code.
+     *           2. check the error code.
      * @tc.expect: error code equals 401.
      * @tc.type: Func
      * @tc.level: Level 1
@@ -356,12 +402,17 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testLowSpeed006
      * @tc.desc: Tests the task can be completed normally when MinSpeed is satisfied.
-     * @tc.precon: start https download server
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. start a download task when MinSpeed is satisfied.
-     2. check if the complete callback is triggered.
+     *           2. check if the complete callback is triggered.
      * @tc.expect: complete callback is triggered.
      * @tc.type: Func
      * @tc.level: Level 1
@@ -390,12 +441,17 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testLowSpeed007
      * @tc.desc: Tests the task can be completed normally when MinSpeed is not satisfied.
-     * @tc.precon: start https download server
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. start a download task when MinSpeed is not satisfied.
-     2. check if the fault callback is triggered.
+     *           2. check if the fault callback is triggered.
      * @tc.expect: fault callback is triggered.
      * @tc.type: Func
      * @tc.level: Level 1
@@ -424,16 +480,21 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testLowSpeed008
      * @tc.desc: Tests no error occurs if speed is above the minimum limit but duration is not met.
-     * @tc.precon: start https download server
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. create a download task with MinSpeed.duration is 2 and MinSpeed.speed is 1000000000.
-     2. start the task.
-     3. sleep 1s.
-     4. pause the task.
-     5. resume the task.
-     6. check if the fault callback is triggered.
+     *           2. start the task.
+     *           3. sleep 1s.
+     *           4. pause the task.
+     *           5. resume the task.
+     *           6. check if the fault callback is triggered.
      * @tc.expect: fault callback is triggered.
      * @tc.type: Func
      * @tc.level: Level 1
@@ -475,16 +536,22 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTimeout001
      * @tc.name: testTimeout001
      * @tc.desc: Test on task background task
      * @tc.step: 1. start a download task when connectionTimeout is 0.
-     2. check the error code.
+     *           2. check the error code.
      * @tc.expect: error code equals 401.
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTimeout001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -506,16 +573,22 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTimeout002
      * @tc.name: testTimeout002
      * @tc.desc: Test on task background task
      * @tc.step: 1. start a download task when totalTimeout is 0.
-     2. check the error code.
+     *           2. check the error code.
      * @tc.expect: error code equals 401.
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTimeout002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -538,16 +611,22 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTimeout003
      * @tc.name: testTimeout003
      * @tc.desc: Test on task background task
      * @tc.step: 1. start a download task when totalTimeout is 604801.
-     2. check the error code.
+     *           2. check the error code.
      * @tc.expect: error code equals 401.
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTimeout003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -570,16 +649,22 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTimeout004
      * @tc.name: testTimeout004
      * @tc.desc: Test on task background task
      * @tc.step: 1. start a download task when connectionTimeout is 2, totalTimeout is 10.
-     2. check the error code.
+     *           2. check the error code.
      * @tc.expect: the task is created success.
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTimeout004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -604,15 +689,21 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTimeout005
      * @tc.name: testTimeout005
      * @tc.desc: Test on task background task
      * @tc.step: 1. start a download task when connectionTimeout is 1.
-     2. check the error code.
+     *           2. check the error code.
      * @tc.expect: the task is created success.
      * @tc.type: Function
      * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.require: issue#IC8U1A
      */
     it('testTimeout005', 0, async (done: Function) => {
@@ -637,15 +728,21 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTimeout006
      * @tc.name: testTimeout006
      * @tc.desc: Test on task background task
      * @tc.step: 1. start a download task when connectionTimeout is 10, totalTimeout is 2.
-     2. check the error code.
+     *           2. check the error code.
      * @tc.expect: the task is created success.
      * @tc.type: Function
      * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.require: issue#IC8U1A
      */
     it('testTimeout006', 0, async (done: Function) => {
@@ -671,15 +768,21 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTimeout007
      * @tc.name: testTimeout007
      * @tc.desc: Test on task background task
      * @tc.step: 1. start a download task when connectionTimeout is 5, totalTimeout is 10.
-     2. check the error code.
+     *           2. check the error code.
      * @tc.expect: the task is created success.
      * @tc.type: Function
      * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.require: issue#IC8U1A
      */
     it('testTimeout007', 0, async (done: Function) => {
@@ -705,15 +808,21 @@ export default function requestHttpLimitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTimeout008
      * @tc.name: testTimeout008
      * @tc.desc: Test on task background task
      * @tc.step: 1. start a download task when totalTimeout is 604800.
-     2. check the error code.
+     *           2. check the error code.
      * @tc.expect: the task is created success.
      * @tc.type: Function
      * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
      * @tc.require: issue#IC8U1A
      */
     it('testTimeout008', 0, async (done: Function) => {

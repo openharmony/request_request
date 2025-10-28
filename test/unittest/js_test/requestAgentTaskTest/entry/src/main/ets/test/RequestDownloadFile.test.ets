@@ -78,6 +78,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadUrl002
      * @tc.name: testDownloadUrl002
@@ -85,7 +86,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadUrl002', 0, (done: Function) => {
       let conf: Record<string, undefined> = {
@@ -101,6 +107,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadUrl003
      * @tc.name: testDownloadUrl003
@@ -108,7 +115,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadUrl003', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -125,6 +137,7 @@ export default function requestDownloadFileTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testDownloadUrl004
      * @tc.name: testDownloadUrl004
@@ -132,7 +145,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadUrl004', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -149,6 +167,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadUrl005
      * @tc.name: testDownloadUrl005
@@ -156,7 +175,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadUrl005', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -173,6 +197,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadUrl006
      * @tc.name: testDownloadUrl006
@@ -180,7 +205,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadUrl006', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -197,6 +227,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadUrl007
      * @tc.name: testDownloadUrl007
@@ -204,7 +235,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadUrl007', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -220,6 +256,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFile001
      * @tc.name: testDownloadFile001
@@ -227,7 +264,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFile001', 0, async (done: Function) => {
       try {
@@ -237,6 +279,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFile002
      * @tc.name: testDownloadFile002
@@ -244,7 +287,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFile002', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -261,6 +309,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFile003
      * @tc.name: testDownloadFile003
@@ -268,7 +317,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFile003', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -285,6 +339,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFile0031
      * @tc.name: testDownloadFile0031
@@ -292,7 +347,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFile0031', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -311,6 +371,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFile0032
      * @tc.name: testDownloadFile0032
@@ -318,7 +379,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFile0032', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -336,6 +402,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFile004
      * @tc.name: testDownloadFile004
@@ -343,7 +410,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFile004', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -361,6 +433,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFile005
      * @tc.name: testDownloadFile005
@@ -368,7 +441,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFile005', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -386,6 +464,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFilePath0001
      * @tc.name: testDownloadFilePath0001
@@ -393,7 +472,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFilePath0001', 0, async (done: Function) => {
       let standardizePath = cacheDir + '/test.txt';
@@ -433,7 +517,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFilePath0002', 0, async (done: Function) => {
       if (!fs.accessSync(cacheDir + '/A')) {
@@ -478,7 +567,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFilePath0003', 0, async (done: Function) => {
       if (!fs.accessSync(cacheDir + '/A')) {
@@ -523,7 +617,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFilePath0004', 0, async (done: Function) => {
       if (!fs.accessSync(cacheDir + '/A')) {
@@ -568,7 +667,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOn001', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -588,6 +692,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOn002
      * @tc.name: testDownloadFileOn002
@@ -595,7 +700,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOn002', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -615,6 +725,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOn003
      * @tc.name: testDownloadFileOn003
@@ -622,7 +733,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOn003', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -639,6 +755,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOn004
      * @tc.name: testDownloadFileOn004
@@ -646,7 +763,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOn004', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -669,6 +791,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOn005
      * @tc.name: testDownloadFileOn005
@@ -676,7 +799,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOn005', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -700,6 +828,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOn006
      * @tc.name: testDownloadFileOn006
@@ -707,7 +836,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOn006', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -729,6 +863,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOn007
      * @tc.name: testDownloadFileOn007
@@ -736,7 +871,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOn007', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -759,6 +899,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOn008
      * @tc.name: testDownloadFileOn008
@@ -766,7 +907,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOn008', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -788,6 +934,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOff001
      * @tc.name: testDownloadFileOff001
@@ -795,7 +942,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff001', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -815,6 +967,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOff002
      * @tc.name: testDownloadFileOff002
@@ -843,6 +996,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOff003
      * @tc.name: testDownloadFileOff003
@@ -850,7 +1004,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff003', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -874,6 +1033,7 @@ export default function requestDownloadFileTest() {
       task.on('complete', CompletedCallback);
       task.off('complete', CompletedCallback);
     });
+
     /**
      * @tc.number: testDownloadFileOff0031
      * @tc.name: testDownloadFileOff0031
@@ -881,7 +1041,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff0031', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -915,6 +1080,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOff004
      * @tc.name: testDownloadFileOff004
@@ -922,7 +1088,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff004', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -944,6 +1115,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOff005
      * @tc.name: testDownloadFileOff005
@@ -951,7 +1123,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff005', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -984,6 +1161,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOff0051
      * @tc.name: testDownloadFileOff0051
@@ -991,7 +1169,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff0051', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1026,6 +1209,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOff006
      * @tc.name: testDownloadFileOff006
@@ -1033,7 +1217,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff006', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1063,6 +1252,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOff007
      * @tc.name: testDownloadFileOff007
@@ -1070,7 +1260,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff007', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1106,6 +1301,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOff008
      * @tc.name: testDownloadFileOff008
@@ -1113,7 +1309,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff008', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1143,6 +1344,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOff009
      * @tc.name: testDownloadFileOff009
@@ -1150,7 +1352,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff009', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1186,6 +1393,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOff010
      * @tc.name: testDownloadFileOff010
@@ -1193,7 +1401,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff010', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -1218,6 +1431,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadFileOff011
      * @tc.name: testDownloadFileOff011
@@ -1225,7 +1439,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff011', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1260,6 +1479,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadTaskRestore001
      * @tc.name: testDownloadTaskRestore001
@@ -1267,7 +1487,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskRestore001', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1292,6 +1517,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadTaskRestore0011
      * @tc.name: testDownloadTaskRestore0011
@@ -1299,7 +1525,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskRestore0011', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1322,6 +1553,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadTaskDelete001
      * @tc.name: testDownloadTaskDelete001
@@ -1329,7 +1561,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskDelete001', 0, async (done: Function) => {
       try {
@@ -1340,6 +1577,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadTaskDelete002
      * @tc.name: testDownloadTaskDelete002
@@ -1347,7 +1585,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskDelete002', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1366,6 +1609,7 @@ export default function requestDownloadFileTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testDownloadTaskDelete0021
      * @tc.name: testDownloadTaskDelete0021
@@ -1373,7 +1617,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskDelete0021', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1394,6 +1643,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadGetTaskInfo001
      * @tc.name: testDownloadGetTaskInfo001
@@ -1401,7 +1651,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo001', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1430,6 +1685,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadGetTaskInfo0011
      * @tc.name: testDownloadGetTaskInfo0011
@@ -1437,7 +1693,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo0011', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1463,6 +1724,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+    
     /**
      * @tc.number: testDownloadGetTaskInfo002
      * @tc.name: testDownloadGetTaskInfo002
@@ -1470,7 +1732,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo002', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1496,6 +1763,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadGetTaskInfo0021
      * @tc.name: testDownloadGetTaskInfo0021
@@ -1503,7 +1771,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo0021', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1526,6 +1799,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadGetTaskInfo003
      * @tc.name: testDownloadGetTaskInfo003
@@ -1533,7 +1807,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo003', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -1561,6 +1840,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadGetTaskInfo0031
      * @tc.name: testDownloadGetTaskInfo0031
@@ -1568,7 +1848,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo0031', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
@@ -1590,6 +1875,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadGetTaskInfo004
      * @tc.name: testDownloadGetTaskInfo004
@@ -1597,7 +1883,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo004', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1627,6 +1918,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadGetTaskInfo0041
      * @tc.name: testDownloadGetTaskInfo0041
@@ -1634,7 +1926,12 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo0041', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';

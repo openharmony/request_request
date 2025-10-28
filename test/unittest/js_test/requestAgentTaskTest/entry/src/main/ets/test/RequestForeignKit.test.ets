@@ -51,7 +51,12 @@ export default function requestForeignKitTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskUserFile001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -73,6 +78,7 @@ export default function requestForeignKitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadTaskUserFile002
      * @tc.name: testDownloadTaskUserFile002
@@ -80,7 +86,12 @@ export default function requestForeignKitTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskUserFile002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -103,6 +114,7 @@ export default function requestForeignKitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadTaskUserFile003
      * @tc.name: testDownloadTaskUserFile003
@@ -110,7 +122,12 @@ export default function requestForeignKitTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskUserFile003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -133,6 +150,7 @@ export default function requestForeignKitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadTaskUserFile001
      * @tc.name: testUploadTaskUserFile001
@@ -140,7 +158,12 @@ export default function requestForeignKitTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadTaskUserFile001', 0, async (done: Function) => {
       let fileSpec: request.agent.FileSpec = {
@@ -169,6 +192,7 @@ export default function requestForeignKitTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskBroadcastEvent001
      * @tc.name: testTaskBroadcastEvent001
@@ -176,7 +200,12 @@ export default function requestForeignKitTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTaskBroadcastEvent001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -214,6 +243,7 @@ export default function requestForeignKitTest() {
       let subscriber: commonEvent.CommonEventSubscriber = await commonEvent.createSubscriber(commonEventSubscribeInfo);
       await commonEvent.subscribe(subscriber, subscriberCallback);
     });
+    
     /**
      * @tc.number: testTaskBroadcastEvent002
      * @tc.name: testTaskBroadcastEvent002
