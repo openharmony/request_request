@@ -86,9 +86,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData001', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -111,6 +115,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData002
      * @tc.name: testTaskData002
@@ -118,9 +123,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData002', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -144,6 +153,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData003
      * @tc.name: testTaskData003
@@ -151,9 +161,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData003', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -174,6 +188,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData004
      * @tc.name: testTaskData004
@@ -181,9 +196,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData004', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -205,6 +224,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData005
      * @tc.name: testTaskData005
@@ -212,9 +232,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData005', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -238,6 +262,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData006
      * @tc.name: testTaskData006
@@ -245,9 +270,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData006', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -271,6 +300,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData007
      * @tc.name: testTaskData007
@@ -278,9 +308,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData007', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -304,6 +338,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData008
      * @tc.name: testTaskData008
@@ -311,9 +346,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData008', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -334,6 +373,7 @@ export default function requestDataConfigCreateTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testTaskData009
      * @tc.name: testTaskData009
@@ -341,9 +381,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData009', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -364,6 +408,7 @@ export default function requestDataConfigCreateTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testTaskData010
      * @tc.name: testTaskData010
@@ -371,9 +416,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData010', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -394,6 +443,7 @@ export default function requestDataConfigCreateTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testTaskData011
      * @tc.name: testTaskData011
@@ -401,9 +451,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData011', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -428,6 +482,7 @@ export default function requestDataConfigCreateTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testTaskData012
      * @tc.name: testTaskData012
@@ -435,9 +490,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData012', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -459,6 +518,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData013
      * @tc.name: testTaskData013
@@ -466,9 +526,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData013', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -489,6 +553,7 @@ export default function requestDataConfigCreateTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testTaskData014
      * @tc.name: testTaskData014
@@ -496,9 +561,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData014', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
@@ -513,6 +582,7 @@ export default function requestDataConfigCreateTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testTaskData015
      * @tc.name: testTaskData015
@@ -520,9 +590,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData015', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -541,15 +615,20 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData016
      * @tc.name: testTaskData016
      * @tc.desc: Test create task when data path is `zcszczvxdvvadZ`
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData016', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -574,6 +653,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData017
      * @tc.name: testTaskData017
@@ -581,9 +661,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData017', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
@@ -608,6 +692,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData018
      * @tc.name: testTaskData018
@@ -615,9 +700,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData018', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -648,6 +737,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData019
      * @tc.name: testTaskData019
@@ -655,9 +745,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData019', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -688,6 +782,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData020
      * @tc.name: testTaskData020
@@ -695,9 +790,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData020', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -721,6 +820,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData021
      * @tc.name: testTaskData021
@@ -728,9 +828,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData021', 0, async (done: Function) => {
       let context: common.UIAbilityContext = globalThis.abilityContext.getApplicationContext();
       let dir: String = context.cacheDir;
@@ -762,6 +866,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData022
      * @tc.name: testTaskData022
@@ -769,9 +874,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData022', 0, async (done: Function) => {
       let context: common.UIAbilityContext = globalThis.abilityContext.getApplicationContext();
       let dir: String = context.cacheDir;
@@ -803,6 +912,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData023
      * @tc.name: testTaskData023
@@ -810,9 +920,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData023', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
@@ -835,6 +949,7 @@ export default function requestDataConfigCreateTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testTaskData024
      * @tc.name: testTaskData024
@@ -842,9 +957,13 @@ export default function requestDataConfigCreateTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
-
     it('testTaskData024', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
