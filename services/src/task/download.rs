@@ -105,15 +105,19 @@ pub(crate) async fn download(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>
 
 impl RequestTask {
     async fn prepare_download(&self) -> Result<(), TaskError> {
-        let file = self.files.get(0).unwrap();
-        task_control::file_seek(file.clone(), SeekFrom::End(0)).await?;
-        let downloaded = task_control::file_metadata(file).await?.len() as usize;
+        if let Some(file) = self.files.get(0) {
+            task_control::file_seek(file.clone(), SeekFrom::End(0)).await?;
+            let downloaded = task_control::file_metadata(file).await?.len() as usize;
 
-        let mut progress = self.progress.lock().unwrap();
-        progress.common_data.index = 0;
-        progress.common_data.total_processed = downloaded;
-        progress.common_data.state = State::Running.repr;
-        progress.processed = vec![downloaded];
+            let mut progress = self.progress.lock().unwrap();
+            progress.common_data.index = 0;
+            progress.common_data.total_processed = downloaded;
+            progress.common_data.state = State::Running.repr;
+            progress.processed = vec![downloaded];
+        } else {
+            error!("prepare_download err, no file in the task");
+            return Err(TaskError::Failed(Reason::OthersError));
+        }
         Ok(())
     }
 }
@@ -166,17 +170,20 @@ pub(crate) async fn download_inner(
                     info!("task {} server not support range", task.task_id());
                     return Err(TaskError::Failed(Reason::UnsupportedRangeRequest));
                 }
-                let file = task.files.get(0).unwrap();
-
-                let has_downloaded = task_control::file_metadata(file).await?.len() > 0;
-                if has_downloaded {
-                    error!("task {} file not cleared", task.task_id());
-                    sys_event!(
-                        ExecFault,
-                        DfxCode::TASK_FAULT_09,
-                        &format!("task {} file not cleared", task.task_id())
-                    );
-                    task_control::clear_downloaded_file(task.clone()).await?;
+                if let Some(file) = task.files.get(0) {
+                    let has_downloaded = task_control::file_metadata(file).await?.len() > 0;
+                    if has_downloaded {
+                        error!("task {} file not cleared", task.task_id());
+                        sys_event!(
+                            ExecFault,
+                            DfxCode::TASK_FAULT_09,
+                            &format!("task {} file not cleared", task.task_id())
+                        );
+                        task_control::clear_downloaded_file(task.clone()).await?;
+                    }
+                } else {
+                    error!("download_inner err, no file in the `task`");
+                    return Err(TaskError::Failed(Reason::OthersError));
                 }
             }
         }

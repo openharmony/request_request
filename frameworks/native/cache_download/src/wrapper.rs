@@ -106,7 +106,14 @@ impl PreloadCallback for FfiCallback {
             }
         }
         let (tx, rx) = mpsc::channel();
-        tx.send((progress, total)).unwrap();
+        match tx.send((progress, total)) {
+            Ok(_) => (),
+            Err(e) => {
+                error!("Failed to send progress message: {}", e);
+                return;
+            }
+        }
+
         self.tx = Some(tx);
         let progress_callback = self.progress_callback.clone();
         let mutex = self.finish_lock.clone();

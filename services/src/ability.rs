@@ -63,10 +63,12 @@ impl RequestAbility {
             PANIC_INFO = Some(info);
         }));
 
-        ylong_runtime::builder::RuntimeBuilder::new_multi_thread()
+        if let Err(e) = ylong_runtime::builder::RuntimeBuilder::new_multi_thread()
             .worker_num(4)
             .build_global()
-            .unwrap();
+        {
+            error!("ylong_runtime error: {}", e);
+        }
         info!("ylong_runtime init ok");
 
         let runcount_manager = RunCountManager::init();
@@ -79,7 +81,11 @@ impl RequestAbility {
         unsafe { SYSTEM_CONFIG_MANAGER.write(SystemConfigManager::init()) };
         info!("system_config_manager init ok");
 
-        let task_manager = TaskManager::init(runcount_manager.clone(), client_manger.clone(), self.active_counter.clone());
+        let task_manager = TaskManager::init(
+            runcount_manager.clone(),
+            client_manger.clone(),
+            self.active_counter.clone(),
+        );
         *self.task_manager.lock().unwrap() = Some(task_manager.clone());
         info!("task_manager init ok");
 
@@ -119,12 +125,16 @@ impl Ability for RequestAbility {
     ) {
         info!("on_start_with_reason: {:?}", reason);
         if reason.name == "usual.event.USER_REMOVED" {
-            let user_id = reason.value.parse::<i32>().unwrap();
-            account::remove_account_tasks(user_id);
-            self.init(handler);
-        } else {
-            self.init(handler);
+            match reason.value.parse::<i32>() {
+                Ok(user_id) => {
+                    account::remove_account_tasks(user_id);
+                }
+                Err(e) => {
+                    error!("on_start_with_reason error: {}", e);
+                }
+            }
         }
+        self.init(handler);
         const INIT_POLICY: bool = false;
         let _ = update_policy(INIT_POLICY);
     }
@@ -164,11 +174,14 @@ static A: extern "C" fn() = {
     #[link_section = ".text.startup"]
     extern "C" fn init() {
         info!("begin request service init");
-        let system_ability = RequestAbility::new()
+        if let Some(system_ability) = RequestAbility::new()
             .build_system_ability(samgr::definition::DOWNLOAD_SERVICE_ID, false)
-            .unwrap();
-        system_ability.register();
-        info!("request service inited");
+        {
+            system_ability.register();
+            info!("request service inited");
+        } else {
+            info!("request service inited error");
+        }
     }
     init
 };

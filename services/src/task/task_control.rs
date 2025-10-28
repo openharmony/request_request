@@ -92,7 +92,15 @@ pub(crate) async fn clear_downloaded_file(task: Arc<RequestTask>) -> Result<(), 
     info!("task {} clear downloaded file", task.task_id());
     runtime_spawn_blocking(move || {
         {
-            let file_mutex = task.files.get(0).unwrap();
+            let file_mutex = if let Some(mutex) = task.files.get(0) {
+                mutex
+            } else {
+                error!("clear_downloaded_file err, 1no file in the `task`");
+                return Err(io::Error::new(io::ErrorKind::Other,
+                                          "clear_downloaded_file err, 1no file in the `task`"
+                ));
+            };
+            
             let mut file = file_mutex.lock().unwrap();
             file.set_len(0)?;
             file.seek(SeekFrom::Start(0))?;
