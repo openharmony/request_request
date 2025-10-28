@@ -28,20 +28,11 @@ export default function requestDataConfigCreateTest() {
     });
     beforeEach(() => {
       console.info('beforeEach called');
-      if (fs.accessSync(cacheDir + '/test.txt')) {
-        fs.unlinkSync(cacheDir + '/test.txt');
-      }
-      if (fs.accessSync(cacheDir + '/test1.txt')) {
-        fs.unlinkSync(cacheDir + '/test1.txt');
-      }
     });
     afterEach(async () => {
       console.info('afterEach called');
       if (fs.accessSync(cacheDir + '/test.txt')) {
         fs.unlinkSync(cacheDir + '/test.txt');
-      }
-      if (fs.accessSync(cacheDir + '/test1.txt')) {
-        fs.unlinkSync(cacheDir + '/test1.txt');
       }
     });
 
