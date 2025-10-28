@@ -11,32 +11,134 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Event observation system for download tasks.
+//! 
+//! This module provides the infrastructure for monitoring and responding to download
+//! task events through a callback mechanism. It includes the `Observer` struct that
+//! manages callbacks and dispatches events, and the `Callback` trait that defines the
+//! interface for handling these events.
+
+// Standard library imports
 use std::collections::HashMap;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
 
+// External dependencies
 use request_core::info::{Progress, SubscribeType, Response};
 use ylong_runtime::task::JoinHandle;
 
+// Internal dependencies
 use crate::listen::uds::{Message, UdsListener};
 
+/// Manages callbacks and dispatches task events to registered observers.
+///
+/// Maintains a registry of callbacks associated with task IDs and listens for events
+/// from the download service through a Unix domain socket. When events are received,
+/// they are dispatched to the appropriate callback based on the task ID and event type.
 pub struct Observer {
+    /// Registry mapping task IDs to their corresponding callback implementations
     callbacks: Arc<Mutex<HashMap<i64, Arc<dyn Callback + Send + Sync + 'static>>>>,
+    /// Handle to the background task listening for events
     listener: Mutex<Option<JoinHandle<()>>>,
 }
 
+/// Trait defining the interface for handling download task events.
+///
+/// Implementations of this trait can receive notifications about various download
+/// task events such as progress updates, completion, failure, and state changes.
+/// All methods have empty default implementations to allow implementing only the
+/// methods of interest.
+///
+/// # Examples
+///
+/// ```rust
+/// use request_core::info::{Progress, Response};
+/// use request_next::listen::observe::Callback;
+/// use std::sync::Arc;
+///
+/// // Custom callback implementation that logs download progress
+/// struct ProgressLogger;
+///
+/// impl Callback for ProgressLogger {
+///     fn on_progress(&self, progress: &Progress) {
+///         println!("Download progress: {} bytes downloaded of {} total", 
+///                  progress.download_size, progress.total_size);
+///     }
+///     
+///     fn on_completed(&self, progress: &Progress) {
+///         println!("Download completed: {} bytes downloaded", progress.download_size);
+///     }
+///     
+///     fn on_failed(&self, progress: &Progress, error_code: i32) {
+///         println!("Download failed with error code {} after {} bytes", 
+///                  error_code, progress.download_size);
+///     }
+/// }
+///
+/// // Create and use the callback
+/// let callback = Arc::new(ProgressLogger);
+/// // observer.register_callback(task_id, callback); // Register with Observer
+/// ```
 pub trait Callback {
+    /// Called when download progress is updated.
+    ///
+    /// # Parameters
+    /// - `progress`: Current progress information including bytes downloaded and total size
     fn on_progress(&self, progress: &Progress) {}
+    
+    /// Called when a download completes successfully.
+    ///
+    /// # Parameters
+    /// - `progress`: Final progress information with complete download details
     fn on_completed(&self, progress: &Progress) {}
+    
+    /// Called when a download fails.
+    ///
+    /// # Parameters
+    /// - `progress`: Progress information at the time of failure
+    /// - `error_code`: Error code indicating the reason for failure
     fn on_failed(&self, progress: &Progress, error_code: i32) {}
+    
+    /// Called when a download is paused.
+    ///
+    /// # Parameters
+    /// - `progress`: Progress information at the time of pausing
     fn on_pause(&self, progress: &Progress) {}
+    
+    /// Called when a paused download is resumed.
+    ///
+    /// # Parameters
+    /// - `progress`: Progress information at the time of resuming
     fn on_resume(&self, progress: &Progress) {}
+    
+    /// Called when a download task is removed.
+    ///
+    /// # Parameters
+    /// - `progress`: Progress information at the time of removal
     fn on_remove(&self, progress: &Progress) {}
+    
+    /// Called when an HTTP response is received.
+    ///
+    /// # Parameters
+    /// - `response`: HTTP response details including status code, headers, etc.
     fn on_response(&self, response: &Response) {}
+    
+    /// Called when HTTP headers are received but before the response body starts downloading.
     fn on_header_receive(&self) {}
 }
 
 impl Observer {
+    /// Creates a new `Observer` instance.
+    ///
+    /// Initializes empty collections for callbacks and the listener handle.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use request_next::listen::observe::Observer;
+    ///
+    /// let observer = Observer::new();
+    /// ```
     pub fn new() -> Self {
         Observer {
             callbacks: Arc::new(Mutex::new(HashMap::new())),
@@ -44,14 +146,41 @@ impl Observer {
         }
     }
 
+    /// Sets up the event listener with the provided file descriptor.
+    ///
+    /// Creates a new UDS listener with the given file descriptor and starts a background
+    /// task to listen for and process incoming messages. Cancels any existing listener
+    /// if one is already running.
+    ///
+    /// # Parameters
+    /// - `file`: File descriptor connected to the download service's event stream
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use request_next::listen::observe::Observer;
+    /// use std::fs::File;
+    ///
+    /// // In a real application, this file would be obtained from a service connection
+    /// // let file = ...; // File descriptor connected to UDS socket
+    ///
+    /// // let observer = Observer::new();
+    /// // observer.set_listenr(file); // Start listening for events
+    /// ```
+    ///
+    /// # Notes
+    /// The function name contains a typo (`set_listenr` instead of `set_listener`).
     pub fn set_listenr(&self, file: File) {
         let mut listener = UdsListener::new(file);
         let callbacks = self.callbacks.clone();
+        
+        // Spawn background task to process incoming messages
         let handle = ylong_runtime::spawn(async move {
             loop {
                 match listener.recv().await {
                     Ok(message) => match message {
                         Message::HttpResponse(response) => {
+                            // Convert task_id from string to i64 for lookup
                             let task_id = response.task_id.parse().unwrap();
                             if let Some(callback) = callbacks.lock().unwrap().get(&task_id) {
                                 callback.on_response(&response);
@@ -60,7 +189,10 @@ impl Observer {
                         Message::NotifyData(data) => {
                             let task_id = data.task_id as i64;
                             let progress = data.progress;
+                            
+                            // Find the appropriate callback for the task
                             if let Some(callback) = callbacks.lock().unwrap().get(&task_id) {
+                                // Dispatch to the appropriate callback method based on event type
                                 match data.subscribe_type {
                                     SubscribeType::Progress => {
                                         callback.on_progress(&progress);
@@ -95,11 +227,44 @@ impl Observer {
                 }
             }
         });
+        
+        // Replace and cancel any existing listener
         if let Some(old_listener) = self.listener.lock().unwrap().replace(handle) {
             old_listener.cancel();
         }
     }
 
+    /// Registers a callback for a specific task.
+    ///
+    /// Associates a callback implementation with a task ID, allowing the callback to receive
+    /// events for that specific task.
+    ///
+    /// # Parameters
+    /// - `task_id`: ID of the task to monitor
+    /// - `callback`: Callback implementation to receive events
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use request_core::info::{Progress, Response};
+    /// use request_next::listen::observe::{Callback, Observer};
+    /// use std::sync::Arc;
+    ///
+    /// struct SimpleCallback;
+    ///
+    /// impl Callback for SimpleCallback {
+    ///     fn on_progress(&self, progress: &Progress) {
+    ///         println!("Progress: {}/{} bytes", progress.download_size, progress.total_size);
+    ///     }
+    /// }
+    ///
+    /// let observer = Observer::new();
+    /// let task_id = 12345;
+    /// let callback = Arc::new(SimpleCallback);
+    ///
+    /// // Register the callback for the specific task
+    /// observer.register_callback(task_id, callback);
+    /// ```
     pub fn register_callback(
         &self,
         task_id: i64,
@@ -108,6 +273,25 @@ impl Observer {
         self.callbacks.lock().unwrap().insert(task_id, callback);
     }
 
+    /// Unregisters a callback for a specific task.
+    ///
+    /// Removes the callback association for the given task ID, stopping event notifications
+    /// for that task.
+    ///
+    /// # Parameters
+    /// - `task_id`: ID of the task to stop monitoring
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use request_next::listen::observe::Observer;
+    ///
+    /// let observer = Observer::new();
+    /// let task_id = 12345;
+    ///
+    /// // Unregister any callback associated with the task
+    /// observer.unregister_callback(task_id);
+    /// ```
     pub fn unregister_callback(&self, task_id: i64) {
         self.callbacks.lock().unwrap().remove(&task_id);
     }

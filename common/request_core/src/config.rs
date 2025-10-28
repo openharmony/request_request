@@ -11,59 +11,102 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Configuration types for network tasks.
+//! 
+//! This module provides structures and enums for configuring network operations,
+//! including download and upload tasks, with various options for controlling
+//! behavior, network preferences, and file handling.
+
 use std::collections::HashMap;
 use std::fs::File;
 use std::os::fd::FromRawFd;
 
 use crate::file::FileSpec;
 
-/// task config
+/// Complete configuration for a network task.
+///
+/// This struct contains all configuration parameters needed to execute a network task,
+/// including network settings, file specifications, metadata, and authentication details.
 #[derive(Clone, Debug)]
 pub struct TaskConfig {
+    /// Bundle identifier associated with the task.
     pub bundle: String,
+    /// Type identifier for the bundle.
     pub bundle_type: u32,
+    /// Account identifier for atomic operations.
     pub atomic_account: String,
+    /// Target URL for the network request.
     pub url: String,
+    /// User-facing title for the task.
     pub title: String,
+    /// Description of the task purpose.
     pub description: String,
+    /// HTTP method to use (e.g., GET, POST).
     pub method: String,
+    /// HTTP headers to include in the request.
     pub headers: HashMap<String, String>,
+    /// Request body data as a string.
     pub data: String,
+    /// Authentication token.
     pub token: String,
+    /// Proxy server configuration.
     pub proxy: String,
+    /// Certificate pinning configuration.
     pub certificate_pins: String,
+    /// Additional configuration parameters.
     pub extras: HashMap<String, String>,
+    /// API version to use for compatibility.
     pub version: Version,
+    /// Form data items for multi-part requests.
     pub form_items: Vec<FormItem>,
+    /// File specifications for upload tasks.
     pub file_specs: Vec<FileSpec>,
+    /// Paths to files for request body.
     pub body_file_paths: Vec<String>,
+    /// Paths to certificate files.
     pub certs_path: Vec<String>,
+    /// Common task configuration parameters.
     pub common_data: CommonTaskConfig,
 }
 
+/// Builder for creating a `TaskConfig` with a fluent interface.
+///
+/// Provides a convenient way to construct a `TaskConfig` instance with
+/// selective configuration parameters.
+///
+/// # Examples
+///
+/// ```rust
+/// let config = TaskConfigBuilder::new(Version::API10)
+///     .url("https://example.com".to_string())
+///     .title("Example Download".to_string())
+///     .description("Download example file".to_string())
+///     .background(true)
+///     .build();
+/// ```
 pub struct TaskConfigBuilder {
     version: Version,
-
     url: Option<String>,
     headers: Option<HashMap<String, String>>,
-
+    
     // network configuration
     enable_metered: Option<bool>,
     enable_roaming: Option<bool>,
     network_type: Option<NetworkConfig>,
-
+    
     // description of the task
     description: Option<String>,
     title: Option<String>,
-
+    
     // task config
     background: Option<bool>,
-
+    
     // file
     file_path: Option<String>,
 }
 
 impl TaskConfigBuilder {
+    /// Creates a new `TaskConfigBuilder` with the specified API version.
     pub fn new(version: Version) -> Self {
         TaskConfigBuilder {
             version,
@@ -79,51 +122,65 @@ impl TaskConfigBuilder {
         }
     }
 
+    /// Sets the target URL for the task.
     pub fn url(&mut self, url: String) -> &mut Self {
         self.url = Some(url);
         self
     }
 
+    /// Sets HTTP headers for the request.
     pub fn headers(&mut self, headers: HashMap<String, String>) -> &mut Self {
         self.headers = Some(headers);
         self
     }
 
+    /// Sets whether the task should run on metered connections.
     pub fn metered(&mut self, enable: bool) -> &mut Self {
         self.enable_metered = Some(enable);
         self
     }
 
+    /// Sets whether the task should run on roaming connections.
     pub fn roaming(&mut self, enable: bool) -> &mut Self {
         self.enable_roaming = Some(enable);
         self
     }
 
+    /// Sets the network type preference for the task.
     pub fn network_type(&mut self, network_type: NetworkConfig) -> &mut Self {
         self.network_type = Some(network_type);
         self
     }
 
+    /// Sets the description for the task.
     pub fn description(&mut self, description: String) -> &mut Self {
         self.description = Some(description);
         self
     }
 
+    /// Sets the title for the task.
     pub fn title(&mut self, title: String) -> &mut Self {
         self.title = Some(title);
         self
     }
 
+    /// Sets whether the task should run in background mode.
     pub fn background(&mut self, background: bool) -> &mut Self {
         self.background = Some(background);
         self
     }
 
+    /// Sets the file path for the task output.
     pub fn file_path(&mut self, file_path: String) -> &mut Self {
         self.file_path = Some(file_path);
         self
     }
 
+    /// Constructs a `TaskConfig` with the current builder configuration.
+    ///
+    /// # Notes
+    ///
+    /// Default values are used for any unspecified fields.
     pub fn build(self) -> TaskConfig {
         TaskConfig {
             bundle: "".to_string(),
@@ -170,7 +227,17 @@ impl TaskConfigBuilder {
 }
 
 impl ipc::parcel::Serialize for TaskConfig {
+    /// Serializes the task configuration to a message parcel.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if serialization fails for any reason.
+    ///
+    /// # Safety
+    ///
+    /// Uses `unsafe` block when converting raw file descriptors to `File` instances.
     fn serialize(&self, parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<()> {
+        // Serialize common configuration fields
         parcel.write(&(self.common_data.action.clone() as u32))?;
         parcel.write(&(self.version as u32))?;
         parcel.write(&(self.common_data.mode as u32))?;
@@ -189,10 +256,14 @@ impl ipc::parcel::Serialize for TaskConfig {
         parcel.write(&self.common_data.gauge)?;
         parcel.write(&self.common_data.precise)?;
         parcel.write(&self.common_data.priority)?;
+        
+        // Write placeholders for future fields
         parcel.write(&0i64)?;
         parcel.write(&0i64)?;
         parcel.write(&0u64)?;
         parcel.write(&0u64)?;
+        
+        // Serialize basic string fields
         parcel.write(&self.url)?;
         parcel.write(&self.title)?;
         parcel.write(&self.method)?;
@@ -202,16 +273,20 @@ impl ipc::parcel::Serialize for TaskConfig {
         parcel.write(&self.proxy)?;
         parcel.write(&self.certificate_pins)?;
 
+        // Serialize vector of certificate paths
         parcel.write(&(self.certs_path.len() as u32))?;
         for cert_path in &self.certs_path {
             parcel.write(cert_path)?;
         }
 
+        // Serialize form items
         parcel.write(&(self.form_items.len() as u32))?;
         for form_item in &self.form_items {
             parcel.write(&form_item.name)?;
             parcel.write(&form_item.value)?;
         }
+        
+        // Serialize file specifications
         parcel.write(&(self.file_specs.len() as u32))?;
         for file_spec in &self.file_specs {
             parcel.write(&file_spec.name)?;
@@ -219,22 +294,28 @@ impl ipc::parcel::Serialize for TaskConfig {
             parcel.write(&file_spec.file_name)?;
             parcel.write(&file_spec.mime_type)?;
             parcel.write(&file_spec.is_user_file)?;
+            // Special handling for user-provided files
             if file_spec.is_user_file {
+                // Safety: Assumes the file descriptor is valid and not owned elsewhere
                 let file = unsafe { File::from_raw_fd(file_spec.fd.unwrap()) };
                 parcel.write_file(file)?;
             }
         }
 
+        // Serialize body file paths
         parcel.write(&(self.body_file_paths.len() as u32))?;
         for body_file_paths in self.body_file_paths.iter() {
             parcel.write(body_file_paths)?;
         }
+        
+        // Serialize HTTP headers
         parcel.write(&(self.headers.len() as u32))?;
         for header in self.headers.iter() {
             parcel.write(header.0)?;
             parcel.write(header.1)?;
         }
 
+        // Serialize extra configuration parameters
         parcel.write(&(self.extras.len() as u32))?;
         for extra in self.extras.iter() {
             parcel.write(extra.0)?;
@@ -245,20 +326,33 @@ impl ipc::parcel::Serialize for TaskConfig {
     }
 }
 
+/// Represents a form field in a multi-part request.
 #[derive(Clone, Debug)]
 pub struct FormItem {
+    /// Name of the form field.
     pub name: String,
+    /// Value of the form field.
     pub value: String,
 }
 
+/// API version identifier for task configuration.
+///
+/// Used to ensure compatibility across different versions of the API.
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[repr(u32)]
 pub enum Version {
+    /// API version 9.
     API9 = 1,
+    /// API version 10.
     API10,
 }
 
 impl From<u32> for Version {
+    /// Converts a raw integer to a `Version` enum variant.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the provided value does not correspond to a known version.
     fn from(value: u32) -> Self {
         match value {
             1 => Version::API9,
@@ -268,16 +362,22 @@ impl From<u32> for Version {
     }
 }
 
+/// Type of network operation to perform.
 #[derive(Clone, Debug, PartialEq)]
 #[repr(u32)]
 pub enum Action {
-    /// Download
+    /// Download content from a remote server.
     Download = 0,
-    /// Upload
+    /// Upload content to a remote server.
     Upload,
 }
 
 impl From<u32> for Action {
+    /// Converts a raw integer to an `Action` enum variant.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the provided value does not correspond to a known action.
     fn from(value: u32) -> Self {
         match value {
             0 => Action::Download,
@@ -287,25 +387,32 @@ impl From<u32> for Action {
     }
 }
 
+/// Execution mode for a network task.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum Mode {
-    /// BackGround
+    /// Task runs in the background, possibly with lower priority.
     BackGround = 0,
-    /// ForeGround
+    /// Task runs in the foreground, typically for user-initiated operations.
     FrontEnd,
 }
 
+/// Network type configuration for task execution.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum NetworkConfig {
-    /// Any
+    /// Task can run on any available network.
     Any = 0,
-    /// Wifi
+    /// Task should only run on WiFi networks.
     Wifi,
-    /// Cellular
+    /// Task should only run on cellular networks.
     Cellular,
 }
 
 impl From<i32> for NetworkConfig {
+    /// Converts a raw integer to a `NetworkConfig` enum variant.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the provided value does not correspond to a known network configuration.
     fn from(value: i32) -> Self {
         match value {
             0 => NetworkConfig::Any,
@@ -316,25 +423,47 @@ impl From<i32> for NetworkConfig {
     }
 }
 
+/// Common configuration parameters for network tasks.
+///
+/// Contains general task settings that apply to both download and upload operations.
 #[derive(Clone, Debug)]
 pub struct CommonTaskConfig {
+    /// Unique identifier for the task.
     pub task_id: u32,
+    /// User identifier associated with the task.
     pub uid: u64,
+    /// Token identifier for authentication.
     pub token_id: u64,
+    /// Type of operation to perform.
     pub action: Action,
+    /// Execution mode (foreground or background).
     pub mode: Mode,
+    /// Whether to overwrite existing files.
     pub cover: bool,
+    /// Network type preference.
     pub network_config: NetworkConfig,
+    /// Whether to allow execution on metered connections.
     pub metered: bool,
+    /// Whether to allow execution while roaming.
     pub roaming: bool,
+    /// Whether to retry on failure.
     pub retry: bool,
+    /// Whether to follow redirects.
     pub redirect: bool,
+    /// Index of the task in a batch.
     pub index: u32,
+    /// Start position for range requests (in bytes).
     pub begins: u64,
+    /// End position for range requests (in bytes).
     pub ends: i64,
+    /// Whether to enable progress gauge updates.
     pub gauge: bool,
+    /// Whether to use precise progress reporting.
     pub precise: bool,
+    /// Task priority level.
     pub priority: u32,
+    /// Whether to run as a background task.
     pub background: bool,
+    /// Whether to use multi-part form encoding.
     pub multipart: bool,
 }
