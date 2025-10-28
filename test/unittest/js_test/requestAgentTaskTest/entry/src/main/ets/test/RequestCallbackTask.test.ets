@@ -76,6 +76,7 @@ export default function requestCallbackTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testOnTask002
      * @tc.name: testOnTask002
@@ -83,7 +84,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnTask002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -102,6 +108,7 @@ export default function requestCallbackTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testOnTask003
      * @tc.name: testOnTask003
@@ -109,7 +116,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnTask003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -125,6 +137,7 @@ export default function requestCallbackTaskTest() {
       });
       await task.start();
     });
+
     /**
      * @tc.number: testOnTask004
      * @tc.name: testOnTask004
@@ -132,7 +145,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnTask004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -149,6 +167,7 @@ export default function requestCallbackTaskTest() {
       });
       await task.start();
     });
+
     /**
      * @tc.number: testOnTask005
      * @tc.name: testOnTask005
@@ -156,7 +175,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnTask005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -172,6 +196,7 @@ export default function requestCallbackTaskTest() {
       });
       await task.start();
     });
+
     /**
      * @tc.number: testOnTask006
      * @tc.name: testOnTask006
@@ -179,7 +204,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnTask006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -197,6 +227,7 @@ export default function requestCallbackTaskTest() {
       await sleep(2000);
       await request.agent.remove(task.tid);
     });
+
     /**
      * @tc.number: testOnTask007
      * @tc.name: testOnTask007
@@ -204,7 +235,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -227,6 +263,7 @@ export default function requestCallbackTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testOnTask008
      * @tc.name: testOnTask008
@@ -234,7 +271,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnTask008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -258,6 +300,7 @@ export default function requestCallbackTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testOnTask009
      * @tc.name: testOnTask009
@@ -265,7 +308,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnTask009', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -288,6 +336,7 @@ export default function requestCallbackTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testOnTask010
      * @tc.name: testOnTask010
@@ -295,7 +344,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnTask010', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -311,6 +365,7 @@ export default function requestCallbackTaskTest() {
       });
       await task.start();
     });
+
     /**
      * @tc.number: testOnTask011
      * @tc.name: testOnTask011
@@ -318,7 +373,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnTask011', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -334,6 +394,7 @@ export default function requestCallbackTaskTest() {
       });
       await task.start();
     });
+
     /**
      * @tc.number: testOnTask012
      * @tc.name: testOnTask012
@@ -341,7 +402,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnTask012', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -357,6 +423,7 @@ export default function requestCallbackTaskTest() {
       });
       await task.start();
     });
+
     /**
      * @tc.number: testOnTask013
      * @tc.name: testOnTask013
@@ -364,7 +431,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnTask013', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -382,14 +454,19 @@ export default function requestCallbackTaskTest() {
       await task.start();
     });
 
-/**
+    /**
      * @tc.number: testOffTask001
      * @tc.name: testOffTask001
      * @tc.desc: Test off task for 'test'
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOffTask001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -408,6 +485,7 @@ export default function requestCallbackTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testOffTask002
      * @tc.name: testOffTask002
@@ -415,7 +493,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOffTask002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -433,6 +516,7 @@ export default function requestCallbackTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testOffTask003
      * @tc.name: testOffTask003
@@ -440,7 +524,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOffTask003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -460,6 +549,7 @@ export default function requestCallbackTaskTest() {
       expect(true).assertTrue();
       done();
     });
+
     /**
      * @tc.number: testOffTask004
      * @tc.name: testOffTask004
@@ -467,7 +557,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOffTask004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -491,6 +586,7 @@ export default function requestCallbackTaskTest() {
       task.off('completed', CompletedCallback);
       await task.start();
     });
+
     /**
      * @tc.number: testOffTask005
      * @tc.name: testOffTask005
@@ -498,7 +594,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOffTask005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -526,6 +627,7 @@ export default function requestCallbackTaskTest() {
       task.off('progress', ProgressCallback);
       await task.start();
     });
+
     /**
      * @tc.number: testOffTask006
      * @tc.name: testOffTask006
@@ -533,7 +635,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOffTask006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -554,6 +661,7 @@ export default function requestCallbackTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testOffTask007
      * @tc.name: testOffTask007
@@ -561,7 +669,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOffTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -590,6 +703,7 @@ export default function requestCallbackTaskTest() {
       await task.start();
       await task.pause();
     });
+
     /**
      * @tc.number: testOffTask008
      * @tc.name: testOffTask008
@@ -597,7 +711,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOffTask008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -627,6 +746,7 @@ export default function requestCallbackTaskTest() {
       await task.pause();
       await task.resume();
     });
+
     /**
      * @tc.number: testOffTask009
      * @tc.name: testOffTask009
@@ -634,7 +754,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOffTask009', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -667,7 +792,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnResponse001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -686,6 +816,7 @@ export default function requestCallbackTaskTest() {
       });
       await task.start();
     });
+
     /**
      * @tc.number: testOnResponse002
      * @tc.name: testOnResponse002
@@ -693,7 +824,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnResponse002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -716,6 +852,7 @@ export default function requestCallbackTaskTest() {
       });
       await task.start();
     });
+
     /**
      * @tc.number: testOnResponse003
      * @tc.name: testOnResponse003
@@ -723,7 +860,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnResponse003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -750,6 +892,7 @@ export default function requestCallbackTaskTest() {
       });
       await task.start();
     });
+
     /**
      * @tc.number: testOnResponse004
      * @tc.name: testOnResponse004
@@ -757,7 +900,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnResponse004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -775,6 +923,7 @@ export default function requestCallbackTaskTest() {
       });
       await task.start();
     });
+
     /**
      * @tc.number: testOnResponse005
      * @tc.name: testOnResponse005
@@ -782,7 +931,12 @@ export default function requestCallbackTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testOnResponse005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -806,9 +960,14 @@ export default function requestCallbackTaskTest() {
     /**
      * @tc.name: testOnWait001
      * @tc.desc: test the task won't receive wait callback when callback is off.
-     * @tc.precon: start https download server
-     * @tc.step: 1. start 1 download task with wait callback off.
-     2. check if the wait callback is triggered.
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. start 
+     *           2. download task with wait callback off.
+     *           3. check if the wait callback is triggered.
      * @tc.expect: no wait callback is triggered.
      * @tc.type: Func
      * @tc.level: Level 1
