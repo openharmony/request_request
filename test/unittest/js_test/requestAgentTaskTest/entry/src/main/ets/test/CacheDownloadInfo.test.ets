@@ -50,6 +50,8 @@ export default function cacheDownloadInfo() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Call setDownloadInfoListSize with parameter -1.
+     *           2. Verify that the call fails and returns error code 401.
      * @tc.require: issues#1573
      */
     it('testSetInfoListSize001', 0, async (done: Function) => {
@@ -62,6 +64,7 @@ export default function cacheDownloadInfo() {
         done();
       }
     });
+
     /**
      * @tc.number: testSetInfoListSize002
      * @tc.name: testSetInfoListSize002
@@ -74,6 +77,8 @@ export default function cacheDownloadInfo() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Call setDownloadInfoListSize with parameter 8193.
+     *           2. Verify that the call fails and returns error code 401.
      * @tc.require: issues#1573
      */
     it('testSetInfoListSize002', 0, async (done: Function) => {
@@ -86,6 +91,7 @@ export default function cacheDownloadInfo() {
         done();
       }
     });
+
     /**
      * @tc.number: testSetInfoListSize003
      * @tc.name: testSetInfoListSize003
@@ -98,6 +104,8 @@ export default function cacheDownloadInfo() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Call setDownloadInfoListSize with parameter 8192.
+     *           2. Verify that the call succeeds without throwing an error.
      * @tc.require: issues#1573
      */
     it('testSetInfoListSize003', 0, async (done: Function) => {
@@ -109,6 +117,7 @@ export default function cacheDownloadInfo() {
         done();
       }
     });
+
     /**
      * @tc.number: testGetDownloadInfo001
      * @tc.name: testGetDownloadInfo001
@@ -121,6 +130,9 @@ export default function cacheDownloadInfo() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Set download info list size to 1 via setDownloadInfoListSize.
+     *           2. Call download twice with the same test URL and wait 5 seconds each time.
+     *           3. Get download info twice via getDownloadInfo and verify totalTime is different.
      * @tc.require: issues#1573
      */
     it('testGetDownloadInfo001', 0, async (done: Function) => {
@@ -159,6 +171,7 @@ export default function cacheDownloadInfo() {
         done();
       }
     });
+
     /**
      * @tc.number: testGetDownloadInfo002
      * @tc.name: testGetDownloadInfo002
@@ -171,6 +184,9 @@ export default function cacheDownloadInfo() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Set download info list size to 1 via setDownloadInfoListSize.
+     *           2. Call download with two different test URLs and wait 5 seconds each time.
+     *           3. Verify the first URL's info is cleared and the second URL's info exists.
      * @tc.require: issues#1573
      */
     it('testGetDownloadInfo002', 0, async (done: Function) => {
@@ -212,6 +228,7 @@ export default function cacheDownloadInfo() {
         done();
       }
     });
+    
     /**
      * @tc.number: testGetDownloadInfo003
      * @tc.name: testGetDownloadInfo003
@@ -224,6 +241,9 @@ export default function cacheDownloadInfo() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Set download info list size to 2 via setDownloadInfoListSize.
+     *           2. Call download with three different test URLs and wait 5 seconds each time.
+     *           3. Verify the oldest URL's info is cleared and the latest two exist.
      * @tc.require: issues#1573
      */
     it('testGetDownloadInfo003', 0, async (done: Function) => {
@@ -275,6 +295,7 @@ export default function cacheDownloadInfo() {
         done();
       }
     });
+
     /**
      * @tc.number: testGetDownloadInfo004
      * @tc.name: testGetDownloadInfo004
@@ -287,6 +308,22 @@ export default function cacheDownloadInfo() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Initialize empty download options,
+     *              set download info list size to 2 via setDownloadInfoListSize.
+     *           2. Call download() for "test400K.txt" URL with the above options,
+     *              wait 5 seconds, then get its download info; 
+     *              if info is undefined, print error and assert failure.
+     *           3. Call download() for "edge_picture.jpg" URL with the same options,
+     *              wait 5 seconds, then get its download info; 
+     *              if info is undefined, print error and assert failure.
+     *           4. Re-get download info of "test400K.txt" URL;
+     *              if info is undefined, print error and assert failure.
+     *           5. Call download() for "audio_test.mp3" URL with the same options,
+     *              wait 5 seconds, then get its download info; 
+     *              if info is undefined, print error and assert failure.
+     *           6. Get download info of "edge_picture.jpg" URL again;
+     *              if info is undefined, execute done() normally; 
+     *              if not, print error and assert failure.
      * @tc.require: issues#1573
      */
     it('testGetDownloadInfo004', 0, async (done: Function) => {
@@ -345,6 +382,7 @@ export default function cacheDownloadInfo() {
         done();
       }
     });
+
     /**
      * @tc.number: testGetDownloadInfo005
      * @tc.name: testGetDownloadInfo005
@@ -357,6 +395,17 @@ export default function cacheDownloadInfo() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Initialize download options with headers {"key":"123","value":"456"}, 
+     *              set download info list size to 1 via setDownloadInfoListSize.
+     *           2. Call download() for "test400K.txt" URL with the above options,
+     *              wait 5 seconds, then get its download info.
+     *           3. If the first obtained download info is undefined, print error and assert failure; 
+     *              if not, record its performance.totalTime to total_time variable.
+     *           4. Call download() for the same "test400K.txt" URL with the same options again, wait 5 seconds,
+     *              then get its download info (named downloadInfo2).
+     *           5. If downloadInfo2 is undefined, print error and assert failure; 
+     *              if not, assert that total_time is not equal to downloadInfo2.performance.totalTime,
+     *              then execute done().
      * @tc.require: issues#1573
      */
     it('testGetDownloadInfo005', 0, async (done: Function) => {

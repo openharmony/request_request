@@ -64,6 +64,9 @@ export default function requestDownloadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
+     * @tc.step: 1. Create an empty Record object (for type conversion) as the download configuration.
+     *           2. Try to call request.downloadFile() with the empty config; in the success callback (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (missing URL error), then call done().
      * @tc.require:
      */
     it('testDownloadUrl001', 0, (done: Function) => {
@@ -91,6 +94,9 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Record object with "url" set to undefined as the download configuration.
+     *           2. Try to call request.downloadFile() with the config; in the success callback (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (undefined URL error), then call done().
      * @tc.require: issues#1573
      */
     it('testDownloadUrl002', 0, (done: Function) => {
@@ -120,6 +126,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with an URL that does not support download (gitee repository page) and filePath: testDownloadUrl003.txt.
+     *           2. Call request.downloadFile() with the config; in the success callback, assert true (task created successfully).
+     *           3. Get the download task from the callback result, call task.delete() to clean up, then call done().
+     *           4. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadUrl003', 0, (done: Function) => {
@@ -150,6 +160,9 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with an URL using "admin://" scheme (non-http/https) and filePath: testDownloadUrl004.txt.
+     *           2. Try to call request.downloadFile() with the config; in the success callback (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (invalid URL scheme error), then call done().
      * @tc.require: issues#1573
      */
     it('testDownloadUrl004', 0, (done: Function) => {
@@ -180,6 +193,9 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Construct an URL with length 8193 (base "http://127.0.0.1/" + 8176 'a's) and set it in DownloadConfig with filePath: testDownloadUrl005.txt.
+     *           2. Try to call request.downloadFile() with the config; in the success callback (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (URL too long error), then call done().
      * @tc.require: issues#1573
      */
     it('testDownloadUrl005', 0, (done: Function) => {
@@ -210,6 +226,9 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with empty string URL and filePath: testDownloadUrl006.txt.
+     *           2. Try to call request.downloadFile() with the config; in the success callback (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (empty URL error), then call done().
      * @tc.require: issues#1573
      */
     it('testDownloadUrl006', 0, (done: Function) => {
@@ -240,6 +259,9 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Construct an URL with length 8192 (base "http://127.0.0.1/" + 8175 'a's) and set it in DownloadConfig.
+     *           2. Try to call request.downloadFile() with the config; in the success callback (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 13400001 (file path error), then call done().
      * @tc.require: issues#1573
      */
     it('testDownloadUrl007', 0, (done: Function) => {
@@ -269,6 +291,8 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Try to call request.downloadFile() with a string ("conf") type-cast to DownloadConfig.
+     *           2. Catch the thrown exception, assert err.code equals 401 (invalid config type error), then call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFile001', 0, async (done: Function) => {
@@ -292,6 +316,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with valid URL and filePath: testV9_file02.txt.
+     *           2. Call request.downloadFile() to create the first download task and wait for 2 seconds.
+     *           3. Call request.downloadFile() again with the same config; in the success callback, call done().
+     *           4. Catch the thrown exception, assert err.code equals 13400002 (duplicate download error), then call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFile002', 0, async (done: Function) => {
@@ -322,6 +350,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with valid URL and filePath: testV9_file03.txt.
+     *           2. Call request.downloadFile() via Promise; in the success callback, get the task and assert true.
+     *           3. Call task.delete() to clean up, then call done().
+     *           4. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFile003', 0, async (done: Function) => {
@@ -352,6 +384,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with valid URL and filePath: testV9_file04.txt.
+     *           2. Call request.downloadFile() via callback; in the success callback, get the task and assert true.
+     *           3. Call task.delete() to clean up, then call done().
+     *           4. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFile0031', 0, async (done: Function) => {
@@ -384,6 +420,9 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with valid URL, filePath: 'file://media/Photo/1/test.txt' (user public directory), and background: false.
+     *           2. Try to call request.downloadFile() via callback; in the success callback (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert true (expected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFile0032', 0, async (done: Function) => {
@@ -415,6 +454,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with valid URL, filePath: testDownloadFile004.txt, and networkType: request.NETWORK_WIFI.
+     *           2. Call request.downloadFile() via Promise; in the success callback, get the task and assert true.
+     *           3. Call task.delete() to clean up, then call done().
+     *           4. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFile004', 0, async (done: Function) => {
@@ -446,6 +489,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with valid URL, filePath: testDownloadFile005.txt, and networkType: request.NETWORK_MOBILE.
+     *           2. Call request.downloadFile() via Promise; in the success callback, get the task and assert true.
+     *           3. Call task.delete() to clean up, then call done().
+     *           4. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFile005', 0, async (done: Function) => {
@@ -477,6 +524,11 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the standard file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Construct a file path with double slash (cacheDir + '//test.txt') and set it in DownloadConfig with valid URL.
+     *           3. Call request.downloadFile() via callback; in the success callback, get the task and assert true.
+     *           4. Bind the 'complete' event to the task: check if the file exists at the standard path, assert true, delete the file, unbind the event, then call done().
+     *           5. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFilePath0001', 0, async (done: Function) => {
@@ -522,6 +574,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create subdirectories cacheDir + '/A' and '/A/B' if they do not exist.
+     *           2. Define the standard file path (cacheDir + '/A/B/test.txt'), delete it if it exists.
+     *           3. Construct a file path with double slash (cacheDir + '/A//B/test.txt') and set it in DownloadConfig with valid URL.
+     *           4. Call request.downloadFile() via callback; in the success callback, get the task and assert true.
+     *           5. Bind the 'complete' event: check if the file exists at the standard path, assert true, delete the file, then call done().
+     *           6. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFilePath0002', 0, async (done: Function) => {
@@ -572,6 +630,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create subdirectories cacheDir + '/A' and '/A/B' if they do not exist.
+     *           2. Define the standard file path (cacheDir + '/A/B/test.txt'), delete it if it exists.
+     *           3. Construct a file path with multiple slashes (cacheDir + '/A///////B/test.txt') and set it in DownloadConfig with valid URL.
+     *           4. Call request.downloadFile() via callback; in the success callback, get the task and assert true.
+     *           5. Bind the 'complete' event: check if the file exists at the standard path, assert true, delete the file, then call done().
+     *           6. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFilePath0003', 0, async (done: Function) => {
@@ -622,6 +686,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create subdirectories cacheDir + '/A' and '/A/B' if they do not exist.
+     *           2. Define the standard file path (cacheDir + '/A/B/test.txt'), delete it if it exists.
+     *           3. Construct a file path with dots and multiple slashes (cacheDir + '/A//////./B/.//test.txt') and set it in DownloadConfig with valid URL.
+     *           4. Call request.downloadFile() via callback; in the success callback, get the task and assert true.
+     *           5. Bind the 'complete' event: check if the file exists at the standard path, assert true, delete the file, then call done().
+     *           6. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFilePath0004', 0, async (done: Function) => {
@@ -672,6 +742,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Try to call task.on() with error event type 'test' (type-cast to 'progress'); in the success callback, do nothing.
+     *           4. Catch the thrown exception, assert true (expected error), call task.delete() to clean up, then call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOn001', 0, async (done: Function) => {
@@ -705,6 +779,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Try to call task.on() with error event type 123 (type-cast to 'progress'); in the success callback, do nothing.
+     *           4. Catch the thrown exception, assert true (expected error), call task.delete() to clean up, then call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOn002', 0, async (done: Function) => {
@@ -738,6 +816,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with an invalid URL (http://www.ylong_http.client.com/test.txt).
+     *           2. Call request.downloadFile() via Promise to get the task.
+     *           3. Call task.on() to bind the 'fail' event; in the event callback, assert true and call done().
+     *           4. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOn003', 0, async (done: Function) => {
@@ -768,6 +850,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Call task.on() to bind the 'progress' event; in the event callback, assert true, check if total size equals 1042003, unbind the event, then call done().
+     *           4. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOn004', 0, async (done: Function) => {
@@ -804,6 +890,11 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Call task.on() twice to bind the 'progress' event (two different callbacks).
+     *           4. Assert true (event binding succeeded), call task.delete() to clean up, then call done().
+     *           5. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOn005', 0, async (done: Function) => {
@@ -841,6 +932,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Call task.on() to bind the 'complete' event; in the event callback, assert true, unbind the event, then call done().
+     *           4. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOn006', 0, async (done: Function) => {
@@ -876,6 +971,11 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Call task.on() to bind the 'pause' event; in the event callback, assert true.
+     *           4. Wait for 1 second, call task.suspend() to pause the task, then call done().
+     *           5. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOn007', 0, async (done: Function) => {
@@ -912,6 +1012,11 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Call task.on() to bind the 'remove' event; in the event callback, assert true and call done().
+     *           4. Call task.delete() to delete the task, triggering the 'remove' event.
+     *           5. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOn008', 0, async (done: Function) => {
@@ -947,6 +1052,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Try to call task.off() with error event type 'test' (type-cast to 'progress'); in the success callback, do nothing.
+     *           4. Catch the thrown exception, assert true (expected error), call task.delete() to clean up, then call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOff001', 0, async (done: Function) => {
@@ -976,6 +1085,11 @@ export default function requestDownloadFileTest() {
      * @tc.type: Function
      * @tc.level: Level 1
      * @tc.require:
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Try to call task.off() with error event type 123 (type-cast to 'progress'); in the success callback, call done().
+     *           4. Catch the thrown exception, assert true (expected error), call task.delete() to clean up, then call done().
+     * @tc.require: issues#1573
      */
     it('testDownloadFileOff002', 0, async (done: Function) => {
       let filePath = cacheDir + '/test.txt';
@@ -1009,6 +1123,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Bind the 'complete' event to the task; in the event callback, assert true and call done().
+     *           4. Define a CompletedCallback (asserts false if triggered), bind it to 'complete', then call task.off() to unbind it.
      * @tc.require: issues#1573
      */
     it('testDownloadFileOff003', 0, async (done: Function) => {
@@ -1046,6 +1164,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Define two CompletedCallbacks (both assert false if triggered), bind them to 'complete'.
+     *           4. Call task.off('complete') to unbind all 'complete' callbacks, wait for 2 seconds.
+     *           5. Assert true (unbind succeeded), then call done().
+     *           6. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOff0031', 0, async (done: Function) => {
@@ -1093,6 +1217,11 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Call task.off('complete') twice (unbind even if no callbacks exist).
+     *           4. Assert true (double unbind succeeded), call task.delete() to clean up, then call done().
+     *           5. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOff004', 0, async (done: Function) => {
@@ -1128,6 +1257,11 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Bind 'progress' event (asserts true if triggered) and 'complete' event (asserts true if triggered) to the task.
+     *           4. Define a ProgressCallback (asserts false if triggered), bind it to 'progress', then call task.off() to unbind it.
+     *           5. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOff005', 0, async (done: Function) => {
@@ -1174,6 +1308,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Bind 'complete' event (asserts true if triggered) to the task.
+     *           4. Define two ProgressCallbacks (both assert false if triggered), bind them to 'progress'.
+     *           5. Call task.off('progress') to unbind all 'progress' callbacks.
+     *           6. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOff0051', 0, async (done: Function) => {
@@ -1222,6 +1362,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Bind 'pause' event (asserts true if triggered) to the task; in the event callback, call done().
+     *           4. Define a PauseCallback (asserts false if triggered), bind it to 'pause', then call task.off() to unbind it.
+     *           5. Call task.suspend() to pause the task, triggering the remaining 'pause' callback.
+     *           6. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOff006', 0, async (done: Function) => {
@@ -1265,6 +1411,13 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Define two PauseCallbacks (both assert false if triggered), bind them to the 'pause' event.
+     *           4. Call task.off('pause') to unbind all 'pause' event callbacks.
+     *           5. Call task.suspend() to pause the task, wait for 2 seconds (ensure no callbacks are triggered).
+     *           6. Assert true (unbind succeeded), call task.delete() to clean up, then call done().
+     *           7. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOff007', 0, async (done: Function) => {
@@ -1314,6 +1467,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Bind a 'remove' event callback (asserts true if triggered) to the task.
+     *           4. Define a RemoveCallback (asserts false if triggered), bind it to 'remove', then call task.off() to unbind it.
+     *           5. Call task.delete() to delete the task, triggering the remaining 'remove' callback.
+     *           6. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOff008', 0, async (done: Function) => {
@@ -1357,6 +1516,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Define two RemoveCallbacks (both assert false if triggered), bind them to 'remove'.
+     *           4. Call task.off('remove') to unbind all 'remove' callbacks, then bind a new 'remove' callback (asserts true if triggered).
+     *           5. Call task.delete() to delete the task, triggering the new 'remove' callback.
+     *           6. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOff009', 0, async (done: Function) => {
@@ -1406,6 +1571,11 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with an invalid URL (http://www.ylong_http.client.com/test.txt).
+     *           2. Call request.downloadFile() via Promise to get the task.
+     *           3. Bind a 'fail' event callback (asserts true if triggered) to the task.
+     *           4. Define a FailCallback (asserts false if triggered), bind it to 'fail', then call task.off() to unbind it.
+     *           5. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOff010', 0, async (done: Function) => {
@@ -1444,6 +1614,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with an invalid URL (http://www.ylong_http.client.com/test.txt).
+     *           3. Call request.downloadFile() via Promise to get the task.
+     *           4. Define two FailCallbacks (both assert false if triggered), bind them to 'fail'.
+     *           5. Call task.off('fail') to unbind all 'fail' callbacks, then bind a new 'fail' callback (asserts true if triggered).
+     *           6. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadFileOff011', 0, async (done: Function) => {
@@ -1492,6 +1668,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Call task.suspend() to pause the task.
+     *           4. Call task.restore() via Promise; in the success callback, assert the result is true and call done().
+     *           5. In the catch callback of restore(), assert false (restore failed) and call done().
+     *           6. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadTaskRestore001', 0, async (done: Function) => {
@@ -1530,6 +1712,11 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Call task.suspend() via await to ensure the task is paused.
+     *           4. Call task.restore() via callback; in the callback, assert true (restore succeeded), call task.delete() to clean up, then call done().
+     *           5. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadTaskRestore0011', 0, async (done: Function) => {
@@ -1566,6 +1753,9 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Try to call request.downloadFile() with an empty string (type-cast to DownloadConfig) to get an invalid task.
+     *           2. Call task.delete() on the invalid task.
+     *           3. Catch the thrown exception, assert true (expected parameter error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadTaskDelete001', 0, async (done: Function) => {
@@ -1590,6 +1780,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Call task.delete() via Promise; in the success callback, assert true (delete succeeded) and call done().
+     *           4. In the catch callback of delete(), assert false (delete failed) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadTaskDelete002', 0, async (done: Function) => {
@@ -1622,6 +1816,10 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Call task.delete() via callback; in the callback, assert true (delete succeeded) and call done().
+     *           4. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadTaskDelete0021', 0, async (done: Function) => {
@@ -1656,6 +1854,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Define a CompletedCallback, bind it to the 'complete' event.
+     *           4. In CompletedCallback, call task.getTaskInfo() via Promise; assert downloadInfo.status equals 0 (completed) and call done().
+     *           5. In the catch callback of getTaskInfo(), assert false (failed to get task info) and call done().
+     *           6. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo001', 0, async (done: Function) => {
@@ -1698,6 +1902,11 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Define a CompletedCallback, bind it to the 'complete' event.
+     *           4. In CompletedCallback, call task.getTaskInfo() via callback; assert downloadInfo.status equals 0 (completed) and call done().
+     *           5. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo0011', 0, async (done: Function) => {
@@ -1737,6 +1946,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Call task.suspend() via await to ensure the task is paused.
+     *           4. Call task.getTaskInfo() via Promise; assert downloadInfo.status equals 3 (paused), call task.delete() to clean up, then call done().
+     *           5. In the catch callback of getTaskInfo(), assert false (failed to get task info) and call done().
+     *           6. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo002', 0, async (done: Function) => {
@@ -1776,6 +1991,11 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with valid URL, call request.downloadFile() via Promise to get the task.
+     *           3. Call task.suspend() via await to ensure the task is paused.
+     *           4. Call task.getTaskInfo() via callback; assert downloadInfo.status equals 3 (paused), call task.delete() to clean up, then call done().
+     *           5. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo0021', 0, async (done: Function) => {
@@ -1812,6 +2032,13 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with valid URL (large_test.zip) and filePath: DownloadGetTaskInfo003.
+     *           2. Call request.downloadFile() via Promise to get the task.
+     *           3. Define a ProgressCallback, bind it to the 'progress' event.
+     *           4. In ProgressCallback: unbind the 'progress' event, call task.getTaskInfo() via Promise.
+     *           5. Assert downloadInfo.status equals 1 (in progress), call task.delete() to clean up, then call done().
+     *           6. In the catch callback of getTaskInfo(), assert false (failed to get task info) and call done().
+     *           7. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo003', 0, async (done: Function) => {
@@ -1853,6 +2080,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a DownloadConfig object with valid URL (large_test.zip) and filePath: DownloadGetTaskInfo0031.
+     *           2. Call request.downloadFile() via Promise to get the task.
+     *           3. Bind a 'progress' event callback to the task.
+     *           4. In the callback: unbind the 'progress' event, call task.getTaskInfo() via callback.
+     *           5. Assert downloadInfo.status equals 1 (in progress), call task.delete() to clean up, then call done().
+     *           6. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo0031', 0, async (done: Function) => {
@@ -1888,6 +2121,13 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with an invalid URL (http://www.ylong_http.client.com/test.txt).
+     *           3. Call request.downloadFile() via Promise to get the task.
+     *           4. Define a FailCallback, bind it to the 'fail' event.
+     *           5. In FailCallback, call task.getTaskInfo() via Promise; assert downloadInfo.status equals 4 (failed), call task.delete() to clean up, then call done().
+     *           6. In the catch callback of getTaskInfo(), assert false (failed to get task info) and call done().
+     *           7. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo004', 0, async (done: Function) => {
@@ -1931,6 +2171,12 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Define the file path (cacheDir + '/test.txt'), delete it if it exists.
+     *           2. Create a DownloadConfig object with an invalid URL (http://www.ylong_http.client.com/test.txt).
+     *           3. Call request.downloadFile() via Promise to get the task.
+     *           4. Define a FailCallback, bind it to the 'fail' event.
+     *           5. In FailCallback, call task.getTaskInfo() via callback; assert downloadInfo.status equals 4 (failed), call task.delete() to clean up, then call done().
+     *           6. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testDownloadGetTaskInfo0041', 0, async (done: Function) => {

@@ -96,6 +96,11 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Record object (for type conversion) with action: DOWNLOAD, no url parameter.
+     *           2. Try to call request.agent.create() with type-cast config; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (missing url error), 
+     *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskUrl001', 0, async (done: Function) => {
@@ -125,6 +130,11 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url set to empty string ('').
+     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (invalid url error), 
+     *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskUrl002', 0, async (done: Function) => {
@@ -155,6 +165,11 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url set to a non-download-supporting 
+     *             address (https://gitee.com/openharmony/request_request).
+     *           2. Call request.agent.create() with a callback; in the callback, assert err is null 
+     *             (task created successfully).
+     *           3. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
      */
     it('testTaskUrl003', 0, async (done: Function) => {
@@ -181,6 +196,13 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     *             and close it.
+     *           2. Create a Config object with action: UPLOAD, url set to a non-upload-supporting 
+     *             address, and data containing the test file.
+     *           3. Call request.agent.create() with a callback; in the callback, assert err is null 
+     *             (task created successfully).
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
      */
     it('testTaskUrl004', 0, async (done: Function) => {
@@ -210,6 +232,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url set to non-http/https scheme 
+     *             (admin://127.0.0.1).
+     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (invalid scheme error), 
+     *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskUrl005', 0, async (done: Function) => {
@@ -240,6 +268,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url composed of 'http://127.0.0.1/' 
+     *             plus 8176 'a's (total length 8193), and saveas: testTaskUrl006.
+     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (url too long error), 
+     *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskUrl006', 0, async (done: Function) => {
@@ -271,6 +305,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url composed of 'http://127.0.0.1/' 
+     *             plus 8175 'a's (total length 8192), and saveas: testTaskUrl007.
+     *           2. Call request.agent.create() with a callback; in the callback, assert true 
+     *             (task created successfully).
+     *           3. Clean up by calling request.agent.remove() to delete the task, then call done().
+     *           4. In the outer catch, assert false (unexpected exception) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskUrl007', 0, async (done: Function) => {
@@ -303,6 +343,14 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     *             and close it.
+     *           2. Create a Config object with action: UPLOAD, url composed of 'http://127.0.0.1/' 
+     *             plus 8175 'a's (total length 8192), data containing the test file, and saveas: 
+     *             testTaskUrl008.
+     *           3. Call request.agent.create() with a callback; in the callback, assert true 
+     *             (task created successfully), then call done().
+     *           4. In the outer catch, assert false (unexpected exception) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskUrl008', 0, async (done: Function) => {
@@ -337,6 +385,15 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     *             and close it.
+     *           2. Create a Config object with action: UPLOAD, url composed of 'http://127.0.0.1/' 
+     *             plus 8176 'a's (total length 8193), data containing the test file, and saveas: 
+     *             testTaskUrl009.
+     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 401 (url too long error), 
+     *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskUrl009', 0, async (done: Function) => {
@@ -371,6 +428,14 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     *             and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data containing 
+     *             the test file, and method: 'POST'.
+     *           3. Call request.agent.create() to create an upload task instance.
+     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task executed successfully) and call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskMethod001', 0, async (done: Function) => {
@@ -409,6 +474,13 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskMethod002.txt, 
+     *             and method: 'POST'.
+     *           2. Call request.agent.create() to create a download task instance.
+     *           3. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task executed successfully).
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskMethod002', 0, async (done: Function) => {
@@ -441,6 +513,13 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Record object (for type conversion) with action: DOWNLOAD, valid URL, 
+     *             saveas: testTaskMethod003.txt, and method: 123 (number type).
+     *           2. Call request.agent.create() with type-cast config to create a download task instance.
+     *           3. Call task.start() to execute the task; in the success callback, assert 
+     *             task.config.method equals 123.
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskMethod003', 0, async (done: Function) => {
@@ -473,6 +552,13 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskMethod004.txt, 
+     *             and method: '' (empty string).
+     *           2. Call request.agent.create() to create a download task instance.
+     *           3. Call task.start() to execute the task; in the success callback, assert 
+     *             task.config.method equals ''.
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskMethod004', 0, async (done: Function) => {
@@ -505,6 +591,15 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     *             and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data containing 
+     *             the test file, and method: 'GET'.
+     *           3. Call request.agent.create() to create an upload task instance.
+     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task executed successfully).
+     *           5. Clean up by calling request.agent.remove() to delete the task, then call done().
+     *           6. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskMethod005', 0, async (done: Function) => {
@@ -544,6 +639,14 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Wait for 2 seconds (to avoid potential conflicts with previous tasks).
+     *           2. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskMethod006.txt, 
+     *             and method: 'PUT'.
+     *           3. Call request.agent.create() to create a download task instance.
+     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task executed successfully).
+     *           5. Clean up by calling request.agent.remove() to delete the task, then call done().
+     *           6. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskMethod006', 0, async (done: Function) => {
@@ -577,6 +680,14 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     *             and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data containing 
+     *             the test file, and headers: {'content-type': 'application/json'}.
+     *           3. Call request.agent.create() to create an upload task instance.
+     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task executed successfully) and call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskHeaders001', 0, async (done: Function) => {
@@ -617,6 +728,14 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     *             and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data containing 
+     *             the test file, no headers parameter.
+     *           3. Call request.agent.create() to create an upload task instance.
+     *           4. Call task.start() to execute the task; in the success callback, assert 
+     *             typeof task.config.headers equals 'undefined' (no headers set) and call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskHeaders002', 0, async (done: Function) => {
@@ -654,6 +773,13 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskHeaders003.txt, 
+     *             no headers parameter.
+     *           2. Call request.agent.create() to create a download task instance.
+     *           3. Call task.start() to execute the task; in the success callback, assert 
+     *             typeof task.config.headers equals 'undefined' (no headers set).
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskHeaders003', 0, async (done: Function) => {
@@ -685,6 +811,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: README.md, 
+     *             mode: BACKGROUND, and headers: {'content-type': 'multipart/form-data'}.
+     *           2. Call request.agent.create() to create a download task instance.
+     *           3. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task executed successfully) and call done().
+     *           4. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskHeaders004', 0, async (done: Function) => {
@@ -719,6 +851,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, proxy set to invalid format 
+     *             (https://127.0.0.1:8080).
+     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (invalid proxy format error), 
+     *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskProxy001', 0, async (done: Function) => {
@@ -750,6 +888,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, proxy set to invalid format 
+     *             (http://127.0.0.1:8080/proxy).
+     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (invalid proxy format error), 
+     *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskProxy002', 0, async (done: Function) => {
@@ -781,6 +925,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, proxy set to invalid format 
+     *             (http://127.0.0.1:111111, port exceeds range).
+     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (invalid proxy format error), 
+     *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskProxy003', 0, async (done: Function) => {
@@ -812,6 +962,11 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, description: 'test upload', 
+     *             and saveas: testTaskDescription001.txt.
+     *           2. Call request.agent.create() to create a download task instance.
+     *           3. Assert task.config.description equals 'test upload' (description set correctly).
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
      */
     it('testTaskDescription001', 0, async (done: Function) => {
@@ -839,6 +994,11 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Record object (for type conversion) with action: DOWNLOAD, valid URL, 
+     *             description: 123 (number type), and saveas: testTaskDescription002.txt.
+     *           2. Call request.agent.create() with type-cast config and a callback; in the callback, 
+     *             assert data.config.description equals 123 (description set correctly).
+     *           3. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
      */
     it('testTaskDescription002', 0, async (done: Function) => {
@@ -867,6 +1027,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskDescription003.txt, 
+     *             and description: 1025 'a's (length exceeds limit).
+     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (description too long error), 
+     *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskDescription003', 0, async (done: Function) => {
@@ -899,6 +1065,11 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, description: 1024 'a's 
+     *             (length equals limit), and saveas: testTaskDescription004.txt.
+     *           2. Call request.agent.create() with a callback; in the callback, assert err is null 
+     *             (task created successfully).
+     *           3. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
      */
     it('testTaskDescription004', 0, async (done: Function) => {

@@ -91,6 +91,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (lacks 'name' field in the data item).
+     *           3. Try to call request.agent.create() with type-cast config; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 401 (data lacks name error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData001', 0, async (done: Function) => {
@@ -128,6 +134,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (name is number 123 in the data item).
+     *           3. Try to call request.agent.create() with type-cast config; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 401 (invalid data name type error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData002', 0, async (done: Function) => {
@@ -166,6 +178,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (lacks 'value' field in the data item).
+     *           3. Try to call request.agent.create() with type-cast config; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 401 (data lacks value error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData003', 0, async (done: Function) => {
@@ -201,6 +219,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (value is number 123 in the data item).
+     *           3. Try to call request.agent.create() with type-cast config; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 401 (invalid data value type error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData004', 0, async (done: Function) => {
@@ -237,6 +261,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (path is empty string '' in the value).
+     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 401 (invalid empty path error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData005', 0, async (done: Function) => {
@@ -275,6 +305,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (path is number 123 in the value).
+     *           3. Try to call request.agent.create() with type-cast config; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 401 (invalid path type error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData006', 0, async (done: Function) => {
@@ -313,6 +349,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (path is cacheDir + '/test.txt', non-absolute path).
+     *           3. Try to call request.agent.create() to create a task; in the success callback, 
+     *             assert true and call done().
+     *           4. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskData007', 0, async (done: Function) => {
@@ -351,6 +393,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (filename is number 123 in the value).
+     *           3. Call request.agent.create() with type-cast config; in the callback, assert err is null 
+     *             (task created successfully).
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData008', 0, async (done: Function) => {
@@ -386,6 +434,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (mimeType is number 123 in the value).
+     *           3. Call request.agent.create() with type-cast config; in the callback, assert err is null 
+     *             (task created successfully).
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData009', 0, async (done: Function) => {
@@ -421,6 +475,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (path: ./test.txt, filename: a.txt, different values).
+     *           3. Call request.agent.create() to create a task; in the callback, assert err is null 
+     *             (task created successfully).
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData010', 0, async (done: Function) => {
@@ -456,6 +516,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (value contains two file objects with path: ./test.txt).
+     *           3. Call request.agent.create() to create a task; in the callback, assert err is null 
+     *             (task created successfully).
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData011', 0, async (done: Function) => {
@@ -495,6 +561,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (value is string 'test' in the data item).
+     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 401 (invalid data value type error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData012', 0, async (done: Function) => {
@@ -531,6 +603,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (path: ./test.txt, filename: test.txt, same values).
+     *           3. Call request.agent.create() to create a task; in the callback, assert err is null 
+     *             (task created successfully).
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData013', 0, async (done: Function) => {
@@ -566,6 +644,11 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskData014.txt, 
+     *             mode: FOREGROUND, and data: 'aaaaa' (string type).
+     *           2. Call request.agent.create() to create a task; in the callback, assert err is null 
+     *             (task created successfully).
+     *           3. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData014', 0, async (done: Function) => {
@@ -595,6 +678,11 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, and data: 'aaaaa' (string type).
+     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 401 (invalid data type for upload error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData015', 0, async (done: Function) => {
@@ -627,6 +715,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (path: `zcszczvxdvvadZ`, non-existent path, filename: test.txt).
+     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 13400001 (file not exists error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData016', 0, async (done: Function) => {
@@ -666,6 +760,11 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskData017.txt, 
+     *             mode: FOREGROUND, and data (file object with path and filename).
+     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 401 (invalid data type for download error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData017', 0, async (done: Function) => {
@@ -705,6 +804,13 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create an array of 100 file objects (path: ./test.txt, filename: td${i}.txt) and wrap into formItemD18.
+     *           3. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data: formItemD18 (100 files).
+     *           4. Try to call request.agent.create() with type-cast config; in the success callback, 
+     *             assert true and call done().
+     *           5. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskData018', 0, async (done: Function) => {
@@ -750,6 +856,13 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create an array of 101 file objects (path: ./test.txt, filename: td${i}.txt) and wrap into formItemD19.
+     *           3. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data: formItemD19 (101 files, exceeds limit).
+     *           4. Try to call request.agent.create() with type-cast config; in the success callback 
+     *             (unexpected), assert true and call done().
+     *           5. Catch the thrown exception, assert err.code equals 401 (too many files error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData019', 0, async (done: Function) => {
@@ -795,6 +908,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (path: `internal://cache/test.txt`, internal pattern path).
+     *           3. Try to call request.agent.create() to create a task; in the success callback, 
+     *             assert true and call done().
+     *           4. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskData020', 0, async (done: Function) => {
@@ -833,6 +952,13 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Get the application's cache directory via UIAbilityContext.
+     *           2. In the cache directory, create a test file (data_021) with read-write permissions and close it.
+     *           3. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (path: application pattern path pointing to data_021).
+     *           4. Call request.agent.create() to create a task; in the success callback, delete the test file, 
+     *             assert true and call done().
+     *           5. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskData021', 0, async (done: Function) => {
@@ -879,6 +1005,13 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Get the application's cache directory via UIAbilityContext.
+     *           2. In the cache directory, create a test file (data_022) with read-write permissions and close it.
+     *           3. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (path: `file://com.acts.request/.../data_022`, file pattern path).
+     *           4. Call request.agent.create() to create a task; in the success callback, delete the test file, 
+     *             assert true and call done().
+     *           5. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskData022', 0, async (done: Function) => {
@@ -925,6 +1058,11 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: UPLOAD, url: http://127.0.0.1, mode: FOREGROUND, 
+     *             and data (path: `file://media/Photo/1/test.txt`, public directory path).
+     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           3. Catch the thrown exception, assert err.code equals 13400001 (file not exists error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskData023', 0, async (done: Function) => {
@@ -962,6 +1100,12 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *             and data (path: cacheDir + '/test.txt', contentType: 'test' string).
+     *           3. Try to call request.agent.create() to create a task; in the success callback, 
+     *             assert true and call done().
+     *           4. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskData024', 0, async (done: Function) => {
