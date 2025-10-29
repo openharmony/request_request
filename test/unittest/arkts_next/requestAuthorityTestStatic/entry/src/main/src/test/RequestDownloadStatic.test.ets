@@ -56,6 +56,19 @@ export default function RequestDownloadStaticTest() {
       hilog.info(domain, tag, '%{public}s', 'beforeAll end');
     })
 
+    /**
+     * @tc.name: SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001
+     * @tc.desc: Test download file with callback in stage api
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("-----------------------SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001 is starting-----------------------");
       let downloadFilePath = `${baseContext.tempDir}/SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001.txt`
@@ -88,6 +101,19 @@ export default function RequestDownloadStaticTest() {
         });
     });
 
+    /**
+     * @tc.name: SUB_REQUEST_downloadFile_STAGE_API_PROMISE_0001
+     * @tc.desc: Test download file with promise in stage api
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_downloadFile_STAGE_API_PROMISE_0001', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("-----------------------SUB_REQUEST_downloadFile_STAGE_API_PROMISE_0001 is starting-----------------------");
       let downloadFilePath = `${baseContext.tempDir}/SUB_REQUEST_downloadFile_STAGE_API_PROMISE_0001.txt`
@@ -123,6 +149,19 @@ export default function RequestDownloadStaticTest() {
       }
     });
 
+    /**
+     * @tc.name: SUB_Misc_Request_Download_Notice_Task_001
+     * @tc.desc: Test download notification task functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_Request_Download_Notice_Task_001', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>---------------------SUB_Misc_Request_Download_Notice_Task_001 is starting---------------------");
       let downloadFilePath = `${baseContext.tempDir}/SUB_Misc_Request_Download_Notice_Task_001.txt`
@@ -170,6 +209,19 @@ export default function RequestDownloadStaticTest() {
       })
     });
 
+    /**
+     * @tc.name: SUB_Misc_Request_Download_Notice_Task_002
+     * @tc.desc: Test download notification task with background false
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_Request_Download_Notice_Task_002', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>---------------------SUB_Misc_Request_Download_Notice_Task_002 is starting---------------------");
       let downloadFilePath = `${baseContext.tempDir}/SUB_Misc_Request_Download_Notice_Task_002.txt`
@@ -218,7 +270,19 @@ export default function RequestDownloadStaticTest() {
       })
     });
 
-
+    /**
+     * @tc.name: SUB_Misc_Request_Download_Notice_Task_003
+     * @tc.desc: Test download notification task with background true
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_Request_Download_Notice_Task_003', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>---------------------SUB_Misc_Request_Download_Notice_Task_003 is starting---------------------");
       let downloadFilePath = `${baseContext.tempDir}/SUB_Misc_Request_Download_Notice_Task_003.txt`
@@ -267,6 +331,19 @@ export default function RequestDownloadStaticTest() {
       })
     })
 
+    /**
+     * @tc.name: SUB_Misc_Request_DownloadManagement_0003
+     * @tc.desc: Test download management functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_Request_DownloadManagement_0003', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>---------------------SUB_Misc_Request_DownloadManagement_0003 is starting---------------------");
       let downloadFilePath = `${baseContext.tempDir}/SUB_Misc_Request_DownloadManagement_0003.txt`
@@ -301,7 +378,19 @@ export default function RequestDownloadStaticTest() {
       }
     });
 
-
+    /**
+     * @tc.name: SUB_Misc_Request_DownloadManagement_0004
+     * @tc.desc: Test download management with specific file path
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_Request_DownloadManagement_0004', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>---------------------SUB_Misc_Request_DownloadManagement_0004 is starting---------------------");
       let downloadFilePath =
@@ -330,7 +419,19 @@ export default function RequestDownloadStaticTest() {
       }
     });
 
-    //
+    /**
+     * @tc.name: SUB_Misc_Request_DownloadManagement_0004
+     * @tc.desc: Test download management with invalid local URL
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_Request_DownloadManagement_0004', Level.LEVEL1, async (done: () => void): Promise<void> => {
       console.info("====>SUB_Misc_Request_DownloadManagement_0005 is starting");
       let downloadFileConfig: request.DownloadConfig = {
@@ -353,6 +454,19 @@ export default function RequestDownloadStaticTest() {
       }
     });
 
+    /**
+     * @tc.name: SUB_Misc_Request_Download_SupportSystem_DownloadSuccess_001
+     * @tc.desc: Test system download support functionality with successful download
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_Request_Download_SupportSystem_DownloadSuccess_001', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>---------------------SUB_Misc_Request_Download_SupportSystem_DownloadSuccess_001 is starting---------------------");
@@ -402,6 +516,19 @@ export default function RequestDownloadStaticTest() {
         })
       });
 
+    /**
+     * @tc.name: SUB_Misc_Request_Download_SupportSystem_DownloadSuccess_002
+     * @tc.desc: Test system download support functionality with file path specified
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_Request_Download_SupportSystem_DownloadSuccess_002', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>---------------------SUB_Misc_Request_Download_SupportSystem_DownloadSuccess_002 is starting---------------------");
@@ -456,6 +583,19 @@ export default function RequestDownloadStaticTest() {
         })
       });
 
+    /**
+     * @tc.name: SUB_Misc_Request_Download_SupportSystem_ConflictDownload_001
+     * @tc.desc: Test system download support functionality with conflicting downloads
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_Request_Download_SupportSystem_ConflictDownload_001', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>---------------------SUB_Misc_Request_Download_SupportSystem_ConflictDownload_001 is starting---------------------");
@@ -515,6 +655,19 @@ export default function RequestDownloadStaticTest() {
         })
       });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Download_Promise_0030
+     * @tc.desc: Test download promise with invalid URL
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Download_Promise_0030', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>SUB_Misc_REQUEST_Download_Promise_0030 is starting");
@@ -538,7 +691,19 @@ export default function RequestDownloadStaticTest() {
         }
       });
 
-    //
+    /**
+     * @tc.name: Download_Test_0400
+     * @tc.desc: Test download functionality with header configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('Download_Test_0400', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>---------------------Download_Test_0400 is starting---------------------");
@@ -586,7 +751,20 @@ export default function RequestDownloadStaticTest() {
           }
         })
       });
-    
+
+    /**
+     * @tc.name: Download_Test_0600
+     * @tc.desc: Test download failure event handling and event removal
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('Download_Test_0600', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>---------------------Download_Test_0600 is starting---------------------");
@@ -637,6 +815,19 @@ export default function RequestDownloadStaticTest() {
       });
 
 
+    /**
+     * @tc.name: Download_Test_0700
+     * @tc.desc: Test download functionality with event handling
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('Download_Test_0700', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>---------------------Download_Test_0700 is starting---------------------");
@@ -701,7 +892,19 @@ export default function RequestDownloadStaticTest() {
         })
       });
 
-
+    /**
+     * @tc.name: Download_Test_1100
+     * @tc.desc: Test multiple download tasks management
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('Download_Test_1100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>---------------------Download_Test_1100 is starting---------------------");
@@ -757,6 +960,19 @@ export default function RequestDownloadStaticTest() {
       });
 
 
+    /**
+     * @tc.name: Download_Test_0100
+     * @tc.desc: Test download with invalid system path
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('Download_Test_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>Download_Test_0100 is starting");
@@ -781,6 +997,19 @@ export default function RequestDownloadStaticTest() {
         }
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_DownloadManagement_Download_0500
+     * @tc.desc: Test download management functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_DownloadManagement_Download_0500', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_DownloadManagement_Download_0500 is starting-----------------------');
@@ -826,6 +1055,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_DownloadManagement_Download_0300
+     * @tc.desc: Test download management with progress tracking and suspension
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_DownloadManagement_Download_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_DownloadManagement_Download_0300 is starting-----------------------');
@@ -885,6 +1127,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+      /**
+       * @tc.name: SUB_REQUEST_DownloadManagement_Download_0300
+       * @tc.desc: Test download management with progress tracking and suspension
+       * @tc.size: MediumTest
+       * @tc.type: Function
+       * @tc.level: Level 1
+       * @tc.precon: 1. The device screen remains constantly lit
+       *             2. The device is connected to the Internet
+       *             3. The application is always at the foreground of the device
+       *             4. The download_server SA process has been initiated
+       *             5. The local cache of the previous use case has been cleared
+       * @tc.require: issues#1573
+       */
       it('SUB_REQUEST_DownloadManagement_Download_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_DownloadManagement_Download_0300 is starting-----------------------');
@@ -943,6 +1198,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_DownloadManagement_DownloadSuccess_0100
+     * @tc.desc: Test download success callback functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_DownloadManagement_DownloadSuccess_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_DownloadManagement_DownloadSuccess_0100 is starting-----------------------');
@@ -987,6 +1255,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_SupportSystem_DownloadMultitask_0100
+     * @tc.desc: Test multi-task download functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_SupportSystem_DownloadMultitask_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_SupportSystem_DownloadMultitask_0100 is starting-----------------------');
@@ -1047,6 +1328,19 @@ export default function RequestDownloadStaticTest() {
       });
 
 
+    /**
+     * @tc.name: SUB_REQUEST_SupportSystem_DownloadSuccess_0300
+     * @tc.desc: Test download success with custom headers
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_SupportSystem_DownloadSuccess_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_SupportSystem_DownloadSuccess_0300 is starting-----------------------');
@@ -1095,6 +1389,19 @@ export default function RequestDownloadStaticTest() {
       });
 
 
+    /**
+     * @tc.name: SUB_Request_download_Default_0100
+     * @tc.desc: Test download with default parameters
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_download_Default_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_Request_download_Default_0100 is starting-----------------------');
@@ -1140,6 +1447,19 @@ export default function RequestDownloadStaticTest() {
       });
 
 
+    /**
+     * @tc.name: SUB_MISC_REQUEST_DOWNLOAD_removeNormal_promise_0010
+     * @tc.desc: Test remove download task with invalid task ID using promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_MISC_REQUEST_DOWNLOAD_removeNormal_promise_0010', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>-----------------------SUB_MISC_REQUEST_DOWNLOAD_removeNormal_promise_0010 is starting-----------------------");
@@ -1155,6 +1475,19 @@ export default function RequestDownloadStaticTest() {
       });
 
 
+    /**
+     * @tc.name: SUB_MISC_REQUEST_UPLOAD_removeNormal_callback_0010
+     * @tc.desc: Test remove upload task with invalid task ID using callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_MISC_REQUEST_UPLOAD_removeNormal_callback_0010', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>-----------------------SUB_MISC_REQUEST_DOWNLOAD_removeNormal_callback_0010 is starting-----------------------");
@@ -1176,6 +1509,19 @@ export default function RequestDownloadStaticTest() {
       });
 
 
+    /**
+     * @tc.name: SUB_Request_Agent_ErrorDetailed_0500
+     * @tc.desc: Test download agent with error detailed information
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_ErrorDetailed_0500', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('====>-----------------------SUB_Request_Agent_ErrorDetailed_0500 is starting-----------------------');
@@ -1212,6 +1558,19 @@ export default function RequestDownloadStaticTest() {
       });
 
 
+    /**
+     * @tc.name: Download_Test_0300
+     * @tc.desc: Test download with custom headers to invalid URL
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('Download_Test_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>---------------------Download_Test_0300 is starting---------------------");
@@ -1260,6 +1619,19 @@ export default function RequestDownloadStaticTest() {
         })
       });
 
+    /**
+     * @tc.name: SUB_Request_Agent_TaskSaveas_0400
+     * @tc.desc: Test download agent task saveas functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_TaskSaveas_0400', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("====>-----------------------SUB_Request_Agent_TaskSaveas_0400 is starting-----------------------");
@@ -1306,6 +1678,19 @@ export default function RequestDownloadStaticTest() {
         }
       });
 
+    /**
+     * @tc.name: SUB_Request_Download_on_faultOccur_0400
+     * @tc.desc: Test download task fault occur callback and offFaultOccur functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Download_on_faultOccur_0400', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("-----------------------SUB_Request_Download_on_faultOccur_0400 is starting-----------------------");
@@ -1337,6 +1722,19 @@ export default function RequestDownloadStaticTest() {
         await task.start();
       });
 
+    /**
+     * @tc.name: SUB_Request_Download_on_faultOccur_0400
+     * @tc.desc: Test download task fault occur callback and offFaultOccur functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Download_on_faultOccur_0400', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info("-----------------------SUB_Request_Download_on_faultOccur_0400 is starting-----------------------");
@@ -1367,7 +1765,20 @@ export default function RequestDownloadStaticTest() {
         task.on('faultOccur', faultOccurCallBack);
         await task.start();
       });
-
+      
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_UploadTaskCreation_0300
+     * @tc.desc: Test upload task creation with GET method
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_UploadTaskCreation_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_FileUpload_UploadTaskCreation_0300 is starting-----------------------');
@@ -1429,6 +1840,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_UploadTaskCreation_0300
+     * @tc.desc: Test upload task creation with single file and GET method
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_UploadTaskCreation_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_FileUpload_UploadTaskCreation_0300 is starting-----------------------');
@@ -1484,6 +1908,19 @@ export default function RequestDownloadStaticTest() {
         });
       })
 
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_UploadTaskCreation_0500
+     * @tc.desc: Test upload task creation with data parameter
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_UploadTaskCreation_0500', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_FileUpload_UploadTaskCreation_0500 is starting-----------------------');
@@ -1570,6 +2007,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_UploadTaskCreation_0300
+     * @tc.desc: Test upload task creation with single file GET method
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_UploadTaskCreation_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_FileUpload_UploadTaskCreation_0300 is starting-----------------------');
@@ -1631,6 +2081,19 @@ export default function RequestDownloadStaticTest() {
         console.info('====>SUB_REQUEST_FileUpload_UploadTaskCreation_0700 on complete');
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_UploadTaskCreation_0300
+     * @tc.desc: Test upload task creation with single file GET method and complete callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_UploadTaskCreation_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_FileUpload_UploadTaskCreation_0300 is starting-----------------------');
@@ -1684,6 +2147,19 @@ export default function RequestDownloadStaticTest() {
         });
       })
 
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_UploadTaskCreation_0300
+     * @tc.desc: Test upload task creation with single file POST method and complete callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_UploadTaskCreation_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_FileUpload_UploadTaskCreation_0300 is starting-----------------------');
@@ -1737,6 +2213,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_MonitoringProgress_0100
+     * @tc.desc: Test upload progress monitoring functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_MonitoringProgress_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -1792,6 +2281,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_MonitoringProgress_0300
+     * @tc.desc: Test upload progress monitoring with different file sizes
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_MonitoringProgress_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -1849,6 +2351,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_MonitoringProgress_0400
+     * @tc.desc: Test upload task header receive callback and offHeaderReceive functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_MonitoringProgress_0400', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -1892,6 +2407,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_MonitoringProgress_0400
+     * @tc.desc: Test upload task fail callback and offFail functionality
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_MonitoringProgress_0400', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -1935,6 +2463,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_OnFail_0100
+     * @tc.desc: Test upload task failure handling
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_OnFail_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_REQUEST_FileUpload_OnFail_0100 is starting-----------------------');
@@ -1991,6 +2532,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_OffFail_0100
+     * @tc.desc: Test upload task off fail event subscription
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_OffFail_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2033,6 +2587,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_FileUpload_offSuccess_0100
+     * @tc.desc: Test upload task off success event subscription
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_FileUpload_offSuccess_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2084,6 +2651,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_Request_UpLoadFile_Multipart_Supported_0100
+     * @tc.desc: Test file upload with multipart content type support
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
       it('SUB_Request_UpLoadFile_Multipart_Supported_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2138,6 +2718,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_Request_UpLoadFile_Multipart_Supported_0200
+     * @tc.desc: Test file upload with multipart support and chunk parameters
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_UpLoadFile_Multipart_Supported_0200', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2192,6 +2785,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_Request_UpLoadFile_Multipart_Supported_0300
+     * @tc.desc: Test file upload with multipart support and specified start position
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_UpLoadFile_Multipart_Supported_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2246,6 +2852,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_Request_UpLoadFile_Multipart_Supported_0700
+     * @tc.desc: Test file upload with multipart support and specified file range
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_UpLoadFile_Multipart_Supported_0700', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2300,6 +2919,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_Request_UpLoadFile_Multipart_Supported_0900
+     * @tc.desc: Test file upload with multipart support and invalid range parameters
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_UpLoadFile_Multipart_Supported_0900', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2368,6 +3000,19 @@ export default function RequestDownloadStaticTest() {
         }
       });
 
+    /**
+     * @tc.name: SUB_Request_UpLoadFile_Multipart_Supported_0800
+     * @tc.desc: Test file upload with multipart support and large start position
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_UpLoadFile_Multipart_Supported_0800', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2422,6 +3067,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_Request_UpLoadFile_Multipart_Supported_1000
+     * @tc.desc: Test file upload with multipart support and single byte range
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_UpLoadFile_Multipart_Supported_1000', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2477,6 +3135,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_Request_UpLoadFile_Multipart_Supported_1100
+     * @tc.desc: Test file upload with multipart support and 1KB range
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_UpLoadFile_Multipart_Supported_1100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2532,7 +3203,20 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
-    it('SUB_Misc_REQUEST_Create_Download_Callback_Static_0010x', Level.LEVEL1,
+    /**
+     * @tc.name: SUB_Request_UpLoadFile_Multipart_Supported_1200
+     * @tc.desc: Test upload task creation with multiple files and 1KB range
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('SUB_Request_UpLoadFile_Multipart_Supported_1200', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
           name: 'name',
@@ -2610,6 +3294,19 @@ export default function RequestDownloadStaticTest() {
         });
       })
 
+    /**
+     * @tc.name: SUB_Request_UpLoadFile_Multipart_Supported_1300
+     * @tc.desc: Test upload task creation with multiple files and 1KB range starting from 1024
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_UpLoadFile_Multipart_Supported_1300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2688,6 +3385,19 @@ export default function RequestDownloadStaticTest() {
         });
       })
 
+    /**
+     * @tc.name: SUB_Request_UpLoadFile_Multipart_Supported_1400
+     * @tc.desc: Test upload task creation with multiple files and full range (begins: 0, ends: -1)
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_UpLoadFile_Multipart_Supported_1400', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2766,6 +3476,19 @@ export default function RequestDownloadStaticTest() {
         });
       })
 
+    /**
+     * @tc.name: SUB_Request_UpLoadFile_Multipart_Supported_1500
+     * @tc.desc: Test upload task creation with multiple files and 30-60 byte range
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_UpLoadFile_Multipart_Supported_1500', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2844,6 +3567,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001
+     * @tc.desc: Test upload file with callback API and handle fail event
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2905,6 +3641,19 @@ export default function RequestDownloadStaticTest() {
         ;
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_uploadFile_STAGE_API_PROMISE_0001
+     * @tc.desc: Test upload file with promise API
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_uploadFile_STAGE_API_PROMISE_0001', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -2946,6 +3695,19 @@ export default function RequestDownloadStaticTest() {
         }
       });
 
+    /**
+     * @tc.name: SUB_Request_FileUpload_Default_0100
+     * @tc.desc: Test upload file with default configuration (undefined index, begins, ends)
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_FileUpload_Default_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let config: request.UploadConfig = {
@@ -2987,6 +3749,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_REQUEST_upload_headerReceive_0100
+     * @tc.desc: Test upload file with header receive callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_REQUEST_upload_headerReceive_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let data: request.RequestData = {
@@ -3042,6 +3817,19 @@ export default function RequestDownloadStaticTest() {
         });
       });
 
+    /**
+     * @tc.name: SUB_Request_Agent_MultipleFiles_0100
+     * @tc.desc: Test upload multiple files with multipart=false configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_MultipleFiles_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let attachments: Array<request.agent.FormItem> = [{
@@ -3118,6 +3906,19 @@ export default function RequestDownloadStaticTest() {
         }
       });
 
+    /**
+     * @tc.name: SUB_Request_Agent_MultipleFiles_0200
+     * @tc.desc: Test upload multiple files with multipart=true configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_MultipleFiles_0200', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let attachments: Array<request.agent.FormItem> = [{
@@ -3194,6 +3995,19 @@ export default function RequestDownloadStaticTest() {
         }
       });
 
+    /**
+     * @tc.name: SUB_Request_Agent_MultipleFiles_0300
+     * @tc.desc: Test upload multiple files with multipart=undefined configuration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_MultipleFiles_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let attachments: Array<request.agent.FormItem> = [{
@@ -3270,6 +4084,19 @@ export default function RequestDownloadStaticTest() {
         }
       });
 
+    /**
+     * @tc.name: SUB_Request_Agent_MultipleFiles_0400
+     * @tc.desc: Test upload multiple files with completed callback and progress state validation
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_Agent_MultipleFiles_0400', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         console.info('-----------------------SUB_Request_Agent_MultipleFiles_0400 is starting-----------------------');
@@ -3341,6 +4168,19 @@ export default function RequestDownloadStaticTest() {
 
       });
 
+    /**
+     * @tc.name: SUB_Request_FileUpload_ErrorCode_0100
+     * @tc.desc: Test upload file with callback error handling
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_FileUpload_ErrorCode_0100', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let config: request.UploadConfig = {
@@ -3374,6 +4214,19 @@ export default function RequestDownloadStaticTest() {
         }
       });
 
+    /**
+     * @tc.name: SUB_Request_FileUpload_ErrorCode_0200
+     * @tc.desc: Test upload file with Promise error handling
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_FileUpload_ErrorCode_0200', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let config: request.UploadConfig = {
@@ -3402,6 +4255,19 @@ export default function RequestDownloadStaticTest() {
 
       });
 
+    /**
+     * @tc.name: SUB_Request_FileUpload_ErrorCode_0300
+     * @tc.desc: Test upload file with invalid URL using callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_FileUpload_ErrorCode_0300', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let config: request.UploadConfig = {
@@ -3436,6 +4302,19 @@ export default function RequestDownloadStaticTest() {
         }
       });
 
+    /**
+     * @tc.name: SUB_Request_FileUpload_ErrorCode_0400
+     * @tc.desc: Test upload file with invalid URL using Promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
     it('SUB_Request_FileUpload_ErrorCode_0400', Level.LEVEL1,
       async (done: () => void): Promise<void> => {
         let config: request.UploadConfig = {
