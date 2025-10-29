@@ -51,7 +51,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -75,7 +80,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -92,6 +102,7 @@ export default function requestFileLocTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testDownloadTaskSaveas003
      * @tc.name: testDownloadTaskSaveas003
@@ -99,7 +110,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -116,6 +132,7 @@ export default function requestFileLocTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testDownloadTaskSaveas004
      * @tc.name: testDownloadTaskSaveas004
@@ -123,7 +140,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -140,6 +162,7 @@ export default function requestFileLocTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testDownloadTaskSaveas005
      * @tc.name: testDownloadTaskSaveas005
@@ -147,7 +170,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -164,6 +192,7 @@ export default function requestFileLocTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testDownloadTaskSaveas006
      * @tc.name: testDownloadTaskSaveas006
@@ -171,7 +200,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -188,6 +222,7 @@ export default function requestFileLocTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testDownloadTaskSaveas007
      * @tc.name: testDownloadTaskSaveas007
@@ -195,7 +230,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -212,6 +252,7 @@ export default function requestFileLocTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testDownloadTaskSaveas008
      * @tc.name: testDownloadTaskSaveas008
@@ -219,7 +260,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -241,6 +287,7 @@ export default function requestFileLocTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadTaskSaveas009
      * @tc.name: testDownloadTaskSaveas009
@@ -248,7 +295,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas009', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -265,6 +317,7 @@ export default function requestFileLocTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testDownloadTaskSaveas010
      * @tc.name: testDownloadTaskSaveas010
@@ -272,7 +325,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas010', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -294,6 +352,7 @@ export default function requestFileLocTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadTaskSaveas011
      * @tc.name: testDownloadTaskSaveas011
@@ -301,7 +360,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas011', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -318,6 +382,7 @@ export default function requestFileLocTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testDownloadTaskSaveas012
      * @tc.name: testDownloadTaskSaveas012
@@ -325,7 +390,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas012', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -347,6 +417,7 @@ export default function requestFileLocTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testDownloadTaskSaveas013
      * @tc.name: testDownloadTaskSaveas013
@@ -354,7 +425,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadTaskSaveas013', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -379,7 +455,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadTaskPath001', 0, async (done: Function) => {
       let context: common.UIAbilityContext = globalThis.abilityContext;
@@ -412,6 +493,7 @@ export default function requestFileLocTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadTaskPath002
      * @tc.name: testUploadTaskPath002
@@ -419,7 +501,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadTaskPath002', 0, async (done: Function) => {
       let context: common.UIAbilityContext = globalThis.abilityContext;
@@ -452,6 +539,7 @@ export default function requestFileLocTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadTaskPath003
      * @tc.name: testUploadTaskPath003
@@ -459,7 +547,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadTaskPath003', 0, async (done: Function) => {
       let context: common.UIAbilityContext = globalThis.abilityContext;
@@ -492,6 +585,7 @@ export default function requestFileLocTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadTaskPath004
      * @tc.name: testUploadTaskPath004
@@ -499,7 +593,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadTaskPath004', 0, async (done: Function) => {
       let context: common.UIAbilityContext = globalThis.abilityContext;
@@ -532,6 +631,7 @@ export default function requestFileLocTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadTaskPath005
      * @tc.name: testUploadTaskPath005
@@ -539,7 +639,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadTaskPath005', 0, async (done: Function) => {
       let context: common.UIAbilityContext = globalThis.abilityContext;
@@ -572,6 +677,7 @@ export default function requestFileLocTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadTaskPath006
      * @tc.name: testUploadTaskPath006
@@ -579,7 +685,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadTaskPath006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -605,6 +716,7 @@ export default function requestFileLocTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadTaskPath007
      * @tc.name: testUploadTaskPath007
@@ -612,7 +724,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadTaskPath007', 0, async (done: Function) => {
       let context: common.UIAbilityContext = globalThis.abilityContext.getApplicationContext();
@@ -645,6 +762,7 @@ export default function requestFileLocTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadTaskPath008
      * @tc.name: testUploadTaskPath008
@@ -652,7 +770,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadTaskPath008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -678,6 +801,7 @@ export default function requestFileLocTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadTaskPath009
      * @tc.name: testUploadTaskPath009
@@ -685,7 +809,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadTaskPath009', 0, async (done: Function) => {
       let context: common.UIAbilityContext = globalThis.abilityContext.getApplicationContext();
@@ -718,6 +847,7 @@ export default function requestFileLocTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadTaskPath010
      * @tc.name: testUploadTaskPath010
@@ -725,7 +855,12 @@ export default function requestFileLocTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadTaskPath010', 0, async (done: Function) => {
       let context: common.UIAbilityContext = globalThis.abilityContext.getApplicationContext();

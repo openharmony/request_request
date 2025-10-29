@@ -75,6 +75,7 @@ export default function RequestUploadFileTest() {
       files: [File],
       data: [RequestData]
     };
+    
     /**
      * @tc.number: testUploadUrl001
      * @tc.name: testUploadUrl001
@@ -82,7 +83,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadUrl001', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -105,6 +111,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadUrl002
      * @tc.name: testUploadUrl002
@@ -112,7 +119,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadUrl002', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -136,6 +148,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadUrl003
      * @tc.name: testUploadUrl003
@@ -143,7 +156,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadUrl003', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -167,6 +185,7 @@ export default function RequestUploadFileTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testUploadUrl004
      * @tc.name: testUploadUrl004
@@ -174,7 +193,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadUrl004', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -198,6 +222,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadUrl005
      * @tc.name: testUploadUrl005
@@ -205,7 +230,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadUrl005', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -229,6 +259,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadUrl006
      * @tc.name: testUploadUrl006
@@ -236,7 +267,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadUrl006', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -260,6 +296,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadUrl007
      * @tc.name: testUploadUrl007
@@ -267,7 +304,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadUrl007', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -291,6 +333,7 @@ export default function RequestUploadFileTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testUploadHeader001
      * @tc.name: testUploadHeader001
@@ -298,7 +341,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadHeader001', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -321,6 +369,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadHeader002
      * @tc.name: testUploadHeader002
@@ -328,7 +377,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadHeader002', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -352,6 +406,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadMethod001
      * @tc.name: testUploadMethod001
@@ -359,7 +414,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadMethod001', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -383,6 +443,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadMethod002
      * @tc.name: testUploadMethod002
@@ -390,7 +451,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadMethod002', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -414,6 +480,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadIndex001
      * @tc.name: testUploadIndex001
@@ -421,7 +488,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadIndex001', 0, (done: Function) => {
       let file1 = fs.openSync(cacheDir + '/test1.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -448,6 +520,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadIndex002
      * @tc.name: testUploadIndex002
@@ -455,7 +528,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadIndex002', 0, (done: Function) => {
       let file1 = fs.openSync(cacheDir + '/test1.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -482,6 +560,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadIndex003
      * @tc.name: testUploadIndex003
@@ -489,7 +568,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadIndex003', 0, (done: Function) => {
       let file1 = fs.openSync(cacheDir + '/test1.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -516,6 +600,7 @@ export default function RequestUploadFileTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testUploadBegins001
      * @tc.name: testUploadBegins001
@@ -523,7 +608,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadBegins001', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -548,6 +638,7 @@ export default function RequestUploadFileTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testUploadEnds001
      * @tc.name: testUploadEnds001
@@ -555,7 +646,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadEnds001', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -580,6 +676,7 @@ export default function RequestUploadFileTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testUploadFiles001
      * @tc.name: testUploadFiles001
@@ -587,7 +684,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFiles001', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -610,6 +712,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFiles002
      * @tc.name: testUploadFiles002
@@ -617,7 +720,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFiles002', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -641,6 +749,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFiles003
      * @tc.name: testUploadFiles003
@@ -648,7 +757,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFiles003', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -679,6 +793,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFiles004
      * @tc.name: testUploadFiles004
@@ -686,7 +801,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFiles004', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -717,6 +837,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFiles005
      * @tc.name: testUploadFiles005
@@ -724,7 +845,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFiles005', 0, async (done: Function) => {
       let path = cacheDir + '/test9upDir';
@@ -757,6 +883,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFiles006
      * @tc.name: testUploadFiles006
@@ -764,7 +891,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFiles006', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -795,6 +927,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFiles007
      * @tc.name: testUploadFiles007
@@ -802,7 +935,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFiles007', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -833,6 +971,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFiles008
      * @tc.name: testUploadFiles008
@@ -840,7 +979,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFiles008', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -871,6 +1015,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFiles009
      * @tc.name: testUploadFiles009
@@ -878,7 +1023,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFiles009', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -909,6 +1059,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadData001
      * @tc.name: testUploadData001
@@ -916,7 +1067,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadData001', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -939,6 +1095,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadData002
      * @tc.name: testUploadData002
@@ -946,7 +1103,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadData002', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -970,6 +1132,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFileTask001
      * @tc.name: testUploadFileTask001
@@ -977,7 +1140,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFileTask001', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -992,6 +1160,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFileTask002
      * @tc.name: testUploadFileTask002
@@ -999,7 +1168,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFileTask002', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -1025,6 +1199,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFileTask003
      * @tc.name: testUploadFileTask003
@@ -1032,7 +1207,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFileTask003', 0, (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -1058,6 +1238,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFileTaskOn001
      * @tc.name: testUploadFileTaskOn001
@@ -1065,7 +1246,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFileTaskOn001', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -1089,6 +1275,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFileTaskOn002
      * @tc.name: testUploadFileTaskOn002
@@ -1096,7 +1283,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFileTaskOn002', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -1120,6 +1312,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFileTaskOn003
      * @tc.name: testUploadFileTaskOn003
@@ -1127,7 +1320,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFileTaskOn002', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -1152,6 +1350,7 @@ export default function RequestUploadFileTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testUploadFileTaskDelete001
      * @tc.name: testUploadFileTaskDelete001
@@ -1159,7 +1358,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFileTaskDelete001', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -1182,6 +1386,7 @@ export default function RequestUploadFileTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testUploadFileTaskDelete002
      * @tc.name: testUploadFileTaskDelete002
@@ -1189,7 +1394,12 @@ export default function RequestUploadFileTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadFileTaskDelete002', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);

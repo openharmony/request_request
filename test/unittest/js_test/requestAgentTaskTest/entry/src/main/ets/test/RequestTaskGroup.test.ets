@@ -62,6 +62,7 @@ export default function requestTaskGroupTest() {
       requestCode: 0,
       wantAgentFlags:[wantAgent.WantAgentFlags.CONSTANT_FLAG]
     };
+
     /**
      * @tc.number: testcreateGroup001
      * @tc.name: testcreateGroup001
@@ -69,7 +70,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup001', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -85,14 +91,19 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup002
      * @tc.name: testcreateGroup002
      * @tc.desc: Test for createGroup when fail by other type param
      * @tc.size: MediumTest
      * @tc.type: Function
-     * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup002', 0, async (done: Function) => {
       try {
@@ -104,6 +115,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup003
      * @tc.name: testcreateGroup003
@@ -111,7 +123,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup003', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -129,6 +146,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup004
      * @tc.name: testcreateGroup004
@@ -136,7 +154,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup004', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -154,6 +177,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup005
      * @tc.name: testcreateGroup005
@@ -161,7 +185,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup005', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -179,6 +208,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup006
      * @tc.name: testcreateGroup006
@@ -186,7 +216,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup006', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -204,6 +239,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup007
      * @tc.name: testcreateGroup007
@@ -211,7 +247,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup007', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -228,6 +269,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup008
      * @tc.name: testcreateGroup008
@@ -235,7 +277,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup008', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -252,6 +299,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup009
      * @tc.name: testcreateGroup009
@@ -259,7 +307,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup009', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -276,6 +329,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup010
      * @tc.name: testcreateGroup010
@@ -283,7 +337,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup010', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -300,6 +359,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup011
      * @tc.name: testcreateGroup011
@@ -307,7 +367,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup011', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -324,6 +389,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup012
      * @tc.name: testcreateGroup012
@@ -331,7 +397,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup012', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -348,6 +419,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup013
      * @tc.name: testcreateGroup013
@@ -355,7 +427,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup013', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -373,6 +450,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup014
      * @tc.name: testcreateGroup014
@@ -380,7 +458,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup014', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -398,6 +481,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup015
      * @tc.name: testcreateGroup015
@@ -405,7 +489,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup015', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -424,6 +513,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup016
      * @tc.name: testcreateGroup016
@@ -431,7 +521,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup016', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -450,6 +545,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup017
      * @tc.name: testcreateGroup017
@@ -457,7 +553,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup017', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -476,6 +577,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testcreateGroup018
      * @tc.name: testcreateGroup018
@@ -483,7 +585,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testcreateGroup018', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -501,6 +608,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup001
      * @tc.name: testattachGroup001
@@ -508,7 +616,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup001', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -526,6 +639,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup002
      * @tc.name: testattachGroup002
@@ -533,7 +647,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup002', 0, async (done: Function) => {
       try {
@@ -545,6 +664,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup003
      * @tc.name: testattachGroup003
@@ -552,7 +672,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup003', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -570,6 +695,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup004
      * @tc.name: testattachGroup004
@@ -577,7 +703,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup004', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -594,6 +725,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup005
      * @tc.name: testattachGroup005
@@ -601,7 +733,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup005', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -625,6 +762,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup006
      * @tc.name: testattachGroup006
@@ -632,7 +770,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup006', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -667,6 +810,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup007
      * @tc.name: testattachGroup007
@@ -674,7 +818,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup007', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -711,6 +860,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup008
      * @tc.name: testattachGroup008
@@ -718,7 +868,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup008', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -737,6 +892,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup009
      * @tc.name: testattachGroup009
@@ -744,7 +900,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup009', 0, async (done: Function) => {
       let gid = "123";
@@ -757,6 +918,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup010
      * @tc.name: testattachGroup010
@@ -764,7 +926,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup010', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -781,6 +948,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup011
      * @tc.name: testattachGroup011
@@ -788,7 +956,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup011', 0, async (done: Function) => {
       let groupConfig: request.agent.GroupConfig = {
@@ -816,6 +989,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup012
      * @tc.name: testattachGroup012
@@ -823,7 +997,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup012', 0, async (done: Function) => {
       let groupConfig: request.agent.GroupConfig = {
@@ -850,6 +1029,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup013
      * @tc.name: testattachGroup013
@@ -857,7 +1037,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup013', 0, async (done: Function) => {
       let groupConfig: request.agent.GroupConfig = {
@@ -883,6 +1068,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testattachGroup014
      * @tc.name: testattachGroup014
@@ -890,7 +1076,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testattachGroup014', 0, async (done: Function) => {
       let groupConfig: request.agent.GroupConfig = {
@@ -916,6 +1107,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testdeleteGroup001
      * @tc.name: testdeleteGroup001
@@ -923,7 +1115,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testdeleteGroup001', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -950,6 +1147,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testdeleteGroup002
      * @tc.name: testdeleteGroup002
@@ -957,7 +1155,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testdeleteGroup002', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {
@@ -985,6 +1188,7 @@ export default function requestTaskGroupTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testdeleteGroup003
      * @tc.name: testdeleteGroup003
@@ -992,7 +1196,12 @@ export default function requestTaskGroupTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testdeleteGroup003', 0, async (done: Function) => {
       let config: request.agent.GroupConfig = {

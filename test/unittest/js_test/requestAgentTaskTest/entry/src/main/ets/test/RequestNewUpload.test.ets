@@ -55,6 +55,7 @@ export default function requestNewUploadTest() {
       uri: 'internal://cache/test.txt',
       type: 'txt'
     };
+    
     /**
      * @tc.number: testUploadUrl001
      * @tc.name: testUploadUrl001
@@ -62,7 +63,12 @@ export default function requestNewUploadTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testUploadUrl001', 0, (done: Function) => {
       console.log('===>test 1');
