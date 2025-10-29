@@ -67,6 +67,10 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a download task
+     *           2. Bind the completed event handler
+     *           3. Unbind the completed event handler
+     *           4. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Create_on_callback_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -98,6 +102,10 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Set the download URL
+     *           2. Create a download task
+     *           3. Bind the failed event handler
+     *           4. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Create_on_fail_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -127,6 +135,9 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a download task
+     *           2. Bind the pause event handler
+     *           3. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Create_on_pause_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -156,6 +167,14 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Set the download URL to a large file
+     *           2. Create a download task
+     *           3. Bind the pause event handler
+     *           4. Bind the resume event handler
+     *           5. Unbind the resume event handler
+     *           6. Start the download task
+     *           7. Pause the download task
+     *           8. Resume the download task
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Create_on_resume_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -192,6 +211,9 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a download task using callback
+     *           2. If task is created successfully, bind the progress event handler
+     *           3. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Create_on_progress_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -220,6 +242,10 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a download task
+     *           2. Bind the remove event handler
+     *           3. Start the download task
+     *           4. Remove the download task
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Download_overwrite_Static_0000', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -249,6 +275,9 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a download task
+     *           2. Bind the faultOccur event handler
+     *           3. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Download_overwrite_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -277,6 +306,10 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create configuration with overwrite set to true
+     *           2. Create a download task with the configuration
+     *           3. Bind the completed event handler
+     *           4. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Download_overwrite_Static_0200', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -315,6 +348,10 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create configuration with overwrite set to true
+     *           2. Create a download task with the configuration
+     *           3. Bind the completed event handler that attempts to start the task again
+     *           4. Start the download task for the first time
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Download_overwrite_Static_0300', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -370,6 +407,9 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create configuration with invalid save path
+     *           2. Attempt to create a download task with the configuration
+     *           3. Verify that an error is caught
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_Static_0500', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -404,6 +444,9 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create configuration with invalid save path
+     *           2. Attempt to create a download task using callback
+     *           3. Verify error code 401 is returned in the callback
      * @tc.require: issues#1573
      */
     /**
@@ -417,6 +460,10 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration
+     *           2. Create a download task using promise
+     *           3. Add progress event listener to the task
+     *           4. Start the task and verify progress events are triggered
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_Static_0600', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -459,6 +506,10 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with overwrite set to true
+     *           2. Create a download task
+     *           3. Bind the progress event handler
+     *           4. Start the download task
      * @tc.require: issues#1573
      */
     /**
@@ -472,6 +523,11 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration
+     *           2. Create a download task using promise
+     *           3. Add progress event listener to the task
+     *           4. Remove the progress event listener
+     *           5. Start the task and verify listener has been removed
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -524,6 +580,10 @@ export default function RequestCreateTaskStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with overwrite set to true
+     *           2. Create a download task
+     *           3. Bind the response event handler
+     *           4. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_onResponse_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -613,6 +673,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with multiple options
+     *           2. Create a download task using Promise chain
+     *           3. Bind the faultOccur event handler
+     *           4. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_create_STAGE_API_CALLBACK_0006', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -667,6 +731,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with overwrite set to true
+     *           2. Create a download task using Promise chain
+     *           3. Bind the remove event handler
+     *           4. Start the download task
+     *           5. Wait for 1 second and then remove the task
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_create_STAGE_API_CALLBACK_0005', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -736,6 +805,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with various options
+     *           2. Create a download task using Promise chain
+     *           3. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_create_STAGE_API_CALLBACK_0004', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -791,6 +863,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with various options
+     *           2. Create a download task using Promise chain
+     *           3. Bind the resume event handler
+     *           4. Unbind the resume event handler
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_create_STAGE_API_CALLBACK_0003', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -840,6 +917,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with various options
+     *           2. Create a download task using Promise chain
+     *           3. Bind the pause event handler
+     *           4. Unbind the pause event handler
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_create_STAGE_API_CALLBACK_0002', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -889,6 +971,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with various options
+     *           2. Create a download task using Promise chain
+     *           3. Bind the failed event handler
+     *           4. Unbind the failed event handler
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_create_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -938,6 +1025,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Use request.downloadFile API to create a download task
+     *           2. Set up various event handlers (complete, pause, remove, progress)
+     *           3. Bind the onComplete event handler to the download task
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0006', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1055,6 +1145,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Use request.downloadFile API with local URL (http://127.0.0.1)
+     *           2. Set up fail event handler to catch download errors
+     *           3. Bind the onFail event handler to the download task
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0005', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1108,6 +1201,8 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Get the application's cache directory
+     *           2. Create a test file in the cache directory
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0004', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1199,6 +1294,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Get the application's cache directory
+     *           2. Create a test file in the cache directory
+     *           3. Set up upload configuration with file information
+     *           4. Use request.uploadFile API to create an upload task
+     *           5. Bind the complete event handler to the upload task
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0003', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1260,6 +1360,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Get the application's cache directory
+     *           2. Create a test file in the cache directory
+     *           3. Set up upload configuration with localhost URL
+     *           4. Use request.uploadFile API to create an upload task
+     *           5. Bind the fail event handler to the upload task
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0002', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1321,6 +1426,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Get the application's cache directory
+     *           2. Create a test file in the cache directory
+     *           3. Set up upload configuration with file information
+     *           4. Use request.uploadFile API to create an upload task
+     *           5. Bind the headerReceive event handler to the upload task
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1382,6 +1492,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration
+     *           2. Create a download task using promise
+     *           3. Add completed event listener to the task
+     *           4. Start the task and verify completed event is triggered
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_onResponse_Static_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1427,6 +1541,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with foreground mode
+     *           2. Use request.agent.create to create a download task
+     *           3. Set up search filter with specific criteria
+     *           4. Use request.agent.search API to find tasks matching the filter
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1467,6 +1585,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration without explicit saveas path
+     *           2. Check and delete any existing test file
+     *           3. Create a download task using baseContext
+     *           4. Bind the completed event handler to check file existence
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1534,6 +1656,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with current directory saveas path
+     *           2. Check and delete any existing test file
+     *           3. Create a download task using baseContext
+     *           4. Bind the completed event handler to verify file existence
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1601,6 +1728,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with nested directory saveas path
+     *           2. Check and delete any existing test file in the target path
+     *           3. Create a download task using baseContext
+     *           4. Bind the completed event handler to verify file existence
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1669,6 +1801,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with direct file name saveas path
+     *           2. Check and delete any existing test file in the target path
+     *           3. Create a download task using baseContext
+     *           4. Bind the completed event handler to verify file existence
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1737,6 +1874,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with invalid root path format
+     *           2. Check and delete any existing test file in the target path
+     *           3. Attempt to create a download task and catch the expected error
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_0500', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1808,6 +1948,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with filename only (no path prefix)
+     *           2. Check and delete any existing test file in the target path
+     *           3. Create a download task using baseContext
+     *           4. Bind the completed event handler to verify file existence
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1876,6 +2021,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with relative directory path
+     *           2. Check and delete any existing test file in the target path
+     *           3. Create a download task using baseContext
+     *           4. Bind the completed event handler to verify file existence
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -1944,6 +2094,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with internal cache URI format
+     *           2. Check and delete any existing test file in the target path
+     *           3. Create a download task using baseContext
+     *           4. Bind the completed event handler to verify file existence
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2012,6 +2167,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with absolute system path
+     *           2. Check and delete any existing test file in the target path
+     *           3. Create a download task using baseContext
+     *           4. Bind the completed event handler to verify file existence
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2079,6 +2239,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with absolute directory path
+     *           2. Check and delete any existing test file in the target path
+     *           3. Create a download task using baseContext
+     *           4. Handle any potential errors during task creation
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2119,6 +2283,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with path containing relative elements
+     *           2. Check and delete any existing test file in the target path
+     *           3. Create a download task using baseContext
+     *           4. Set up completed event handler to verify file existence
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2186,6 +2355,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with relative path elements
+     *           2. Check and delete any existing test file in the target path
+     *           3. Attempt to create a download task and catch potential errors
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_1200', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2226,6 +2398,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with file:// protocol path
+     *           2. Check and delete any existing test file in the target path
+     *           3. Create a download task using baseContext
+     *           4. Set up completed event handler to verify file existence
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_1300', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2293,6 +2469,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with file:// protocol and different app ID
+     *           2. Check and delete any existing test file in the target path
+     *           3. Attempt to create a download task and catch potential errors
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_1400', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2333,6 +2512,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with el5 storage path
+     *           2. Check and delete any existing test file in the target path
+     *           3. Create a download task using baseContext
+     *           4. Set up completed event handler to verify file existence
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_1500', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2400,6 +2584,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with ANY network mode
+     *           2. Create a download task using baseContext
+     *           3. Set up response event handler to process HTTP response information
+     *           4. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_onResponse_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2443,6 +2631,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with non-existent URL
+     *           2. Create a download task using baseContext
+     *           3. Set up response event handler to process 404 error response
+     *           4. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_onResponse_0200', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2487,6 +2679,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with ANY network mode
+     *           2. Create a download task using baseContext
+     *           3. Set up response event handler
+     *           4. Start the download task
+     *           5. Remove the response event listener
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_onResponse_0300', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2532,6 +2729,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with ANY network mode
+     *           2. Create a download task using baseContext
+     *           3. Set up two separate response event handlers
+     *           4. Remove all response event listeners
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_onResponse_0500', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2586,6 +2788,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration for large file download
+     *           2. Create a download task using baseContext
+     *           3. Set up response event handler to process partial content response
+     *           4. Set up progress event handler to manage pause/resume operations
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_onResponse_0700', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2643,6 +2849,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create upload task configuration with proxy settings
+     *           2. Attempt to create an upload task with the proxy configuration
+     *           3. Handle any potential errors during task creation
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_proxy_0200', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2679,6 +2888,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with proxy settings
+     *           2. Attempt to create a download task with the proxy configuration
+     *           3. Handle any potential errors during task creation
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_proxy_0400', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2715,6 +2927,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with invalid URL format
+     *           2. Create a download task using baseContext
+     *           3. Set up failed event handler to process error details
+     *           4. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_ErrorDetailed_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2760,6 +2976,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with WIFI network mode
+     *           2. Create a download task with callback function
+     *           3. Set up completed event handler to test restart functionality
+     *           4. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_ContinueDown_0300', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2814,6 +3034,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with WIFI network mode
+     *           2. Create a download task with callback function
+     *           3. Set up pause event handler to test restart functionality
+     *           4. Start the download task
+     *           5. Immediately pause the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_ContinueDown_0500', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2870,6 +3095,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with ANY network mode
+     *           2. Create a download task using baseContext
+     *           3. Call pause() method with error callback
+     *           4. Verify error code in the callback
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_PauseError_callback_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2918,6 +3147,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with ANY network mode
+     *           2. Create a download task using baseContext
+     *           3. Call pause() method and catch promise rejection
+     *           4. Verify error code in the caught exception
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_PauseError_promise_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -2959,6 +3192,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with test URL
+     *           2. Create a download task using baseContext
+     *           3. Set up faultOccur event handler to process faults
+     *           4. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Download_off_faultOccur_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3016,6 +3253,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with test URL
+     *           2. Create a download task using baseContext
+     *           3. Call off('faultOccur') without specifying a callback function
+     *           4. Set up faultOccur event handler
+     *           5. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Download_off_faultOccur_0200', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3065,6 +3307,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with invalid URL
+     *           2. Create a download task using baseContext
+     *           3. Set up multiple faultOccur event handlers
+     *           4. Start the download task
      * @tc.require: issues#1573
      */
     it('SUB_Request_Download_on_faultOccur_0300', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3114,6 +3360,8 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Log all download task state enumeration values
+     *           2. Verify the existence and correctness of each state value
      * @tc.require: issues#1573
      */
     it('SUB_MISC_REQUEST_DOWNLOAD_state_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3146,6 +3394,8 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Log all download task faults enumeration values
+     *           2. Verify the existence and correctness of each faults value
      * @tc.require: issues#1573
      */
     it('SUB_MISC_REQUEST_DOWNLOAD_faults_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3191,6 +3441,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with basic settings
+     *           2. Create a download task using callback function
+     *           3. Verify task creation success in the callback
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Create_Download_Callback_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3235,6 +3488,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with basic settings
+     *           2. Create a download task using promise
+     *           3. Verify task creation success in the promise chain
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Create_Download_Promise_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3276,6 +3532,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration
+     *           2. Create a download task using promise
+     *           3. Remove the task using callback function
+     *           4. Verify task removal success in the callback
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Remove_Download_Callback_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3322,6 +3582,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration
+     *           2. Create a download task using promise
+     *           3. Remove the task using promise
+     *           4. Verify task removal success
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Remove_Download_Promise_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3358,6 +3622,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration
+     *           2. Create a download task using promise
+     *           3. Start the task using callback function
+     *           4. Verify task start success in the callback
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Start_Download_Callback_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3402,6 +3670,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration
+     *           2. Create a download task using promise
+     *           3. Start the task using promise
+     *           4. Verify task start success
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Start_Download_Promise_0010', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3443,6 +3715,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration
+     *           2. Create a download task using promise
+     *           3. Add completed event listener to the task
+     *           4. Remove the completed event listener
+     *           5. Start the task and verify listener has been removed
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_On_Download_Progress_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3495,6 +3772,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with invalid URL
+     *           2. Create a download task using promise
+     *           3. Add failed event listener to the task
+     *           4. Start the task and verify failed event is triggered
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Off_Download_Progress_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3557,6 +3838,11 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with invalid URL
+     *           2. Create a download task using promise
+     *           3. Add failed event listener to the task
+     *           4. Remove the failed event listener
+     *           5. Start the task and verify listener has been removed
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_On_Download_Completed_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3613,6 +3899,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration
+     *           2. Create a download task using promise
+     *           3. Start the download task
+     *           4. Verify download management functionality
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Off_Download_Completed_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3677,6 +3967,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with range request
+     *           2. Create a download task using callback function
+     *           3. Verify task creation success in the callback
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_On_Download_Failed_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3733,6 +4026,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with range request
+     *           2. Create a download task using promise
+     *           3. Verify task creation success in the promise chain
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Off_Download_Failed_0040', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3797,6 +4093,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with partial range request
+     *           2. Create a download task using callback function
+     *           3. Verify task creation success in the callback
      * @tc.require: issues#1573
      */
     it('SUB_Request_DownloadManagement_Download_0100', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3845,6 +4144,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with partial range request
+     *           2. Create a download task using promise
+     *           3. Verify task creation success in the promise chain
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_create_Callback_0140', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3910,6 +4212,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with specific range request
+     *           2. Create a download task using callback function
+     *           3. Verify task creation success in the callback
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Create_Promise_0140', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -3968,6 +4273,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with range request
+     *           2. Create a download task using callback function
+     *           3. Verify task creation success in the callback
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_create_Callback_0160', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -4018,6 +4326,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with invalid range request
+     *           2. Create a download task using promise
+     *           3. Verify task creation success in the promise chain
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Create_Promise_0160', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -4064,6 +4375,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with all undefined properties
+     *           2. Create a download task using callback function
+     *           3. Verify task creation success in the callback
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_create_Callback_0170', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -4127,6 +4441,9 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download task configuration with all undefined properties
+     *           2. Create a download task using promise
+     *           3. Verify task creation success in the promise chain
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_create_Callback_0180', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -4175,6 +4492,10 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create very long description string
+     *           2. Create download task configuration with the long description and without overwrite parameter
+     *           3. Create a download task using callback function
+     *           4. Verify task creation result in the callback
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Create_Promise_0180', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -4331,6 +4652,22 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_Promise_0080
+     * @tc.desc: Test create download task with very long URL using promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create very long URL string
+     *           2. Create download task configuration with the long URL
+     *           3. Create a download task using promise
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_Promise_0080', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let urls = 'x';
       for (let i = 0; i < 8175; i++){
@@ -4359,6 +4696,22 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_Promise_0110
+     * @tc.desc: Test create download task with very long description using promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create very long description string
+     *           2. Create download task configuration with the long description
+     *           3. Create a download task using promise
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_Promise_0110', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let des = 'x';
       for (let i = 0; i < 1025; i++){
@@ -4435,6 +4788,22 @@ it('SUB_Misc_REQUEST_On_Download_Progress_Static_0040', Level.LEVEL1, async (don
     }
     });
 
+    /**
+     * @tc.name: SUB_Misc_REQUEST_Create_Promise_0150
+     * @tc.desc: Test create download task with very long title using promise
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create very long title string
+     *           2. Create download task configuration with the long title
+     *           3. Create a download task using promise
+     * @tc.require: issues#1573
+     */
     it('SUB_Misc_REQUEST_Create_Promise_0150', Level.LEVEL1, async (done: () => void): Promise<void> => {
       let tit = 'x';
       for (let i = 0; i < 257; i++){

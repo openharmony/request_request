@@ -67,6 +67,9 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Download file using callback function in stage api
+     *           3. Verify download result in the callback
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_downloadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -112,6 +115,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration with notification settings
+     *           3. Start download task with notification
+     *           4. Verify download result
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_downloadFile_STAGE_API_PROMISE_0001', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -160,6 +167,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration with background set to false
+     *           3. Start download task with notification
+     *           4. Verify download result
      * @tc.require: issues#1573
      */
     it('SUB_Misc_Request_Download_Notice_Task_001', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -220,6 +231,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration with background set to true
+     *           3. Start download task with notification
+     *           4. Verify download result
      * @tc.require: issues#1573
      */
     it('SUB_Misc_Request_Download_Notice_Task_002', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -281,6 +296,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create and write test file to the target path
+     *           3. Attempt to download to an existing file without overwrite parameter
+     *           4. Verify download fails due to file existence
      * @tc.require: issues#1573
      */
     it('SUB_Misc_Request_Download_Notice_Task_003', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -342,6 +361,9 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download configuration with invalid local URL
+     *           2. Attempt to download using the invalid URL
+     *           3. Verify download fails due to invalid URL format
      * @tc.require: issues#1573
      */
     it('SUB_Misc_Request_DownloadManagement_0003', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -389,6 +411,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download configuration for system download
+     *           2. Start download task using system download support
+     *           3. Set up onComplete listener to verify download success
+     *           4. Clean up downloaded files
      * @tc.require: issues#1573
      */
     it('SUB_Misc_Request_DownloadManagement_0004', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -430,6 +456,11 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration with specified file path
+     *           3. Start download task with system download support
+     *           4. Set up onComplete listener to verify download success
+     *           5. Clean up downloaded files
      * @tc.require: issues#1573
      */
     it('SUB_Misc_Request_DownloadManagement_0004', Level.LEVEL1, async (done: () => void): Promise<void> => {
@@ -465,6 +496,11 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration for conflict test
+     *           3. Start first download task
+     *           4. After first download completes, attempt second download to same path
+     *           5. Verify second download fails due to file conflict
      * @tc.require: issues#1573
      */
     it('SUB_Misc_Request_Download_SupportSystem_DownloadSuccess_001', Level.LEVEL1,
@@ -527,6 +563,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration with header settings
+     *           3. Start download task with header configuration
+     *           4. Verify download result
      * @tc.require: issues#1573
      */
     it('SUB_Misc_Request_Download_SupportSystem_DownloadSuccess_002', Level.LEVEL1,
@@ -594,6 +634,11 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration with invalid URL
+     *           3. Set up onFail listener to handle download failure
+     *           4. Start download task
+     *           5. Verify failure event handling and remove event listener
      * @tc.require: issues#1573
      */
     it('SUB_Misc_Request_Download_SupportSystem_ConflictDownload_001', Level.LEVEL1,
@@ -666,6 +711,9 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download configuration with invalid URL
+     *           2. Attempt to download using promise
+     *           3. Verify download fails due to invalid URL
      * @tc.require: issues#1573
      */
     it('SUB_Misc_REQUEST_Download_Promise_0030', Level.LEVEL1,
@@ -702,6 +750,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration with complete settings
+     *           3. Set up download task and event listeners
+     *           4. Verify download completion and event handling
      * @tc.require: issues#1573
      */
     it('Download_Test_0400', Level.LEVEL1,
@@ -763,6 +815,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare multiple download file paths
+     *           2. Create download configuration for multiple tasks
+     *           3. Start multiple download tasks
+     *           4. Verify multiple downloads and task management
      * @tc.require: issues#1573
      */
     it('Download_Test_0600', Level.LEVEL1,
@@ -826,6 +882,9 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download configuration with invalid system path
+     *           2. Attempt to start download task
+     *           3. Verify download fails due to invalid path
      * @tc.require: issues#1573
      */
     it('Download_Test_0700', Level.LEVEL1,
@@ -903,6 +962,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration
+     *           3. Start download task
+     *           4. Verify download management functionality
      * @tc.require: issues#1573
      */
     it('Download_Test_1100', Level.LEVEL1,
@@ -971,6 +1034,11 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration
+     *           3. Set up progress tracking and start download task
+     *           4. Test suspension functionality
+     *           5. Verify download management features
      * @tc.require: issues#1573
      */
     it('Download_Test_0100', Level.LEVEL1,
@@ -1008,6 +1076,11 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration
+     *           3. Set up success callback
+     *           4. Start download task
+     *           5. Verify success callback functionality
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_DownloadManagement_Download_0500', Level.LEVEL1,
@@ -1066,6 +1139,11 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration with custom headers
+     *           3. Set up success callback
+     *           4. Start download task
+     *           5. Verify download success with custom headers
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_DownloadManagement_Download_0300', Level.LEVEL1,
@@ -1209,6 +1287,9 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download configuration with default parameters
+     *           2. Start download task
+     *           3. Verify download functionality with default settings
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_DownloadManagement_DownloadSuccess_0100', Level.LEVEL1,
@@ -1266,6 +1347,8 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Attempt to remove download task with invalid task ID
+     *           2. Verify removal fails with appropriate error
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_SupportSystem_DownloadMultitask_0100', Level.LEVEL1,
@@ -1339,6 +1422,8 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Attempt to remove download task with invalid task ID using callback
+     *           2. Verify removal fails with appropriate error
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_SupportSystem_DownloadSuccess_0300', Level.LEVEL1,
@@ -1400,6 +1485,9 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download configuration with error condition
+     *           2. Attempt to create download task
+     *           3. Verify detailed error information is provided
      * @tc.require: issues#1573
      */
     it('SUB_Request_download_Default_0100', Level.LEVEL1,
@@ -1458,6 +1546,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration with custom headers and invalid URL
+     *           3. Attempt to start download task
+     *           4. Verify download fails with appropriate error
      * @tc.require: issues#1573
      */
     it('SUB_MISC_REQUEST_DOWNLOAD_removeNormal_promise_0010', Level.LEVEL1,
@@ -1486,6 +1578,9 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download configuration with saveas path
+     *           2. Create download task using agent
+     *           3. Verify task saveas functionality works correctly
      * @tc.require: issues#1573
      */
     it('SUB_MISC_REQUEST_UPLOAD_removeNormal_callback_0010', Level.LEVEL1,
@@ -1520,6 +1615,11 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare download file path
+     *           2. Create download configuration with invalid URL to trigger fault
+     *           3. Set up fault occur callback
+     *           4. Start download task and verify fault handling
+     *           5. Test offFaultOccur functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_ErrorDetailed_0500', Level.LEVEL1,
@@ -1569,6 +1669,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with GET method
+     *           2. Create upload task configuration
+     *           3. Attempt to create upload task
+     *           4. Verify task creation behavior with GET method
      * @tc.require: issues#1573
      */
     it('Download_Test_0300', Level.LEVEL1,
@@ -1630,6 +1734,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pairs
+     *           2. Create upload task configuration with data parameter
+     *           3. Create upload task using uploadFile API
+     *           4. Verify task creation and response handling
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_TaskSaveas_0400', Level.LEVEL1,
@@ -1689,6 +1797,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create download configuration with invalid URL to trigger fault
+     *           2. Set up fault occur callback
+     *           3. Start download task
+     *           4. Verify fault handling and offFaultOccur functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_Download_on_faultOccur_0400', Level.LEVEL1,
@@ -1733,6 +1845,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pairs
+     *           2. Configure upload settings with GET method
+     *           3. Create upload task with files and data
+     *           4. Verify task creation and callback handling
      * @tc.require: issues#1573
      */
     it('SUB_Request_Download_on_faultOccur_0400', Level.LEVEL1,
@@ -1777,6 +1893,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pairs
+     *           2. Configure multiple file upload with POST method
+     *           3. Create upload task with multiple files
+     *           4. Verify task creation and response handling
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_UploadTaskCreation_0300', Level.LEVEL1,
@@ -1851,6 +1971,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare upload file configuration
+     *           2. Set up progress monitoring callback
+     *           3. Initiate file upload task
+     *           4. Verify progress monitoring functionality works correctly
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_UploadTaskCreation_0300', Level.LEVEL1,
@@ -1919,6 +2043,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pairs
+     *           2. Configure multiple file upload with POST method
+     *           3. Create upload task with multiple files
+     *           4. Verify task creation and response handling
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_UploadTaskCreation_0500', Level.LEVEL1,
@@ -2018,6 +2146,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure single file upload with GET method
+     *           3. Create upload task with single file
+     *           4. Verify task creation and response handling
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_UploadTaskCreation_0300', Level.LEVEL1,
@@ -2092,6 +2224,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure single file upload with GET method
+     *           3. Set up complete callback function
+     *           4. Create upload task and verify callback execution
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_UploadTaskCreation_0300', Level.LEVEL1,
@@ -2158,6 +2294,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure single file upload with POST method
+     *           3. Set up complete callback function
+     *           4. Create upload task and verify callback execution
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_UploadTaskCreation_0300', Level.LEVEL1,
@@ -2224,6 +2364,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare upload file configuration
+     *           2. Set up progress monitoring callback
+     *           3. Initiate file upload task
+     *           4. Verify progress monitoring functionality works correctly
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_MonitoringProgress_0100', Level.LEVEL1,
@@ -2292,6 +2436,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload with different file types and sizes
+     *           3. Set up progress monitoring callback
+     *           4. Initiate upload task and verify progress tracking for different files
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_MonitoringProgress_0300', Level.LEVEL1,
@@ -2362,6 +2510,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up header receive monitoring callback
+     *           4. Initiate upload task and verify header receive functionality
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_MonitoringProgress_0400', Level.LEVEL1,
@@ -2418,6 +2570,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up fail callback monitoring
+     *           4. Initiate upload task and verify fail callback functionality
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_MonitoringProgress_0400', Level.LEVEL1,
@@ -2474,6 +2630,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up failure callback
+     *           4. Initiate upload task and verify failure handling mechanism
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_OnFail_0100', Level.LEVEL1,
@@ -2543,6 +2703,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up and then unsubscribe from fail event
+     *           4. Initiate upload task and verify offFail functionality
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_OffFail_0100', Level.LEVEL1,
@@ -2598,6 +2762,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up and then unsubscribe from success event
+     *           4. Initiate upload task and verify offSuccess functionality
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_FileUpload_offSuccess_0100', Level.LEVEL1,
@@ -2662,6 +2830,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up multipart content type support
+     *           4. Initiate upload task and verify multipart functionality
      * @tc.require: issues#1573
      */
       it('SUB_Request_UpLoadFile_Multipart_Supported_0100', Level.LEVEL1,
@@ -2729,6 +2901,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up multipart support with chunk parameters
+     *           4. Initiate upload task and verify chunked multipart functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_UpLoadFile_Multipart_Supported_0200', Level.LEVEL1,
@@ -2796,6 +2972,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up multipart support with specified start position
+     *           4. Initiate upload task and verify partial upload functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_UpLoadFile_Multipart_Supported_0300', Level.LEVEL1,
@@ -2863,6 +3043,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up multipart support with specified file range parameters
+     *           4. Initiate upload task and verify range upload functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_UpLoadFile_Multipart_Supported_0700', Level.LEVEL1,
@@ -2930,6 +3114,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up multipart support with invalid range parameters
+     *           4. Initiate upload task and verify error handling
      * @tc.require: issues#1573
      */
     it('SUB_Request_UpLoadFile_Multipart_Supported_0900', Level.LEVEL1,
@@ -3011,6 +3199,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up multipart support with large start position
+     *           4. Initiate upload task and verify behavior with large start position
      * @tc.require: issues#1573
      */
     it('SUB_Request_UpLoadFile_Multipart_Supported_0800', Level.LEVEL1,
@@ -3078,6 +3270,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up multipart support with single byte range parameters
+     *           4. Initiate upload task and verify single byte upload functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_UpLoadFile_Multipart_Supported_1000', Level.LEVEL1,
@@ -3146,6 +3342,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload files array with file information
+     *           3. Set up multipart support with 1KB range parameters
+     *           4. Initiate upload task and verify 1KB range upload functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_UpLoadFile_Multipart_Supported_1100', Level.LEVEL1,
@@ -3214,6 +3414,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure multiple files array with file information
+     *           3. Set up multipart support with 1KB range parameters
+     *           4. Initiate upload task with multiple files and verify functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_UpLoadFile_Multipart_Supported_1200', Level.LEVEL1,
@@ -3305,6 +3509,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure multiple files array with file information
+     *           3. Set up multipart support with 1KB range parameters starting from 1024
+     *           4. Initiate upload task with multiple files and verify functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_UpLoadFile_Multipart_Supported_1300', Level.LEVEL1,
@@ -3396,6 +3604,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure multiple files array with file information
+     *           3. Set up multipart support with full range parameters (begins: 0, ends: -1)
+     *           4. Initiate upload task with multiple files and verify functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_UpLoadFile_Multipart_Supported_1400', Level.LEVEL1,
@@ -3487,6 +3699,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure multiple files array with file information
+     *           3. Set up multipart support with 30-60 byte range parameters
+     *           4. Initiate upload task with multiple files and verify functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_UpLoadFile_Multipart_Supported_1500', Level.LEVEL1,
@@ -3578,6 +3794,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload file information
+     *           3. Set up upload task with callback API
+     *           4. Handle and verify fail event in the callback
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_uploadFile_STAGE_API_CALLBACK_0001', Level.LEVEL1,
@@ -3652,6 +3872,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload file information
+     *           3. Set up upload task with promise API
+     *           4. Handle and verify upload task functionality
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_uploadFile_STAGE_API_PROMISE_0001', Level.LEVEL1,
@@ -3706,6 +3930,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Configure upload settings with default parameters
+     *           2. Set up file information with undefined index, begins and ends
+     *           3. Initiate file upload with default configuration
+     *           4. Verify upload task functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_FileUpload_Default_0100', Level.LEVEL1,
@@ -3760,6 +3988,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare request data with name-value pair
+     *           2. Configure upload file information
+     *           3. Set up header receive callback function
+     *           4. Initiate upload and verify header receive functionality
      * @tc.require: issues#1573
      */
     it('SUB_REQUEST_upload_headerReceive_0100', Level.LEVEL1,
@@ -3828,6 +4060,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare multiple file attachments for upload
+     *           2. Configure upload settings with multipart=false
+     *           3. Set up upload configuration with attachments
+     *           4. Initiate upload and verify multiple files upload functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_MultipleFiles_0100', Level.LEVEL1,
@@ -3917,6 +4153,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare multiple file attachments for upload
+     *           2. Configure upload settings with multipart=true
+     *           3. Set up upload configuration with attachments
+     *           4. Initiate upload and verify multiple files upload functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_MultipleFiles_0200', Level.LEVEL1,
@@ -4006,6 +4246,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare multiple file attachments for upload
+     *           2. Configure upload settings with multipart=undefined
+     *           3. Set up upload configuration with attachments
+     *           4. Initiate upload and verify multiple files upload functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_MultipleFiles_0300', Level.LEVEL1,
@@ -4095,6 +4339,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Prepare multiple file attachments for upload
+     *           2. Configure upload settings with necessary parameters
+     *           3. Set up completed callback function to validate progress state
+     *           4. Initiate upload and verify progress state in callback
      * @tc.require: issues#1573
      */
     it('SUB_Request_Agent_MultipleFiles_0400', Level.LEVEL1,
@@ -4179,6 +4427,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Configure upload settings with necessary parameters
+     *           2. Set up file information for upload
+     *           3. Implement error handling callback function
+     *           4. Initiate upload and verify error handling functionality
      * @tc.require: issues#1573
      */
     it('SUB_Request_FileUpload_ErrorCode_0100', Level.LEVEL1,
@@ -4225,6 +4477,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Configure upload settings with necessary parameters
+     *           2. Set up file information for upload
+     *           3. Use Promise API to handle potential errors
+     *           4. Verify error handling functionality in Promise catch block
      * @tc.require: issues#1573
      */
     it('SUB_Request_FileUpload_ErrorCode_0200', Level.LEVEL1,
@@ -4266,6 +4522,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Configure upload settings with invalid URL
+     *           2. Set up file information for upload
+     *           3. Implement callback function to handle errors
+     *           4. Verify error handling for invalid URL in callback
      * @tc.require: issues#1573
      */
     it('SUB_Request_FileUpload_ErrorCode_0300', Level.LEVEL1,
@@ -4313,6 +4573,10 @@ export default function RequestDownloadStaticTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Configure upload settings with invalid URL
+     *           2. Set up file information for upload
+     *           3. Use Promise API to handle potential errors
+     *           4. Verify error handling for invalid URL in Promise catch block
      * @tc.require: issues#1573
      */
     it('SUB_Request_FileUpload_ErrorCode_0400', Level.LEVEL1,
