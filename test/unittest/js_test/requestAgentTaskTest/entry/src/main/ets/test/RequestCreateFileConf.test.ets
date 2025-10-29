@@ -360,7 +360,6 @@ export default function requestCreateFileConfTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
      */
-     */
     it('testTaskOverwrite009', 0, async (done: Function) => {
       let dirPath = cacheDir + '/testTaskOverwrite009';
       fs.mkdirSync(dirPath);
@@ -395,7 +394,6 @@ export default function requestCreateFileConfTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
      */
-     */
     it('testTaskSaveas001', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
@@ -426,7 +424,6 @@ export default function requestCreateFileConfTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
-     */
      */
     it('testTaskSaveas002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -466,7 +463,6 @@ export default function requestCreateFileConfTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
      */
-     */
     it('testTaskIndex001', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
@@ -496,7 +492,6 @@ export default function requestCreateFileConfTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
-     */
      */
     it('testTaskIndex002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -531,7 +526,6 @@ export default function requestCreateFileConfTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
-     */
      */
     it('testTaskIndex003', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/testTaskIndex003.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -569,7 +563,6 @@ export default function requestCreateFileConfTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
-     */
      */
     it('testTaskIndex005', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/testTaskIndex005.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -610,7 +603,6 @@ export default function requestCreateFileConfTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
      */
-     */
     it('testTaskIndex006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
@@ -641,7 +633,6 @@ export default function requestCreateFileConfTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
-     */
      */
     it('testTaskIndex007', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/testTaskIndex007.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -681,7 +672,6 @@ export default function requestCreateFileConfTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
      */
-     */
     it('testTaskIndex009', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/testTaskIndex009.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -719,7 +709,6 @@ export default function requestCreateFileConfTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
-     */
      */
     it('testTaskIndex010', 0, async (done: Function) => {
       let test1 = fs.openSync(cacheDir + '/test1.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -770,7 +759,6 @@ export default function requestCreateFileConfTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
      */
-     */
     it('testTaskMultipart001', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
@@ -804,7 +792,6 @@ export default function requestCreateFileConfTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.require: issues#1573
-     */
      */
     it('testTaskMultipart002', 0, async (done: Function) => {
       let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
