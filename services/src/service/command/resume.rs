@@ -37,7 +37,6 @@ impl RequestServiceStub {
 
         let len: u32 = data.read()?;
         let len = len as usize;
-        let mut vec = vec![ErrorCode::Other; len];
 
         if len > CONTROL_MAX {
             info!("Service resume: out of size: {}", len);
@@ -46,6 +45,7 @@ impl RequestServiceStub {
         }
 
         let uid = ipc::Skeleton::calling_uid();
+        let mut vec = vec![ErrorCode::Other; len];
         for i in 0..len {
             let task_id: String = data.read()?;
             info!("Service resume tid {}", task_id);

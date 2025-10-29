@@ -38,13 +38,12 @@ impl RequestServiceStub {
 
         let len: u32 = data.read()?;
         let len = len as usize;
-        let mut vec = vec![ErrorCode::Other; len];
-
         if len > CONTROL_MAX {
             info!("Service start: out of size: {}", len);
             reply.write(&(ErrorCode::Other as i32))?;
             return Err(IpcStatusCode::Failed);
         }
+        let mut vec = vec![ErrorCode::Other; len];
 
         let uid = ipc::Skeleton::calling_uid();
 
