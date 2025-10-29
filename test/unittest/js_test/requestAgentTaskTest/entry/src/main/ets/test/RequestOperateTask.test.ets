@@ -57,7 +57,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStartTask001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -73,6 +78,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testStartTask002
      * @tc.name: testStartTask002
@@ -80,7 +86,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStartTask002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -99,6 +110,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testStartTask003
      * @tc.name: testStartTask003
@@ -106,7 +118,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStartTask003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -122,6 +139,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testStartTask004
      * @tc.name: testStartTask004
@@ -129,7 +147,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStartTask004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -148,6 +171,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testStartTask005
      * @tc.name: testStartTask005
@@ -155,7 +179,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStartTask005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -175,6 +204,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testStartTask006
      * @tc.name: testStartTask006
@@ -182,7 +212,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStartTask006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -201,6 +236,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testStartTask007
      * @tc.name: testStartTask007
@@ -208,7 +244,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStartTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -227,6 +268,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testStartTask008
      * @tc.name: testStartTask008
@@ -234,7 +276,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStartTask008', 0, async (done: Function) => {
       try {
@@ -262,6 +309,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testStartTask009
      * @tc.name: testStartTask009
@@ -269,7 +317,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStartTask009', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -290,6 +343,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testStartTask0010
      * @tc.name: testStartTask010
@@ -297,7 +351,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStartTask0010', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -315,6 +374,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testStartTask011
      * @tc.name: testStartTask011
@@ -322,7 +382,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStartTask011', 0, async (done: Function) => {
       try {
@@ -350,6 +415,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testPauseTask001
      * @tc.name: testPauseTask001
@@ -357,7 +423,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testPauseTask001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -374,6 +445,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testPauseTask002
      * @tc.name: testPauseTask002
@@ -381,7 +453,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testPauseTask002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -401,6 +478,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testPauseTask003
      * @tc.name: testPauseTask003
@@ -408,7 +486,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testPauseTask003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -425,6 +508,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testPauseTask004
      * @tc.name: testPauseTask004
@@ -432,7 +516,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testPauseTask004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -452,6 +541,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testPauseTask005
      * @tc.name: testPauseTask005
@@ -459,7 +549,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testPauseTask005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -487,6 +582,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testPauseTask006
      * @tc.name: testPauseTask006
@@ -494,7 +590,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testPauseTask006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -512,6 +613,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testPauseTask007
      * @tc.name: testPauseTask007
@@ -519,7 +621,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testPauseTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -539,6 +646,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+    
     /**
      * @tc.number: testPauseTask008
      * @tc.name: testPauseTask008
@@ -546,7 +654,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testPauseTask008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -565,6 +678,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testResumeTask001
      * @tc.name: testResumeTask001
@@ -572,7 +686,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testResumeTask001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -590,6 +709,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testResumeTask002
      * @tc.name: testResumeTask002
@@ -597,7 +717,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testResumeTask002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -615,6 +740,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testResumeTask003
      * @tc.name: testResumeTask003
@@ -622,7 +748,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testResumeTask003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -647,6 +778,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testResumeTask004
      * @tc.name: testResumeTask004
@@ -654,7 +786,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testResumeTask004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -673,6 +810,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testResumeTask005
      * @tc.name: testResumeTask005
@@ -680,7 +818,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testResumeTask005', 0, async (done: Function) => {
       try {
@@ -703,6 +846,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testResumeTask006
      * @tc.name: testResumeTask006
@@ -710,7 +854,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testResumeTask006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -734,6 +883,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testResumeTask007
      * @tc.name: testResumeTask007
@@ -741,7 +891,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testResumeTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -761,6 +916,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testResumeTask008
      * @tc.name: testResumeTask008
@@ -768,7 +924,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testResumeTask008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -789,6 +950,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testResumeTask009
      * @tc.name: testResumeTask009
@@ -796,7 +958,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testResumeTask009', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -813,6 +980,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testStopTask001
      * @tc.name: testStopTask001
@@ -820,7 +988,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStopTask001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -836,6 +1009,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testStopTask002
      * @tc.name: testStopTask002
@@ -843,7 +1017,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStopTask002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -862,6 +1041,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testStopTask003
      * @tc.name: testStopTask003
@@ -869,7 +1049,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStopTask003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -885,6 +1070,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testStopTask004
      * @tc.name: testStopTask004
@@ -892,7 +1078,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStopTask004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -911,6 +1102,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testStopTask005
      * @tc.name: testStopTask005
@@ -918,7 +1110,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStopTask005', 0, async (done: Function) => {
       await sleep(2000);
@@ -938,6 +1135,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testStopTask006
      * @tc.name: testStopTask006
@@ -945,7 +1143,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStopTask006', 0, async (done: Function) => {
       await sleep(2000);
@@ -965,6 +1168,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testStopTask007
      * @tc.name: testStopTask007
@@ -972,7 +1176,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStopTask007', 0, async (done: Function) => {
       await sleep(2000);
@@ -990,6 +1199,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testStopTask008
      * @tc.name: testStopTask008
@@ -997,7 +1207,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testStopTask008', 0, async (done: Function) => {
       await sleep(2000);
@@ -1027,7 +1242,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testRemove001', 0, async (done: Function) => {
       try {
@@ -1037,6 +1257,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testRemove002
      * @tc.name: testRemove002
@@ -1044,7 +1265,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testRemove002', 0, async (done: Function) => {
       try {
@@ -1054,6 +1280,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testRemove003
      * @tc.name: testRemove003
@@ -1061,7 +1288,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testRemove003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1079,6 +1311,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testRemove004
      * @tc.name: testRemove004
@@ -1086,7 +1319,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testRemove004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1101,6 +1339,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testRemove005
      * @tc.name: testRemove005
@@ -1108,7 +1347,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testRemove005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1126,6 +1370,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testRemove006
      * @tc.name: testRemove006
@@ -1133,7 +1378,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testRemove006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1151,6 +1401,7 @@ export default function requestOperateTaskTest() {
         done();
       });
     });
+
     /**
      * @tc.number: testRemove007
      * @tc.name: testRemove007
@@ -1158,7 +1409,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testRemove007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1178,6 +1434,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testRemove008
      * @tc.name: testRemove008
@@ -1185,7 +1442,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testRemove008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1206,6 +1468,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testRemove009
      * @tc.name: testRemove009
@@ -1213,7 +1476,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testRemove009', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1234,6 +1502,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testRedirect001
      * @tc.name: testRedirect001
@@ -1241,7 +1510,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testRedirect001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1258,6 +1532,7 @@ export default function requestOperateTaskTest() {
       });
       await task.start();
     });
+
     /**
      * @tc.number: testRedirect002
      * @tc.name: testRedirect002
@@ -1265,7 +1540,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testRedirect002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1282,6 +1562,7 @@ export default function requestOperateTaskTest() {
       });
       await task.start();
     });
+
     /**
      * @tc.number: testGetTaskId001
      * @tc.name: testGetTaskId001
@@ -1289,7 +1570,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testGetTaskId001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1304,6 +1590,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testGetTaskId002
      * @tc.name: testGetTaskId002
@@ -1311,7 +1598,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testGetTaskId002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1326,6 +1618,7 @@ export default function requestOperateTaskTest() {
         done();
       }
     });
+
     /**
      * @tc.number: testGetTaskId003
      * @tc.name: testGetTaskId003
@@ -1333,7 +1626,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testGetTaskId003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1358,7 +1656,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testGetTaskId004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1380,7 +1683,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testGetTaskId005', 0, async (done: Function) => {
       let tid = '1'.repeat(33);
@@ -1398,7 +1706,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testGetTaskId006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -1420,7 +1733,12 @@ export default function requestOperateTaskTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testGetTaskId007', 0, async (done: Function) => {
       let conf: request.agent.Config = {

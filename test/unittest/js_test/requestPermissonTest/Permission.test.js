@@ -52,7 +52,12 @@ describe('PermissionTest', function () {
      * @tc.name: testCreateTask001
      * @tc.desc: Test start task for callback no permission
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testCreateTask001', async function (done) {
         let conf = {
@@ -73,7 +78,12 @@ describe('PermissionTest', function () {
      * @tc.name: testCreateTask002
      * @tc.desc: Test create task for promise no permission
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testCreateTask002', async function (done) {
         let conf = {
@@ -93,7 +103,12 @@ describe('PermissionTest', function () {
      * @tc.name: testSearchTask001
      * @tc.desc: Test search task for callback no permission
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask001', async function (done) {
         let filter = {
@@ -113,7 +128,12 @@ describe('PermissionTest', function () {
      * @tc.name: testSearchTask002
      * @tc.desc: Test search task for promise no permission
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask002', async function (done) {
         let filter = {
@@ -132,7 +152,12 @@ describe('PermissionTest', function () {
      * @tc.name: testQueryTask001
      * @tc.desc: Test query task for callback no permission
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testQueryTask001', function (done) {
         agent.query(context, '123', (err) => {
@@ -149,7 +174,12 @@ describe('PermissionTest', function () {
      * @tc.name: testQueryTask002
      * @tc.desc: Test query task for promise no permission
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testQueryTask002', async function (done) {
         agent.query(context, '123').then((err) => {
@@ -165,7 +195,12 @@ describe('PermissionTest', function () {
      * @tc.name: testClearTask001
      * @tc.desc: Test clear task for callback no permission
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testClearTask001', function (done) {
         agent.query(context, ['123'], (err) => {
@@ -182,7 +217,12 @@ describe('PermissionTest', function () {
      * @tc.name: testClearTask002
      * @tc.desc: Test clear task for promise no permission
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testClearTask002', async function (done) {
         agent.clear(context, ['123']).then((err) => {

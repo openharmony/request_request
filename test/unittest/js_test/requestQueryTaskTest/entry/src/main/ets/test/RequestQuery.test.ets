@@ -55,11 +55,17 @@ export default function requestQueryTest() {
       name: 'file',
       value: [fileSpec]
     }];
+    
     /**
      * @tc.name: testShowTask001
      * @tc.desc: Test show task for tid is empty
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testShowTask001', 0, async (done: Function) => {
       try {
@@ -69,11 +75,17 @@ export default function requestQueryTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testShowTask002
      * @tc.desc: Test show task for tid is number
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testShowTask002', 0, async (done: Function) => {
       try {
@@ -83,11 +95,17 @@ export default function requestQueryTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testShowTask003
      * @tc.desc: Test show task for callback when tid is "123"
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testShowTask003', 0, async (done: Function) => {
       request.agent.show("123", (err, info) => {
@@ -95,11 +113,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testShowTask004
      * @tc.desc: Test show task for promise when tid is "123"
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testShowTask004', 0, async (done: Function) => {
       await request.agent.show("123").then((info) => {
@@ -110,11 +134,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testShowTask005
      * @tc.desc: Test show task when lack tid
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testShowTask005', 0, async (done: Function) => {
       try {
@@ -124,11 +154,17 @@ export default function requestQueryTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testShowTask006
      * @tc.desc: Test show task for promise when correct param
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testShowTask006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -169,11 +205,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testShowTask007
      * @tc.desc: Test show task for callback when correct param
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testShowTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -209,11 +251,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testShowTask008
      * @tc.desc: Test show task for promise when token exist
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testShowTask008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -233,11 +281,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testTouchTask001
      * @tc.desc: Test touch task for tid is empty
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTouchTask001', 0, async (done: Function) => {
       try {
@@ -247,11 +301,17 @@ export default function requestQueryTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testTouchTask002
      * @tc.desc: Test touch task for tid is number
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTouchTask002', 0, async (done: Function) => {
       try {
@@ -261,11 +321,17 @@ export default function requestQueryTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testTouchTask003
      * @tc.desc: Test touch task for token is number
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTouchTask003', 0, async (done: Function) => {
       try {
@@ -275,11 +341,17 @@ export default function requestQueryTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testTouchTask004
      * @tc.desc: Test touch task for token length less than 8
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTouchTask004', 0, async (done: Function) => {
       try {
@@ -289,11 +361,17 @@ export default function requestQueryTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testTouchTask005
      * @tc.desc: Test touch task for token length greater than 2048
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTouchTask005', 0, async (done: Function) => {
       let token = 'a'.padStart(2049, 'a');
@@ -304,11 +382,17 @@ export default function requestQueryTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testTouchTask006
      * @tc.desc: Test touch task for tid is "123"
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTouchTask006', 0, async (done: Function) => {
       request.agent.touch("123", "12345678", (err, info) => {
@@ -316,11 +400,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testTouchTask007
      * @tc.desc: Test touch task for token is "123456789"
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTouchTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -340,11 +430,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testTouchTask008
      * @tc.desc: Test touch task
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTouchTask008', 0, async (done: Function) => {
       let file1 = fs.openSync(cacheDir + '/test1.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -392,11 +488,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testTouchTask009
      * @tc.desc: Test touch task
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testTouchTask009', 0, async (done: Function) => {
       let file1 = fs.openSync(cacheDir + '/test1.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
@@ -434,11 +536,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask001
      * @tc.desc: Test search task for tid is empty
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -453,11 +561,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask002
      * @tc.desc: Test search task for tid is number
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask002', 0, async (done: Function) => {
       try {
@@ -467,11 +581,17 @@ export default function requestQueryTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testSearchTask003
      * @tc.desc: Test search task for bundle is "123"
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -492,11 +612,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask004
      * @tc.desc: Test search task for filter is {}
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -511,11 +637,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask005
      * @tc.desc: Test search task for filter is 123
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -536,11 +668,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask006
      * @tc.desc: Test search task
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask006', 0, async (done: Function) => {
       let filter: request.agent.Filter  = {
@@ -554,11 +692,17 @@ export default function requestQueryTest() {
         done();
       }
     });
+
     /**
      * @tc.name: testSearchTask007
      * @tc.desc: Test search task
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask007', 0, async (done: Function) => {
       let filter: request.agent.Filter = {
@@ -573,11 +717,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask008
      * @tc.desc: Test search task
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -599,11 +749,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask009
      * @tc.desc: Test search task for filter is 123
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask009', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -624,11 +780,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask010
      * @tc.desc: Test search task for before and after type is string
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask010', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -650,11 +812,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask011
      * @tc.desc: Test search task for state is "0"
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask011', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -677,11 +845,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask012
      * @tc.desc: Test search task for state is INITIALIZED
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask012', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -702,11 +876,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask013
      * @tc.desc: Test search task for Action is DOWNLOAD
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask013', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -727,11 +907,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask014
      * @tc.desc: Test search task for mode is BACKGROUND
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask014', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -752,11 +938,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask015
      * @tc.desc: Test search task for bundle is "*"
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask015', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -777,11 +969,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask016
      * @tc.desc: Test search task for filter is empty
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask016', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -799,11 +997,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask017
      * @tc.desc: Test search task for filter is undefined
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask017', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -822,11 +1026,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testSearchTask018
      * @tc.desc: Test search task for filter is null
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testSearchTask018', 0, async (done: Function) => {
       let conf: request.agent.Config = {
@@ -841,11 +1051,17 @@ export default function requestQueryTest() {
         done();
       });
     });
+
     /**
      * @tc.name: testQueryTask001
      * @tc.desc: Test query task for tid is "123"
      * @tc.type: FUNC
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testQueryTask001', 0, async (done: Function) => {
       request.agent.query("123", (err, info) => {
