@@ -91,6 +91,15 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create the target file (testTaskOverwrite001.txt) with 
+     *             read-write permissions and close it to simulate the "file exists" scenario.
+     *           2. Create a Config object with action: DOWNLOAD, valid URL, saveas set to the 
+     *             created file name, and overwrite: true.
+     *           3. Call request.agent.create() to create a download task instance.
+     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task created and started successfully).
+     *           5. Clean up by calling request.agent.remove() to delete the task, then call done().
+     *           6. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskOverwrite001', 0, async (done: Function) => {
@@ -125,6 +134,13 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, 
+     *             saveas: testTaskOverwrite002.txt (file not exists), and overwrite: true.
+     *           2. Call request.agent.create() to create a download task instance.
+     *           3. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task created and started successfully).
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskOverwrite002', 0, async (done: Function) => {
@@ -157,6 +173,14 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create the target file (testTaskOverwrite003.txt) with 
+     *             read-write permissions and close it to simulate the "file exists" scenario.
+     *           2. Create a Config object with action: DOWNLOAD, valid URL, saveas set to the 
+     *             created file name, and overwrite: false.
+     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 13400001 (file exists error), 
+     *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskOverwrite003', 0, async (done: Function) => {
@@ -191,6 +215,13 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, 
+     *             saveas: testTaskOverwrite004.txt (file not exists), and overwrite: false.
+     *           2. Call request.agent.create() to create a download task instance.
+     *           3. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task created and started successfully).
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskOverwrite004', 0, async (done: Function) => {
@@ -223,6 +254,13 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Record object (for type conversion) with action: DOWNLOAD, valid URL, 
+     *             saveas: testTaskOverwrite005, and overwrite: "true" (string type).
+     *           2. Call request.agent.create() with type-cast config to create a download task instance.
+     *           3. Call task.start() to execute the task; in the success callback, assert 
+     *             task.config.overwrite equals "true".
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskOverwrite005', 0, async (done: Function) => {
@@ -255,6 +293,14 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create the target file (testTaskOverwrite006.txt) with 
+     *             read-write permissions and close it to simulate the "file exists" scenario.
+     *           2. Create a Record object (for type conversion) with action: DOWNLOAD, valid URL, 
+     *             saveas set to the created file name, and overwrite: "true" (string type).
+     *           3. Try to call request.agent.create() with type-cast config; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 13400001 (file exists error), 
+     *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskOverwrite006', 0, async (done: Function) => {
@@ -289,6 +335,14 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, 
+     *             saveas: testTaskOverwrite007.txt (file not exists), and no overwrite parameter.
+     *           2. Try to call request.agent.create() to create a download task instance.
+     *           3. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task created and started successfully).
+     *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
+     *           5. In the task catch callback, assert false (task execution failed); in the outer 
+     *             catch, assert err.code equals 13400001 and call done().
      * @tc.require: issues#1573
      */
     it('testTaskOverwrite007', 0, async (done: Function) => {
@@ -325,6 +379,14 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create the target file (testTaskOverwrite008.txt) with 
+     *             read-write permissions and close it to simulate the "file exists" scenario.
+     *           2. Create a Config object with action: DOWNLOAD, valid URL, saveas set to the 
+     *             created file name, and no overwrite parameter.
+     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 13400001 (file exists error), 
+     *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskOverwrite008', 0, async (done: Function) => {
@@ -358,6 +420,14 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a target directory (testTaskOverwrite009) to 
+     *             simulate "saveas is a directory" scenario.
+     *           2. Create a Config object with action: DOWNLOAD, valid URL, overwrite: true, and 
+     *             saveas set to the created directory path.
+     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *             (unexpected), assert false and call done().
+     *           4. Catch the thrown exception, assert err.code equals 13400001 (saveas is directory 
+     *             error), then call done().
      * @tc.require: issues#1573
      */
     it('testTaskOverwrite009', 0, async (done: Function) => {
@@ -392,6 +462,14 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Record object (for type conversion) with action: DOWNLOAD, valid URL, 
+     *             mode: BACKGROUND, and saveas: 123 (number type).
+     *           2. Call request.agent.create() with type-cast config to create a download task instance.
+     *           3. Bind 'completed' event to the task; in the callback, check if the default file 
+     *             (test.txt) exists in the cache directory.
+     *           4. If the file exists, assert true and call done(); otherwise, the assertion will 
+     *             fail implicitly.
+     *           5. Call task.start() to execute the download task.
      * @tc.require: issues#1573
      */
     it('testTaskSaveas001', 0, async (done: Function) => {
@@ -423,6 +501,13 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, mode: BACKGROUND, 
+     *             and no saveas parameter.
+     *           2. Try to call request.agent.create() to create a download task instance.
+     *           3. If task is created, bind 'completed' event: check if the default file (test.txt) 
+     *             exists in the cache directory, assert true if exists, else assert false.
+     *           4. Call task.start() to execute the task; in the outer catch, assert err.code equals 
+     *             401 (missing saveas error) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskSaveas002', 0, async (done: Function) => {
@@ -461,6 +546,12 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Record object (for type conversion) with action: DOWNLOAD, valid URL, 
+     *             saveas: testTaskIndex001.txt, index: "0" (string type), and mode: BACKGROUND.
+     *           2. Call request.agent.create() with type-cast config to create a download task instance.
+     *           3. Bind 'completed' event to the task; in the callback, assert true (task completed 
+     *             successfully) and call done().
+     *           4. Call task.start() to execute the download task.
      * @tc.require: issues#1573
      */
     it('testTaskIndex001', 0, async (done: Function) => {
@@ -491,6 +582,13 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, 
+     *             saveas: testTaskIndex002.txt, index: 0, begins: 10 (greater than ends: 5).
+     *           2. Call request.agent.create() to create a download task instance.
+     *           3. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task executed successfully despite invalid range) and call done().
+     *           4. Clean up by calling request.agent.remove() to delete the task.
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskIndex002', 0, async (done: Function) => {
@@ -525,6 +623,14 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create an upload file (testTaskIndex003.txt) with 
+     *             read-write permissions and close it (only one file).
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, and index: 1 
+     *             (exceeds number of files: 1).
+     *           3. Try to call request.agent.create() to create an upload task; in the success 
+     *             callback, call task.start() and assert false (unexpected success).
+     *           4. In the task start catch callback, assert false; in the outer catch, assert 
+     *             err.code equals 401 (invalid index error) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskIndex003', 0, async (done: Function) => {
@@ -562,6 +668,14 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create an upload file (testTaskIndex005.txt) with 
+     *             read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data 
+     *             (contains the upload file path), begins: 5, and ends: 10.
+     *           3. Call request.agent.create() to create an upload task instance.
+     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task executed successfully) and call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskIndex005', 0, async (done: Function) => {
@@ -601,6 +715,12 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, mode: BACKGROUND, 
+     *             saveas: testTaskIndex006, begins: 5, and gauge: true (unsupported range).
+     *           2. Call request.agent.create() to create a download task instance.
+     *           3. Call task.start() to execute the task.
+     *           4. Bind 'failed' event to the task; in the callback, assert true (task failed as 
+     *             expected) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskIndex006', 0, async (done: Function) => {
@@ -632,6 +752,14 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create an upload file (testTaskIndex007.txt) with 
+     *             read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data 
+     *             (contains the upload file path), and begins: 5 (ends not specified).
+     *           3. Call request.agent.create() to create an upload task instance.
+     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task executed successfully) and call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskIndex007', 0, async (done: Function) => {
@@ -670,6 +798,14 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create an upload file (testTaskIndex009.txt) with 
+     *             read-write permissions and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data 
+     *             (contains the upload file path), and ends: 10 (begins not specified).
+     *           3. Call request.agent.create() to create an upload task instance.
+     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task executed successfully) and call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskIndex009', 0, async (done: Function) => {
@@ -708,6 +844,14 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create two upload files (test1.txt, test2.txt) with 
+     *             read-write permissions and close them.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data 
+     *             (contains both upload file paths), and index: 1 (valid, matches number of files).
+     *           3. Call request.agent.create() to create an upload task instance.
+     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *             (task executed successfully) and call done().
+     *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskIndex010', 0, async (done: Function) => {
@@ -757,6 +901,13 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     *             and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, multipart: true, 
+     *             and data: [formItem1] (invalid form item).
+     *           3. Try to call request.agent.create() to create an upload task; in the success callback 
+     *             (expected despite multipart error), assert true and call done().
+     *           4. In the outer catch, assert false (unexpected exception) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskMultipart001', 0, async (done: Function) => {
@@ -791,6 +942,13 @@ export default function requestCreateFileConfTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     *             and close it.
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, multipart: false, 
+     *             and data: [formItem1] (invalid form item).
+     *           3. Try to call request.agent.create() to create an upload task; in the success callback 
+     *             (expected despite multipart error), assert true and call done().
+     *           4. In the outer catch, assert false (unexpected exception) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskMultipart002', 0, async (done: Function) => {

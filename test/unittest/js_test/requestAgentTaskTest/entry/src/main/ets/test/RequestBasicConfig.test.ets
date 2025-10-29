@@ -100,6 +100,9 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a config object with only url and saveas (no action field).
+     *           2. Call request.agent.create() with the config, attempt to create a task.
+     *           3. Verify the call throws an error, and the error code is 401.
      * @tc.require: issues#1573
      */
     it('testTaskAction001', 0, (done: Function) => {
@@ -130,6 +133,9 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a config object with action set to string "UPLOAD", plus url and saveas.
+     *           2. Call request.agent.create() with the config, attempt to create a task.
+     *           3. Verify the call throws an error: code 401 and error message contains "action".
      * @tc.require: issues#1573
      */
     it('testTaskAction002', 0, async (done: Function) => {
@@ -162,6 +168,9 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action set to number 2, plus url and saveas.
+     *           2. Call request.agent.create() with the config, attempt to create a task.
+     *           3. Verify the call throws an error, and the error code is 401.
      * @tc.require: issues#1573
      */
     it('testTaskAction003', 0, async (done: Function) => {
@@ -193,6 +202,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a test.txt file in cacheDir, then close the file.
+     *           2. Create a Config object with action set to request.agent.Action.UPLOAD, plus url and data.
+     *           3. Call request.agent.create() to create a task; verify no error (err is null).
+     *           4. Call request.agent.remove() with the task's tid to clean up, then finish the test.
      * @tc.require: issues#1573
      */
     it('testTaskAction004', 0, async (done: Function) => {
@@ -222,6 +235,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action set to request.agent.Action.DOWNLOAD, 
+     *              plus valid test URL, saveas and gauge: true.
+     *           2. Call request.agent.create() with the config, use then() to handle success.
+     *           3. Verify the target file exists via fs.accessSync(), then call request.agent.remove() to clean up.
+     *           4. If catch() is triggered, assert failure; otherwise finish the test.
      * @tc.require: issues#1573
      */
     it('testTaskAction005', 0, async (done: Function) => {
@@ -255,6 +273,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action set to number 0 (representing DOWNLOAD), 
+     *              plus valid test URL, saveas and gauge: true.
+     *           2. Call request.agent.create() with the config, use then() to handle success.
+     *           3. Verify the target file exists via fs.accessSync(), then call request.agent.remove() to clean up.
+     *           4. If catch() is triggered, assert failure; otherwise finish the test.
      * @tc.require: issues#1573
      */
     it('testTaskAction006', 0, async (done: Function) => {
@@ -288,6 +311,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a test.txt file in cacheDir, then close the file.
+     *           2. Create a Config object with action set to number 1 (representing UPLOAD), 
+     *              plus url and data.
+     *           3. Call request.agent.create() to create a task; verify no error (err is null).
+     *           4. Call request.agent.remove() with the task's tid to clean up, then finish the test.
      * @tc.require: issues#1573
      */
     it('testTaskAction007', 0, async (done: Function) => {
@@ -317,6 +345,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid test URL, saveas, 
+     *              and mode set to request.agent.Mode.FOREGROUND.
+     *           2. Call request.agent.create() with the config; use then() to handle success.
+     *           3. Assert success (true === true), call request.agent.remove() to clean up, then finish the test.
+     *           4. If catch() is triggered, assert failure.
      * @tc.require: issues#1573
      */
     it('testTaskMode001', 0, async (done: Function) => {
@@ -348,6 +381,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid test URL, saveas, 
+     *              and mode set to request.agent.Mode.BACKGROUND.
+     *           2. Call request.agent.create() with the config; use then() to handle success.
+     *           3. Assert success (true === true), call request.agent.remove() to clean up, then finish the test.
+     *           4. If catch() is triggered, assert failure.
      * @tc.require: issues#1573
      */
     it('testTaskMode002', 0, async (done: Function) => {
@@ -379,6 +417,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a config object with action: DOWNLOAD, valid test URL, saveas, and mode as "BACKGROUND".
+     *           2. Await request.agent.create() with the config (cast to valid type) to get task instance.
+     *           3. Call task.start(), on success assert true, clean up with remove(), then finish test.
+     *           4. If start() fails, assert false and finish test.
      * @tc.require: issues#1573
      */
     it('testTaskMode003', 0, async (done: Function) => {
@@ -411,6 +453,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid test URL, saveas, and mode: 0.
+     *           2. Call request.agent.create() with the config, on success assert true.
+     *           3. Clean up with request.agent.remove() using task tid, then finish test.
+     *           4. If create() fails, assert false and finish test.
      * @tc.require: issues#1573
      */
     it('testTaskMode004', 0, async (done: Function) => {
@@ -442,6 +488,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid test URL, saveas, and mode: 1.
+     *           2. Call request.agent.create() with the config, on success assert true.
+     *           3. Clean up with request.agent.remove() using task tid, then finish test.
+     *           4. If create() fails, assert false and finish test.
      * @tc.require: issues#1573
      */
     it('testTaskMode005', 0, async (done: Function) => {
@@ -473,6 +523,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid test URL, saveas, and mode: 3.
+     *           2. Await request.agent.create() to get task instance.
+     *           3. Call task.start(), on success assert true, clean up with remove(), then finish test.
+     *           4. If start() fails, assert false and finish test.
      * @tc.require: issues#1573
      */
     it('testTaskMode006', 0, async (done: Function) => {
@@ -505,6 +559,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a config with action: DOWNLOAD, valid URL, saveas, mode as request.agent.Action.DOWNLOAD.
+     *           2. Await request.agent.create() with cast config to get task instance.
+     *           3. Call task.start(), on success assert true, clean up with remove(), then finish test.
+     *           4. If start() fails, assert false and finish test.
      * @tc.require: issues#1573
      */
     it('testTaskMode007', 0, async (done: Function) => {
@@ -537,6 +595,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid test URL, saveas (no mode field).
+     *           2. Call request.agent.create() with the config, on success check data.config.mode is undefined.
+     *           3. Assert true, clean up with remove(), then finish test.
+     *           4. If create() fails, assert false and finish test.
      * @tc.require: issues#1573
      */
     it('testTaskMode008', 0, async (done: Function) => {
@@ -568,6 +630,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create test.txt in cacheDir, close the file.
+     *           2. Create Config with action: UPLOAD, url, data (file info), network: 3.
+     *           3. Call request.agent.create() with config, on success assert true.
+     *           4. Clean up with remove(), then finish test. If failed, assert false.
      * @tc.require: issues#1573
      */
     it('testTaskNetwork001', 0, async (done: Function) => {
@@ -606,6 +672,9 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create a config with action: DOWNLOAD, valid URL, saveas, network: "ANY".
+     *           2. Call request.agent.create() with cast config, on success assert true.
+     *           3. Clean up with remove(), then finish test. If failed, assert false.
      * @tc.require: issues#1573
      */
     it('testTaskNetwork002', 0, async (done: Function) => {
@@ -637,6 +706,9 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, saveas, network: WIFI.
+     *           2. Call request.agent.create() with config, on success assert true.
+     *           3. Clean up with remove(), then finish test. If failed, assert false.
      * @tc.require: issues#1573
      */
     it('testTaskNetwork003', 0, async (done: Function) => {
@@ -668,6 +740,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create test.txt in cacheDir, close the file.
+     *           2. Create Config with action: UPLOAD, url, data (file info), network: WIFI.
+     *           3. Await request.agent.create() to get task instance, call task.start().
+     *           4. On start() success assert true, finish test. If failed, assert false.
      * @tc.require: issues#1573
      */
     it('testTaskNetwork004', 0, async (done: Function) => {
@@ -706,6 +782,9 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, saveas, network: ANY.
+     *           2. Call request.agent.create() with config, on success assert true.
+     *           3. Clean up with remove(), then finish test. If failed, assert false.
      * @tc.require: issues#1573
      */
     it('testTaskNetwork005', 0, async (done: Function) => {
@@ -737,6 +816,9 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, saveas, network: 0.
+     *           2. Call request.agent.create() with config, on success assert true.
+     *           3. Clean up with remove(), then finish test. If failed, assert false.
      * @tc.require: issues#1573
      */
     it('testTaskNetwork006', 0, async (done: Function) => {
@@ -768,6 +850,9 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, saveas, network: 1.
+     *           2. Call request.agent.create() with config, on success assert true.
+     *           3. Clean up with remove(), then finish test. If failed, assert false.
      * @tc.require: issues#1573
      */
     it('testTaskNetwork007', 0, async (done: Function) => {
@@ -799,6 +884,9 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, saveas, network: CELLULAR.
+     *           2. Call request.agent.create() with config, on success assert true.
+     *           3. Clean up with remove(), then finish test. If failed, assert false.
      * @tc.require: issues#1573
      */
     it('testTaskNetwork008', 0, async (done: Function) => {
@@ -830,6 +918,9 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, saveas, network: 2.
+     *           2. Call request.agent.create() with config, on success assert true.
+     *           3. Clean up with remove(), then finish test. If failed, assert false.
      * @tc.require: issues#1573
      */
     it('testTaskNetwork009', 0, async (done: Function) => {
@@ -861,6 +952,9 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, saveas (no network field).
+     *           2. Call request.agent.create() with config, on success assert true.
+     *           3. Clean up with remove(), then finish test. If failed, assert false.
      * @tc.require: issues#1573
      */
     it('testTaskNetwork010', 0, async (done: Function) => {
@@ -891,6 +985,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, url: http://xxx, mode: FOREGROUND, saveas, retry: true.
+     *           2. Await request.agent.create() to get task instance, call task.start().
+     *           3. On start() success assert true, clean up with remove(), then finish test.
+     *           4. If start() fails, assert false and finish test.
      * @tc.require: issues#1573
      */
     it('testTaskRetry001', 0, async (done: Function) => {
@@ -924,6 +1022,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, mode: BACKGROUND, saveas, retry: true, gauge: true.
+     *           2. Await request.agent.create() to get task instance, call task.start().
+     *           3. On start() success assert true, clean up with remove(), then finish test.
+     *           4. If start() fails, assert false and finish test.
      * @tc.require: issues#1573
      */
     it('testTaskRetry002', 0, async (done: Function) => {
@@ -958,6 +1060,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create config with action: DOWNLOAD, url: http://xxx, mode: BACKGROUND, saveas, retry: "true", overwrite: true.
+     *           2. Await request.agent.create() with cast config to get task instance.
+     *           3. Listen to 'failed' event, on trigger assert true and finish test.
+     *           4. Call task.start() to execute the task.
      * @tc.require: issues#1573
      */
     it('testTaskRetry003', 0, async (done: Function) => {
@@ -989,6 +1095,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, target URL, mode: FOREGROUND, saveas, retry: false.
+     *           2. Await request.agent.create() to get task instance.
+     *           3. Listen to 'failed' event, on trigger assert true and finish test.
+     *           4. Call task.start() to execute the task.
      * @tc.require: issues#1573
      */
     it('testTaskRetry004', 0, async (done: Function) => {
@@ -1019,6 +1129,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, target URL, mode: BACKGROUND, saveas, retry: false, overwrite: true.
+     *           2. Await request.agent.create() to get task instance.
+     *           3. Listen to 'failed' event, on trigger assert true and finish test.
+     *           4. Call task.start() to execute the task.
      * @tc.require: issues#1573
      */
     it('testTaskRetry005', 0, async (done: Function) => {
@@ -1050,6 +1164,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, title: 'download test.txt', saveas.
+     *           2. Await request.agent.create() to get task instance.
+     *           3. Assert task.config.title equals 'download test.txt', clean up with remove().
+     *           4. Finish the test after cleanup.
      * @tc.require: issues#1573
      */
     it('testTaskTitle001', 0, async (done: Function) => {
@@ -1077,6 +1195,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create config with action: DOWNLOAD, valid URL, title: 123, saveas.
+     *           2. Await request.agent.create() with cast config to get task instance.
+     *           3. Assert task.config.title equals 123, clean up with remove().
+     *           4. Finish the test after cleanup.
      * @tc.require: issues#1573
      */
     it('testTaskTitle002', 0, async (done: Function) => {
@@ -1104,6 +1226,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, title: 'a' repeated 257 times, saveas.
+     *           2. Try to call request.agent.create() with the config; expect it to throw an error.
+     *           3. In catch block, assert error code is 401, then finish test.
+     *           4. If no error is thrown, assert false and finish test.
      * @tc.require: issues#1573
      */
     it('testTaskTitle003', 0, async (done: Function) => {
@@ -1136,6 +1262,9 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, title: 'a' repeated 256 times, saveas.
+     *           2. Try to await request.agent.create() to create task; if success, call done().
+     *           3. If create() throws error, assert true and call done().
      * @tc.require: issues#1573
      */
     it('testTaskTitle004', 0, async (done: Function) => {
@@ -1166,6 +1295,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, other parameters set to undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() with task tid, verify multiple info fields match expectations.
+     *           4. Clean up with request.agent.remove(), print success log, call done().
+     *           5. Catch any errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadNormalConfig001', 0, (done: Function) => {
@@ -1255,6 +1389,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, title: "title", other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() to verify info.title equals "title" and other fields match.
+     *           4. Clean up with remove(), print success log, call done().
+     *           5. Catch errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigTitle001', 0, (done: Function) => {
@@ -1344,6 +1483,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, title: "", other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() to verify info.title equals "download" and other fields match.
+     *           4. Clean up with remove(), print success log, call done().
+     *           5. Catch errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigTitle002', 0, (done: Function) => {
@@ -1433,6 +1577,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, title: 'a'×256, other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() to verify info.title equals 'a'×256 and other fields match.
+     *           4. Clean up with remove(), print success log, call done().
+     *           5. Catch errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigTitle003', 0, (done: Function) => {
@@ -1522,6 +1671,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, title: 'a'×257, other params undefined.
+     *           2. Try to call request.agent.create() with config; expect it to throw error.
+     *           3. In catch block, assert err.code equals 401, print success log, call done().
+     *           4. If create() succeeds, print fail log, assert false, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigTitle004', 0, (done: Function) => {
@@ -1584,6 +1737,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Record config with action: DOWNLOAD, valid URL, title: 1, other params undefined.
+     *           2. Call request.agent.create() with cast config; assert err is null.
+     *           3. Call request.agent.show() to verify info.title equals "download" and other fields match.
+     *           4. Clean up with remove(), print success log, call done().
+     *           5. Catch errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigTitle005', 0, (done: Function) => {
@@ -1674,6 +1832,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, description: "desc", other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() to verify info.description equals "desc" and other fields match.
+     *           4. Clean up with remove(), print success log, call done().
+     *           5. Catch errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigDescription001', 0, (done: Function) => {
@@ -1763,6 +1926,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, description: "", other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() to verify info.description equals "" and other fields match.
+     *           4. Clean up with remove(), print success log, call done().
+     *           5. Catch errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigDescription002', 0, (done: Function) => {
@@ -1852,6 +2020,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, description: 'a'×1024, other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() to verify info.description equals 'a'×1024 and other fields match.
+     *           4. Clean up with remove(), print success log, call done().
+     *           5. Catch errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigDescription003', 0, (done: Function) => {
@@ -1941,6 +2114,10 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, description: 'a'×1025, other params undefined.
+     *           2. Try to call request.agent.create() with config; expect it to throw error.
+     *           3. In catch block, assert err.code equals 401, print success log, call done().
+     *           4. If create() succeeds, print fail log, assert false, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigDescription004', 0, (done: Function) => {
@@ -2003,6 +2180,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Record config with action: DOWNLOAD, valid URL, description: 1, other params undefined.
+     *           2. Call request.agent.create() with cast config; assert err is null.
+     *           3. Call request.agent.show() to verify info.description equals "" and other fields match.
+     *           4. Clean up with remove(), print success log, call done().
+     *           5. Catch errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigDescription005', 0, (done: Function) => {
@@ -2093,6 +2275,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, mode: BACKGROUND, other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() to verify info.mode equals BACKGROUND and other fields match.
+     *           4. Clean up with remove(), print success log, call done().
+     *           5. Catch errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigMode001', 0, (done: Function) => {
@@ -2182,6 +2369,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, mode: FOREGROUND, other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() to verify info.mode equals FOREGROUND and other fields match.
+     *           4. Clean up with remove(), print success log, call done().
+     *           5. Catch errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigMode002', 0, (done: Function) => {
@@ -2271,6 +2463,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Record config with action: DOWNLOAD, valid URL, mode: 1, other params undefined.
+     *           2. Call request.agent.create() with cast config; assert err is null.
+     *           3. Call request.agent.show() to verify info.mode equals FOREGROUND and other fields match.
+     *           4. Clean up with remove(), print success log, call done().
+     *           5. Catch errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigMode003', 0, (done: Function) => {
@@ -2361,6 +2558,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, overwrite: true, other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() to verify other fields match expectations (overwrite not checked here).
+     *           4. Clean up with remove(), print success log, call done().
+     *           5. Catch errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigOverwrite001', 0, (done: Function) => {
@@ -2450,6 +2652,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, overwrite: false, other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() with task tid, verify multiple info fields match expectations.
+     *           4. Clean up with request.agent.remove(), print success log, call done().
+     *           5. Catch any errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigOverwrite002', 0, (done: Function) => {
@@ -2539,6 +2746,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, method: 'GET', other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() with task tid, verify multiple info fields match expectations.
+     *           4. Clean up with request.agent.remove(), print success log, call done().
+     *           5. Catch any errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigMethod001', 0, (done: Function) => {
@@ -2628,6 +2840,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, method: 'POST', other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() with task tid, verify multiple info fields match expectations.
+     *           4. Clean up with request.agent.remove(), print success log, call done().
+     *           5. Catch any errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigMethod002', 0, (done: Function) => {
@@ -2717,6 +2934,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, method: 'PUT', other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() with task tid, verify multiple info fields match expectations.
+     *           4. Clean up with request.agent.remove(), print success log, call done().
+     *           5. Catch any errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigMethod003', 0, (done: Function) => {
@@ -2806,6 +3028,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Record config with action: DOWNLOAD, valid URL, method: 1, other params undefined.
+     *           2. Call request.agent.create() with cast config; assert err is null.
+     *           3. Call request.agent.show() with task tid, verify multiple info fields match expectations.
+     *           4. Clean up with request.agent.remove(), print success log, call done().
+     *           5. Catch any errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigMethod004', 0, (done: Function) => {
@@ -2896,6 +3123,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL, headers: {'content-type': 'application/json'}, other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() with task tid, verify multiple info fields match expectations.
+     *           4. Clean up with request.agent.remove(), print success log, call done().
+     *           5. Catch any errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigHeaders001', 0, (done: Function) => {
@@ -2987,6 +3219,12 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Config with action: DOWNLOAD, valid URL,
+     *              headers: {'content-type': 'multipart/form-data'}, other params undefined.
+     *           2. Call request.agent.create() with config; assert err is null.
+     *           3. Call request.agent.show() with task tid, verify multiple info fields match expectations.
+     *           4. Clean up with request.agent.remove(), print success log, call done().
+     *           5. Catch any errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigHeaders002', 0, (done: Function) => {
@@ -3078,6 +3316,11 @@ export default function requestBasicConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Create Record config with action: DOWNLOAD, valid URL, headers: 1, other params undefined.
+     *           2. Try to call request.agent.create() with cast config; expect it to throw error.
+     *           3. In catch block, assert true, print success log, call done().
+     *           4. If create() succeeds, assert false, print success log (code logic), call done().
+     *           5. Catch any other errors, assert false, print fail log, call done().
      * @tc.require: issues#1573
      */
     it('testDownloadConfigHeaders003', 0, (done: Function) => {
