@@ -1621,7 +1621,7 @@ export default function requestBasicConfigTest() {
       }
 
       try {
-        request.agent.create(context, config, async (err, task) => {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, task) => {
           expect(err === null).assertTrue();
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
@@ -2040,7 +2040,7 @@ export default function requestBasicConfigTest() {
       }
 
       try {
-        request.agent.create(context, config, async (err, task) => {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, task) => {
           expect(err === null).assertTrue();
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
@@ -2088,7 +2088,12 @@ export default function requestBasicConfigTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadConfigMode001', 0, (done: Function) => {
       console.info("===> testDownloadConfigMode001 test start!");
@@ -2172,7 +2177,12 @@ export default function requestBasicConfigTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadConfigMode002', 0, (done: Function) => {
       console.info("===> testDownloadConfigMode002 test start!");
@@ -2256,7 +2266,12 @@ export default function requestBasicConfigTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadConfigMode003', 0, (done: Function) => {
       console.info("===> testDownloadConfigMode003 test start!");
@@ -2293,7 +2308,7 @@ export default function requestBasicConfigTest() {
       }
 
       try {
-        request.agent.create(context, config, async (err, task) => {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, task) => {
           expect(err === null).assertTrue();
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
@@ -2341,7 +2356,12 @@ export default function requestBasicConfigTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadConfigOverwrite001', 0, (done: Function) => {
       console.info("===> testDownloadConfigOverwrite001 test start!");
@@ -2425,7 +2445,12 @@ export default function requestBasicConfigTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadConfigOverwrite002', 0, (done: Function) => {
       console.info("===> testDownloadConfigOverwrite002 test start!");
@@ -2509,7 +2534,12 @@ export default function requestBasicConfigTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadConfigMethod001', 0, (done: Function) => {
       console.info("===> testDownloadConfigMethod001 test start!");
@@ -2593,7 +2623,12 @@ export default function requestBasicConfigTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadConfigMethod002', 0, (done: Function) => {
       console.info("===> testDownloadConfigMethod002 test start!");
@@ -2677,7 +2712,12 @@ export default function requestBasicConfigTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadConfigMethod003', 0, (done: Function) => {
       console.info("===> testDownloadConfigMethod003 test start!");
@@ -2761,7 +2801,12 @@ export default function requestBasicConfigTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadConfigMethod004', 0, (done: Function) => {
       console.info("===> testDownloadConfigMethod004 test start!");
@@ -2798,7 +2843,7 @@ export default function requestBasicConfigTest() {
       }
 
       try {
-        request.agent.create(context, config, async (err, task) => {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, task) => {
           expect(err === null).assertTrue();
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
@@ -2846,7 +2891,12 @@ export default function requestBasicConfigTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadConfigHeaders001', 0, (done: Function) => {
       console.info("===> testDownloadConfigHeaders001 test start!");
@@ -2932,7 +2982,12 @@ export default function requestBasicConfigTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadConfigHeaders002', 0, (done: Function) => {
       console.info("===> testDownloadConfigHeaders002 test start!");
@@ -3018,7 +3073,12 @@ export default function requestBasicConfigTest() {
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
-     * @tc.require:
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
      */
     it('testDownloadConfigHeaders003', 0, (done: Function) => {
       console.info("===> testDownloadConfigHeaders003 test start!");
@@ -3064,6 +3124,1776 @@ export default function requestBasicConfigTest() {
         expect(true).assertTrue();
         console.info("===> testDownloadConfigHeaders003 test success!");
         done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigSaveas001
+     * @tc.name: testDownloadConfigSaveas001
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     saveas to 'test.txt' and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigSaveas001', 0, (done: Function) => {
+      console.info("===> testDownloadConfigSaveas001 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: 'test.txt',
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        proxy: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+      try {
+        request.agent.create(context, config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigSaveas001 test success!");
+            done();
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigSaveas001 test fail!");
+            done();
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigSaveas001 test fail!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigSaveas002
+     * @tc.name: testDownloadConfigSaveas002
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     saveas to 1, and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigSaveas002', 0, (done: Function) => {
+      console.info("===> testDownloadConfigSaveas002 test start!");
+
+      let config: Record<string, string | number | undefined> = {
+        "action": request.agent.Action.DOWNLOAD,
+        "url": "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "title": undefined,
+        "description": undefined,
+        "mode": undefined,
+        "overwrite": undefined,
+        "method": undefined,
+        "headers": undefined,
+        //data: undefined,
+        "saveas": 1,
+        "network": undefined,
+        "metered": undefined,
+        "roaming": undefined,
+        "retry": undefined,
+        "redirect": undefined,
+        "proxy": undefined,
+        "index": undefined,
+        "begins": undefined,
+        "ends": undefined,
+        "gauge": undefined,
+        "precise": undefined,
+        "token": undefined,
+        "priority": undefined,
+        "extras": undefined,
+        "multipart": undefined,
+        "notification": undefined,
+        "minSpeed": undefined,
+        "timeout": undefined,
+      }
+
+      try {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigSaveas002 test success!");
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigSaveas002 test fail!");
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigSaveas002 test fail!");
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigSaveas003
+     * @tc.name: testDownloadConfigSaveas003
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     saveas to './' and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigSaveas003', 0, (done: Function) => {
+      console.info("===> testDownloadConfigSaveas003 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: './',
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        proxy: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+      try {
+        request.agent.create(context, config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigSaveas003 test success!");
+            done();
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigSaveas003 test fail!");
+            done();
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigSaveas003 test fail!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigSaveas004
+     * @tc.name: testDownloadConfigSaveas004
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     saveas to ./filename and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigSaveas004', 0, (done: Function) => {
+      console.info("===> testDownloadConfigSaveas004 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: './test004.txt',
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        proxy: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+      try {
+        request.agent.create(context, config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test004.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigSaveas004 test success!");
+            done();
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigSaveas004 test fail!");
+            done();
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigSaveas004 test fail!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigSaveas005
+     * @tc.name: testDownloadConfigSaveas005
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     saveas to pathname/filename and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigSaveas005', 0, (done: Function) => {
+      console.info("===> testDownloadConfigSaveas005 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: 'a/b/test005.txt',
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        proxy: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+      try {
+        request.agent.create(context, config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/a/b/test005');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigSaveas005 test success!");
+            done();
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigSaveas005 test fail!");
+            done();
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigSaveas005 test fail!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigSaveas006
+     * @tc.name: testDownloadConfigSaveas006
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     saveas to internal://cache/filename and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigSaveas006', 0, (done: Function) => {
+      console.info("===> testDownloadConfigSaveas006 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: 'internal://cache/test006',
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        proxy: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+      try {
+        request.agent.create(context, config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test006');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigSaveas006 test success!");
+            done();
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigSaveas006 test fail!");
+            done();
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigSaveas006 test fail!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigSaveas007
+     * @tc.name: testDownloadConfigSaveas007
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     saveas is whole path which contains error .. and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigSaveas007', 0, (done: Function) => {
+      console.info("===> testDownloadConfigSaveas007 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: '/data/storage/../../el2/base/test_saveas_007',
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        proxy: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+      try {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, data) => {
+          expect(false).assertTrue();
+          console.info("===> testDownloadConfigSaveas007 test success!");
+          done();
+        });
+      } catch (err) {
+        expect(true).assertTrue();
+        console.info("===> testDownloadConfigSaveas007 test success!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigSaveas008
+     * @tc.name: testDownloadConfigSaveas008
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     saveas is file:// with correct package name and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigSaveas008', 0, (done: Function) => {
+      console.info("===> testDownloadConfigSaveas008 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: 'file://com.acts.request/data/storage/el2/base/test008',
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        proxy: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+      try {
+        request.agent.create(context, config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/test008');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigSaveas008 test success!");
+            done();
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigSaveas008 test fail!");
+            done();
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigSaveas008 test fail!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigSaveas009
+     * @tc.name: testDownloadConfigSaveas009
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     saveas is file:// with error package name and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigSaveas009', 0, (done: Function) => {
+      console.info("===> testDownloadConfigSaveas009 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: 'file://com.acts.request1111/data/storage/el2/base/test009',
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        proxy: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+      try {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, data) => {
+          expect(false).assertTrue();
+          console.info("===> testDownloadConfigSaveas009 test success!");
+          done();
+        });
+      } catch (err) {
+        expect(true).assertTrue();
+        console.info("===> testDownloadConfigSaveas009 test success!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigMetered001
+     * @tc.name: testDownloadConfigMetered001
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     metered is true and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigMetered001', 0, (done: Function) => {
+      console.info("===> testDownloadConfigMetered001 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: undefined,
+        network: undefined,
+        metered: true,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        proxy: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+      try {
+        request.agent.create(context, config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigMetered001 test success!");
+            done();
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigMetered001 test fail!");
+            done();
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigMetered001 test fail!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigMetered002
+     * @tc.name: testDownloadConfigMetered002
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     metered is 1 and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigMetered002', 0, (done: Function) => {
+      console.info("===> testDownloadConfigMetered002 test start!");
+
+      let config: Record<string, string | number | undefined> = {
+        "action": request.agent.Action.DOWNLOAD,
+        "url": "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "title": undefined,
+        "description": undefined,
+        "mode": undefined,
+        "overwrite": undefined,
+        "method": undefined,
+        "headers": undefined,
+        //data: undefined,
+        "saveas": undefined,
+        "network": undefined,
+        "metered": 1,
+        "roaming": undefined,
+        "retry": undefined,
+        "redirect": undefined,
+        "proxy": undefined,
+        "index": undefined,
+        "begins": undefined,
+        "ends": undefined,
+        "gauge": undefined,
+        "precise": undefined,
+        "token": undefined,
+        "priority": undefined,
+        "extras": undefined,
+        "multipart": undefined,
+        "notification": undefined,
+        "minSpeed": undefined,
+        "timeout": undefined,
+      }
+
+      try {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigMetered002 test success!");
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigMetered002 test fail!");
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigMetered002 test fail!");
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigRoaming001
+     * @tc.name: testDownloadConfigRoaming001
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     roaming is true and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigRoaming001', 0, (done: Function) => {
+      console.info("===> testDownloadConfigRoaming001 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: undefined,
+        network: undefined,
+        metered: undefined,
+        roaming: true,
+        retry: undefined,
+        redirect: undefined,
+        proxy: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+      try {
+        request.agent.create(context, config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigRoaming001 test success!");
+            done();
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigRoaming001 test fail!");
+            done();
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigRoaming001 test fail!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigRoaming002
+     * @tc.name: testDownloadConfigRoaming002
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     roaming is 1 and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigMetered002', 0, (done: Function) => {
+      console.info("===> testDownloadConfigMetered002 test start!");
+
+      let config: Record<string, string | number | undefined> = {
+        "action": request.agent.Action.DOWNLOAD,
+        "url": "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "title": undefined,
+        "description": undefined,
+        "mode": undefined,
+        "overwrite": undefined,
+        "method": undefined,
+        "headers": undefined,
+        //data: undefined,
+        "saveas": undefined,
+        "network": undefined,
+        "metered": undefined,
+        "roaming": 1,
+        "retry": undefined,
+        "redirect": undefined,
+        "proxy": undefined,
+        "index": undefined,
+        "begins": undefined,
+        "ends": undefined,
+        "gauge": undefined,
+        "precise": undefined,
+        "token": undefined,
+        "priority": undefined,
+        "extras": undefined,
+        "multipart": undefined,
+        "notification": undefined,
+        "minSpeed": undefined,
+        "timeout": undefined,
+      }
+
+      try {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigRoaming002 test success!");
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigRoaming002 test fail!");
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigRoaming002 test fail!");
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigRetry001
+     * @tc.name: testDownloadConfigRetry001
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     retry is true and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigRetry001', 0, (done: Function) => {
+      console.info("===> testDownloadConfigRetry001 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: undefined,
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: true,
+        redirect: undefined,
+        proxy: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+      try {
+        request.agent.create(context, config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(true);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigRetry001 test success!");
+            done();
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigRetry001 test fail!");
+            done();
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigRetry001 test fail!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigRetry002
+     * @tc.name: testDownloadConfigRetry002
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     retry is 1 and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigRetry002', 0, (done: Function) => {
+      console.info("===> testDownloadConfigRetry002 test start!");
+
+      let config: Record<string, string | number | undefined> = {
+        "action": request.agent.Action.DOWNLOAD,
+        "url": "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "title": undefined,
+        "description": undefined,
+        "mode": undefined,
+        "overwrite": undefined,
+        "method": undefined,
+        "headers": undefined,
+        //data: undefined,
+        "saveas": undefined,
+        "network": undefined,
+        "metered": undefined,
+        "roaming": undefined,
+        "retry": 1,
+        "redirect": undefined,
+        "proxy": undefined,
+        "index": undefined,
+        "begins": undefined,
+        "ends": undefined,
+        "gauge": undefined,
+        "precise": undefined,
+        "token": undefined,
+        "priority": undefined,
+        "extras": undefined,
+        "multipart": undefined,
+        "notification": undefined,
+        "minSpeed": undefined,
+        "timeout": undefined,
+      }
+
+      try {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigRetry002 test success!");
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigRetry002 test fail!");
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigRetry002 test fail!");
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigRedirect001
+     * @tc.name: testDownloadConfigRedirect001
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     redirect is true and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigRedirect001', 0, (done: Function) => {
+      console.info("===> testDownloadConfigRedirect001 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: undefined,
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: true,
+        proxy: undefined,
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+      try {
+        request.agent.create(context, config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(true);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigRedirect001 test success!");
+            done();
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigRedirect001 test fail!");
+            done();
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigRedirect001 test fail!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigRedirect002
+     * @tc.name: testDownloadConfigRedirect002
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     redirect is 1 and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigRedirect002', 0, (done: Function) => {
+      console.info("===> testDownloadConfigRedirect002 test start!");
+
+      let config: Record<string, string | number | undefined> = {
+        "action": request.agent.Action.DOWNLOAD,
+        "url": "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "title": undefined,
+        "description": undefined,
+        "mode": undefined,
+        "overwrite": undefined,
+        "method": undefined,
+        "headers": undefined,
+        //data: undefined,
+        "saveas": undefined,
+        "network": undefined,
+        "metered": undefined,
+        "roaming": undefined,
+        "retry": undefined,
+        "redirect": 1,
+        "proxy": undefined,
+        "index": undefined,
+        "begins": undefined,
+        "ends": undefined,
+        "gauge": undefined,
+        "precise": undefined,
+        "token": undefined,
+        "priority": undefined,
+        "extras": undefined,
+        "multipart": undefined,
+        "notification": undefined,
+        "minSpeed": undefined,
+        "timeout": undefined,
+      }
+
+      try {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigRedirect002 test success!");
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigRedirect002 test fail!");
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigRedirect002 test fail!");
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigProxy001
+     * @tc.name: testDownloadConfigProxy001
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+    proxy to 'http://127.0.0.1:8080', and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigProxy001', 0, (done: Function) => {
+      console.info("===> testDownloadConfigProxy001 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: undefined,
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        proxy: 'https://127.0.0.1:8080',
+        index: undefined,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+
+      try {
+        request.agent.create(context, config, async (err, data) => {
+          console.info("===> testDownloadConfigProxy001 test fail!");
+          expect(false).assertTrue();
+          done();
+        });
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        console.info("===> testDownloadConfigProxy001 test success!");
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigProxy002
+     * @tc.name: testDownloadConfigProxy002
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     proxy to 1, and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigProxy002', 0, (done: Function) => {
+      console.info("===> testDownloadConfigProxy002 test start!");
+
+      let config: Record<string, string | number | undefined> = {
+        "action": request.agent.Action.DOWNLOAD,
+        "url": "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "title": undefined,
+        "description": undefined,
+        "mode": undefined,
+        "overwrite": undefined,
+        "method": undefined,
+        "headers": undefined,
+        //data: undefined,
+        "saveas": undefined,
+        "network": undefined,
+        "metered": undefined,
+        "roaming": undefined,
+        "retry": undefined,
+        "redirect": undefined,
+        "proxy": 1,
+        "index": undefined,
+        "begins": undefined,
+        "ends": undefined,
+        "gauge": undefined,
+        "precise": undefined,
+        "token": undefined,
+        "priority": undefined,
+        "extras": undefined,
+        "multipart": undefined,
+        "notification": undefined,
+        "minSpeed": undefined,
+        "timeout": undefined,
+      }
+
+      try {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigProxy002 test success!");
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigProxy002 test fail!");
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigProxy002 test fail!");
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigIndex001
+     * @tc.name: testDownloadConfigIndex001
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+    index to 1, and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigIndex001', 0, (done: Function) => {
+      console.info("===> testDownloadConfigIndex001 test start!");
+
+      let config: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        overwrite: undefined,
+        method: undefined,
+        headers: undefined,
+        // data: undefined,
+        saveas: undefined,
+        network: undefined,
+        metered: undefined,
+        roaming: undefined,
+        retry: undefined,
+        redirect: undefined,
+        proxy: undefined,
+        index: 1,
+        begins: undefined,
+        ends: undefined,
+        gauge: undefined,
+        precise: undefined,
+        token: undefined,
+        priority: undefined,
+        extras: undefined,
+        multipart: undefined,
+        notification: undefined,
+        minSpeed: undefined,
+        timeout: undefined,
+      }
+
+      try {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigIndex001 test success!");
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigIndex001 test fail!");
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigIndex001 test fail!");
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadConfigIndex002
+     * @tc.name: testDownloadConfigIndex002
+     * @tc.desc: Set action to request.agent.Action.DOWNLOAD, url to a normal url,
+     index to 'test', and other parameters to undefined.
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1573
+     */
+    it('testDownloadConfigIndex002', 0, (done: Function) => {
+      console.info("===> testDownloadConfigIndex002 test start!");
+
+      let config: Record<string, string | number | undefined> = {
+        "action": request.agent.Action.DOWNLOAD,
+        "url": "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "title": undefined,
+        "description": undefined,
+        "mode": undefined,
+        "overwrite": undefined,
+        "method": undefined,
+        "headers": undefined,
+        //data: undefined,
+        "saveas": undefined,
+        "network": undefined,
+        "metered": undefined,
+        "roaming": undefined,
+        "retry": undefined,
+        "redirect": undefined,
+        "proxy": undefined,
+        "index": 'test',
+        "begins": undefined,
+        "ends": undefined,
+        "gauge": undefined,
+        "precise": undefined,
+        "token": undefined,
+        "priority": undefined,
+        "extras": undefined,
+        "multipart": undefined,
+        "notification": undefined,
+        "minSpeed": undefined,
+        "timeout": undefined,
+      }
+
+      try {
+        request.agent.create(context, config as Object as request.agent.Config, async (err, task) => {
+          expect(err === null).assertTrue();
+          request.agent.show(task.tid).then(async (info) => {
+            expect(info.uid).assertEqual(undefined);
+            expect(info.bundle).assertEqual(undefined);
+            expect(info.url).assertEqual('https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt');
+            expect(info.data).assertEqual("");
+            expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
+            expect(info.tid).assertEqual(task.tid);
+            expect(info.title).assertEqual('download');
+            expect(info.description).assertEqual("");
+            expect(info.action).assertEqual(request.agent.Action.DOWNLOAD);
+            expect(info.mode).assertEqual(request.agent.Mode.BACKGROUND);
+            expect(info.mimeType).assertEqual("");
+            expect(info.progress.state).assertEqual(request.agent.State.INITIALIZED);
+            expect(info.progress.index).assertEqual(0);
+            expect(info.progress.sizes.length).assertEqual(1);
+            expect(info.faults).assertEqual(null);
+            expect(info.gauge).assertEqual(false);
+            expect(typeof info.ctime).assertEqual("number");
+            expect(typeof info.mtime).assertEqual("number");
+            expect(info.retry).assertEqual(false);
+            expect(info.tries).assertEqual(0);
+            expect(typeof info.reason).assertEqual("string");
+            await request.agent.remove(task.tid);
+            console.info("===> testDownloadConfigIndex002 test success!");
+          }).catch((err: Error) => {
+            expect(false).assertTrue();
+            console.info("===> testDownloadConfigIndex002 test fail!");
+          });
+        });
+      } catch (err) {
+        expect(false).assertTrue();
+        console.info("===> testDownloadConfigIndex002 test fail!");
       }
     });
   })
