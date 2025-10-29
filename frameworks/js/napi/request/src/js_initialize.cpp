@@ -61,6 +61,7 @@ namespace OHOS::Request {
 napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Version version, bool firstInit)
 {
     REQUEST_HILOGD("constructor request task!");
+    // todo: check if needed
     bool withErrCode = version != Version::API8;
     napi_value self = nullptr;
     size_t argc = NapiUtils::MAX_ARGC;
@@ -76,6 +77,7 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
     Config config;
     config.version = version;
     config.withErrCode = withErrCode;
+    // todo: check if needed
     config.firstInit = firstInit;
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
     ExceptionError err = InitParam(env, argv, context, config);

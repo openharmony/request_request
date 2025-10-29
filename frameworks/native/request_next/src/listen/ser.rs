@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Serialization framework for Unix Domain Socket communication.
-//! 
+//!
 //! This module provides functionality for deserializing binary data received through
 //! Unix Domain Sockets. Despite its name, the `Serialize` trait in this module is actually
 //! responsible for deserialization of primitive types, enums, and complex data structures
@@ -24,7 +24,9 @@ use std::io::Read;
 
 // External dependencies
 use request_core::config::{Action, Version};
-use request_core::info::{NotifyData, Progress, Response, State, SubscribeType, TaskState};
+use request_core::info::{
+    FaultOccur, Faults, NotifyData, Progress, Reason, Response, State, SubscribeType, TaskState,
+};
 
 /// Binary deserializer for Unix Domain Socket communications.
 ///
@@ -205,6 +207,27 @@ impl Serialize for SubscribeType {
     }
 }
 
+impl Serialize for FaultOccur {
+    fn read(ser: &mut UdsSer) -> Self {
+        // let task_id = ser.read::<i32>() as i64;
+        let task_id = ser.read::<i32>();
+        let subscribe_type = ser.read::<SubscribeType>();
+        let faults: Faults = ser.read::<Reason>().into();
+        FaultOccur {
+            task_id,
+            subscribe_type,
+            faults,
+        }
+    }
+}
+
+impl Serialize for Reason {
+    fn read(ser: &mut UdsSer) -> Self {
+        let reason: u32 = ser.read();
+        Reason::from(reason)
+    }
+}
+
 /// Deserializes a `String` from the binary stream.
 ///
 /// Reads bytes until a null terminator (\0) is found, then converts to a String.
@@ -337,6 +360,7 @@ impl Serialize for Progress {
         let total_processed: u64 = ser.read();
         let sizes: Vec<i64> = ser.read();
         let extras: HashMap<String, String> = ser.read();
+        // let body_bytes: Vec<u8> = ser.read();
 
         Progress {
             state,
@@ -345,6 +369,7 @@ impl Serialize for Progress {
             total_processed,
             sizes,
             extras,
+            // body_bytes,
         }
     }
 }

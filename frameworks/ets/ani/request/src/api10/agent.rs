@@ -12,11 +12,11 @@
 // limitations under the License.
 
 //! Agent module for API 10.
-//! 
+//!
 //! This module provides functions to manage download tasks in API 10,
 //! including task creation, retrieval, removal, and search operations.
 
-use std::path::PathBuf;
+// use std::path::PathBuf;
 
 use ani_rs::business_error::BusinessError;
 use ani_rs::objects::{AniObject, AniRef};
@@ -27,6 +27,7 @@ use request_client::check::file::DownloadPathError;
 use request_core::config::Version;
 use request_core::filter::SearchFilter;
 use request_utils::context::Context;
+use request_core::config::TaskConfig;
 
 use crate::api10::bridge::{Config, Filter, Task, TaskInfo};
 use crate::seq::TaskSeq;
@@ -66,7 +67,7 @@ use crate::seq::TaskSeq;
 ///     overwrite: Some(true),
 ///     // Other configuration fields...
 /// };
-/// 
+///
 /// match create(&env, context, config) {
 ///     Ok(task) => println!("Task created with ID: {}", task.tid),
 ///     Err(e) => println!("Error creating task: {}", e),
@@ -79,33 +80,19 @@ pub fn create(env: &AniEnv, context: AniRef, config: Config) -> Result<Task, Bus
     let seq = TaskSeq::next();
     info!("Api10 task, seq: {}", seq.0);
     let context = Context::new(env, &context);
+    let input_config = config.clone();
+    let mut config: TaskConfig = config.into();
+    // TODO: CHECK NULLPTR
+    config.bundle_type = context.get_bundle_type() as u32;
+    config.bundle = context.get_bundle_name();
 
-    // Determine the save path based on config or URL
-    let save_as = match &config.saveas {
-        // Use specified path if it exists and is not just a directory marker
-        Some(path) if path != "./" => path.to_string(),
-        _ => {
-            // Extract filename from URL if no path specified
-            let name = PathBuf::from(&config.url);
-            name.file_name()
-                .map(|s| s.to_string_lossy().to_string())
-                .unwrap_or(config.url.clone())
-        }
-    };
-    // Default to not overwriting files if not specified
-    let overwrite = config.overwrite.unwrap_or(false);
-
-    info!("Creating task with config: {:?}", overwrite);
-
-    match RequestClient::get_instance().crate_task(
+    match RequestClient::get_instance().create_task(
         context,
-        Version::API10,
-        config.into(),
-        &save_as,
-        overwrite,
+        config,
     ) {
         Ok(task_id) => Ok(Task {
             tid: task_id.to_string(),
+            config: input_config,
         }),
         Err(e) => {
             error!("Create task failed: {:?}", e);
@@ -182,7 +169,7 @@ pub fn remove(id: String) -> Result<(), BusinessError> {
     // Parse string task ID to integer for internal use
     let task_id = id
         .parse::<i64>()
-        .map_err(|_| BusinessError::new(-1, "Invalid task ID format".to_string()))?;
+        .map_err(|_| BusinessError::new(401, "Invalid task ID format".to_string()))?;
     RequestClient::get_instance()
         .remove(task_id)
         .map_err(|e| BusinessError::new_static(e, "Failed to remove task"))
@@ -269,7 +256,7 @@ pub fn touch(id: String, token: String) -> Result<(), BusinessError> {
 ///     Ok(task_ids) => println!("Found {} tasks", task_ids.len()),
 ///     Err(e) => println!("Error searching tasks: {}", e),
 /// }
-/// 
+///
 /// // Search with specific filter
 /// let filter = Filter {
 ///     // Set filter criteria

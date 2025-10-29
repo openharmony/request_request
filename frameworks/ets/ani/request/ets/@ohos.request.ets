@@ -16,7 +16,6 @@
 
 import { AsyncCallback, Callback } from '@ohos.base';
 import { BusinessError } from '@ohos.base';
-import hilog from '@ohos.hilog';
 import BaseContext from 'application.BaseContext';
 
 export default namespace request {
@@ -128,7 +127,7 @@ export default namespace request {
 
   interface DownloadConfig {
     url: string;
-    header?: Object;
+    header?: Record<string, string>;
     enableMetered?: boolean;
     enableRoaming?: boolean;
     description?: string;
@@ -166,10 +165,35 @@ export default namespace request {
     downloadTotalBytes: long;
   }
 
-  interface DownloadTask {
-    on(type: string, callback: object): void;
+  export type DownloadProgressCallback = (receivedSize: long, totalSize: long) => void;
+  export type DownloadCompleteCallback = () => void;
+  export type DownloadPauseCallback = () => void;
+  export type DownloadRemoveCallback = () => void;
+  export type DownloadFailCallback = (err: int) => void;
 
-    // off(type: 'progress' | 'complete' | 'pause' | 'remove' | 'fail' , callback?: object): void;
+  interface DownloadTask {
+    readonly taskId: string;
+
+    onProgress(callback: DownloadProgressCallback): void;
+    offProgress(callback?: DownloadProgressCallback): void;
+    onComplete(callback: DownloadCompleteCallback): void;
+    onPause(callback: DownloadPauseCallback): void;
+    onRemove(callback: DownloadRemoveCallback): void;
+    offComplete(callback?: DownloadCompleteCallback): void;
+    offPause(callback?: DownloadPauseCallback): void;
+    offRemove(callback?: DownloadRemoveCallback): void;
+    onFail(callback: DownloadFailCallback): void;
+    offFail(callback?: DownloadFailCallback): void;
+
+    // onEvents(type: 'complete' | 'pause' | 'remove', callback: () => void): void;
+    // onFails(type: 'fail', callback: (err: int) => void): void;
+    // onProgresss(type: 'progress', callback: (receivedSize: long, totalSize: long) => void): void;
+    // overload on { onEvents, onFails, onProgresss }
+
+    // offEvents(type: 'complete' | 'pause' | 'remove', callback?: () => void): void;
+    // offProgresss(type: 'progress', callback?: (receivedSize: long, totalSize: long) => void): void;
+    // offFails(type: 'fail', callback?: (err: int) => void): void;
+    // overload off { offEvents, offFails, offProgresss }
 
     delete(callback: AsyncCallback<boolean>): void;
 
@@ -197,48 +221,100 @@ export default namespace request {
       loadLibrary("request_ani")
     }
 
-    taskId: long;
+    readonly taskId: string;
 
-    native onProgress(callback: (receivedSize: long, totalSize: long) => void): void;
-    native onEvent(type: string, callback: () => void):void;
-    native onFail(callback: (err: int) => void): void;
+    native onProgressInner(callback: (receivedSize: long, totalSize: long) => void): void;
+    native onEvent(type: string, callback: () => void): void;
+    native onFailInner(callback: (err: int) => void): void;
 
-    // native offProgress(callback?: (receivedSize: long, totalSize: long) => void): void;
-    // native offEvent(type: string, callback?: () => void): void;
-    // native offFail(callback?: (err: int) => void): void;
+    native offProgressInner(callback?: (receivedSize: long, totalSize: long) => void): void;
+    native offEvent(type: string, callback?: () => void): void;
+    native offFailInner(callback?: (err: int) => void): void;
+    native offEvents(type: string):void;
 
+    onProgress(callback: DownloadProgressCallback): void {
+      this.onProgressInner(callback);
+    }
 
-    on(type: string, callback: object): void {
-      if (type == 'progress') {
-        this.onProgress(callback as (receivedSize: long, totalSize: long) => void);
-      } else if (type == 'complete' | type == 'pause' | type == 'remove') {
-        this.onEvent(type, callback as () => void);
+    offProgress(callback?: DownloadProgressCallback): void {
+      if(callback == undefined) {
+        this.offEvents('progress');
       } else {
-        this.onFail(callback as (err: int) => void);
+        this.offProgressInner(callback);
       }
     }
 
-     // off(type: 'progress' | 'complete' | 'pause' | 'remove' | 'fail' , callback?: object): void {
-     //   if (type == 'progress') {
-     //     if (callback === undefined) {
-     //       this.offProgress();
-     //     } else {
-     //       this.offProgress(callback as (receivedSize: long, totalSize: long) => void);
-     //     }
-     //   } else if (type == 'complete' || type == 'pause' || type == 'remove') {
-     //     if (callback === undefined) {
-     //         this.offEvent(type)
-     //     }else {
-     //         this.offEvent(type, callback as () => void)
-     //     }
-     //   } else if (type == 'fail') {
-     //     if (callback === undefined) {
-     //       this.offFail();
-     //     } else {
-     //       this.offFail(callback as (err: int) => void)
-     //     }
-     //   }
-     // }
+    onComplete(callback: DownloadCompleteCallback): void {
+      this.onEvent('complete', callback);
+    }
+
+    onPause(callback: DownloadPauseCallback): void {
+      this.onEvent('pause', callback);
+    }
+
+    onRemove(callback: DownloadRemoveCallback): void {
+      this.onEvent('remove', callback);
+    }
+
+    offComplete(callback?: DownloadCompleteCallback): void {
+      if(callback == undefined) {
+        this.offEvents('complete_download');
+      } else {
+        this.offEvent('complete', callback);
+      }
+    }
+
+    offPause(callback?: DownloadPauseCallback): void {
+      if(callback == undefined) {
+        this.offEvents('pause');
+      } else {
+        this.offEvent('pause', callback);
+      }
+    }
+
+    offRemove(callback?: DownloadRemoveCallback): void {
+      if(callback == undefined) {
+        this.offEvents('remove');
+      } else {
+        this.offEvent('remove', callback);
+      }
+    }
+
+    onFail(callback: DownloadFailCallback): void {
+      this.onFailInner(callback);
+    }
+
+    offFail(callback?: DownloadFailCallback): void {
+      if(callback == undefined) {
+        this.offEvents('fail_download');
+      } else {
+        this.offFailInner(callback);
+      }
+    }
+
+    // onEvents(type: 'complete' | 'pause' | 'remove', callback: () => void): void {
+    //   this.onEvent(type, callback);
+    // }
+
+    // onFails(type: 'fail', callback: (err: int) => void): void {
+    //   this.onFail(callback);
+    // }
+
+    // onProgresss(type: 'progress', callback: (receivedSize: long, totalSize: long) => void): void {
+    //   this.onProgress(callback);
+    // }
+
+    // offEvents(type: 'complete' | 'pause' | 'remove', callback?: () => void): void {
+    //   this.offEvent(type, callback);
+    // }
+
+    // offProgresss(type: 'progress', callback?: (receivedSize: long, totalSize: long) => void): void {
+    //   this.offProgress(callback);
+    // }
+
+    // offFails(type: 'fail', callback?: (err: int) => void): void {
+    //   this.offFail(callback);
+    // }
 
     native deleteSync(): boolean;
 
@@ -380,7 +456,7 @@ export default namespace request {
 
   interface UploadConfig {
     url: string;
-    header: Object;
+    header: Record<string, string>;
     method: string;
     index?: int;
     begins?: long;
@@ -395,27 +471,45 @@ export default namespace request {
     message: string;
   }
 
+  class TaskStateInner implements TaskState {
+    path: string;
+    responseCode: int;
+    message: string;
+  }
+
+  export type UploadProgressCallback = (uploadedSize: long, totalSize: long) => void;
+  export type UploadHeaderReceiveCallback = (header: Record<string, string>) => void;
+
   interface UploadTask {
-    // on(type: 'progress', callback: (uploadedSize: long, totalSize: long) => void): void;
+    readonly taskId: string;
 
-    // off(type: 'progress', callback?: (uploadedSize: long, totalSize: long) => void): void;
+    onProgress(callback: UploadProgressCallback): void;
+    offProgress(callback?: UploadProgressCallback): void;
+    onHeaderReceive(callback: UploadHeaderReceiveCallback): void;
+    offHeaderReceive(callback?: UploadHeaderReceiveCallback): void;
+    onComplete(callback: Callback<Array<TaskState>>): void;
+    onFail(callback: Callback<Array<TaskState>>): void;
+    offComplete(callback?: Callback<Array<TaskState>>): void;
+    offFail(callback?: Callback<Array<TaskState>>): void;
 
-    // on(type: 'headerReceive', callback: (header: object) => void): void;
+    // onEvent(type: 'complete' | 'fail', callback: (states: Array<TaskState>) => void): void;
+    // onProgress(type: 'progress', callback: (uploadedSize: long, totalSize: long) => void): void;
+    // onHeaderReceive(type: 'header_receive', callback: (header: Record<string, string>) => void): void;
+    // overload on { onEvent, onProgress, onHeaderReceive }
 
-    // off(type: 'headerReceive', callback?: (header: object) => void): void;
-
-    // on(type: 'complete' | 'fail', callback: Callback<Array<TaskState>>): void;
-
-    // off(type: 'complete' | 'fail', callback?: Callback<Array<TaskState>>): void;
+    // offEvent(type: 'complete' | 'fail', callback?: (states: Array<TaskState>) => void): void;
+    // offProgress(type: 'progress', callback?: (uploadedSize: long, totalSize: long) => void): void;
+    // offHeaderReceive(type: 'header_receive', callback?: (header: Record<string, string>) => void): void;
+    // overload off { offEvent, offProgress, offHeaderReceive }
 
     delete(callback: AsyncCallback<boolean>): void;
+
 
     delete(): Promise<boolean>;
   }
 
   class UploadTaskInner implements UploadTask {
-    taskId: long;
-
+    readonly taskId: string;
     native deleteSync(): boolean;
 
     delete(callback: AsyncCallback<boolean>): void {
@@ -440,6 +534,86 @@ export default namespace request {
           });
       });
     }
+
+    onProgress(callback: UploadProgressCallback): void {
+      this.onProgressInner(callback);
+    }
+
+    offProgress(callback?: UploadProgressCallback): void {
+      if(callback == undefined) {
+        this.offEvents('progress');
+      } else {
+        this.offProgressInner(callback);
+      }
+    }
+
+    onHeaderReceive(callback: UploadHeaderReceiveCallback): void {
+      this.onHeaderReceiveInner(callback);
+    }
+
+    offHeaderReceive(callback?: UploadHeaderReceiveCallback): void {
+      if(callback == undefined) {
+        this.offEvents('header_receive');
+      } else {
+        this.offHeaderReceiveInner(callback);
+      }
+    }
+
+    onComplete(callback: Callback<Array<TaskState>>): void {
+      this.onEventInner('complete', callback);
+    }
+
+    onFail(callback: Callback<Array<TaskState>>): void {
+      this.onEventInner('fail', callback);
+    }
+
+    offComplete(callback?: Callback<Array<TaskState>>): void {
+      if(callback == undefined) {
+        this.offEvents('complete_upload');
+      } else {
+        this.offEventInner('complete', callback);
+      }
+    }
+
+    offFail(callback?: Callback<Array<TaskState>>): void {
+      if(callback == undefined) {
+        this.offEvents('fail_upload');
+      } else {
+        this.offEventInner('fail', callback);
+      }
+    }
+
+    // onEvent(type: 'complete' | 'fail', callback: (states: Array<TaskState>) => void): void {
+    //   this.onEventInner(type, callback);
+    // }
+
+    // onProgress(type: 'progress', callback: (uploadedSize: long, totalSize: long) => void): void {
+    //   this.onProgressInner(callback);
+    // }
+
+    // onHeaderReceive(type: 'header_receive', callback: (header: Record<string, string>) => void): void {
+    //   this.onHeaderReceiveInner(callback);
+    // }
+
+    // offEvent(type: 'complete' | 'fail', callback?: (states: Array<TaskState>) => void): void {
+    //   this.offEventInner(type, callback);
+    // }
+
+    // offProgress(type: 'progress', callback?: (uploadedSize: long, totalSize: long) => void): void {
+    //   this.offProgressInner(callback);
+    // }
+
+    // offHeaderReceive(type: 'header_receive', callback?: (header: Record<string, string>) => void): void {
+    //   this.offHeaderReceiveInner(callback);
+    // }
+
+    native onProgressInner(callback: (uploadedSize: long, totalSize: long) => void): void;
+    native onEventInner(type: string, callback: Callback<Array<TaskState>>):void;
+    native onHeaderReceiveInner(callback: (header: Record<string, string>) => void): void;
+    native offProgressInner(callback?: (uploadedSize: long, totalSize: long) => void): void;
+    native offEventInner(type: string, callback?: Callback<Array<TaskState>>):void;
+    native offHeaderReceiveInner(callback?: (header: Record<string, string>) => void): void;
+    native offEvents(type: string):void;
   }
 
   export namespace agent {
@@ -469,15 +643,14 @@ export default namespace request {
       path: string;
       contentType?: string;
       filename?: string;
-      extras?: object;
+      extras?: Record<string, string>;
     }
 
     class FileSpecInner implements FileSpec {
       path: string;
-      mimeType?: string;
       contentType?: string;
       filename?: string;
-      extras?: object;
+      extras?: Record<string, string>;
     }
 
     interface FormItem {
@@ -504,7 +677,7 @@ export default namespace request {
       mode?: Mode;
       overwrite?: boolean;
       method?: string;
-      headers?: object;
+      headers?: Record<string, string>;
       data?: string | Array<FormItem>;
       saveas?: string;
       network?: Network;
@@ -520,7 +693,37 @@ export default namespace request {
       precise?: boolean;
       token?: string;
       priority?: int;
-      extras?: object;
+      extras?: Record<string, string>;
+      multipart?: boolean;
+      notification?: Notification;
+    }
+
+    class ConfigInner implements Config {
+      action: Action;
+      url: string;
+      title?: string;
+      description?: string;
+
+      mode?: Mode;
+      overwrite?: boolean;
+      method?: string;
+      headers?: Record<string, string>;
+      data?: string | Array<FormItem>;
+      saveas?: string;
+      network?: Network;
+      metered?: boolean;
+      roaming?: boolean;
+      retry?: boolean;
+      redirect?: boolean;
+      proxy?: string;
+      index?: int;
+      begins?: long;
+      ends?: long;
+      gauge?: boolean;
+      precise?: boolean;
+      token?: string;
+      priority?: int;
+      extras?: Record<string, string>;
       multipart?: boolean;
       notification?: Notification;
     }
@@ -542,7 +745,7 @@ export default namespace request {
       readonly index: int;
       readonly processed: long;
       readonly sizes: Array<long>;
-      readonly extras?: object;
+      readonly extras?: Record<string, string>;
     }
 
     class ProgressInner implements Progress {
@@ -550,7 +753,7 @@ export default namespace request {
       readonly index: int;
       readonly processed: long;
       readonly sizes: Array<long>;
-      readonly extras?: object;
+      readonly extras?: Record<string, string>;
     }
 
     enum Faults {
@@ -596,7 +799,7 @@ export default namespace request {
       readonly tries: int;
       readonly faults: Faults;
       readonly reason: string;
-      readonly extras?: object;
+      readonly extras?: Record<string, string>;
     }
 
     class TaskInfoInner implements TaskInfo{
@@ -620,7 +823,7 @@ export default namespace request {
       readonly tries: int;
       readonly faults: Faults;
       readonly reason: string;
-      readonly extras?: object;
+      readonly extras?: Record<string, string>;
     }
 
     interface HttpResponse {
@@ -642,14 +845,7 @@ export default namespace request {
       config: Config;
 
       on(event: string, callback: Callback<Any>): void;
-
-      // off(event: 'progress', callback?: (progress: Progress) => void): void;
-      // off(event: 'completed', callback?: (progress: Progress) => void): void;
-      // off(event: 'failed', callback?: (progress: Progress) => void): void;
-      // off(event: 'pause', callback?: (progress: Progress) => void): void;
-      // off(event: 'resume', callback?: (progress: Progress) => void): void;
-      // off(event: 'remove', callback?: (progress: Progress) => void): void;
-      // off(event: 'response', callback?: Callback<HttpResponse>): void;
+      off(event: string, callback: Callback<Any>): void;
 
       start(callback: AsyncCallback<void>): void;
       start(): Promise<void>;
@@ -668,7 +864,7 @@ export default namespace request {
     }
 
     readonly tid: string;
-    
+
     config: Config;
 
     native startSync(): void;
@@ -677,11 +873,35 @@ export default namespace request {
 
     native onResponseEvent(event: string, callback: Callback<HttpResponse>): void;
 
+    native onFaultEvent(event: string, callback: Callback<Faults>): void;
+
+    native offEvent(event: string, callback?: (progress: Progress) => void): void;
+
+    native offResponseEvent(event: string, callback: Callback<HttpResponse>): void;
+
+    native offFaultEvent(event: string, callback: Callback<Faults>): void;
+
+    native offEvents(event: string): void;
+
     on(event: string, callback: Callback<Any>): void {
       if (event == "response") {
         this.onResponseEvent(event, callback as Callback<HttpResponse>);
+      } else if (event == "faultOccur") {
+        this.onFaultEvent(event, callback as Callback<Faults>);
       } else {
         this.onEvent(event, callback as Callback<Progress>);
+      }
+    }
+
+    off(event: string, callback?: Callback<Any>): void {
+      if (callback == undefined) {
+        this.offEvents(event);
+      } else if (event == "response") {
+        this.offResponseEvent(event, callback as Callback<HttpResponse>);
+      } else if (event == "faultOccur") {
+        this.offFaultEvent(event, callback as Callback<Faults>);
+      } else {
+        this.offEvent(event, callback as Callback<Progress>);
       }
     }
 
@@ -698,8 +918,8 @@ export default namespace request {
 
     start(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            taskpool.execute((): undefined => {
-              return this.startSync();
+            taskpool.execute(() => {
+                this.startSync();
             }).then((content: NullishType) => {
                 resolve(undefined);
             }, (err: Error): void => {
@@ -722,8 +942,8 @@ export default namespace request {
     }
     pause(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            taskpool.execute((): undefined => {
-              return this.pauseSync();
+            taskpool.execute(() => {
+                this.pauseSync();
             }).then((content: NullishType) => {
                 resolve(undefined);
             }, (err: Error): void => {
@@ -746,8 +966,8 @@ export default namespace request {
     }
     resume(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            taskpool.execute((): undefined => {
-              return this.resumeSync();
+            taskpool.execute(() => {
+                this.resumeSync();
             }).then((content: NullishType) => {
                 resolve(undefined);
             }, (err: Error): void => {
@@ -770,8 +990,8 @@ export default namespace request {
     }
     stop(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            taskpool.execute((): undefined => {
-              return this.stopSync();
+            taskpool.execute(() => {
+                this.stopSync();
             }).then((content: NullishType) => {
                 resolve(undefined);
             }, (err: Error): void => {
@@ -784,8 +1004,8 @@ export default namespace request {
 
     setMaxSpeed(speed: long): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            taskpool.execute((): undefined => {
-              return this.setMaxSpeedSync(speed);
+            taskpool.execute(() => {
+                this.setMaxSpeedSync(speed);
             }).then((content: NullishType) => {
                 resolve(undefined);
             }, (err: Error): void => {

@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Bridge module for API 10.
-//! 
+//!
 //! This module provides bridge types and conversion utilities between the ETS interface
 //! and the request core functionality for API 10.
 
@@ -22,6 +22,7 @@ use request_core::config::{self, CommonTaskConfig, NetworkConfig, TaskConfig, Ve
 use serde::{Deserialize, Serialize};
 
 /// Defines the type of action for a request task.
+#[derive(Clone)]
 #[ani_rs::ani(path = "L@ohos/request/request/agent/Action")]
 pub enum Action {
     /// Download action type.
@@ -62,6 +63,7 @@ impl From<u8> for Action {
 }
 
 /// Defines the execution mode for a request task.
+#[derive(Clone)]
 #[ani_rs::ani(path = "L@ohos/request/request/agent/Mode")]
 pub enum Mode {
     /// Background execution mode.
@@ -102,6 +104,7 @@ impl From<u8> for Mode {
 }
 
 /// Defines network preferences for a request task.
+#[derive(Clone)]
 #[ani_rs::ani(path = "L@ohos/request/request/agent/Network")]
 pub enum Network {
     /// Any network type is acceptable.
@@ -142,6 +145,7 @@ pub enum BroadcastEvent {
 }
 
 /// Represents file specifications for upload or download operations.
+#[derive(Clone)]
 #[ani_rs::ani(path = "L@ohos/request/request/agent/FileSpecInner")]
 pub struct FileSpec {
     /// Path to the file.
@@ -169,18 +173,19 @@ impl From<FileSpec> for request_core::file::FileSpec {
 }
 
 /// Represents different value types for form data.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum Value {
     /// String value type.
     S(String),
     /// File specification type.
-    #[serde(rename = "L@ohos/request/request/agent/FileSpecInner;")]
+    #[serde(rename = "L@ohos/request/request/agent/FileSpec;")]
     FileSpec(FileSpec),
     /// Array of file specifications.
     Array(Vec<FileSpec>),
 }
 
 /// Represents an item in a form for data submission.
+#[derive(Clone)]
 #[ani_rs::ani(path = "L@ohos/request/request/agent/FormItemInner")]
 pub struct FormItem {
     /// Name of the form item.
@@ -190,6 +195,7 @@ pub struct FormItem {
 }
 
 /// Represents notification details for a request task.
+#[derive(Clone, Serialize)]
 #[ani_rs::ani]
 pub struct Notification {
     /// Optional title for the notification.
@@ -199,6 +205,16 @@ pub struct Notification {
 }
 
 /// Represents different data types for request body content.
+impl From<Notification> for request_core::config::Notification {
+    fn from(value: Notification) -> Self {
+        request_core::config::Notification {
+            title: value.title.unwrap_or("".to_string()),
+            text: value.text.unwrap_or("".to_string()),
+        }
+    }
+}
+
+#[derive(Clone)]
 #[derive(Serialize, Deserialize)]
 pub enum Data {
     /// String data type.
@@ -208,7 +224,8 @@ pub enum Data {
 }
 
 /// Represents configuration for a request task.
-#[ani_rs::ani]
+#[derive(Clone)]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/ConfigInner")]
 pub struct Config {
     /// Action type (download or upload).
     pub action: Action,
@@ -406,7 +423,24 @@ pub enum Faults {
     Redirect = 0x80,
 }
 
-/// Represents search filter criteria for tasks.
+impl From<request_core::info::Faults> for Faults {
+    fn from(value: request_core::info::Faults) -> Self {
+        match value {
+            request_core::info::Faults::Others => Faults::Others,
+            request_core::info::Faults::Disconnected => Faults::Disconnected,
+            request_core::info::Faults::Timeout => Faults::Timeout,
+            request_core::info::Faults::Protocol => Faults::Protocol,
+            request_core::info::Faults::Param => Faults::Param,
+            request_core::info::Faults::Fsio => Faults::Fsio,
+            request_core::info::Faults::Dns => Faults::Dns,
+            request_core::info::Faults::Tcp => Faults::Tcp,
+            request_core::info::Faults::Ssl => Faults::Ssl,
+            request_core::info::Faults::Redirect => Faults::Redirect,
+            _ => unimplemented!(),
+        }
+    }
+}
+
 #[ani_rs::ani]
 pub struct Filter {
     /// Optional bundle name filter.
@@ -487,12 +521,18 @@ pub struct TaskInfo {
 /// Converts from core TaskInfo to API TaskInfo.
 impl From<request_core::info::TaskInfo> for TaskInfo {
     fn from(value: request_core::info::TaskInfo) -> Self {
+        let saveas = if value.common_data.action == Action::Upload as u8 {
+            "".to_string()
+        } else {
+            value.file_specs.get(0).map(|x| x.path.clone()).unwrap_or("".to_string())
+        };
         TaskInfo {
             uid: Some(value.common_data.uid.to_string()),
             bundle: Some(value.bundle),
-            saveas: None,
+            saveas: Some(saveas),
             url: Some(value.url),
-            data: None,
+            // todo
+            data: Some(Data::S(value.data)),
             tid: value.common_data.task_id.to_string(),
             title: value.title,
             description: value.description,
@@ -543,6 +583,7 @@ impl From<&request_core::info::Response> for HttpResponse {
 pub struct Task {
     /// Task ID.
     pub tid: String,
+    pub config: Config,
 }
 
 /// Represents configuration for a task group.
@@ -555,11 +596,54 @@ pub struct GroupConfig {
 }
 
 /// Converts from API Config to core TaskConfig.
-/// 
+///
 /// Maps API configuration options to the corresponding core task configuration,
 /// providing default values for unspecified fields.
 impl From<Config> for TaskConfig {
     fn from(value: Config) -> Self {
+        let mut form_items = vec![];
+        let mut file_specs = vec![];
+        let mut data = "".to_string();
+        let method;
+        // todo: error?
+        if matches!(value.action, Action::Upload) {
+            method = match value.method {
+                Some(m) if m.to_uppercase() == "POST" => m,
+                _ => "PUT".to_string(),
+            };
+            if let Some(Data::Array(form_items_data)) = value.data {
+                for form_item in form_items_data {
+                    match form_item.value {
+                        Value::S(s) => {
+                            // String 类型的 value，添加到 form_items
+                            form_items.push(request_core::config::FormItem {
+                                name: form_item.name,
+                                value: s,
+                            });
+                        }
+                        Value::FileSpec(file_spec) => {
+                            // FileSpec 类型的 value，转换为 FileSpec 并添加到 file_specs
+                            file_specs.push(file_spec.into());
+                        }
+                        Value::Array(file_spec_array) => {
+                            // FileSpec 数组类型的 value，转换为多个 FileSpec 并添加到 file_specs
+                            for file_spec in file_spec_array {
+                                file_specs.push(file_spec.into());
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            method = match value.method {
+                Some(m) if m.to_uppercase() == "POST" => m,
+                _ => "GET".to_string(),
+            };
+            if let Some(Data::S(s)) = value.data {
+                data = s;
+            }
+        }
+        // todo: cert pins
         TaskConfig {
             bundle: "".to_string(),
             bundle_type: 0,
@@ -567,16 +651,16 @@ impl From<Config> for TaskConfig {
             url: value.url,
             title: value.title.unwrap_or("".to_string()),
             description: value.description.unwrap_or_default(),
-            method: value.method.unwrap_or("GET".to_string()),
+            method: method,
             headers: value.headers.unwrap_or_default(),
-            data: "".to_string(),
-            token: "".to_string(),
-            proxy: "".to_string(),
+            data,
+            token: value.token.unwrap_or("".to_string()),
+            proxy: value.proxy.unwrap_or("".to_string()),
             certificate_pins: "".to_string(),
-            extras: HashMap::new(),
-            version: Version::API9,
-            form_items: vec![],
-            file_specs: vec![],
+            extras: value.extras.unwrap_or_default(),
+            version: Version::API10,
+            form_items,
+            file_specs,
             body_file_paths: vec![],
             certs_path: vec![],
             common_data: CommonTaskConfig {
@@ -584,22 +668,31 @@ impl From<Config> for TaskConfig {
                 uid: 0,
                 token_id: 0,
                 action: value.action.into(),
-                mode: value.mode.unwrap_or(Mode::Background).into(),
                 cover: false,
-                network_config: NetworkConfig::Any,
-                metered: false,
-                roaming: false,
-                retry: false,
-                redirect: true,
-                index: 0,
-                begins: 0,
-                ends: -1,
-                gauge: false,
-                precise: false,
-                priority: 0,
-                background: false,
-                multipart: false,
+                network_config: value.network.map(|n| n.into()).unwrap_or(NetworkConfig::Any),
+                metered: value.metered.unwrap_or(false),
+                roaming: value.roaming.unwrap_or(true),
+                retry: value.retry.unwrap_or(true),
+                redirect: value.redirect.unwrap_or(true),
+                index: value.index.map(|i| i as u32).unwrap_or(0u32),
+                // todo
+                begins: value.begins.map(|b| if b > 0 { b as u64 } else { 0u64 }).unwrap_or(0u64),
+                ends: value.ends.unwrap_or(-1),
+                gauge: value.gauge.unwrap_or(false),
+                precise: value.precise.unwrap_or(false),
+                priority: value.priority.map(|p| p as u32).unwrap_or(0u32),
+                // todo
+                background: !matches!(value.mode, Some(Mode::Foreground)),
+                multipart: value.multipart.unwrap_or(false),
+                mode: value.mode.unwrap_or(Mode::Background).into(),
             },
+            saveas: value.saveas.unwrap_or_default(),
+            overwrite: value.overwrite.unwrap_or(false),
+            notification: value.notification.map(Into::into).unwrap_or(request_core::config::Notification {
+                title: "".to_string(),
+                text: "".to_string(),
+            }),
+            body_file_names: vec![],
         }
     }
 }

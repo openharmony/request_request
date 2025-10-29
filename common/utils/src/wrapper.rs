@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Foreign Function Interface (FFI) bindings for the request system.
-//! 
+//!
 //! This module provides FFI bindings to C++ code through the CXX bridge, enabling
 //! interaction with native APIs from Rust. It includes types, enums, and functions
 //! for accessing system services, logging, and storage functionality.
@@ -122,6 +122,11 @@ mod ffi {
         include!("application_context.h");
         include!("context.h");
         include!("storage_acl.h");
+        include!("file_uri.h");
+
+        fn FileUriGetRealPath(uri: &CxxString) -> String;
+
+        fn DataAbilityOpenFile(context: &SharedPtr<Context>, path: &CxxString) -> i32;
 
         #[namespace = "OHOS::AppExecFwk"]
         type BundleType;
@@ -130,6 +135,8 @@ mod ffi {
         ///
         /// Returns the system's cache directory path as a string.
         fn GetCacheDir() -> String;
+
+        fn GetBaseDir() -> String;
 
         /// Computes the SHA-256 hash of an input string.
         ///
@@ -156,6 +163,8 @@ mod ffi {
         /// # Returns
         ///
         /// Returns true if the environment is a stage context.
+        /// #Safety
+        /// todo
         unsafe fn IsStageContext(env: *mut AniEnv, ani_object: *mut AniObject) -> bool;
 
         /// Gets the stage mode context from the given environment and object.
@@ -199,7 +208,7 @@ mod ffi {
         ///
         /// The cache directory path as a string.
         fn ContextGetCacheDir(context: &SharedPtr<Context>) -> String;
-        
+
         /// Gets the base directory path from the context.
         ///
         /// # Parameters
@@ -268,6 +277,11 @@ mod ffi {
         #[namespace = ""]
         type LogLevel;
 
+        fn IsCleartextPermitted(hostname: &CxxString) -> bool;
+
+        fn GetTrustAnchorsForHostName(hostname: &CxxString) -> Vec<String>;
+
+        fn GetCertificatePinsForHostName(hostname: &CxxString) -> String;
     }
 }
 
@@ -290,7 +304,7 @@ mod ffi {
 ///
 /// ```rust
 /// use request_utils::wrapper::{hilog_print, LogLevel};
-/// 
+///
 /// // Print an info log message
 /// hilog_print(
 ///     LogLevel::LOG_INFO,

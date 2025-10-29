@@ -12,6 +12,39 @@
 # limitations under the License.
 import("//build/ohos.gni")
 
+#rust_cxx("request_next_cxx_gen") {
+#  sources = [ "src/wrapper.rs" ]
+#}
+#
+#ohos_static_library("request_next_cxx") {
+#  sanitize = {
+#    integer_overflow = true
+#    ubsan = true
+#    boundary_sanitize = true
+#    cfi = true
+#    cfi_cross_dso = true
+#    debug = false
+#  }
+#
+#  include_dirs = [
+#    "${target_gen_dir}/src",
+#  ]
+#
+#  sources = get_target_outputs(":request_next_cxx_gen")
+#
+#  external_deps = [
+#    "app_file_service:fileuri_native",
+#    "rust_cxx:cxx_cppdeps",
+#  ]
+#
+#  deps = [
+#    ":request_next_cxx_gen",
+#  ]
+#
+#  subsystem_name = "request"
+#  part_name = "request"
+#}
+
 ohos_rust_static_library("request_client") {
   sanitize = {
     cfi = true
@@ -34,6 +67,7 @@ ohos_rust_static_library("request_client") {
     "../../../common/request_core:request_core",
     "../../../common/utils:request_utils",
     "//third_party/rust/crates/serde/serde:lib",
+#    ":request_next_cxx",
   ]
 
   clippy_lints = "none"

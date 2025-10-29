@@ -21,8 +21,11 @@
 #include "ani.h"
 #include "ani_base_context.h"
 #include "openssl/sha.h"
+#include "data_ability_helper.h"
+#include "network_security_config.h"
 
 namespace OHOS::Request {
+
 rust::string GetCacheDir()
 {
     auto context = Context::GetApplicationContext();
@@ -30,6 +33,16 @@ rust::string GetCacheDir()
         return "";
     } else {
         return context->GetCacheDir();
+    }
+}
+
+rust::string GetBaseDir()
+{
+    auto context = Context::GetApplicationContext();
+    if (context == nullptr) {
+        return "";
+    } else {
+        return context->GetBaseDir();
     }
 }
 
@@ -60,4 +73,42 @@ std::shared_ptr<AbilityRuntime::Context> GetStageModeContext(AniEnv **env, AniOb
     return AbilityRuntime::GetStageModeContext(reinterpret_cast<ani_env *>(*env), *reinterpret_cast<ani_object *>(obj));
 }
 
+int32_t DataAbilityOpenFile(std::shared_ptr<Context> const &context, const std::string &path)
+{
+    std::shared_ptr<Uri> uri = std::make_shared<Uri>(path);
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> dataAbilityHelper =
+        AppExecFwk::DataAbilityHelper::Creator(context, uri);
+    if (dataAbilityHelper == nullptr) {
+        return -1;
+    }
+    return dataAbilityHelper->OpenFile(*uri, "r");
+}
+
+bool IsCleartextPermitted(std::string const &hostname)
+{
+    bool cleartextPermitted = true;
+    OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().IsCleartextPermitted(hostname, cleartextPermitted);
+    return cleartextPermitted;
+}
+
+rust::vec<rust::string> GetTrustAnchorsForHostName(std::string const &hostname)
+{
+    std::vector<std::string> trustAnchors;
+    OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().GetTrustAnchorsForHostName(hostname, trustAnchors);
+    rust::vec<rust::string> ret;
+    for (auto &anchor : trustAnchors) {
+        ret.push_back(anchor);
+    }
+    return ret;
+}
+
+rust::string GetCertificatePinsForHostName(std::string const &hostname)
+{
+    if (OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().IsPinOpenMode(hostname)) {
+        return "";
+    }
+    std::string certificatePins;
+    OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().GetPinSetForHostName(hostname, certificatePins);
+    return certificatePins;
+}
 } // namespace OHOS::Request

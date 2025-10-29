@@ -11,10 +11,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Validation utilities for request operations.
-//!
-//! This module provides utilities for validating various aspects of download/upload
-//! requests, including file path validation and permission checking.
+use request_core::config::{Action, TaskConfig, Version};
 
-/// File path validation utilities.
-pub mod file;
+use crate::verify::ConfigVerifier;
+
+pub struct DataVerifier {}
+
+impl ConfigVerifier for DataVerifier {
+    // todo: check
+    fn verify(&self, config: &TaskConfig) -> Result<(), i32> {
+        if matches!(config.version, Version::API10) {
+            if matches!(config.common_data.action, Action::Upload) && !config.data.is_empty() {
+                error!("data must be empty for upload on API10");
+                return Err(401);
+            }
+        }
+        Ok(())
+    }
+}

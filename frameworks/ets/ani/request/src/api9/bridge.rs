@@ -12,15 +12,16 @@
 // limitations under the License.
 
 //! Bridge module for API 9 request functionality.
-//! 
+//!
 //! This module defines data structures and conversion traits to bridge between the ETS interface
 //! and the underlying request core functionality. It provides type definitions for download and
 //! upload configurations, tasks, and information.
 
 use std::collections::HashMap;
 
-use request_core::config::{NetworkConfig, TaskConfig, TaskConfigBuilder, Version};
-use request_core::info::TaskInfo;
+use request_core::config::{NetworkConfig, TaskConfig, TaskConfigBuilder, Version, FormItem, Action};
+use request_core::info::{self, TaskInfo};
+use request_core::file::FileSpec;
 
 /// Configuration for a download task.
 ///
@@ -55,7 +56,7 @@ pub struct UploadConfig {
     /// The URL to upload to.
     pub url: String,
     /// HTTP headers to include in the request.
-    pub header: HashMap<String, String>,
+    pub header: Option<HashMap<String, String>>,
     /// The HTTP method to use for the upload.
     pub method: String,
     /// Optional index parameter.
@@ -76,7 +77,7 @@ pub struct UploadConfig {
 #[ani_rs::ani(path = "L@ohos/request/request/DownloadTaskInner")]
 pub struct DownloadTask {
     /// The unique identifier of the download task.
-    pub task_id: i64,
+    pub task_id: String,
 }
 
 /// Represents an upload task.
@@ -85,7 +86,7 @@ pub struct DownloadTask {
 #[ani_rs::ani(path = "L@ohos/request/request/UploadTaskInner")]
 pub struct UploadTask {
     /// The unique identifier of the upload task.
-    pub task_id: i64,
+    pub task_id: String,
 }
 
 /// Information about a download task.
@@ -133,9 +134,19 @@ pub struct File {
     type_: String,
 }
 
-/// Represents form data for a request.
-///
-/// Contains a key-value pair to be included in a request.
+impl From<File> for FileSpec {
+    fn from(value: File) -> Self {
+        FileSpec {
+            file_name: value.filename,
+            name: value.name,
+            path: value.uri,
+            mime_type: value.type_,
+            is_user_file: false,
+            fd: None,
+        }
+    }
+}
+
 #[ani_rs::ani]
 pub struct RequestData {
     /// Name of the form field.
@@ -147,27 +158,44 @@ pub struct RequestData {
 /// Represents the state of a task.
 ///
 /// Contains information about the current state of a task operation.
-#[ani_rs::ani]
+impl From<RequestData> for FormItem {
+    fn from(value: RequestData) -> Self {
+        FormItem {
+            name: value.name,
+            value: value.value,
+        }
+    }
+}
+
+#[ani_rs::ani(path = "L@ohos/request/request/TaskStateInner")]
+#[derive(Clone)]
 pub struct TaskState {
     /// Path associated with the task.
     path: String,
     /// HTTP response code from the server.
-    response_code: f64,
+    response_code: i32,
     /// Status message associated with the task.
     message: String,
 }
 
-/// Converts from `DownloadConfig` to `TaskConfig`.
-///
-/// Transforms the ETS API configuration into the format expected by the underlying request core.
+impl From<request_core::info::TaskState> for TaskState {
+    fn from(value: request_core::info::TaskState) -> Self {
+        TaskState {
+            path: value.path,
+            response_code: value.response_code as i32,
+            message: value.message,
+        }
+    }
+}
+
 impl From<DownloadConfig> for TaskConfig {
     fn from(config: DownloadConfig) -> Self {
         // Create builder configured for API9
         let mut config_builder = TaskConfigBuilder::new(Version::API9);
-        
+
         // Set required URL
         config_builder.url(config.url);
-        
+
         // Add optional parameters if provided
         if let Some(headers) = config.header {
             config_builder.headers(headers);
@@ -184,12 +212,14 @@ impl From<DownloadConfig> for TaskConfig {
         if let Some(description) = config.description {
             config_builder.description(description);
         }
-        if let Some(title) = config.title {
-            config_builder.title(title);
-        }
+        config_builder.title(config.title.clone().unwrap_or("download".to_string()));
         if let Some(background) = config.background {
             config_builder.background(background);
         }
+        if let Some(file_path) = config.file_path {
+            config_builder.file_path(file_path);
+        }
+        config_builder.action(Action::Download);
 
         // Build the final task configuration
         config_builder.build()
@@ -220,5 +250,30 @@ impl From<TaskInfo> for DownloadInfo {
             // Get total size from progress information
             download_total_bytes: info.progress.sizes[0] as i64,
         }
+    }
+}
+
+impl From<UploadConfig> for TaskConfig {
+    fn from(config: UploadConfig) -> Self {
+        let mut config_builder = TaskConfigBuilder::new(Version::API9);
+        config_builder.url(config.url);
+        if let Some(headers) = config.header {
+            config_builder.headers(headers);
+        }
+        config_builder.method(config.method);
+        if let Some(index) = config.index {
+            config_builder.index(index);
+        }
+        if let Some(begins) = config.begins {
+            config_builder.begins(begins);
+        }
+        if let Some(ends) = config.ends {
+            config_builder.ends(ends);
+        }
+        config_builder.files(config.files.into_iter().map(Into::into).collect());
+        config_builder.data(config.data.into_iter().map(Into::into).collect());
+        config_builder.action(Action::Upload);
+        config_builder.title("upload".to_string());
+        config_builder.build()
     }
 }

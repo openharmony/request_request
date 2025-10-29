@@ -12,14 +12,14 @@
 // limitations under the License.
 
 //! Application context utilities and wrapper.
-//! 
+//!
 //! This module provides utilities for accessing application context information
 //! and file system paths. It wraps the underlying native context implementation
 //! and provides a safe Rust API.
 
 use ani_rs::objects::AniObject;
 use ani_rs::AniEnv;
-use cxx::SharedPtr;
+use cxx::{SharedPtr, let_cxx_string};
 
 use super::wrapper::GetCacheDir;
 use crate::wrapper::{self, IsStageContext};
@@ -64,7 +64,7 @@ pub struct Context {
 
 pub enum BundleType {
     /// Standard application bundle
-    App,
+    App = 0,
     /// Atomic service bundle
     AtomicService,
     /// Shared bundle
@@ -133,5 +133,14 @@ impl Context {
     /// Retrieves the base directory path associated with this context.
     pub fn get_base_dir(&self) -> String {
         wrapper::ContextGetBaseDir(&self.inner)
+    }
+
+    pub fn get_bundle_type(&self) -> BundleType {
+        wrapper::BundleType(&self.inner.GetApplicationInfo()).into()
+    }
+
+    pub fn data_ability_open_file(&self, target_file: String) -> i32 {
+        let_cxx_string!(target_file = target_file);
+        wrapper::DataAbilityOpenFile(&self.inner, &target_file)
     }
 }

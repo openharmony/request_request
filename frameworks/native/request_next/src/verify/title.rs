@@ -11,10 +11,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Validation utilities for request operations.
-//!
-//! This module provides utilities for validating various aspects of download/upload
-//! requests, including file path validation and permission checking.
+use request_core::config::{Action, TaskConfig, Version};
 
-/// File path validation utilities.
-pub mod file;
+use crate::verify::ConfigVerifier;
+
+pub struct TitleVerifier {}
+
+impl ConfigVerifier for TitleVerifier {
+    fn verify(&self, config: &TaskConfig) -> Result<(), i32> {
+        const TITLE_MAX_LEN: usize = 256;
+        if matches!(config.version, Version::API10) && config.title.len() > TITLE_MAX_LEN {
+            error!("title length must be less than 256");
+            return Err(401);
+        }
+        Ok(())
+    }
+}

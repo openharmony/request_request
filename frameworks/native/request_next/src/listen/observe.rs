@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Event observation system for download tasks.
-//! 
+//!
 //! This module provides the infrastructure for monitoring and responding to download
 //! task events through a callback mechanism. It includes the `Observer` struct that
 //! manages callbacks and dispatches events, and the `Callback` trait that defines the
@@ -24,7 +24,8 @@ use std::fs::File;
 use std::sync::{Arc, Mutex};
 
 // External dependencies
-use request_core::info::{Progress, SubscribeType, Response};
+use request_core::config::{Action, Version};
+use request_core::info::{Faults, Progress, Response, SubscribeType, TaskState};
 use ylong_runtime::task::JoinHandle;
 
 // Internal dependencies
@@ -61,16 +62,16 @@ pub struct Observer {
 ///
 /// impl Callback for ProgressLogger {
 ///     fn on_progress(&self, progress: &Progress) {
-///         println!("Download progress: {} bytes downloaded of {} total", 
+///         println!("Download progress: {} bytes downloaded of {} total",
 ///                  progress.download_size, progress.total_size);
 ///     }
-///     
+///
 ///     fn on_completed(&self, progress: &Progress) {
 ///         println!("Download completed: {} bytes downloaded", progress.download_size);
 ///     }
-///     
+///
 ///     fn on_failed(&self, progress: &Progress, error_code: i32) {
-///         println!("Download failed with error code {} after {} bytes", 
+///         println!("Download failed with error code {} after {} bytes",
 ///                  error_code, progress.download_size);
 ///     }
 /// }
@@ -85,46 +86,49 @@ pub trait Callback {
     /// # Parameters
     /// - `progress`: Current progress information including bytes downloaded and total size
     fn on_progress(&self, progress: &Progress) {}
-    
+
     /// Called when a download completes successfully.
     ///
     /// # Parameters
     /// - `progress`: Final progress information with complete download details
     fn on_completed(&self, progress: &Progress) {}
-    
+
     /// Called when a download fails.
     ///
     /// # Parameters
     /// - `progress`: Progress information at the time of failure
     /// - `error_code`: Error code indicating the reason for failure
     fn on_failed(&self, progress: &Progress, error_code: i32) {}
-    
+
     /// Called when a download is paused.
     ///
     /// # Parameters
     /// - `progress`: Progress information at the time of pausing
     fn on_pause(&self, progress: &Progress) {}
-    
+
     /// Called when a paused download is resumed.
     ///
     /// # Parameters
     /// - `progress`: Progress information at the time of resuming
     fn on_resume(&self, progress: &Progress) {}
-    
+
     /// Called when a download task is removed.
     ///
     /// # Parameters
     /// - `progress`: Progress information at the time of removal
     fn on_remove(&self, progress: &Progress) {}
-    
+
     /// Called when an HTTP response is received.
     ///
     /// # Parameters
     /// - `response`: HTTP response details including status code, headers, etc.
     fn on_response(&self, response: &Response) {}
-    
+
     /// Called when HTTP headers are received but before the response body starts downloading.
-    fn on_header_receive(&self) {}
+    fn on_header_receive(&self, progress: &Progress) {}
+    fn on_fault(&self, faults: Faults) {}
+    fn on_complete_upload(&self, task_states: Vec<TaskState>) {}
+    fn on_fail_upload(&self, task_states: Vec<TaskState>) {}
 }
 
 impl Observer {
@@ -173,7 +177,7 @@ impl Observer {
     pub fn set_listenr(&self, file: File) {
         let mut listener = UdsListener::new(file);
         let callbacks = self.callbacks.clone();
-        
+
         // Spawn background task to process incoming messages
         let handle = ylong_runtime::spawn(async move {
             loop {
@@ -189,45 +193,93 @@ impl Observer {
                         Message::NotifyData(data) => {
                             let task_id = data.task_id as i64;
                             let progress = data.progress;
-                            
+
                             // Find the appropriate callback for the task
                             if let Some(callback) = callbacks.lock().unwrap().get(&task_id) {
                                 // Dispatch to the appropriate callback method based on event type
-                                match data.subscribe_type {
-                                    SubscribeType::Progress => {
-                                        callback.on_progress(&progress);
-                                    }
-                                    SubscribeType::Completed => {
-                                        callback.on_completed(&progress);
-                                    }
-                                    SubscribeType::Failed => {
-                                        callback.on_failed(
-                                            &progress,
-                                            data.task_states[0].response_code as i32,
-                                        );
-                                    }
-                                    SubscribeType::Pause => {
-                                        callback.on_pause(&progress);
-                                    }
-                                    SubscribeType::Resume => {
-                                        callback.on_resume(&progress);
-                                    }
-                                    SubscribeType::Remove => {
-                                        callback.on_remove(&progress);
-                                    }
-                                    SubscribeType::HeaderReceive => {
-                                        callback.on_header_receive();
-                                    }
-                                    _ => {}
+                                match data.version {
+                                    Version::API10 => match data.subscribe_type {
+                                        SubscribeType::Progress => {
+                                            callback.on_progress(&progress);
+                                        }
+                                        SubscribeType::Completed => {
+                                            callback.on_completed(&progress);
+                                        }
+                                        SubscribeType::Failed => {
+                                            callback.on_failed(
+                                                &progress,
+                                                data.task_states[0].response_code as i32,
+                                            );
+                                        }
+                                        SubscribeType::Pause => {
+                                            callback.on_pause(&progress);
+                                        }
+                                        SubscribeType::Resume => {
+                                            callback.on_resume(&progress);
+                                        }
+                                        SubscribeType::Remove => {
+                                            callback.on_remove(&progress);
+                                        }
+                                        _ => {}
+                                    },
+                                    Version::API9 => match data.action {
+                                        Action::Download => match data.subscribe_type {
+                                            SubscribeType::Completed => {
+                                                callback.on_completed(&progress);
+                                            }
+                                            SubscribeType::Pause => {
+                                                callback.on_pause(&progress);
+                                            }
+                                            SubscribeType::Remove => {
+                                                callback.on_remove(&progress);
+                                            }
+                                            SubscribeType::Failed => {
+                                                callback.on_failed(
+                                                    &progress,
+                                                    data.task_states[0].response_code as i32,
+                                                );
+                                            }
+                                            SubscribeType::Progress => {
+                                                callback.on_progress(&progress);
+                                            }
+                                            _ => {
+                                                error!("bad subscribeType ");
+                                            }
+                                        },
+                                        Action::Upload => match data.subscribe_type {
+                                            SubscribeType::Progress => {
+                                                callback.on_progress(&progress);
+                                            }
+                                            SubscribeType::Completed => {
+                                                callback.on_complete_upload(data.task_states);
+                                            }
+                                            SubscribeType::Failed => {
+                                                callback.on_fail_upload(data.task_states);
+                                            }
+                                            SubscribeType::HeaderReceive => {
+                                                callback.on_header_receive(&progress);
+                                            }
+                                            _ => {
+                                                error!("bad subscribeType ");
+                                            }
+                                        },
+                                    },
                                 }
+
+                            }
+                        }
+                        Message::Faults(faultOccur) => {
+                            let task_id = faultOccur.task_id as i64;
+                            if let Some(callback) = callbacks.lock().unwrap().get(&task_id) {
+                                callback.on_fault(faultOccur.faults);
                             }
                         }
                     },
-                    Err(e) => eprintln!("Error receiving message: {}", e),
+                    Err(e) => error!("Error receiving message: {}", e),
                 }
             }
         });
-        
+
         // Replace and cancel any existing listener
         if let Some(old_listener) = self.listener.lock().unwrap().replace(handle) {
             old_listener.cancel();

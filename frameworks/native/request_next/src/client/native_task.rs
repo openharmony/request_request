@@ -10,3 +10,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+use crate::file::PermissionToken;
+use request_core::config::TaskConfig;
+use std::collections::HashMap;
+use std::sync::Mutex;
+
+#[derive(Default)]
+pub struct NativeTaskManager {
+    pub tasks: Mutex<HashMap<i64, NativeTask>>,
+}
+
+pub struct NativeTask {
+    pub config: TaskConfig,
+    pub token: Vec<PermissionToken>,
+}

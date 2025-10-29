@@ -14,7 +14,7 @@
 #![allow(unused)]
 
 //! Download module for API 9.
-//! 
+//!
 //! This module provides functions to manage download tasks in API 9, including
 //! creating, starting, pausing, resuming, and deleting download tasks, as well as
 //! retrieving task information.
@@ -25,9 +25,11 @@ use ani_rs::business_error::BusinessError;
 use ani_rs::objects::{AniObject, AniRef};
 use ani_rs::AniEnv;
 use request_client::RequestClient;
+use request_client::client::error::CreateTaskError;
 use request_core::config::Version;
 use request_core::info::TaskInfo;
 use request_utils::context::{is_stage_context, Context};
+use request_core::config::TaskConfig;
 
 use super::bridge::{DownloadConfig, DownloadTask};
 use crate::api9::bridge::DownloadInfo;
@@ -66,7 +68,7 @@ use crate::seq::TaskSeq;
 ///     file_path: Some("./downloads/file.zip".to_string()),
 ///     // Other configuration fields...
 /// };
-/// 
+///
 /// match download_file(&env, context, config) {
 ///     Ok(task) => println!("Download started with task ID: {}", task.task_id),
 ///     Err(e) => println!("Error starting download: {}", e),
@@ -86,35 +88,33 @@ pub fn download_file(
     info!("Api9 task, seq: {}", seq.0);
     let context = Context::new(env, &context);
 
-    // Determine the save path based on config or URL
-    let save_as = match &config.file_path {
-        // Use specified path if it exists and is not just a directory marker
-        Some(path) if path != "./" => path.to_string(),
-        _ => {
-            // Extract filename from URL if no path specified
-            let name = PathBuf::from(&config.url);
-            name.file_name()
-                .map(|s| s.to_string_lossy().to_string())
-                .unwrap_or(config.url.clone())
-        }
-    };
+    let mut config: TaskConfig = config.into();
+    config.bundle_type = context.get_bundle_type() as u32;
+    config.bundle = context.get_bundle_name();
 
     // Create the download task
-    let task = match RequestClient::get_instance().crate_task(
+    let task = match RequestClient::get_instance().create_task(
         context,
-        Version::API9,
-        config.into(),
-        &save_as,
-        false,
+        config
     ) {
-        Ok(task_id) => DownloadTask { task_id },
-        Err(e) => {
-            return Err(BusinessError::new(-1, format!("Download failed")));
+        Ok(task_id) => DownloadTask { task_id: task_id.to_string() },
+        Err(CreateTaskError::DownloadPath(_)) => {
+            return Err(BusinessError::new(
+                13400001,
+                "Invalid file or file system error.".to_string(),
+            ))
+        }
+        Err(CreateTaskError::Code(code)) => {
+            return Err(BusinessError::new(
+                code,
+                "Download failed.".to_string(),
+            ))
         }
     };
 
+    let tid = task.task_id.parse().unwrap();
     // Start the download task
-    match RequestClient::get_instance().start(task.task_id) {
+    match RequestClient::get_instance().start(tid) {
         Ok(_) => {
             info!("Api9 download started successfully, seq: {}", seq.0);
             Ok(task)
@@ -161,7 +161,7 @@ pub fn download_file(
 #[ani_rs::native]
 pub fn delete(this: DownloadTask) -> Result<(), BusinessError> {
     RequestClient::get_instance()
-        .remove(this.task_id)
+        .remove(this.task_id.parse().unwrap())
         .map_err(|e| BusinessError::new(e, "Failed to delete download task".to_string()))
 }
 
@@ -197,7 +197,7 @@ pub fn delete(this: DownloadTask) -> Result<(), BusinessError> {
 #[ani_rs::native]
 pub fn suspend(this: DownloadTask) -> Result<(), BusinessError> {
     RequestClient::get_instance()
-        .pause(this.task_id)
+        .pause(this.task_id.parse().unwrap())
         .map_err(|e| BusinessError::new(e, "Failed to suspend download task".to_string()))
 }
 
@@ -233,7 +233,7 @@ pub fn suspend(this: DownloadTask) -> Result<(), BusinessError> {
 #[ani_rs::native]
 pub fn restore(this: DownloadTask) -> Result<(), BusinessError> {
     RequestClient::get_instance()
-        .resume(this.task_id)
+        .resume(this.task_id.parse().unwrap())
         .map_err(|e| BusinessError::new(e, "Failed to restore download task".to_string()))
 }
 
@@ -269,7 +269,7 @@ pub fn restore(this: DownloadTask) -> Result<(), BusinessError> {
 #[ani_rs::native]
 pub fn get_task_info(this: DownloadTask) -> Result<DownloadInfo, BusinessError> {
     RequestClient::get_instance()
-        .show_task(this.task_id)
+        .show_task(this.task_id.parse().unwrap())
         .map(|info| DownloadInfo::from(info))
         .map_err(|e| BusinessError::new(e, "Failed to get download task info".to_string()))
 }
@@ -277,9 +277,9 @@ pub fn get_task_info(this: DownloadTask) -> Result<DownloadInfo, BusinessError> 
 /// Gets the MIME type of a download task.
 ///
 /// Returns the MIME type for the specified download task.
-/// 
+///
 /// # Notes
-/// 
+///
 /// Currently returns a static value of "application/octet-stream" for all tasks.
 ///
 /// # Parameters

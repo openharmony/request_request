@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Task information and state management.
-//! 
+//!
 //! This module defines structures and enums for representing task states, progress,
 //! notifications, and detailed task information used throughout the request system.
 
@@ -94,6 +94,8 @@ pub enum SubscribeType {
     Resume,
     /// HTTP response has been received.
     Response,
+    FaultOccur,
+    Wait,
     /// Marker for the end of the enum.
     Butt,
 }
@@ -114,15 +116,151 @@ impl From<u32> for SubscribeType {
             5 => SubscribeType::Remove,
             6 => SubscribeType::Resume,
             7 => SubscribeType::Response,
-            8 => SubscribeType::Butt,
+            8 => SubscribeType::FaultOccur,
+            9 => SubscribeType::Wait,
+            10 => SubscribeType::Butt,
             _ => unimplemented!(),
         }
     }
 }
 
-/// HTTP response information.
-///
-/// Contains the status code, headers, and other metadata from an HTTP response.
+#[derive(Copy, Clone)]
+#[repr(u32)]
+#[derive(Debug)]
+pub enum Faults {
+    Others = 0xFF,
+    Disconnected = 0x00,
+    Timeout = 0x10,
+    Protocol = 0x20,
+    Param = 0x30,
+    Fsio = 0x40,
+    Dns = 0x50,
+    Tcp = 0x60,
+    Ssl = 0x70,
+    Redirect = 0x80,
+}
+
+impl From<u32> for Faults {
+    fn from(value: u32) -> Self {
+        match value {
+            0xFF => Faults::Others,
+            0x00 => Faults::Disconnected,
+            0x10 => Faults::Timeout,
+            0x20 => Faults::Protocol,
+            0x30 => Faults::Param,
+            0x40 => Faults::Fsio,
+            0x50 => Faults::Dns,
+            0x60 => Faults::Tcp,
+            0x70 => Faults::Ssl,
+            0x80 => Faults::Redirect,
+            _ => unimplemented!(),
+        }
+    }
+}
+
+impl From<Reason> for Faults {
+    fn from(reason: Reason) -> Self {
+        match reason {
+            Reason::NetworkOffline | Reason::NetworkApp | Reason::NetworkAccount
+            | Reason::NetworkAppAccount => Faults::Disconnected,
+            Reason::BuildClientFailed | Reason::BuildRequestFailed => Faults::Param,
+            Reason::GetFilesizeFailed | Reason::IoError => Faults::Fsio,
+            Reason::ContinuousTaskTimeout => Faults::Timeout,
+            Reason::ConnectError => Faults::Tcp,
+            Reason::RequestError | Reason::ProtocolError | Reason::UnsupportRangeRequest => Faults::Protocol,
+            Reason::RedirectError => Faults::Redirect,
+            Reason::DNS => Faults::Dns,
+            Reason::TCP => Faults::Tcp,
+            Reason::SSL => Faults::Ssl,
+            _ => Faults::Others,
+        }
+    }
+}
+
+#[derive(Debug)]
+#[derive(Copy, Clone)]
+pub enum Reason {
+    ReasonOk = 0,
+    TaskSurvivalOneMonth,
+    WaittingNetworkOneDay,
+    StoppedNewFrontTask,
+    RunningTaskMeetLimits,
+    UserOperation,
+    AppBackgroundOrTerminate,
+    NetworkOffline,
+    UnsupportedNetworkType,
+    BuildClientFailed,
+    BuildRequestFailed,
+    GetFilesizeFailed,
+    ContinuousTaskTimeout,
+    ConnectError,
+    RequestError,
+    UploadFileError,
+    RedirectError,
+    ProtocolError,
+    IoError,
+    UnsupportRangeRequest,
+    OthersError,
+    AccountStopped,
+    NetworkChanged,
+    DNS,
+    TCP,
+    SSL,
+    InsufficientSpace,
+    NetworkApp,
+    NetworkAccount,
+    AppAccount,
+    NetworkAppAccount,
+    LowSpeed,
+}
+
+impl From<u32> for Reason {
+    fn from(value: u32) -> Self {
+        match value {
+            0 => Reason::ReasonOk,
+            1 => Reason::TaskSurvivalOneMonth,
+            2 => Reason::WaittingNetworkOneDay,
+            3 => Reason::StoppedNewFrontTask,
+            4 => Reason::RunningTaskMeetLimits,
+            5 => Reason::UserOperation,
+            6 => Reason::AppBackgroundOrTerminate,
+            7 => Reason::NetworkOffline,
+            8 => Reason::UnsupportedNetworkType,
+            9 => Reason::BuildClientFailed,
+            10 => Reason::BuildRequestFailed,
+            11 => Reason::GetFilesizeFailed,
+            12 => Reason::ContinuousTaskTimeout,
+            13 => Reason::ConnectError,
+            14 => Reason::RequestError,
+            15 => Reason::UploadFileError,
+            16 => Reason::RedirectError,
+            17 => Reason::ProtocolError,
+            18 => Reason::IoError,
+            19 => Reason::UnsupportRangeRequest,
+            20 => Reason::OthersError,
+            21 => Reason::AccountStopped,
+            22 => Reason::NetworkChanged,
+            23 => Reason::DNS,
+            24 => Reason::TCP,
+            25 => Reason::SSL,
+            26 => Reason::InsufficientSpace,
+            27 => Reason::NetworkApp,
+            28 => Reason::NetworkAccount,
+            29 => Reason::AppAccount,
+            30 => Reason::NetworkAppAccount,
+            31 => Reason::LowSpeed,
+            _ => unimplemented!(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct FaultOccur {
+    pub task_id: i32,
+    pub subscribe_type: SubscribeType,
+    pub faults: Faults,
+}
+
 #[derive(Debug)]
 pub struct Response {
     /// Unique identifier of the task associated with this response.
@@ -138,7 +276,7 @@ pub struct Response {
 }
 
 /// Status information for a specific task file.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct TaskState {
     /// Path to the file being processed.
     pub path: String,
@@ -165,6 +303,7 @@ pub struct Progress {
     pub sizes: Vec<i64>,
     /// Additional progress-related metadata.
     pub extras: HashMap<String, String>,
+    // pub body_bytes: Vec<u8>,
 }
 
 /// Data structure for task notifications.
@@ -251,12 +390,12 @@ pub struct CommonTaskInfo {
 ///
 /// ```rust
 /// use request_core::{info::TaskInfo, file::FileSpec};
-/// 
+///
 /// // Access task details
 /// fn process_task_info(task_info: &TaskInfo) {
 ///     println!("Task ID: {}", task_info.common_data.task_id);
 ///     println!("URL: {}", task_info.url);
-///     println!("Progress: {}/{}", 
+///     println!("Progress: {}/{}",
 ///              task_info.progress.common_data.total_processed,
 ///              task_info.progress.sizes.iter().sum::<i64>());
 /// }
@@ -304,16 +443,16 @@ impl Deserialize for TaskInfo {
         let mode = parcel.read::<u32>().unwrap() as u8;
         let reason = parcel.read::<u32>().unwrap() as u8;
         let tries = parcel.read::<u32>().unwrap();
-        
+
         // Parse user ID from string representation
         let uid = parcel.read::<String>().unwrap().parse::<u64>().unwrap_or(0);
-        
+
         let bundle = parcel.read::<String>().unwrap();
         let url = parcel.read::<String>().unwrap();
-        
+
         // Parse task ID from string representation
         let task_id = parcel.read::<String>().unwrap().parse::<u32>().unwrap_or(0);
-        
+
         let title = parcel.read::<String>().unwrap();
         let mime_type = parcel.read::<String>().unwrap();
         let ctime = parcel.read::<u64>().unwrap();
@@ -321,7 +460,7 @@ impl Deserialize for TaskInfo {
         let data = parcel.read::<String>().unwrap();
         let description = parcel.read::<String>().unwrap();
         let priority = parcel.read::<u32>().unwrap();
-        
+
         // Read form items
         let form_items_len = parcel.read::<u32>().unwrap() as usize;
         let mut form_items = Vec::with_capacity(form_items_len);
@@ -406,7 +545,7 @@ impl Deserialize for TaskInfo {
             version,
             priority,
         };
-        
+
         // Construct progress information
         let progress = InfoProgress {
             common_data: CommonProgress {
@@ -418,7 +557,7 @@ impl Deserialize for TaskInfo {
             processed: vec![processed; file_specs.len()],
             extras: progress_extras,
         };
-        
+
         // Return constructed TaskInfo
         Ok(TaskInfo {
             bundle,
