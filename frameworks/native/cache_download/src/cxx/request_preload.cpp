@@ -349,8 +349,10 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
     if (options != nullptr) {
         // Validate and set headers
         for (const auto &[key, value] : options->headers) {
-            if (!Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(key.begin(), key.end()))
-                || !Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(value.begin(), value.end()))) {
+            std::vector<uint8_t> key_bytes(key.begin(), key.end());
+            std::vector<uint8_t> value_bytes(value.begin(), value.end());
+
+            if (!Utf8Utils::RunUtf8Validation(key_bytes) || !Utf8Utils::RunUtf8Validation(value_bytes)) {
                 return nullptr;
             }
             ffiOptions.headers.push_back(rust::str(key));
