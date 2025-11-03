@@ -250,7 +250,7 @@ export default function requestBasicConfigTest() {
         gauge: true
       };
       request.agent.create(context, conf).then(async (data) => {
-        if (fs.accessSync(`${cacheDir}/testTaskAction005.txt`)) {
+        if (fs.accessSync(`${cacheDir}/testTaskAction005`)) {
           expect(true).assertTrue();
           await request.agent.remove(data.tid);
           done();
@@ -288,7 +288,7 @@ export default function requestBasicConfigTest() {
         gauge: true
       };
       request.agent.create(context, conf).then(async (data) => {
-        if (fs.accessSync(`${cacheDir}/testTaskAction006.txt`)) {
+        if (fs.accessSync(`${cacheDir}/testTaskAction006`)) {
           expect(true).assertTrue();
           await request.agent.remove(data.tid);
           done();
