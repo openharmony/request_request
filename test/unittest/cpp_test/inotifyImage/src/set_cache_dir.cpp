@@ -98,9 +98,7 @@ HWTEST_F(FileCachePath, SetFileCachePathTest, TestSize.Level1)
     bool dirCreated = false;
     if (!DirOperation::IsDirExist(cacheDir)) {
         dirCreated = DirOperation::CreateDir(cacheDir);
-    }
-    if (!dirCreated) {
-        return;
+        EXPECT_TRUE(dirCreated);
     }
     Preload::SetFileCachePath(emptyPath);
     Preload::SetFileCachePath(cacheDir);
