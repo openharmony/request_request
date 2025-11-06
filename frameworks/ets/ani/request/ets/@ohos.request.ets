@@ -125,7 +125,7 @@ export default namespace request {
     });
   }
 
-  interface DownloadConfig {
+  export interface DownloadConfig {
     url: string;
     header?: Record<string, string>;
     enableMetered?: boolean;
@@ -137,7 +137,7 @@ export default namespace request {
     background?: boolean;
   }
 
-  interface DownloadInfo {
+  export interface DownloadInfo {
     description: string;
     downloadedBytes: long;
     downloadId: long;
@@ -171,7 +171,7 @@ export default namespace request {
   export type DownloadRemoveCallback = () => void;
   export type DownloadFailCallback = (err: int) => void;
 
-  interface DownloadTask {
+  export interface DownloadTask {
     readonly taskId: string;
 
     onProgress(callback: DownloadProgressCallback): void;
@@ -421,19 +421,19 @@ export default namespace request {
     }
   }
 
-  interface File {
+  export interface File {
     filename: string;
     name: string;
     uri: string;
     type: string;
   }
 
-  interface RequestData {
+  export interface RequestData {
     name: string;
     value: string;
   }
 
-  interface UploadConfig {
+  export interface UploadConfig {
     url: string;
     header: Record<string, string>;
     method: string;
@@ -444,7 +444,7 @@ export default namespace request {
     data: Array<RequestData>;
   }
 
-  interface TaskState {
+  export interface TaskState {
     path: string;
     responseCode: int;
     message: string;
@@ -601,7 +601,7 @@ export default namespace request {
       COMPLETE = 'ohos.request.event.COMPLETE'
     }
 
-    interface FileSpec {
+    export interface FileSpec {
       path: string;
       contentType?: string;
       filename?: string;
@@ -616,7 +616,7 @@ export default namespace request {
       extras?: Record<string, string>;
     }
 
-    interface FormItem {
+    export interface FormItem {
       name: string;
       value: string | FileSpec | Array<FileSpec>;
     }
@@ -626,12 +626,12 @@ export default namespace request {
       value: string | FileSpec | Array<FileSpec>;
     }
 
-    interface Notification {
+    export interface Notification {
       title?: string;
       text?: string;
     }
 
-    interface Config {
+    export interface Config {
       action: Action;
       url: string;
       title?: string;
@@ -673,7 +673,7 @@ export default namespace request {
       REMOVED = 0x50
     }
 
-    interface Progress {
+    export interface Progress {
       readonly state: State;
       readonly index: int;
       readonly processed: long;
@@ -702,7 +702,7 @@ export default namespace request {
       REDIRECT = 0x80
     }
 
-    interface Filter {
+    export interface Filter {
       bundle?: string;
       before?: long;
       after?: long;
@@ -711,7 +711,7 @@ export default namespace request {
       mode?: Mode;
     }
 
-    interface TaskInfo {
+    export interface TaskInfo {
       readonly uid?: string;
       readonly bundle?: string;
       readonly saveas?: string;
@@ -759,7 +759,7 @@ export default namespace request {
       readonly extras?: Record<string, string>;
     }
 
-    interface HttpResponse {
+    export interface HttpResponse {
       readonly version: string;
       readonly statusCode: int;
       readonly reason: string;
@@ -773,7 +773,7 @@ export default namespace request {
       readonly headers: Map<string, Array<string>>;
     }
 
-    interface Task {
+    export interface Task {
       readonly tid: string;
       config: Config;
 
@@ -1119,7 +1119,7 @@ export default namespace request {
       });
     }
 
-    interface GroupConfig {
+    export interface GroupConfig {
       gauge?: boolean;
       notification: Notification;
     }
