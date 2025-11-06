@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Resource capacity management for caching system.
-//! 
+//!
 //! This module provides functionality for tracking and managing resource capacities
 //! within the cache system, including applying for additional resources and releasing
 //! unused resources.

@@ -14,11 +14,14 @@
 use std::collections::HashSet;
 use std::io::{BufReader, Lines};
 use std::net::TcpStream;
+use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 use std::time::Duration;
 
+use request_utils;
 use request_utils::test::log::init;
 use request_utils::test::server::test_server;
 
@@ -28,6 +31,11 @@ use crate::download::CANCEL;
 const ERROR_IP: &str = "127.12.31.12";
 const NO_DATA: usize = 1359;
 const TEST_URL: &str = "http://www.baidu.com";
+const TEST_VIDEO_URL: &str = "https://www.w3cschool.cn/statics/demosource/movie.mp4";
+static TEST_TEXT_URL: Mutex<&'static str> = Mutex::new(
+    "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+);
+const FINISH_SUFFIX: &str = "_F";
 
 #[cfg(feature = "ohos")]
 const DOWNLOADER: Downloader = Downloader::Netstack;
@@ -442,4 +450,158 @@ fn ut_download_request_ssl_type() {
     let mut request = DownloadRequest::new(TEST_URL);
     request.ssl_type("TLS");
     assert_eq!(request.ssl_type, Some("TLS"));
+}
+
+// @tc.name: ut_remove_file_cache
+// @tc.desc: Test removing file cache
+// @tc.precon: NA
+// @tc.step: 1. Preload a file to create cache
+//           2. Verify cache exists and cache file exists
+//           3. Call remove method to remove cache
+//           4. Verify cache is still available and cache file does not exist
+// @tc.expect: Cache file is removed from service but cache is still available
+// @tc.type: FUNC
+// @tc.require: issue#1643
+// @tc.level: level1
+#[test]
+fn ut_remove_file_cache() {
+    let test_url = TEST_TEXT_URL.lock().unwrap();
+    CacheDownloadService::get_instance().remove(test_url.as_ref());
+    let success_flag = Arc::new(AtomicUsize::new(0));
+    let callback = Box::new(TestCallbackS {
+        flag: success_flag.clone(),
+    });
+    let handle = CacheDownloadService::get_instance().preload(
+        DownloadRequest::new(test_url.as_ref()),
+        callback,
+        true,
+        DOWNLOADER,
+    );
+    assert!(handle.is_some());
+    let handle = handle.unwrap();
+    while !handle.is_finish() {
+        thread::sleep(Duration::from_millis(500));
+    }
+    let cache = CacheDownloadService::get_instance().fetch(test_url.as_ref());
+    assert!(cache.is_some());
+    let path = get_curr_store_dir();
+    let task_id = handle.task_id();
+    let file_name = format!("{}{}", task_id, FINISH_SUFFIX);
+    let file_path = path.join(file_name);
+    assert!(file_path.exists());
+    CacheDownloadService::get_instance().clear_file_cache();
+    assert!(!file_path.exists());
+    let cache = CacheDownloadService::get_instance().fetch(test_url.as_ref());
+    assert!(cache.is_some());
+}
+
+// @tc.name: ut_remove_ram_cache
+// @tc.desc: Test removing RAM cache
+// @tc.precon: NA
+// @tc.step: 1. Preload a file to create cache
+//           2. Verify cache exists and cache file exists
+//           3. Call clear_memory_cache method to remove memory cache
+//           4. Verify cache is still available
+//           5. Call clear_file_cache and clear_memory_cache to remove all caches
+//           6. Verify cache is removed
+// @tc.expect: Cache is removed after clear_memory_cache and clear_file_cache
+// @tc.type: FUNC
+// @tc.require: issue#1643
+// @tc.level: level1
+#[test]
+fn ut_remove_ram_cache() {
+    let test_url = TEST_TEXT_URL.lock().unwrap();
+    CacheDownloadService::get_instance().remove(test_url.as_ref());
+    let success_flag = Arc::new(AtomicUsize::new(0));
+    let callback = Box::new(TestCallbackS {
+        flag: success_flag.clone(),
+    });
+    let handle = CacheDownloadService::get_instance().preload(
+        DownloadRequest::new(test_url.as_ref()),
+        callback,
+        true,
+        DOWNLOADER,
+    );
+    assert!(handle.is_some());
+    let handle = handle.unwrap();
+    while !handle.is_finish() {
+        thread::sleep(Duration::from_millis(500));
+    }
+    let cache = CacheDownloadService::get_instance().fetch(test_url.as_ref());
+    assert!(cache.is_some());
+    CacheDownloadService::get_instance().clear_memory_cache();
+    let cache = CacheDownloadService::get_instance().fetch(test_url.as_ref());
+    assert!(cache.is_some());
+    CacheDownloadService::get_instance().clear_memory_cache();
+    CacheDownloadService::get_instance().clear_file_cache();
+    let cache = CacheDownloadService::get_instance().fetch(test_url.as_ref());
+    assert!(cache.is_none());
+}
+
+// @tc.name: ut_remove_finished_caches
+// @tc.desc: Test removing finished task caches and keep running task caches
+// @tc.precon: NA
+// @tc.step: 1. Preload a file to create cache
+//           2. Wait for preload to finish
+//           3. Preload another file but do not wait for it to finish
+//           4. Call remove method to remove finished caches
+//           5. Verify cache is still available for running task
+// @tc.expect: Cache is removed for finished task but still available for running task
+// @tc.type: FUNC
+// @tc.require: issue#1643
+// @tc.level: level1
+#[test]
+fn ut_remove_finished_caches() {
+    let test_url = TEST_TEXT_URL.lock().unwrap();
+    CacheDownloadService::get_instance().remove(test_url.as_ref());
+    CacheDownloadService::get_instance().remove(TEST_VIDEO_URL);
+    let success_flag = Arc::new(AtomicUsize::new(0));
+    let callback = Box::new(TestCallbackS {
+        flag: success_flag.clone(),
+    });
+    let handle = CacheDownloadService::get_instance().preload(
+        DownloadRequest::new(test_url.as_ref()),
+        callback,
+        true,
+        DOWNLOADER,
+    );
+    assert!(handle.is_some());
+    let handle = handle.unwrap();
+    while !handle.is_finish() {
+        thread::sleep(Duration::from_millis(500));
+    }
+    let success_flag2 = Arc::new(AtomicUsize::new(0));
+    let callback2 = Box::new(TestCallbackS {
+        flag: success_flag2.clone(),
+    });
+    let handle2 = CacheDownloadService::get_instance().preload(
+        DownloadRequest::new(TEST_VIDEO_URL),
+        callback2,
+        true,
+        DOWNLOADER,
+    );
+    CacheDownloadService::get_instance().clear_memory_cache();
+    CacheDownloadService::get_instance().clear_file_cache();
+    assert!(handle2.is_some());
+    let handle2 = handle2.unwrap();
+    while !handle2.is_finish() {
+        thread::sleep(Duration::from_millis(500));
+    }
+    let cache = CacheDownloadService::get_instance().fetch(test_url.as_ref());
+    assert!(cache.is_none());
+    let cache = CacheDownloadService::get_instance().fetch(TEST_VIDEO_URL);
+    assert!(cache.is_some());
+}
+
+pub fn get_curr_store_dir() -> PathBuf {
+    let mut path = match request_utils::context::get_cache_dir() {
+        Some(dir) => PathBuf::from_str(&dir).unwrap(),
+        None => {
+            error!("get cache dir failed");
+            // Fallback to standard cache directory if context retrieval fails
+            PathBuf::from_str("/data/storage/el2/base/cache").unwrap()
+        }
+    };
+    path.push("preload_caches");
+    path
 }

@@ -12,14 +12,14 @@
 // limitations under the License.
 
 //! Cache download service interfaces and core functionality.
-//! 
+//!
 //! This module defines the primary service interfaces for the cache download system,
 //! including request structures, callback traits, and the main cache download service
 //! implementation with singleton pattern.
 
 // Standard library imports for thread safety and collections
 use std::collections::hash_map::Entry;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, Once, OnceLock};
 
 // External dependencies
@@ -45,17 +45,17 @@ pub trait PreloadCallback: Send {
     /// - `data`: The downloaded content in RAM cache
     /// - `task_id`: Brief identifier for the completed task
     fn on_success(&mut self, data: Arc<RamCache>, task_id: &str) {}
-    
+
     /// Called when a download operation fails.
     ///
     /// # Parameters
     /// - `error`: The error that caused the failure
     /// - `task_id`: Brief identifier for the failed task
     fn on_fail(&mut self, error: CacheDownloadError, task_id: &str) {}
-    
+
     /// Called when a download operation is cancelled.
     fn on_cancel(&mut self) {}
-    
+
     /// Called periodically to report download progress.
     ///
     /// # Parameters
@@ -421,6 +421,32 @@ impl CacheDownloadService {
     pub fn get_download_info(&self, url: &str) -> Option<DownloadInfo> {
         let task_id = TaskId::from_url(url);
         self.info_mgr.get_download_info(task_id)
+    }
+
+    /// Clears all memory cache.
+    pub fn clear_memory_cache(&self) {
+        let running_tasks = self
+            .running_tasks
+            .lock()
+            .unwrap()
+            .keys()
+            .cloned()
+            .collect::<HashSet<_>>();
+        self.cache_manager.clear_memory_cache(&running_tasks);
+        info!("clear memory cache");
+    }
+
+    /// Clears all file cache.
+    pub fn clear_file_cache(&self) {
+        let running_tasks = self
+            .running_tasks
+            .lock()
+            .unwrap()
+            .keys()
+            .cloned()
+            .collect::<HashSet<_>>();
+        self.cache_manager.clear_file_cache(&running_tasks);
+        info!("clear file cache");
     }
 
     /// Fetches content from cache with callback notification.

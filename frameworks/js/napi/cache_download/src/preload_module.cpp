@@ -231,6 +231,18 @@ napi_value getDownloadInfo(napi_env env, napi_callback_info info)
     return jsInfo;
 }
 
+napi_value clearMemoryCache(napi_env env, napi_callback_info info)
+{
+    Preload::GetInstance()->ClearMemoryCache();
+    return nullptr;
+}
+
+napi_value clearFileCache(napi_env env, napi_callback_info info)
+{
+    Preload::GetInstance()->ClearFileCache();
+    return nullptr;
+}
+
 static void NapiCreateEnumSslType(napi_env env, napi_value &sslType)
 {
     napi_create_object(env, &sslType);
@@ -250,6 +262,8 @@ static napi_value registerFunc(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setFileCacheSize", setFileCacheSize),
         DECLARE_NAPI_FUNCTION("setDownloadInfoListSize", setDownloadInfoListSize),
         DECLARE_NAPI_FUNCTION("getDownloadInfo", getDownloadInfo),
+        DECLARE_NAPI_FUNCTION("clearMemoryCache", clearMemoryCache),
+        DECLARE_NAPI_FUNCTION("clearFileCache", clearFileCache),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
     return exports;
