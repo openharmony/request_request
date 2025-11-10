@@ -71,10 +71,10 @@ void DownloadCancelTest(std::string url)
     EXPECT_EQ(handle->GetState(), PreloadState::RUNNING);
 
     handle->Cancel();
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     EXPECT_FALSE(flagF->load());
     EXPECT_FALSE(flagS->load());
     EXPECT_TRUE(flagC->load());
