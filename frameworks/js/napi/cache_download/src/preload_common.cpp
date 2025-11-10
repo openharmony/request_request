@@ -69,6 +69,25 @@ void SetOptionsSslType(napi_env env, napi_value arg, std::unique_ptr<PreloadOpti
     }
 }
 
+void GetCacheStrategy(napi_env env, napi_value arg, bool &isUpdate)
+{
+    napi_value napiCacheStrategy = GetNamedProperty(env, arg, "cacheStrategy");
+    if (napiCacheStrategy != nullptr) {
+        if (GetValueType(env, napiCacheStrategy) != napi_number) {
+            isUpdate = true;
+            return;
+        }
+        int64_t numCacheStrategy = GetValueNum(env, napiCacheStrategy);
+        if (numCacheStrategy == static_cast<int64_t>(CacheStrategy::LAZY)) {
+            isUpdate = false;
+        } else {
+            isUpdate = true;
+        }
+    } else {
+        isUpdate = true;
+    }
+}
+
 bool BuildInfoResource(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo)
 {
     napi_status status;

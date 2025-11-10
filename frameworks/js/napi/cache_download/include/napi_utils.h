@@ -34,6 +34,7 @@ std::string GetPropertyValue(napi_env env, napi_value object, const std::string 
 int64_t GetValueNum(napi_env env, napi_value value);
 void ThrowError(napi_env env, int32_t code, const std::string &msg);
 void SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &name, const std::string &value);
+void SetUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value);
 napi_value Convert2JSValue(napi_env env, const std::string &str);
 } // namespace OHOS::Request
 #endif
