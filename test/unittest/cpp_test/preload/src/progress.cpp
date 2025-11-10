@@ -58,7 +58,7 @@ static std::string TEST_URL_3 = "https://vd4.bdstatic.com/mda-pm7bte3t6fs50rsh/s
                                 "1702057792414494257/"
                                 "mda-pm7bte3t6fs50rsh.mp4?v_from_s=bdapp-author-nanjing";
 
-constexpr size_t SLEEP_INTERVAL = 100;
+constexpr size_t SLEEP_INTERVAL = 1000;
 
 void DownloadProgressTest(std::string url)
 {
@@ -86,7 +86,8 @@ void DownloadProgressTest(std::string url)
             },
     };
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
     EXPECT_FALSE(flagF->load());
