@@ -928,24 +928,31 @@ impl TaskStatus {
 /// 
 /// `true` if all file specifications are valid, `false` otherwise.
 fn check_file_specs(file_specs: &[FileSpec]) -> bool {
-    for (idx, spec) in file_specs.iter().enumerate() {
+    for (_idx, spec) in file_specs.iter().enumerate() {
         if spec.is_user_file {
             continue;
         }
         let path = &spec.path;
-        if !check_standardized_path(path) {
-            error!("File path err - path: {}, idx: {}", path, idx);
+        if !check_path(path) {
             return false;
         }
-        if !belong_app_base(path) {
-            error!("File path invalid - path: {}, idx: {}", path, idx);
-            sys_event!(
-                ExecFault,
-                DfxCode::TASK_FAULT_09,
-                &format!("File path invalid - path: {}, idx: {}", path, idx)
-            );
-            return false;
-        }
+    }
+    true
+}
+
+fn check_path(path: &str) -> bool {
+    if !check_standardized_path(path) {
+        error!("File path err - path: {}", path);
+        return false;
+    }
+    if !belong_app_base(path) {
+        error!("File path invalid - path: {}", path);
+        sys_event!(
+            ExecFault,
+            DfxCode::TASK_FAULT_09,
+            &format!("File path invalid - path: {}", path)
+        );
+        return false;
     }
     true
 }
@@ -968,6 +975,9 @@ pub(crate) fn check_config(
     #[cfg(feature = "oh")] system: SystemConfig,
 ) -> Result<(AttachedFiles, Client), ErrorCode> {
     if !check_file_specs(&config.file_specs) {
+        return Err(ErrorCode::Other);
+    }
+    if !config.body_file_paths.iter().all(|path| check_path(path)) {
         return Err(ErrorCode::Other);
     }
     let files = AttachedFiles::open(config).map_err(|_| ErrorCode::FileOperationErr)?;
