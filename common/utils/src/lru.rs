@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Least Recently Used (LRU) cache implementation.
-//! 
+//!
 //! This module provides an efficient LRU cache implementation using a combination
 //! of a hash map for O(1) lookups and a doubly linked list for O(1) insertions and
 //! deletions from both ends.
@@ -383,6 +383,24 @@ impl<K: Hash + Eq + Clone, V> LRUCache<K, V> {
     /// ```
     pub fn len(&self) -> usize {
         self.map.len()
+    }
+
+    /// Returns an iterator over the keys of the cache.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use request_utils::lru::LRUCache;
+    ///
+    /// let mut cache = LRUCache::new();
+    /// cache.insert(1, "one");
+    /// cache.insert(2, "two");
+    ///
+    /// let keys: Vec<_> = cache.keys().collect();
+    /// assert_eq!(keys, vec![&1, &2]);
+    /// ```
+    pub fn keys(&self) -> impl Iterator<Item = &K> {
+        self.map.keys()
     }
 }
 

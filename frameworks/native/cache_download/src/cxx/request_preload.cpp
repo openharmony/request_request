@@ -471,6 +471,16 @@ bool Preload::Contains(const std::string &url)
     return agent_->contains(rust::str(url));
 }
 
+void Preload::ClearMemoryCache()
+{
+    agent_->clear_memory_cache();
+}
+
+void Preload::ClearFileCache()
+{
+    agent_->clear_file_cache();
+}
+
 /**
  * @brief Get singleton instance
  * @return Pointer to Preload instance

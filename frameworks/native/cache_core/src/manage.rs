@@ -12,12 +12,12 @@
 // limitations under the License.
 
 //! Cache management and coordination.
-//! 
+//!
 //! This module provides the central `CacheManager` that coordinates different cache storage types
 //! including RAM-based caches and file-based caches. It handles cache allocation, resource
 //! management, and synchronization between different cache types.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::io;
 use std::sync::{Arc, Mutex, OnceLock, Weak};
 
@@ -38,16 +38,16 @@ const DEFAULT_FILE_CACHE_SIZE: u64 = 1024 * 1024 * 100;
 /// This struct manages RAM-based and file-based caches, handles resource allocation,
 /// and provides methods for cache operations across different storage types.
 /// It uses LRU (Least Recently Used) eviction policy for managing cache entries.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust
 /// use cache_core::CacheManager;
 /// use request_utils::task_id::TaskId;
-/// 
+///
 /// // Create a new cache manager
 /// let manager = CacheManager::new();
-/// 
+///
 /// // Set custom cache sizes
 /// manager.set_ram_cache_size(50 * 1024 * 1024); // 50MB
 /// manager.set_file_cache_size(200 * 1024 * 1024); // 200MB
@@ -55,20 +55,20 @@ const DEFAULT_FILE_CACHE_SIZE: u64 = 1024 * 1024 * 100;
 pub struct CacheManager {
     /// Primary RAM cache storage using LRU eviction policy
     pub(crate) rams: Mutex<LRUCache<TaskId, Arc<RamCache>>>,
-    
+
     /// Backup RAM cache storage not subject to LRU eviction
     pub(crate) backup_rams: Mutex<HashMap<TaskId, Arc<RamCache>>>,
-    
+
     /// File-based cache storage using LRU eviction policy
     pub(crate) files: Mutex<LRUCache<TaskId, FileCache>>,
 
     /// Ensures each file-to-RAM update is performed only once
-    pub(crate) update_from_file_once: 
+    pub(crate) update_from_file_once:
         Mutex<HashMap<TaskId, Arc<OnceLock<io::Result<Weak<RamCache>>>>>>,
-    
+
     /// Manages RAM cache resource allocation and capacity
     pub(crate) ram_handle: Mutex<data::ResourceManager>,
-    
+
     /// Manages file cache resource allocation and capacity
     pub(crate) file_handle: Mutex<data::ResourceManager>,
 }
@@ -120,7 +120,7 @@ impl CacheManager {
     ///
     /// Initializes the current storage directory and restores all previously cached files
     /// into the manager's file cache.
-    /// 
+    ///
     /// # Safety
     /// Must be called with a `'static self` reference as it may spawn background tasks
     /// that need to reference the manager.
@@ -196,6 +196,52 @@ impl CacheManager {
         let res = self.rams.lock().unwrap().get(task_id).cloned();
         res.or_else(|| self.backup_rams.lock().unwrap().get(task_id).cloned())
             .or_else(|| self.update_ram_from_file(task_id))
+    }
+
+    /// Clears memory cache entries not associated with running tasks.
+    pub fn clear_memory_cache(&self, running_tasks: &HashSet<TaskId>) {
+        let ram_keys = self
+            .rams
+            .lock()
+            .unwrap()
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>();
+        let key_to_remove = ram_keys
+            .into_iter()
+            .filter(|task_id| !running_tasks.contains(task_id))
+            .collect::<Vec<_>>();
+        let mut rams_to_remove = Vec::with_capacity(key_to_remove.len());
+        // Do not delete the data of Arc during the time when the lock is held to reduce the time when the lock is held
+        {
+            let mut rams = self.rams.lock().unwrap();
+            for key in key_to_remove {
+                rams_to_remove.push(rams.remove(&key));
+            }
+        }
+    }
+
+    /// Clears file cache entries not associated with running tasks.
+    pub fn clear_file_cache(&self, running_tasks: &HashSet<TaskId>) {
+        let file_keys = self
+            .files
+            .lock()
+            .unwrap()
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>();
+        let key_to_remove = file_keys
+            .into_iter()
+            .filter(|task_id| !running_tasks.contains(task_id))
+            .collect::<Vec<_>>();
+        let mut files_to_remove = Vec::with_capacity(key_to_remove.len());
+        // Do not delete the data of FileCache during the time when the lock is held to reduce the time when the lock is held
+        {
+            let mut files = self.files.lock().unwrap();
+            for key in key_to_remove {
+                files_to_remove.push(files.remove(&key));
+            }
+        }
     }
 
     /// Attempts to allocate cache space, evicting entries if necessary.

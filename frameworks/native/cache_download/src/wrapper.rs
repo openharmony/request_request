@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! C++ FFI bridge for cache download service.
-//! 
+//!
 //! This module provides the C++ Foreign Function Interface (FFI) bridge for the cache
 //! download service, allowing C++ code to interact with the Rust implementation through
 //! type-safe bindings.
@@ -157,7 +157,7 @@ impl PreloadCallback for FfiCallback {
         if self.progress_callback.is_null() {
             return;
         }
-        
+
         // Special handling for 100% completion to ensure it's always reported
         if progress == total {
             let progress_callback = self.progress_callback.clone();
@@ -175,7 +175,7 @@ impl PreloadCallback for FfiCallback {
                 return;
             }
         }
-        
+
         // Create new channel if none exists or previous one failed
         let (tx, rx) = mpsc::channel();
         match tx.send((progress, total)) {
@@ -189,7 +189,7 @@ impl PreloadCallback for FfiCallback {
         self.tx = Some(tx);
         let progress_callback = self.progress_callback.clone();
         let mutex = self.finish_lock.clone();
-        
+
         // Spawn a thread to process progress updates and notify C++
         crate::spawn(move || {
             let lock = mutex.lock().unwrap();
@@ -228,7 +228,7 @@ impl CacheDownloadService {
     ) -> SharedPtr<ffi::PreloadHandle> {
         let callback = FfiCallback::from_ffi(callback, progress_callback);
         let mut request = DownloadRequest::new(url);
-        
+
         // Convert C++ headers format to Rust format
         if !options.headers.is_empty() {
             let headers = options
@@ -238,7 +238,7 @@ impl CacheDownloadService {
                 .collect::<Vec<(&str, &str)>>();
             request.headers(headers);
         }
-        
+
         // Add SSL configuration if provided
         if !options.ssl_type.is_empty() {
             request.ssl_type(options.ssl_type);
@@ -246,7 +246,7 @@ impl CacheDownloadService {
         if !options.ca_path.is_empty() {
             request.ca_path(options.ca_path);
         }
-        
+
         // Perform preload and convert the result to C++ format
         match self.preload(request, Box::new(callback), update, Downloader::Netstack) {
             Some(handle) => ffi::ShareTaskHandle(Box::new(handle)),
@@ -310,7 +310,7 @@ pub(crate) mod ffi {
 
         // RustData methods
         fn bytes(self: &RustData) -> &[u8];
-        
+
         // CacheDownloadService methods
         fn ffi_preload(
             self: &'static CacheDownloadService,
@@ -347,6 +347,8 @@ pub(crate) mod ffi {
         fn cancel(self: &CacheDownloadService, url: &str);
         fn remove(self: &CacheDownloadService, url: &str);
         fn contains(self: &CacheDownloadService, url: &str) -> bool;
+        fn clear_memory_cache(self: &CacheDownloadService);
+        fn clear_file_cache(self: &CacheDownloadService);
 
         fn cancel(self: &mut TaskHandle);
         fn task_id(self: &TaskHandle) -> String;
@@ -378,7 +380,7 @@ pub(crate) mod ffi {
         fn ShareTaskHandle(handle: Box<TaskHandle>) -> SharedPtr<PreloadHandle>;
         fn UniqueData(data: Box<RustData>) -> UniquePtr<Data>;
         fn UniqueInfo(data: Box<RustDownloadInfo>) -> UniquePtr<CppDownloadInfo>;
-        
+
         // C++ callback methods
         fn OnSuccess(self: &PreloadCallbackWrapper, data: SharedPtr<Data>, task_id: &str);
         fn OnFail(self: &PreloadCallbackWrapper, error: Box<CacheDownloadError>, task_id: &str);

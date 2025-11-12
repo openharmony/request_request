@@ -218,6 +218,8 @@ HWTEST_F(PreloadSuccess, PreloadSuccessCache, TestSize.Level1)
     EXPECT_FALSE(id.empty());
     preload->Cancel(url);
     handle->Cancel();
+    preload->SetRamCacheSize(1024 * 1024 * 20);
+    preload->SetFileCacheSize(1024 * 1024 * 100);
 }
 
 /**
