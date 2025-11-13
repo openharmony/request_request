@@ -169,7 +169,7 @@ pub fn remove(id: String) -> Result<(), BusinessError> {
     // Parse string task ID to integer for internal use
     let task_id = id
         .parse::<i64>()
-        .map_err(|_| BusinessError::new(401, "Invalid task ID format".to_string()))?;
+        .map_err(|_| BusinessError::new(21900006, "Invalid task ID format".to_string()))?;
     RequestClient::get_instance()
         .remove(task_id)
         .map_err(|e| BusinessError::new_static(e, "Failed to remove task"))
@@ -203,7 +203,9 @@ pub fn remove(id: String) -> Result<(), BusinessError> {
 #[ani_rs::native]
 pub fn show(id: String) -> Result<TaskInfo, BusinessError> {
     // Parse string task ID to integer for internal use
-    let task_id = id.parse::<i64>().unwrap();
+    let task_id = id
+        .parse::<i64>()
+        .map_err(|_| BusinessError::new(21900006, "Invalid task ID format".to_string()))?;
     RequestClient::get_instance()
         .show_task(task_id)
         .map(|info| {

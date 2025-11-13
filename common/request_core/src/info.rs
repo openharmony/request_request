@@ -303,7 +303,7 @@ pub struct Progress {
     pub sizes: Vec<i64>,
     /// Additional progress-related metadata.
     pub extras: HashMap<String, String>,
-    // pub body_bytes: Vec<u8>,
+    pub body_bytes: Vec<u8>,
 }
 
 /// Data structure for task notifications.

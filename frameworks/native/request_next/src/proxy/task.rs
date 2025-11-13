@@ -87,7 +87,7 @@ impl RequestProxy {
         // Send request to construct the task
         let mut reply = remote
             .send_request(interface::CONSTRUCT, &mut data)
-            .unwrap();
+            .map_err(|_| 13400003)?;
 
         // Check first error code
         let code = reply.read::<i32>().unwrap();
@@ -142,7 +142,7 @@ impl RequestProxy {
         data.write(&task_id.to_string()).unwrap();
 
         // Send start request
-        let mut reply = remote.send_request(interface::START, &mut data).unwrap();
+        let mut reply = remote.send_request(interface::START, &mut data).map_err(|_| 13400003)?;
         let code = reply.read::<i32>().unwrap(); // error code
         if code == 0 {
             let code = reply.read::<i32>().unwrap(); // error code
@@ -193,14 +193,21 @@ impl RequestProxy {
         data.write(&task_id.to_string()).unwrap();
 
         // Send pause request
-        let mut reply = remote.send_request(interface::PAUSE, &mut data).unwrap();
+        let mut reply = remote.send_request(interface::PAUSE, &mut data).map_err(|_| 13400003)?;
 
+        // Check first error code
         let code = reply.read::<i32>().unwrap(); // error code
-        if code == 0 {
-            Ok(())
-        } else {
-            Err(code)
+        if code != 0 {
+            return Err(code);
         }
+
+        // Check second error code
+        let code = reply.read::<i32>().unwrap(); // error code
+        if code != 0 {
+            return Err(code);
+        }
+
+        Ok(())
     }
 
     /// Resumes a paused download task.
@@ -239,14 +246,21 @@ impl RequestProxy {
         data.write(&task_id.to_string()).unwrap();
 
         // Send resume request
-        let mut reply = remote.send_request(interface::RESUME, &mut data).unwrap();
+        let mut reply = remote.send_request(interface::RESUME, &mut data).map_err(|_| 13400003)?;
 
+        // Check first error code
         let code = reply.read::<i32>().unwrap(); // error code
-        if code == 0 {
-            Ok(())
-        } else {
-            Err(code)
+        if code != 0 {
+            return Err(code);
         }
+
+        // Check second error code
+        let code = reply.read::<i32>().unwrap(); // error code
+        if code != 0 {
+            return Err(code);
+        }
+
+        Ok(())
     }
 
     /// Removes a download task from the system.
@@ -286,7 +300,7 @@ impl RequestProxy {
         data.write(&task_id.to_string()).unwrap();
 
         // Send remove request
-        let mut reply = remote.send_request(interface::REMOVE, &mut data).unwrap();
+        let mut reply = remote.send_request(interface::REMOVE, &mut data).map_err(|_| 13400003)?;
 
         // Check first error code
         let code = reply.read::<i32>().unwrap(); // error code
@@ -339,7 +353,7 @@ impl RequestProxy {
         data.write(&task_id.to_string()).unwrap();
 
         // Send stop request
-        let mut reply = remote.send_request(interface::STOP, &mut data).unwrap();
+        let mut reply = remote.send_request(interface::STOP, &mut data).map_err(|_| 13400003)?;
 
         // Check first error code
         let code = reply.read::<i32>().unwrap(); // error code
@@ -398,7 +412,7 @@ impl RequestProxy {
         // Send set max speed request
         let mut reply = remote
             .send_request(interface::SET_MAX_SPEED, &mut data)
-            .unwrap();
+            .map_err(|_| 13400003)?;
 
         // Check first error code
         let code = reply.read::<i32>().unwrap(); // error code

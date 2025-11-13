@@ -60,7 +60,7 @@ pub struct UploadConfig {
     /// The HTTP method to use for the upload.
     pub method: String,
     /// Optional index parameter.
-    pub index: Option<i64>,
+    pub index: Option<i32>,
     /// Optional beginning byte offset for partial uploads.
     pub begins: Option<i64>,
     /// Optional ending byte offset for partial uploads.

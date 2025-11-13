@@ -69,7 +69,7 @@ impl RequestProxy {
         // Request to open a new communication channel
         let mut reply = remote
             .send_request(interface::OPEN_CHANNEL, &mut data)
-            .unwrap();
+            .map_err(|_| 13400003)?;
 
         // Check if the channel was opened successfully
         let code = reply.read::<i32>().unwrap();
@@ -128,7 +128,7 @@ impl RequestProxy {
         // Send subscription request
         let mut reply = remote
             .send_request(interface::SUBSCRIBE, &mut data)
-            .unwrap();
+            .map_err(|_| 13400003)?;
         
         // Check subscription result
         let code = reply.read::<i32>().unwrap();
@@ -189,7 +189,7 @@ impl RequestProxy {
         // Send unsubscription request
         let mut reply = remote
             .send_request(interface::UNSUBSCRIBE, &mut data)
-            .unwrap();
+            .map_err(|_| 13400003)?;
 
         // Check unsubscription result
         let code = reply.read::<i32>().unwrap();

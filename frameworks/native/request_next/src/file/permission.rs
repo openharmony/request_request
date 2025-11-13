@@ -52,7 +52,7 @@ impl PermissionManager {
         // Redundant permission setting operations are performed here to ensure that
         // some permissions are not lost in concurrent scenarios.
         while path_clone.pop() && path_clone.to_string_lossy().to_string().len() >= 10 {
-            info!("Current path: {:?}", path_clone);
+            debug!("Current path: {:?}", path_clone);
             let temp_path = path_clone.to_string_lossy().to_string();
 
             if let Err(e) = self.granter.grant(&temp_path, SA_PERMISSION_X) {
@@ -67,7 +67,7 @@ impl PermissionManager {
                 //     }
                 // }
                 // todo
-                error!("grant path: {}, error: {}", temp_path, e);
+                debug!("grant path: {}, error: {}", temp_path, e);
                 // return Err(13400001);
             }
             match paths.entry(temp_path.clone()) {
@@ -81,7 +81,7 @@ impl PermissionManager {
             completed_path.push(temp_path);
         }
 
-        info!("Setting ACL access for path: {:?}", path);
+        debug!("Setting ACL access for path: {:?}", path);
         if let Err(e) =
             self.granter.grant(&path.to_string_lossy().to_string(), SA_PERMISSION_RWX)
         {

@@ -546,7 +546,7 @@ impl From<request_core::info::TaskInfo> for TaskInfo {
             mtime: value.common_data.mtime as i64,
             retry: value.common_data.retry,
             tries: value.common_data.tries as i32,
-            faults: Faults::Others,
+            faults: request_core::info::Faults::from(request_core::info::Reason::from(value.common_data.reason as u32)).into(),
             reason: value.common_data.reason.to_string(),
             extras: Some(value.extras.clone()),
         }
@@ -692,7 +692,6 @@ impl From<Config> for TaskConfig {
                 title: "".to_string(),
                 text: "".to_string(),
             }),
-            body_file_names: vec![],
         }
     }
 }

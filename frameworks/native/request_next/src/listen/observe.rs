@@ -25,8 +25,10 @@ use std::sync::{Arc, Mutex};
 
 // External dependencies
 use request_core::config::{Action, Version};
-use request_core::info::{Faults, Progress, Response, SubscribeType, TaskState};
+use request_core::info::{Faults, Progress, Response, SubscribeType, TaskState, NotifyData};
 use ylong_runtime::task::JoinHandle;
+use crate::client::RequestClient;
+use crate::file::FileManager;
 
 // Internal dependencies
 use crate::listen::uds::{Message, UdsListener};
@@ -182,7 +184,7 @@ impl Observer {
         let handle = ylong_runtime::spawn(async move {
             loop {
                 match listener.recv().await {
-                    Ok(message) => match message {
+                    Ok(mut message) => match &mut message {
                         Message::HttpResponse(response) => {
                             // Convert task_id from string to i64 for lookup
                             let task_id = response.task_id.parse().unwrap();
@@ -192,7 +194,8 @@ impl Observer {
                         }
                         Message::NotifyData(data) => {
                             let task_id = data.task_id as i64;
-                            let progress = data.progress;
+                            Observer::process_header_receive(data);
+                            let mut progress = &data.progress;
 
                             // Find the appropriate callback for the task
                             if let Some(callback) = callbacks.lock().unwrap().get(&task_id) {
@@ -251,10 +254,10 @@ impl Observer {
                                                 callback.on_progress(&progress);
                                             }
                                             SubscribeType::Completed => {
-                                                callback.on_complete_upload(data.task_states);
+                                                callback.on_complete_upload(data.task_states.clone());
                                             }
                                             SubscribeType::Failed => {
-                                                callback.on_fail_upload(data.task_states);
+                                                callback.on_fail_upload(data.task_states.clone());
                                             }
                                             SubscribeType::HeaderReceive => {
                                                 callback.on_header_receive(&progress);
@@ -346,5 +349,34 @@ impl Observer {
     /// ```
     pub fn unregister_callback(&self, task_id: i64) {
         self.callbacks.lock().unwrap().remove(&task_id);
+    }
+
+    pub fn process_header_receive(notify_data: &mut NotifyData) {
+        let mut index = notify_data.progress.index as usize;
+        let mut file_path = String::new();
+        let mut len = 0;
+
+        let tasks_lock = RequestClient::get_instance()
+                                        .task_manager.tasks.lock()
+                                        .unwrap();
+        let item = tasks_lock.get(&(notify_data.task_id as i64));
+
+        if item.is_none() {
+            error!("Task ID not found");
+            return;
+        }
+
+        let config = &item.unwrap().config;
+        if config.common_data.multipart {
+            index = 0;
+        }
+        len = config.body_file_paths.len();
+        if index >= len {
+            return;
+        }
+        file_path = config.body_file_paths[index].clone();
+
+        notify_data.progress.body_bytes = FileManager::read_bytes_from_file(&file_path).unwrap_or_default();
+        // Waiting for "complete" to read and delete.
     }
 }

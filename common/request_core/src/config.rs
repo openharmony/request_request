@@ -70,7 +70,6 @@ pub struct TaskConfig {
     pub saveas: String,
     pub overwrite: bool,
     pub notification: Notification,
-    pub body_file_names: Vec<String>,
 }
 
 /// Builder for creating a `TaskConfig` with a fluent interface.
@@ -109,7 +108,7 @@ pub struct TaskConfigBuilder {
     file_path: Option<String>,
 
     method: Option<String>,
-    index: Option<i64>,
+    index: Option<i32>,
     begins: Option<i64>,
     ends: Option<i64>,
     files: Option<Vec<FileSpec>>,
@@ -202,7 +201,7 @@ impl TaskConfigBuilder {
         self
     }
 
-    pub fn index(&mut self, index: i64) -> &mut Self {
+    pub fn index(&mut self, index: i32) -> &mut Self {
         self.index = Some(index);
         self
     }
@@ -274,7 +273,7 @@ impl TaskConfigBuilder {
                 roaming: self.enable_roaming.unwrap_or(false),
                 retry: false,
                 redirect: true,
-                index: self.index.unwrap_or(0i64) as u32,
+                index: self.index.unwrap_or(0i32) as u32,
                 begins: self.begins.unwrap_or(0i64) as u64,
                 ends: self.ends.unwrap_or(-1),
                 gauge: false,
@@ -289,7 +288,6 @@ impl TaskConfigBuilder {
                 title: "".to_string(),
                 text: "".to_string(),
             },
-            body_file_names: vec![],
             // notification: self.notification.unwrap_or(Notification {
             //     title: "".to_string(),
             //     text: "".to_string(),
