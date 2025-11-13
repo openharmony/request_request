@@ -13,6 +13,8 @@
 
 use std::collections::HashMap;
 
+use preload_native_rlib::{CacheDownloadError, ErrorKind};
+
 #[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.SslType")]
 pub enum SslType {
     TLS,
@@ -82,6 +84,38 @@ impl DownloadInfo {
                 total_time: native_info.total_time(),
                 redirect_time: native_info.redirect_time(),
             },
+        }
+    }
+}
+
+#[derive(Clone)]
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.ErrorCode")]
+pub enum ErrorCode {
+    Others = 0xFF,
+    Dns = 0x00,
+    Tcp = 0x10,
+    Ssl = 0x20,
+    Http = 0x30,
+}
+
+#[derive(Clone)]
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.DownloadErrorInner")]
+pub struct DownloadError {
+    pub error_code: ErrorCode,
+    pub message: String,
+}
+
+impl DownloadError {
+    pub fn from_native(error: CacheDownloadError) -> Self {
+        Self {
+            error_code: match error.kind() {
+                ErrorKind::Dns => ErrorCode::Dns,
+                ErrorKind::Tcp => ErrorCode::Tcp,
+                ErrorKind::Ssl => ErrorCode::Ssl,
+                ErrorKind::Http => ErrorCode::Http,
+                _ => ErrorCode::Others,
+            },
+            message: error.message().to_string(),
         }
     }
 }

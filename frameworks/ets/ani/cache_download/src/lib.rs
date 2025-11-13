@@ -13,6 +13,7 @@
 
 mod bridge;
 mod cache_download;
+pub(crate) mod callback;
 ani_rs::ani_constructor! {
     namespace "@ohos.request.cacheDownload.cacheDownload"
     [
@@ -22,5 +23,11 @@ ani_rs::ani_constructor! {
         "setFileCacheSize" : cache_download::set_file_cache_size,
         "getDownloadInfo" : cache_download::get_download_info,
         "setDownloadInfoListSize" : cache_download::set_download_info_list_size,
+        "clearMemoryCache" : cache_download::clear_memory_cache,
+        "clearFileCache" : cache_download::clear_file_cache,
+        "onDownloadSuccess" : cache_download::on_download_success,
+        "offDownloadSuccess" : cache_download::off_download_success,
+        "onDownloadError" : cache_download::on_download_error,
+        "offDownloadError" : cache_download::off_download_error,
     ]
 }

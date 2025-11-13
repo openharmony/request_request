@@ -20,22 +20,17 @@
 use std::sync::OnceLock;
 
 use ani_rs::business_error::BusinessError;
+use ani_rs::objects::AniFnObject;
+use ani_rs::AniEnv;
 use preload_native_rlib::{CacheDownloadService, DownloadRequest, Downloader, PreloadCallback};
 use preload_permission_verify::permission_check;
 
-use crate::bridge::{CacheDownloadOptions, DownloadInfo, SslType};
-
-/// Empty callback implementation for preload operations.
-///
-/// Provides a no-op implementation of the `PreloadCallback` trait for use in
-/// download requests.
-struct Callback;
-
-impl PreloadCallback for Callback {}
+use crate::bridge::{CacheDownloadOptions, CacheStrategy, DownloadInfo, SslType};
+use crate::callback::{self, CallbackManager, CallbackWrapper};
 
 const MAX_FILE_SIZE: i64 = 4294967296;
 const MAX_MEM_SIZE: i64 = 1073741824;
-const MAX_UTL_LENGTH: usize = 8192;
+const MAX_URL_LENGTH: usize = 8192;
 const MAX_INFO_LIST_SIZE: u16 = 8192;
 
 static HAS_INTERNET_PERM: OnceLock<bool> = OnceLock::new();
@@ -96,15 +91,13 @@ pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), Busine
             "internet permission denied".to_string(),
         ));
     }
-    if (url.len() > MAX_UTL_LENGTH as usize) {
+    if (url.len() > MAX_URL_LENGTH as usize) {
         return Err(BusinessError::new(
             401,
             "url exceeds the maximum length".to_string(),
         ));
     }
     let mut request = DownloadRequest::new(&url);
-    // Create a boxed callback to handle download events
-    let callback = Box::new(Callback);
     // Apply headers if provided in options
     let headers = options.headers.unwrap_or_default();
     let headers_vec: Vec<(String, String)> = headers.into_iter().collect();
@@ -126,11 +119,17 @@ pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), Busine
             request.ca_path(ca_path);
         }
     }
+    let mut is_update = true;
+    if let Some(cache_strategy) = options.cache_strategy {
+        if let CacheStrategy::LAZY = cache_strategy {
+            is_update = false;
+        }
+    }
     // Initiate preloading with Netstack downloader and auto-refresh enabled
     CacheDownloadService::get_instance().preload(
         request,
-        callback,
-        true, // Enable auto-refresh of cached resources
+        Box::new(CallbackWrapper::new(url.clone())),
+        is_update, // Enable auto-refresh of cached resources
         Downloader::Netstack,
     );
     Ok(())
@@ -160,7 +159,7 @@ pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), Busine
 /// ```
 #[ani_rs::native]
 pub fn cancel(url: String) -> Result<(), BusinessError> {
-    if (url.len() > MAX_UTL_LENGTH as usize) {
+    if (url.len() > MAX_URL_LENGTH as usize) {
         return Err(BusinessError::new(
             401,
             "url exceeds the maximum length".to_string(),
@@ -248,7 +247,7 @@ pub fn get_download_info(url: String) -> Result<Option<DownloadInfo>, BusinessEr
             "GET_NETWORK_INFO permission denied".to_string(),
         ));
     }
-    if (url.len() > MAX_UTL_LENGTH as usize) {
+    if (url.len() > MAX_URL_LENGTH as usize) {
         return Err(BusinessError::new(
             401,
             "url exceeds the maximum length".to_string(),
@@ -279,5 +278,109 @@ pub fn set_download_info_list_size(size: i64) -> Result<(), BusinessError> {
         ));
     }
     CacheDownloadService::get_instance().set_info_list_size(size as u16);
+    Ok(())
+}
+
+/// Clears all entries from the memory (RAM) cache.
+///
+/// Removes all cached resources from the in-memory cache.
+///
+/// # Examples
+///
+/// ```rust
+/// use ani_cache_download::cache_download::clear_memory_cache;
+/// use ani_rs::business_error::BusinessError;
+///
+/// // Clear memory cache
+/// let result: Result<(), BusinessError> = clear_memory_cache();
+/// ```
+#[ani_rs::native]
+pub fn clear_memory_cache() -> Result<(), BusinessError> {
+    CacheDownloadService::get_instance().clear_memory_cache();
+    Ok(())
+}
+
+/// Clears all entries from the file system cache.
+///
+/// Removes all cached resources from the file system cache.
+///
+/// # Examples
+///
+/// ```rust
+/// use ani_cache_download::cache_download::clear_file_cache;
+/// use ani_rs::business_error::BusinessError;
+///
+/// // Clear file cache
+/// let result: Result<(), BusinessError> = clear_file_cache();
+/// ```
+#[ani_rs::native]
+pub fn clear_file_cache() -> Result<(), BusinessError> {
+    CacheDownloadService::get_instance().clear_file_cache();
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn on_download_success(
+    env: &AniEnv,
+    url: String,
+    callback: AniFnObject,
+) -> Result<(), BusinessError> {
+    check_url_length(url.as_str())?;
+    let callback = callback.into_global_callback(env)?;
+    CallbackManager::get_instance().register_success_callback(&url.as_str(), callback);
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn on_download_error(
+    env: &AniEnv,
+    url: String,
+    callback: AniFnObject,
+) -> Result<(), BusinessError> {
+    check_url_length(url.as_str())?;
+    let callback = callback.into_global_callback(env)?;
+    CallbackManager::get_instance().register_error_callback(&url.as_str(), callback);
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn off_download_success(
+    env: &AniEnv,
+    url: String,
+    success_callback: Option<AniFnObject>,
+) -> Result<(), BusinessError> {
+    check_url_length(url.as_str())?;
+    let callback = success_callback
+        .map(|cb| cb.into_global_callback(env))
+        .transpose()?;
+    CallbackManager::get_instance().unregister_success_callback(&url.as_str(), callback);
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn off_download_error(
+    env: &AniEnv,
+    url: String,
+    err_callback: Option<AniFnObject>,
+) -> Result<(), BusinessError> {
+    check_url_length(url.as_str())?;
+    let callback = err_callback
+        .map(|cb| cb.into_global_callback(env))
+        .transpose()?;
+    CallbackManager::get_instance().unregister_error_callback(&url.as_str(), callback);
+    Ok(())
+}
+
+fn check_url_length(url: &str) -> Result<(), BusinessError> {
+    let url_len = url.len();
+    if url_len == 0 {
+        return Err(BusinessError::new(401, "url is empty".to_string()));
+    }
+    if url_len > MAX_URL_LENGTH {
+        return Err(BusinessError::new(
+            401,
+            "url exceeds the maximum length".to_string(),
+        ));
+    }
     Ok(())
 }
