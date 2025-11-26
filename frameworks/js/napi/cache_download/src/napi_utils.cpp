@@ -141,10 +141,31 @@ napi_value Convert2JSValue(napi_env env, const std::string &str)
     return value;
 }
 
+napi_value Convert2JSValue(napi_env env, uint32_t num)
+{
+    napi_value value = nullptr;
+    if (napi_create_uint32(env, num, &value) != napi_ok) {
+        return nullptr;
+    }
+    return value;
+}
+
 void SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &name, const std::string &value)
 {
     napi_value jsValue = Convert2JSValue(env, value);
     if (GetValueType(env, jsValue) != napi_string) {
+        return;
+    }
+    napi_status status = napi_set_named_property(env, object, name.c_str(), jsValue);
+    if (status != napi_ok) {
+        napi_throw_error(env, nullptr, "preload failed to set named property");
+    }
+}
+
+void SetUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value)
+{
+    napi_value jsValue = Convert2JSValue(env, value);
+    if (GetValueType(env, jsValue) != napi_number) {
         return;
     }
     napi_status status = napi_set_named_property(env, object, name.c_str(), jsValue);

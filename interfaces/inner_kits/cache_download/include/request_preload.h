@@ -52,6 +52,11 @@ enum SslType {
     TLCP,
 };
 
+enum class CacheStrategy : uint32_t {
+    FORCE = 0,
+    LAZY = 1,
+};
+
 template<typename T> class Slice {
 public:
     Slice(std::unique_ptr<rust::Slice<T>> &&slice);

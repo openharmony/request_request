@@ -495,5 +495,528 @@ export default function cacheDownloadInfo() {
         done();
       }
     });
+
+    /**
+     * @tc.number: testCacheStrategy001
+     * @tc.name: testCacheStrategy001
+     * @tc.desc: Test scenario where the cache policy is set to LAZY when the cache exists
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Invoke the cacheDownload.setDownloadInfoListSize interface to set the size of the download information list.
+     *           2. Invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt and wait for 5s.
+     *           3. Invoke cacheDownload.getDownloadInfo to obtain url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information.
+     *           4. Set the cache refresh policy in options to LAZY, invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt again, and wait for 5 seconds.
+     *           5. Invoke the cacheDownload.getDownloadInfo interface to obtain the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information again.
+     *           6. Compare the obtained download information.
+     * @tc.require: issues#1650
+     */
+    it('testCacheStrategy001', 0, async (done: Function) => {
+      try {
+        let forceOptions: cacheDownload.CacheDownloadOptions = {
+            cacheStrategy : cacheDownload.CacheStrategy.FORCE
+        };
+        cacheDownload.setDownloadInfoListSize(1);
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          forceOptions);
+        await sleep(5000);
+        let downloadInfo =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let totalTime = 0;
+        let dnsTime = 0;
+        let connectTime = 0;
+        let tlsTime = 0;
+        let firstSendTime = 0;
+        let firstReceiveTime = 0;
+        let redirectTime = 0;
+        if (downloadInfo == undefined) {
+          console.error('testCacheStrategy001 downloadInfo undefined.');
+          expect(false).assertTrue();
+          done();
+        } else {
+          totalTime = downloadInfo.performance.totalTime;
+          dnsTime = downloadInfo.performance.dnsTime;
+          connectTime = downloadInfo.performance.connectTime;
+          tlsTime = downloadInfo.performance.tlsTime;
+          firstSendTime = downloadInfo.performance.firstSendTime;
+          firstReceiveTime = downloadInfo.performance.firstReceiveTime;
+          redirectTime = downloadInfo.performance.redirectTime;
+        }
+        
+        let lazyOptions: cacheDownload.CacheDownloadOptions = {
+            cacheStrategy : cacheDownload.CacheStrategy.LAZY
+        };
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          lazyOptions);
+        await sleep(5000);
+        let downloadInfo2 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        if (downloadInfo2 == undefined) {
+          console.error('testCacheStrategy001 downloadInfo2 undefined.');
+          expect(false).assertTrue();
+          done();
+        } else {
+          expect(totalTime).assertEqual(downloadInfo2.performance.totalTime);
+          expect(dnsTime).assertEqual(downloadInfo2.performance.dnsTime);
+          expect(connectTime).assertEqual(downloadInfo2.performance.connectTime);
+          expect(tlsTime).assertEqual(downloadInfo2.performance.tlsTime);
+          expect(firstSendTime).assertEqual(downloadInfo2.performance.firstSendTime);
+          expect(firstReceiveTime).assertEqual(downloadInfo2.performance.firstReceiveTime);
+          expect(redirectTime).assertEqual(downloadInfo2.performance.redirectTime);
+
+          done();
+        }
+      } catch (err) {
+        console.error('testCacheStrategy001 download error.');
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testCacheStrategy002
+     * @tc.name: testCacheStrategy002
+     * @tc.desc: Test the scenario where the cache policy is set to LAZY when the cache does not exist
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Invoke the cacheDownload.setDownloadInfoListSize interface to set the size of the download information list.
+     *           2. Set the cache refresh policy in options to LAZY, invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt, and wait for 5 seconds.
+     *           3. Invoke the cacheDownload.getDownloadInfo interface to obtain the url 
+     *               https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information again.
+     * @tc.require: issues#1650
+     */
+    it('testCacheStrategy002', 0, async (done: Function) => {
+      try {
+        let lazyOptions: cacheDownload.CacheDownloadOptions = {
+            cacheStrategy : cacheDownload.CacheStrategy.LAZY
+        };
+        cacheDownload.setMemoryCacheSize(0);
+        cacheDownload.setFileCacheSize(0);
+        cacheDownload.setDownloadInfoListSize(0);
+        cacheDownload.setDownloadInfoListSize(1);
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          lazyOptions);
+        await sleep(5000);
+        let downloadInfo =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        if (downloadInfo == undefined) {
+          console.error('testCacheStrategy002 downloadInfo undefined.');
+           expect(false).assertTrue();
+        }
+        done();
+      } catch (err) {
+        console.error('testCacheStrategy002 download error.');
+         expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testCacheStrategy003
+     * @tc.name: testCacheStrategy003
+     * @tc.desc: Test the scenario where the cache policy is set to Force when the cache exists
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Invoke the cacheDownload.setDownloadInfoListSize interface to set the size of the download information list.
+     *           2. Invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt and wait for 5s.
+     *           3. Invoke the cacheDownload.download interface to download the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt and wait for 5 seconds. Invoke the 
+     *              cacheDownload.getDownloadInfo interface to obtain the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information.
+     *           4. Set the cache refresh policy in options to Force, invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt again, and wait for 5s.
+     *           5. Invoke the cacheDownload.getDownloadInfo interface to obtain the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information again.
+     *           6. Compare the obtained download information.
+     * @tc.require: issues#1650
+     */
+    it('testCacheStrategy003', 0, async (done: Function) => {
+      try {
+        let forceOptions: cacheDownload.CacheDownloadOptions = {
+            cacheStrategy : cacheDownload.CacheStrategy.FORCE
+        };
+        cacheDownload.setDownloadInfoListSize(1);
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          forceOptions);
+        await sleep(5000);
+        let downloadInfo =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let totalTime = 0;
+        if (downloadInfo == undefined) {
+          console.error('testCacheStrategy003 downloadInfo undefined.');
+          expect(false).assertTrue();
+          done();
+        } else {
+          totalTime = downloadInfo.performance.totalTime;
+        }
+
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          forceOptions);
+        await sleep(5000);
+        let downloadInfo2 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        if (downloadInfo2 == undefined) {
+          console.error('testCacheStrategy003 downloadInfo2 undefined.');
+          expect(false).assertTrue();
+        } else {
+          expect(totalTime != downloadInfo2.performance.totalTime).assertTrue();
+        }
+        done();
+      } catch (err) {
+        console.error('testCacheStrategy003 download error.');
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testCacheStrategy004
+     * @tc.name: testCacheStrategy004
+     * @tc.desc: Test the scenario where the cache policy is set to Force when the cache does not exist
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Invoke the cacheDownload.setDownloadInfoListSize interface to set the size of the download information list.
+     *           2. Set the cache refresh policy in options to LAZY, invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt, and wait for 5 seconds.
+     *           3. Invoke the cacheDownload.getDownloadInfo interface to obtain the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information again.
+     * @tc.require: issues#1650
+     */
+    it('testCacheStrategy004', 0, async (done: Function) => {
+      try {
+        let forceOptions: cacheDownload.CacheDownloadOptions = {
+            cacheStrategy : cacheDownload.CacheStrategy.FORCE
+        };
+        cacheDownload.setDownloadInfoListSize(0);
+        cacheDownload.setDownloadInfoListSize(1);
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          forceOptions);
+        await sleep(5000);
+        let downloadInfo =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        if (downloadInfo == undefined) {
+          console.error('testCacheStrategy004 downloadInfo undefined.');
+          expect(false).assertTrue();
+        }
+        done();
+      } catch (err) {
+        console.error('testCacheStrategy004 download error.');
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testCacheStrategy005
+     * @tc.name: testCacheStrategy005
+     * @tc.desc: Verifying CacheStrategy Enumerated Value Scenarios
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Verify that the value of CacheStrategy.FORCE is 0.
+     *           2. Verify that the value of CacheStrategy.LAZY is 1.
+     * @tc.require: issues#1650
+     */
+    it('testCacheStrategy005', 0, async (done: Function) => {
+      try {
+        expect(cacheDownload.CacheStrategy.FORCE).assertEqual(0);
+        expect(cacheDownload.CacheStrategy.LAZY).assertEqual(1);
+      catch (err) {
+        expect(false).assertTrue();
+      }
+      done();
+    });
+
+    /**
+     * @tc.number: testCacheStrategy006
+     * @tc.name: testCacheStrategy006
+     * @tc.desc: Test the scenario where the cache policy is not set when the cache exists
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Invoke the cacheDownload.setDownloadInfoListSize interface to set the size of the download information list.
+     *           2. Invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt and wait for 5s.
+     *           3. Invoke the cacheDownload.download interface to download the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt and wait for 5 seconds. Invoke the 
+     *              cacheDownload.getDownloadInfo interface to obtain the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information.
+     *           4. Do not configure the cache policy, invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt again, and wait for 5s.
+     *           5. Invoke the cacheDownload.getDownloadInfo interface to obtain the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information again.
+     *           6. Compare the obtained download information.
+     * @tc.require: issues#1650
+     */
+    it('testCacheStrategy006', 0, async (done: Function) => {
+      try {
+        let options: cacheDownload.CacheDownloadOptions = {};
+        cacheDownload.setDownloadInfoListSize(1);
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          options);
+        await sleep(5000);
+        let downloadInfo =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let totalTime = 0;
+        if (downloadInfo == undefined) {
+          console.error('testCacheStrategy006 downloadInfo undefined.');
+          expect(false).assertTrue();
+          done();
+        } else {
+          totalTime = downloadInfo.performance.totalTime;
+        }
+
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          options);
+        await sleep(5000);
+        let downloadInfo2 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        if (downloadInfo2 == undefined) {
+          console.error('testCacheStrategy006 downloadInfo2 undefined.');
+          expect(false).assertTrue();
+        } else {
+          expect(totalTime != downloadInfo2.performance.totalTime).assertTrue();
+        }
+        done();
+      } catch (err) {
+        console.error('testCacheStrategy006 download error.');
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testCacheStrategy007
+     * @tc.name: testCacheStrategy007
+     * @tc.desc: Test the scenario where the cache exists and the cache policy is set to undefined
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Invoke the cacheDownload.setDownloadInfoListSize interface to set the size of the download information list.
+     *           2. Invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt and wait for 5s.
+     *           3. Invoke the cacheDownload.download interface to download the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt and wait for 5 seconds. Invoke the 
+     *              cacheDownload.getDownloadInfo interface to obtain the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information.
+     *           4. Set the cache policy to undefined, invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt again, and wait for 5s.
+     *           5. Invoke the cacheDownload.getDownloadInfo interface to obtain the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information again.
+     *           6. Compare the obtained download information.
+     * @tc.require: issues#1650
+     */
+    it('testCacheStrategy007', 0, async (done: Function) => {
+      try {
+        let options: cacheDownload.CacheDownloadOptions = {
+            cacheStrategy : undefined
+        };
+        cacheDownload.setDownloadInfoListSize(1);
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          options);
+        await sleep(5000);
+        let downloadInfo =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let totalTime = 0;
+        if (downloadInfo == undefined) {
+          console.error('testCacheStrategy007 downloadInfo undefined.');
+          expect(false).assertTrue();
+          done();
+        } else {
+          totalTime = downloadInfo.performance.totalTime;
+        }
+
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          options);
+        await sleep(5000);
+        let downloadInfo2 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        if (downloadInfo2 == undefined) {
+          console.error('testCacheStrategy007 downloadInfo2 undefined.');
+          expect(false).assertTrue();
+        } else {
+          expect(totalTime != downloadInfo2.performance.totalTime).assertTrue();
+        }
+        done();
+      } catch (err) {
+        console.error('testCacheStrategy007 download error.');
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testCacheStrategy008
+     * @tc.name: testCacheStrategy008
+     * @tc.desc: Test the scenario where the cache exists and the cache policy is set to String
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Invoke the cacheDownload.setDownloadInfoListSize interface to set the size of the download information list.
+     *           2. Invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt and wait for 5s.
+     *           3. Invoke the cacheDownload.download interface to download the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt and wait for 5 seconds. Invoke the 
+     *              cacheDownload.getDownloadInfo interface to obtain the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information.
+     *           4. Set the cache policy to string, invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt again, and wait for 5s.
+     *           5. Invoke the cacheDownload.getDownloadInfo interface to obtain the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information again.
+     *           6. Compare the obtained download information.
+     * @tc.require: issues#1650
+     */
+    it('testCacheStrategy008', 0, async (done: Function) => {
+      try {
+        let options: cacheDownload.CacheDownloadOptions = {
+            cacheStrategy : "test"
+        };
+        cacheDownload.setDownloadInfoListSize(1);
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          options);
+        await sleep(5000);
+        let downloadInfo =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let totalTime = 0;
+        if (downloadInfo == undefined) {
+          console.error('testCacheStrategy008 downloadInfo undefined.');
+          expect(false).assertTrue();
+          done();
+        } else {
+          totalTime = downloadInfo.performance.totalTime;
+        }
+
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          options);
+        await sleep(5000);
+        let downloadInfo2 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        if (downloadInfo2 == undefined) {
+          console.error('testCacheStrategy008 downloadInfo2 undefined.');
+          expect(false).assertTrue();
+        } else {
+          expect(totalTime != downloadInfo2.performance.totalTime).assertTrue();
+        }
+        done();
+      } catch (err) {
+        console.error('testCacheStrategy008 download error.');
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testCacheStrategy009
+     * @tc.name: testCacheStrategy009
+     * @tc.desc: Test the scenario where the cache exists and the cache policy is set to 3
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Invoke the cacheDownload.setDownloadInfoListSize interface to set the size of the download information list.
+     *           2. Invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt and wait for 5s.
+     *           3. Invoke the cacheDownload.download interface to download the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt and wait for 5 seconds. Invoke the 
+     *              cacheDownload.getDownloadInfo interface to obtain the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information.
+     *           4. Set the cache policy to 3, invoke cacheDownload.download to download url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt again, and wait for 5s.
+     *           5. Invoke the cacheDownload.getDownloadInfo interface to obtain the url 
+     *              https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt download information again.
+     *           6. Compare the obtained download information.
+     * @tc.require: issues#1650
+     */
+    it('testCacheStrategy009', 0, async (done: Function) => {
+      try {
+        let options: cacheDownload.CacheDownloadOptions = {
+            cacheStrategy : 3
+        };
+        cacheDownload.setDownloadInfoListSize(1);
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          options);
+        await sleep(5000);
+        let downloadInfo =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        let totalTime = 0;
+        if (downloadInfo == undefined) {
+          console.error('testCacheStrategy009 downloadInfo undefined.');
+          expect(false).assertTrue();
+          done();
+        } else {
+          totalTime = downloadInfo.performance.totalTime;
+        }
+
+        cacheDownload.download("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt",
+          options);
+        await sleep(5000);
+        let downloadInfo2 =
+          cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
+        if (downloadInfo2 == undefined) {
+          console.error('testCacheStrategy009 downloadInfo2 undefined.');
+          expect(false).assertTrue();
+        } else {
+          expect(totalTime != downloadInfo2.performance.totalTime).assertTrue();
+        }
+        done();
+      } catch (err) {
+        console.error('testCacheStrategy009 download error.');
+        expect(false).assertTrue();
+        done();
+      }
+    });
   })
 }

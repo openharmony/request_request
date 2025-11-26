@@ -28,6 +28,7 @@ bool BuildInfoNetwork(napi_env env, const CppDownloadInfo &result, napi_value &j
 bool BuildInfoResource(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo);
 void SetOptionsHeaders(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options);
 void SetOptionsSslType(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options);
+void GetCacheStrategy(napi_env env, napi_value arg, bool &isUpdate);
 inline napi_status SetPerformanceField(napi_env env, napi_value performance, double field_value, const char *js_name);
 } // namespace OHOS::Request
 #endif

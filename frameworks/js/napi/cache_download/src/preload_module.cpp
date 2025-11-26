@@ -103,7 +103,9 @@ napi_value download(napi_env env, napi_callback_info info)
         std::string caPath = GetStringValueWithDefault(env, napiCaPath);
         options->caPath = caPath;
     }
-    Preload::GetInstance()->load(url, nullptr, std::move(options), true);
+    bool isUpdate = true;
+    GetCacheStrategy(env, args[1], isUpdate);
+    Preload::GetInstance()->load(url, nullptr, std::move(options), isUpdate);
     return nullptr;
 }
 
@@ -250,12 +252,22 @@ static void NapiCreateEnumSslType(napi_env env, napi_value &sslType)
     SetStringPropertyUtf8(env, sslType, "TLCP", "TLCP");
 }
 
+static void NapiCreateEnumCacheStrategy(napi_env env, napi_value &cacheStrategy)
+{
+    napi_create_object(env, &cacheStrategy);
+    SetUint32Property(env, cacheStrategy, "FORCE", static_cast<uint32_t>(CacheStrategy::FORCE));
+    SetUint32Property(env, cacheStrategy, "LAZY", static_cast<uint32_t>(CacheStrategy::LAZY));
+}
+
 static napi_value registerFunc(napi_env env, napi_value exports)
 {
     napi_value sslType = nullptr;
+    napi_value cacheStrategy = nullptr;
     NapiCreateEnumSslType(env, sslType);
+    NapiCreateEnumCacheStrategy(env, cacheStrategy);
     napi_property_descriptor desc[]{
         DECLARE_NAPI_PROPERTY("SslType", sslType),
+        DECLARE_NAPI_PROPERTY("CacheStrategy", cacheStrategy),
         DECLARE_NAPI_FUNCTION("download", download),
         DECLARE_NAPI_FUNCTION("cancel", cancel),
         DECLARE_NAPI_FUNCTION("setMemoryCacheSize", setMemoryCacheSize),
