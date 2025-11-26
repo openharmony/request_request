@@ -122,7 +122,7 @@ HWTEST_F(PreloadGetInfo, GetInfoTest, TestSize.Level1)
     EXPECT_TRUE(value.first_recv_time() >= 0);
     EXPECT_TRUE(value.redirect_time() >= 0);
     EXPECT_TRUE(value.resource_size() >= 0);
-    EXPECT_TRUE(value.server_addr().empty());
+    EXPECT_FALSE(value.server_addr().empty());
     Preload::GetInstance()->Remove(TEST_URL_0);
 }
 
@@ -272,4 +272,27 @@ HWTEST_F(PreloadGetInfo, InvalidUtf8_2, TestSize.Level1)
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v4_invalid3));
     std::vector<uint8_t> v4_invalid4 = { 0xF4, 0x90, 0x80, 0x80 };
     EXPECT_FALSE(Utf8Utils::RunUtf8Validation(v4_invalid4));
+}
+
+/**
+ * @tc.name: ServerAddrInfo
+ * @tc.desc: Test GetDownloadInfo interface behavior for server address retrieval
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create test callback and load valid URL
+ *           3. Verify handle is running
+ *           4. Wait for download completion
+ *           5. Call GetDownloadInfo and verify server address info
+ * @tc.expect: Download info contains non-empty server address list
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadGetInfo, ServerAddrInfo, TestSize.Level1)
+{
+    PreDownloadInfo(TEST_URL_0, TEST_SIZE_0);
+    std::optional<CppDownloadInfo> result = TestGetInfo(TEST_URL_0);
+
+    EXPECT_TRUE(result.has_value());
+    EXPECT_TRUE(result.value().server_addr().size() >= 0);
 }

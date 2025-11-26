@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Module for tracking and managing network operation information.
-//! 
+//!
 //! This module provides structures for collecting, storing, and accessing
 //! various metrics and information related to network downloads, including
 //! performance timings, resource details, and network configuration.
@@ -214,6 +214,15 @@ impl NetworkInfo {
         self.dns = dns;
     }
 
+    /// Sets the server address.
+    ///
+    /// # Arguments
+    ///
+    /// * `addr` - The server address to connect to.
+    fn set_ip_address(&mut self, addr: String) {
+        self.addr = addr;
+    }
+
     /// Returns a copy of the DNS servers list.
     ///
     /// # Returns
@@ -284,6 +293,10 @@ impl DownloadInfo {
     /// * `dns` - A vector of DNS server addresses used during resolution.
     pub(crate) fn set_network_dns(&mut self, dns: Vec<String>) {
         self.network.set_dns(dns);
+    }
+
+    pub(crate) fn set_ip_address(&mut self, addr: String) {
+        self.network.set_ip_address(addr);
     }
 
     /// Returns the DNS resolution time in milliseconds.
@@ -503,7 +516,7 @@ impl InfoCollection {
             debug!("DownloadInfoMgr insert info failed, total size is 0");
             return;
         }
-        
+
         // If collection is at capacity, make room by removing an item
         if self.list_size.is_full_capacity() {
             self.list_size.release();
@@ -512,7 +525,7 @@ impl InfoCollection {
                 self.info_list.pop();
             }
         }
-        
+
         info!("Insert {} info", task_id.brief());
         // Increment usage counter only if this is a new insertion
         if self.info_list.insert(task_id, info).is_none() {

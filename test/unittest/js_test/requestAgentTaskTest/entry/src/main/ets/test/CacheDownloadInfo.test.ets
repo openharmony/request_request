@@ -15,6 +15,7 @@
 
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from "@ohos/hypium";
 import cacheDownload from '@ohos.request.cacheDownload';
+import Server from '../common/iTcpServer'
 
 export default function cacheDownloadInfo() {
   describe('cacheDownloadInfo', () => {
@@ -424,7 +425,7 @@ export default function cacheDownloadInfo() {
           cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
         let total_time = 0;
         if (downloadInfo == undefined) {
-          console.error('testGetDownloadInfo001 downloadInfo undefined.');
+          console.error('testGetDownloadInfo005 downloadInfo undefined.');
           expect(false).assertTrue();
           done();
         } else {
@@ -436,7 +437,7 @@ export default function cacheDownloadInfo() {
         let downloadInfo2: cacheDownload.DownloadInfo | undefined =
           cacheDownload.getDownloadInfo("https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt");
         if (downloadInfo2 == undefined) {
-          console.error('testGetDownloadInfo001 downloadInfo2 undefined.');
+          console.error('testGetDownloadInfo005 downloadInfo2 undefined.');
           expect(false).assertTrue();
           done();
         } else {
@@ -444,8 +445,53 @@ export default function cacheDownloadInfo() {
           done();
         }
       } catch (err) {
-        console.error('testGetDownloadInfo001 download error.');
+        console.error('testGetDownloadInfo005 download error.');
         expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.number: testGetDownloadInfo006
+     * @tc.name: testGetDownloadInfo006
+     * @tc.desc: getDownloadInfo can get ip information
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Set download info list size to 10 via setDownloadInfoListSize.
+     *           2. Start local http server and Call download(), wait 300 milliseconds, then get its download info.
+     *           3. If the first obtained download info is undefined, print error and assert failure; 
+     *              if not, assert ip is 127.0.0.1
+     * @tc.require: issues#1573
+     */
+    it('testGetDownloadInfo006', 0, async (done: Function) => {
+      let server = new Server();
+      try {
+        server.serverStart();
+        cacheDownload.setDownloadInfoListSize(10);
+        cacheDownload.download("http://127.0.0.1:8078", {});
+        await sleep(300);
+        let downloadInfo: cacheDownload.DownloadInfo | undefined =
+          cacheDownload.getDownloadInfo("http://127.0.0.1:8078");
+        if (downloadInfo == undefined) {
+          console.error('testGetDownloadInfo006 downloadInfo undefined.');
+          expect(false).assertTrue();
+          server.serverClose();
+          done();
+        } else {
+          expect(downloadInfo?.network.ip == '127.0.0.1').assertTrue();
+          server.serverClose();
+          done();
+        }
+      } catch (err) {
+        console.error('testGetDownloadInfo006 download error.');
+        expect(false).assertTrue();
+        server.serverClose();
         done();
       }
     });
