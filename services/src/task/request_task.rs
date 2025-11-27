@@ -928,7 +928,7 @@ impl TaskStatus {
 /// 
 /// `true` if all file specifications are valid, `false` otherwise.
 fn check_file_specs(file_specs: &[FileSpec]) -> bool {
-    for (_idx, spec) in file_specs.iter().enumerate() {
+    for spec in file_specs.iter() {
         if spec.is_user_file {
             continue;
         }
@@ -978,6 +978,9 @@ pub(crate) fn check_config(
         return Err(ErrorCode::Other);
     }
     if !config.body_file_paths.iter().all(|path| check_path(path)) {
+        return Err(ErrorCode::Other);
+    }
+    if !config.certs_path.iter().all(|path| check_path(path)) {
         return Err(ErrorCode::Other);
     }
     let files = AttachedFiles::open(config).map_err(|_| ErrorCode::FileOperationErr)?;
