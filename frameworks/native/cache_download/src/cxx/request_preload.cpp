@@ -79,8 +79,9 @@ CppDownloadInfo::CppDownloadInfo(rust::Box<RustDownloadInfo> rust_info)
 
 CppDownloadInfo::~CppDownloadInfo()
 {
-    // Properly deallocate Rust data
-    rust::Box<RustDownloadInfo>::from_raw(rust_info_);
+    if (rust_info_ != nullptr) {
+        rust::Box<RustDownloadInfo>::from_raw(rust_info_);
+    }
 }
 
 /**
@@ -241,12 +242,13 @@ rust::Slice<const uint8_t> Data::rustSlice() const
  * @class PreloadError
  * @brief Wrapper for Rust download errors
  */
-PreloadError::PreloadError(rust::Box<CacheDownloadError> &&error)
+PreloadError::PreloadError(rust::Box<CacheDownloadError> &&error, rust::Box<RustDownloadInfo> &&rust_info)
+    : error_(error.into_raw()), download_info_(std::make_shared<CppDownloadInfo>(std::move(rust_info)))
 {
-    error_ = error.into_raw();
 }
 
-PreloadError::PreloadError(PreloadError &&other) noexcept : error_(other.error_)
+PreloadError::PreloadError(PreloadError &&other) noexcept
+    : error_(other.error_), download_info_(std::move(other.download_info_))
 {
     other.error_ = nullptr;
 }
@@ -254,10 +256,11 @@ PreloadError::PreloadError(PreloadError &&other) noexcept : error_(other.error_)
 PreloadError &PreloadError::operator=(PreloadError &&other) &noexcept
 {
     if (this != &other) {
-        if (error_) {
+        if (error_ != nullptr) {
             rust::Box<CacheDownloadError>::from_raw(error_);
         }
         error_ = other.error_;
+        download_info_ = std::move(other.download_info_);
         other.error_ = nullptr;
     }
     return *this;
@@ -265,7 +268,10 @@ PreloadError &PreloadError::operator=(PreloadError &&other) &noexcept
 
 PreloadError::~PreloadError()
 {
-    rust::Box<CacheDownloadError>::from_raw(error_);
+    if (error_) {
+        rust::Box<CacheDownloadError>::from_raw(error_);
+        error_ = nullptr;
+    }
 }
 
 // Error information accessors
@@ -282,6 +288,10 @@ std::string PreloadError::GetMessage() const
 ErrorKind PreloadError::GetErrorKind() const
 {
     return static_cast<ErrorKind>(error_->ffi_kind());
+}
+std::shared_ptr<CppDownloadInfo> PreloadError::GetDownloadInfo() const
+{
+    return download_info_;
 }
 
 /**

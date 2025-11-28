@@ -119,7 +119,16 @@
           "name": "//base/request/request/frameworks/native/cache_download:preload_native",
           "header": {
             "header_files": [],
-            "header_base": "//base/request/request/interfaces/inner_kits/cache_download/include"
+            "header_base": "//base/request/request/interfaces/inner_kits/cache_download/native/include"
+          }
+        },
+        {
+          "name": "//base/request/request/frameworks/js/napi/cache_download:cachedownload",
+          "header": {
+            "header_files": [
+              "preload_napi.h"
+            ],
+            "header_base": "//base/request/request/interfaces/inner_kits/cache_download/napi/include"
           }
         }
       ],

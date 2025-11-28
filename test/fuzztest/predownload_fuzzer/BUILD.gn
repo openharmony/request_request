@@ -26,7 +26,7 @@ ohos_fuzztest("PredownloadFuzzTest") {
     "../../../frameworks/native/cache_download/include",
     "../../../common/include",
     "../../../common/utf8_utils/include",
-    "../../../interfaces/inner_kits/cache_download/include",
+    "../../../interfaces/inner_kits/cache_download/native/include",
     "${target_gen_dir}/../../../frameworks/native/cache_download/src",
   ]
 

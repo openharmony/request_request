@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 use super::*;
 use crate::error::HttpClientError;
+use crate::info::DownloadInfo;
 use crate::wrapper::ffi::NewHttpClientRequest;
 const TEST_URL: &str = "https://www.w3cschool.cn/statics/demosource/movie.mp4";
 const LOCAL_URL: &str = "https://127.0.0.1";
@@ -75,7 +76,7 @@ impl RequestCallback for TestCallback {
         self.finished.store(true, Ordering::SeqCst);
     }
 
-    fn on_fail(&mut self, error: HttpClientError) {
+    fn on_fail(&mut self, error: HttpClientError, _info: DownloadInfo) {
         self.error
             .store(error.code().clone() as u32, Ordering::SeqCst);
         self.finished.store(true, Ordering::SeqCst);
@@ -344,7 +345,7 @@ fn ut_request_task_reset_range() {
             self.finished.store(true, Ordering::SeqCst);
         }
 
-        fn on_fail(&mut self, _error: HttpClientError) {
+        fn on_fail(&mut self, _error: HttpClientError, _info: DownloadInfo) {
             self.finished.store(true, Ordering::SeqCst);
             self.failed.store(true, Ordering::SeqCst);
         }
@@ -424,7 +425,7 @@ fn ut_request_task_reset_not_range() {
             self.finished.store(true, Ordering::SeqCst);
         }
 
-        fn on_fail(&mut self, _error: HttpClientError) {
+        fn on_fail(&mut self, _error: HttpClientError, _info: DownloadInfo) {
             self.finished.store(true, Ordering::SeqCst);
             self.failed.store(true, Ordering::SeqCst);
         }

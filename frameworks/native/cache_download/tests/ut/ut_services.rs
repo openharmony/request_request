@@ -65,7 +65,7 @@ struct TestCallbackF {
 }
 
 impl PreloadCallback for TestCallbackF {
-    fn on_fail(&mut self, error: CacheDownloadError, _task_id: &str) {
+    fn on_fail(&mut self, error: CacheDownloadError, _info: RustDownloadInfo, _task_id: &str) {
         *self.flag.lock().unwrap() = error.message().to_string();
     }
 }

@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Callback handling for download operations.
-//! 
+//!
 //! This module provides a prime callback implementation that handles download events
 //! and communicates with cache storage, manages download state, and notifies registered
 //! callbacks about download progress, success, failure, and cancellation.
@@ -21,13 +21,14 @@ use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
-use cache_core::{CacheManager, Updater};
-use request_utils::task_id::TaskId;
-
 use super::common::{CommonError, CommonResponse};
 use super::{CacheDownloadError, RUNNING};
 use crate::download::{CANCEL, FAIL, SUCCESS};
+use crate::info::RustDownloadInfo;
 use crate::services::{CacheDownloadService, PreloadCallback};
+use cache_core::{CacheManager, Updater};
+use netstack_rs::info::DownloadInfo;
+use request_utils::task_id::TaskId;
 
 /// Interval for reporting progress updates.
 ///
@@ -150,7 +151,7 @@ impl PrimeCallback {
         // Update task state to success
         self.state.store(SUCCESS, Ordering::Release);
         self.finish.store(true, Ordering::Release);
-        
+
         // Notify all registered callbacks
         let mut callbacks = self.callbacks.lock().unwrap();
 
@@ -164,7 +165,7 @@ impl PrimeCallback {
                 callback.on_success(clone_cache, &task_id)
             });
         }
-        
+
         // Explicit drop to release the mutex
         drop(callbacks);
         // Notify the service that the task has finished
@@ -181,7 +182,7 @@ impl PrimeCallback {
     ///
     /// # Parameters
     /// - `error`: Error object containing the failure details
-    pub(crate) fn common_fail<E>(&mut self, error: E)
+    pub(crate) fn common_fail<E>(&mut self, error: E, info: DownloadInfo)
     where
         E: CommonError,
     {
@@ -189,7 +190,7 @@ impl PrimeCallback {
         // Update task state to failed
         self.state.store(FAIL, Ordering::Release);
         self.finish.store(true, Ordering::Release);
-        
+
         // Notify all registered callbacks
         let mut callbacks = self.callbacks.lock().unwrap();
 
@@ -197,10 +198,11 @@ impl PrimeCallback {
             let task_id = self.task_id.brief().to_string();
             // Convert to the standard cache download error type
             let error = CacheDownloadError::from(&error);
+            let info = RustDownloadInfo::from_download_info(info.clone());
             // Spawn in separate tasks to avoid blocking
-            crate::spawn(move || callback.on_fail(error, &task_id));
+            crate::spawn(move || callback.on_fail(error, info, &task_id));
         }
-        
+
         // Explicit drop to release the mutex
         drop(callbacks);
         // Notify the service that the task has finished
@@ -216,7 +218,7 @@ impl PrimeCallback {
         // Update task state to canceled
         self.state.store(CANCEL, Ordering::Release);
         self.finish.store(true, Ordering::Release);
-        
+
         // Notify all registered callbacks
         let mut callbacks = self.callbacks.lock().unwrap();
 
@@ -224,7 +226,7 @@ impl PrimeCallback {
             // Spawn in separate tasks to avoid blocking
             crate::spawn(move || callback.on_cancel());
         }
-        
+
         // Explicit drop to release the mutex
         drop(callbacks);
         // Notify the service that the task has finished
@@ -256,7 +258,7 @@ impl PrimeCallback {
         {
             return;
         }
-        
+
         // Update the last processed position
         self.progress_restriction.processed = dl_now;
 
@@ -266,7 +268,7 @@ impl PrimeCallback {
         if count % PROGRESS_INTERVAL != 0 {
             return;
         }
-        
+
         // Reset counter for next interval
         self.progress_restriction.count = 1;
 

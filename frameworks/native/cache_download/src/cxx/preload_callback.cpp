@@ -37,10 +37,11 @@ void PreloadCallbackWrapper::OnSuccess(const std::shared_ptr<Data> data, rust::s
     }
 }
 
-void PreloadCallbackWrapper::OnFail(rust::Box<CacheDownloadError> error, rust::str taskId) const
+void PreloadCallbackWrapper::OnFail(
+    rust::Box<CacheDownloadError> error, rust::Box<RustDownloadInfo> info, rust::str taskId) const
 {
     if (this->onFail_ != nullptr) {
-        PreloadError preloadError(std::move(error));
+        PreloadError preloadError(std::move(error), std::move(info));
         this->onFail_(preloadError, std::string(taskId));
     }
 }

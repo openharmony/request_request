@@ -72,8 +72,6 @@ void PreDownloadInfo(std::string url, uint64_t size)
 {
     Preload::GetInstance()->Remove(url);
     EXPECT_FALSE(Preload::GetInstance()->Contains(url));
-    std::string invalidUtf8Url = "Test String Invalid \xFF\xFE";
-    EXPECT_FALSE(Preload::GetInstance()->Contains(invalidUtf8Url));
 
     TestCallback test(size);
     auto &[flagS, flagF, flagC, flagP, callback] = test;
@@ -177,6 +175,8 @@ HWTEST_F(PreloadGetInfo, InfoIsInvalidUtf8, TestSize.Level1)
     auto result = Preload::GetInstance()->GetDownloadInfo(invalidUtf8Url);
 
     EXPECT_FALSE(result.has_value());
+
+    EXPECT_FALSE(Preload::GetInstance()->Contains(invalidUtf8Url));
 }
 
 /**
@@ -295,4 +295,94 @@ HWTEST_F(PreloadGetInfo, ServerAddrInfo, TestSize.Level1)
 
     EXPECT_TRUE(result.has_value());
     EXPECT_TRUE(result.value().server_addr().size() >= 0);
+}
+
+/**
+ * @tc.name: HttpFailCallbackInfo
+ * @tc.desc: Test get the download information in the download failure callback.
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create test callback and load invalid path URL
+ *           3. Verify handle is running
+ *           4. Wait for download completion
+ *           5. Verify download info contains non-empty server address list in failure callback
+ * @tc.expect: Download info contains non-empty server address list
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadGetInfo, HttpFailCallbackInfo, TestSize.Level1)
+{
+    std::string invalidUtf8Url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/"
+                                 "notExistResource.txt";
+    Preload::GetInstance()->Remove(invalidUtf8Url);
+    EXPECT_FALSE(Preload::GetInstance()->Contains(invalidUtf8Url));
+
+    TestCallback test(0);
+    auto &[flagS, flagFDeprecated, flagC, flagP, callback] = test;
+
+    auto flagF = std::make_shared<std::atomic_bool>(false);
+    callback.OnFail = [flagF](const PreloadError &error, const std::string &taskId) {
+        flagF->store(true);
+        auto info = error.GetDownloadInfo();
+        EXPECT_FALSE(info->server_addr().empty());
+    };
+
+    auto handle = Preload::GetInstance()->load(invalidUtf8Url, std::make_unique<PreloadCallback>(callback));
+    EXPECT_FALSE(handle->IsFinish());
+    EXPECT_EQ(handle->GetState(), PreloadState::RUNNING);
+
+    size_t counter = 100;
+
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+    }
+    EXPECT_TRUE(flagF->load());
+    EXPECT_FALSE(flagC->load());
+    EXPECT_FALSE(flagS->load());
+}
+
+/**
+ * @tc.name: DnsFailCallbackInfo
+ * @tc.desc: Test get the download information in the download failure callback.
+ * @tc.precon: NA
+ * @tc.step: 1. Remove test URL from preload manager
+ *           2. Create test callback and load invalid authority URL
+ *           3. Verify handle is running
+ *           4. Wait for download completion
+ *           5. Verify download info contains non-empty server address list in failure callback
+ * @tc.expect: Download info contains non-empty server address list
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadGetInfo, DnsFailCallbackInfo, TestSize.Level1)
+{
+    std::string invalidUtf8Url = "https://PreloadGetInfo.DnsFailCallbackInfo.InvalidAuthority/releases/download/v1.01/"
+                                 "notExistResource.txt";
+    Preload::GetInstance()->Remove(invalidUtf8Url);
+    EXPECT_FALSE(Preload::GetInstance()->Contains(invalidUtf8Url));
+
+    TestCallback test(0);
+    auto &[flagS, flagFDeprecated, flagC, flagP, callback] = test;
+
+    auto flagF = std::make_shared<std::atomic_bool>(false);
+    callback.OnFail = [flagF](const PreloadError &error, const std::string &taskId) {
+        flagF->store(true);
+        auto info = error.GetDownloadInfo();
+        EXPECT_TRUE(info->server_addr().empty());
+    };
+
+    auto handle = Preload::GetInstance()->load(invalidUtf8Url, std::make_unique<PreloadCallback>(callback));
+    EXPECT_FALSE(handle->IsFinish());
+    EXPECT_EQ(handle->GetState(), PreloadState::RUNNING);
+
+    size_t counter = 30;
+    size_t oneSecond = 1000;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(oneSecond));
+    }
+    EXPECT_TRUE(flagF->load());
+    EXPECT_FALSE(flagC->load());
+    EXPECT_FALSE(flagS->load());
 }

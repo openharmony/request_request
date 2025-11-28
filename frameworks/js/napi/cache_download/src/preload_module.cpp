@@ -34,6 +34,7 @@
 #include "napi/native_node_api.h"
 #include "napi_utils.h"
 #include "preload_common.h"
+#include "preload_napi.h"
 #include "request_preload.h"
 
 namespace OHOS::Request {
@@ -215,22 +216,7 @@ napi_value getDownloadInfo(napi_env env, napi_callback_info info)
         napi_get_undefined(env, &undefined);
         return undefined;
     }
-    napi_status status;
-    napi_value jsInfo;
-    status = napi_create_object(env, &jsInfo);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-    if (!BuildInfoResource(env, result.value(), jsInfo)) {
-        return nullptr;
-    }
-    if (!BuildInfoNetwork(env, result.value(), jsInfo)) {
-        return nullptr;
-    }
-    if (!BuildInfoPerformance(env, result.value(), jsInfo)) {
-        return nullptr;
-    }
-    return jsInfo;
+    return BuildDownloadInfo(env, result.value());
 }
 
 napi_value clearMemoryCache(napi_env env, napi_callback_info info)
