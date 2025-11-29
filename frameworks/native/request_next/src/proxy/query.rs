@@ -52,7 +52,7 @@ impl RequestProxy {
         data.write(&1u32).unwrap();
         data.write(&task_id.to_string()).unwrap();
 
-        let mut reply = remote.send_request(interface::QUERY, &mut data).unwrap();
+        let mut reply = remote.send_request(interface::QUERY, &mut data).map_err(|_| 13400003)?;
 
         let code = reply.read::<i32>().unwrap(); // error code
 
@@ -96,7 +96,7 @@ impl RequestProxy {
 
         let mut reply = remote
             .send_request(interface::QUERY_MIME_TYPE, &mut data)
-            .unwrap();
+            .map_err(|_| 13400003)?;
 
         let code = reply.read::<i32>().unwrap(); // error code
         if code != 0 {
@@ -143,7 +143,7 @@ impl RequestProxy {
         data.write(&1u32).unwrap();
         data.write(&task_id.to_string()).unwrap();
 
-        let mut reply = remote.send_request(interface::SHOW, &mut data).unwrap();
+        let mut reply = remote.send_request(interface::SHOW, &mut data).map_err(|_| 13400003)?;
 
         let code = reply.read::<i32>().unwrap(); // error code
         if code != 0 {
@@ -180,7 +180,7 @@ impl RequestProxy {
         data.write(&task_id.to_string()).unwrap();
         data.write(&token).unwrap(); // authentication token
 
-        let mut reply = remote.send_request(interface::TOUCH, &mut data).unwrap();
+        let mut reply = remote.send_request(interface::TOUCH, &mut data).map_err(|_| 13400003)?;
 
         let code = reply.read::<i32>().unwrap(); // error code
         if code != 0 {
@@ -273,7 +273,7 @@ impl RequestProxy {
             None => data.write(&02u32).unwrap(), // Default mode value
         }
 
-        let mut reply = remote.send_request(interface::SEARCH, &mut data).unwrap();
+        let mut reply = remote.send_request(interface::SEARCH, &mut data).map_err(|_| 13400003)?;
 
         // First value in reply is the number of results
         let len = reply.read::<u32>().unwrap();
@@ -308,7 +308,7 @@ impl RequestProxy {
         data.write(&task_id.to_string()).unwrap();
         data.write(&token).unwrap(); // authentication token
 
-        let mut reply = remote.send_request(interface::GET_TASK, &mut data).unwrap();
+        let mut reply = remote.send_request(interface::GET_TASK, &mut data).map_err(|_| 13400003)?;
 
         let code = reply.read::<i32>().unwrap(); // error code
         if code != 0 {

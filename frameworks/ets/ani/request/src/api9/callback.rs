@@ -766,7 +766,17 @@ impl request_client::Callback for CallbackColl {
         info!("header_receive 1");
         let callbacks = self.on_header_receive.lock().unwrap();
         let mut headers = progress.extras.clone();
-        headers.insert("body".to_string(), "body".to_string());
+        let body_bytes = &progress.body_bytes;
+        let body_value = match String::from_utf8(body_bytes.clone()) {
+            Ok(s) => s,  // 合法 UTF-8，直接用字符串
+            Err(_) => {
+                let hex = body_bytes.iter()
+                    .map(|b| format!("{:02x}", b))
+                    .collect::<String>();
+                hex
+            }
+        };
+        headers.insert("body".to_string(), body_value);
         for callback in callbacks.iter() {
             callback.execute((headers.clone(),));
         }

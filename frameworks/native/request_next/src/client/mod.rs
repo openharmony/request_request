@@ -134,7 +134,7 @@ use crate::{check, Callback};
 pub struct RequestClient<'a> {
     /// Listener for task status updates and events
     listener: Observer,
-    task_manager: NativeTaskManager,
+    pub task_manager: NativeTaskManager,
     /// Proxy for communicating with the download service
     proxy: &'a RequestProxy,
 }
@@ -266,7 +266,7 @@ impl<'a> RequestClient<'a> {
         context: Context,
         mut config: TaskConfig,
     ) -> Result<i64, CreateTaskError> {
-        info!("Creating task with config: {:?}", config);
+        debug!("Creating task with config: {:?}", config);
         // todo: errcode and errmsg
         TaskConfigVerifier::get_instance().verify(&config)?;
         let token = FileManager::get_instance().apply(context, &mut config)?;
@@ -286,7 +286,7 @@ impl<'a> RequestClient<'a> {
                 Ok(task_id) => {
                     info!("Task created successfully with ID: {}", task_id);
                     let task = NativeTask {
-                        config,
+                        config: config,
                         token: token,
                     };
                     self.task_manager

@@ -369,7 +369,7 @@ impl Serialize for Progress {
             total_processed,
             sizes,
             extras,
-            // body_bytes,
+            body_bytes: Vec::new(),
         }
     }
 }

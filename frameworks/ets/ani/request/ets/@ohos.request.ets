@@ -840,12 +840,31 @@ export default namespace request {
       readonly headers: Map<string, Array<string>>;
     }
 
+    export type ProgressCallback = (progress: Progress) => void;
+
     interface Task {
       readonly tid: string;
       config: Config;
 
       on(event: string, callback: Callback<Any>): void;
       off(event: string, callback: Callback<Any>): void;
+
+      onProgress(callback: ProgressCallback): void;
+      offProgress(callback?: ProgressCallback): void;
+      onCompleted(callback: ProgressCallback): void;
+      offCompleted(callback?: ProgressCallback): void;
+      onFailed(callback: ProgressCallback): void;
+      offFailed(callback?: ProgressCallback): void;
+      onPause(callback: ProgressCallback): void;
+      offPause(callback?: ProgressCallback): void;
+      onResume(callback: ProgressCallback): void;
+      offResume(callback?: ProgressCallback): void;
+      onRemove(callback: ProgressCallback): void;
+      offRemove(callback?: ProgressCallback): void;
+      onResponse(callback: Callback<HttpResponse>): void;
+      offResponse(callback?: Callback<HttpResponse>): void;
+      onFaultOccur(callback: Callback<Faults>): void;
+      offFaultOccur(callback?: Callback<Faults>): void;
 
       start(callback: AsyncCallback<void>): void;
       start(): Promise<void>;
@@ -869,13 +888,17 @@ export default namespace request {
 
     native startSync(): void;
 
-    native onEvent(event: string, callback: (progress: Progress) => void): void;
+    //native onEvent(event: string, callback: (progress: Progress) => void): void;
+
+    //native offEvent(event: string, callback?: (progress: Progress) => void): void;
+
+    native onEvent(event: string, callback: ProgressCallback): void;
 
     native onResponseEvent(event: string, callback: Callback<HttpResponse>): void;
 
     native onFaultEvent(event: string, callback: Callback<Faults>): void;
 
-    native offEvent(event: string, callback?: (progress: Progress) => void): void;
+    native offEvent(event: string, callback?: ProgressCallback): void;
 
     native offResponseEvent(event: string, callback: Callback<HttpResponse>): void;
 
@@ -902,6 +925,102 @@ export default namespace request {
         this.offFaultEvent(event, callback as Callback<Faults>);
       } else {
         this.offEvent(event, callback as Callback<Progress>);
+      }
+    }
+
+    onProgress(callback: ProgressCallback): void {
+      this.onEvent("progress", callback);
+    }
+
+    offProgress(callback?: ProgressCallback): void {
+      if (callback == undefined) {
+        this.offEvents("progress");
+      } else {
+        this.offEvent("progress", callback);
+      }
+    }
+
+    onCompleted(callback: ProgressCallback): void {
+      this.onEvent("completed", callback);
+    }
+
+    offCompleted(callback?: ProgressCallback): void {
+      if (callback == undefined) {
+        this.offEvents("completed");
+      } else {
+        this.offEvent("completed", callback);
+      }
+    }
+
+    onFailed(callback: ProgressCallback): void {
+      this.onEvent("failed", callback);
+    }
+
+    offFailed(callback?: ProgressCallback): void {
+      if (callback == undefined) {
+        this.offEvents("failed");
+      } else {
+        this.offEvent("failed", callback);
+      }
+    }
+
+    onPause(callback: ProgressCallback): void {
+      this.onEvent("pause", callback);
+    }
+
+    offPause(callback?: ProgressCallback): void {
+      if (callback == undefined) {
+        this.offEvents("pause");
+      } else {
+        this.offEvent("pause", callback);
+      }
+    }
+
+    onResume(callback: ProgressCallback): void {
+      this.onEvent("resume", callback);
+    }
+
+    offResume(callback?: ProgressCallback): void {
+      if (callback == undefined) {
+        this.offEvents("resume");
+      } else {
+        this.offEvent("resume", callback);
+      }
+    }
+
+    onRemove(callback: ProgressCallback): void {
+      this.onEvent("remove", callback);
+    }
+
+    offRemove(callback?: ProgressCallback): void {
+      if (callback == undefined) {
+        this.offEvents("remove");
+      } else {
+        this.offEvent("remove", callback);
+      }
+    }
+
+    onResponse(callback: Callback<HttpResponse>): void {
+      this.onResponseEvent("response", callback);
+    }
+
+    offResponse(callback?: Callback<HttpResponse>): void {
+      if (callback == undefined) {
+        this.offEvents("response");
+      } else {
+        this.offResponseEvent("response", callback);
+      }
+    }
+
+    onFaultOccur(callback: Callback<Faults>): void {
+      this.onFaultEvent("faultOccur", callback);
+    }
+
+    offFaultOccur(callback?: Callback<Faults>): void {
+      if (callback == undefined) {
+        this.offEvents("faultOccur");
+      } else {
+        this.offFaultEvent("faultOccur", callback);
       }
     }
 

@@ -198,7 +198,7 @@ impl FileManager {
             }
 
             tokens.push(self.permission_manager.grant(&PathBuf::from(&path))?);
-            config.body_file_names.push(path);
+            config.body_file_paths.push(path);
         }
         Ok(tokens)
     }
@@ -533,7 +533,7 @@ impl FileManager {
 
     fn chmod_upload_file(path: &PathBuf, version: &Version) -> Result<(), i32> {
         if !path.exists() || !path.is_file() {
-            error!("path error");
+            error!("path error: path: {}", path.to_string_lossy().to_string());
             return Err(if matches!(version, Version::API10) {
                 13400001
             } else {
@@ -610,5 +610,15 @@ impl FileManager {
         let_cxx_string!(hostname_str = hostname);
         let certificate_pins = request_utils::wrapper::GetCertificatePinsForHostName(&hostname_str);
         config.certificate_pins = certificate_pins;
+    }
+
+    pub fn read_bytes_from_file(file_path: &str) -> Option<Vec<u8>> {
+        match fs::read(file_path) {
+            Ok(data) => Some(data),
+            Err(e) => {
+                error!("Failed to read file {}: {}", file_path, e);
+                None
+            }
+        }
     }
 }
