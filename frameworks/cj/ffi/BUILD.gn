@@ -36,9 +36,13 @@ ohos_shared_library("cj_request_ffi") {
     "../../../common/include",
     "../../native/request/include",
     "../../js/napi/request/include",
+    "../../../common/sys_event/include",
   ]
 
-  deps = [ "../../native/request:request_native" ]
+  deps = [
+    "../../native/request:request_native",
+    "../../../common/sys_event:request_sysevent"
+  ]
 
   external_deps = [
     "ability_base:zuri",
@@ -60,6 +64,8 @@ ohos_shared_library("cj_request_ffi") {
     "openssl:libcrypto_shared",
     "openssl:libssl_shared",
     "storage_service:storage_manager_acl",
+    "hisysevent:libhisysevent",
+    "app_file_service:fileuri_native",
   ]
 
   sources = [

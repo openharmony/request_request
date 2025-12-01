@@ -116,9 +116,15 @@ CJRequestTask *CJRequestTask::ClearTaskMap(const std::string &key)
 bool CJRequestTask::SetPathPermission(const std::string &filepath)
 {
     std::string baseDir;
-    if (!CJInitialize::GetBaseDir(baseDir) || filepath.find(baseDir) == std::string::npos) {
-        REQUEST_HILOGE("File dir not found.");
-        return false;
+    if (CheckApiVersionAfter19()) {
+        if (!CJInitialize::CheckBelongAppBaseDir(filepath, baseDir)) {
+            return false;
+        }
+    } else {
+        if (!CJInitialize::GetBaseDir(baseDir) || filepath.find(baseDir) == std::string::npos) {
+            REQUEST_HILOGE("File dir not found.");
+            return false;
+        }
     }
 
     AddPathMap(filepath, baseDir);
