@@ -17,5 +17,6 @@ group("fuzztest") {
   deps = [
     "downloaduploadmanager_fuzzer:fuzztest",
     "predownload_fuzzer:fuzztest",
+    "requestserviceproxy_fuzzer:fuzztest",
   ]
 }
