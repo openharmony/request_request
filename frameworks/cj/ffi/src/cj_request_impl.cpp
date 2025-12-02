@@ -235,7 +235,11 @@ ExceptionError CJRequestImpl::ParseToken(RequestNativeOptionCString &cToken, std
         err.errInfo = "Parameter verification failed, the length of token should between 8 and 2048 bytes";
         return err;
     }
-    out = SHA256(cToken.value, len);
+    if (CheckApiVersionAfter19()) {
+        out = std::string(cToken.value, len);
+    } else {
+        out = SHA256(cToken.value, len);
+    }
     return err;
 }
 

@@ -64,6 +64,7 @@ static constexpr const char *DNS_INFO = "DNS error";
 static constexpr const char *TCP_INFO = "TCP error";
 static constexpr const char *SSL_INFO = "TSL/SSL error";
 static constexpr const char *INSUFFICIENT_SPACE_INFO = "Insufficient space error";
+static constexpr int32_t API_VERSION_19 = 19;
 
 void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileData)
 {
@@ -402,4 +403,8 @@ CFormItemArr Convert2CFormItemArr(const std::vector<FileSpec> &files, const std:
     return out;
 }
 
+bool CheckApiVersionAfter19()
+{
+    return GetSdkApiVersion() > API_VERSION_19;
+}
 } // namespace OHOS::CJSystemapi::Request

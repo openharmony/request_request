@@ -46,7 +46,7 @@ uint32_t Convert2Broken(Reason code);
 std::string Convert2ReasonMsg(Reason code);
 CHashStrArr Convert2CHashStrArr(const std::map<std::string, std::string> &extras);
 CFormItemArr Convert2CFormItemArr(const std::vector<FileSpec> &files, const std::vector<FormItem> &forms);
-
+bool CheckApiVersionAfter19();
 } // namespace OHOS::CJSystemapi::Request
 
 #endif
