@@ -91,9 +91,35 @@ enum ErrorKind {
     CACHE,
 };
 
+class CppDownloadInfo {
+public:
+    CppDownloadInfo(rust::Box<RustDownloadInfo> rust_info);
+    CppDownloadInfo(CppDownloadInfo &&other) noexcept;
+    CppDownloadInfo &operator=(CppDownloadInfo &&other) noexcept;
+
+    CppDownloadInfo(const CppDownloadInfo &) = delete;
+    CppDownloadInfo &operator=(const CppDownloadInfo &) = delete;
+
+    ~CppDownloadInfo();
+
+    double dns_time() const;
+    double connect_time() const;
+    double tls_time() const;
+    double first_send_time() const;
+    double first_recv_time() const;
+    double redirect_time() const;
+    double total_time() const;
+    int64_t resource_size() const;
+    std::string server_addr() const;
+    std::vector<std::string> dns_servers() const;
+
+private:
+    RustDownloadInfo *rust_info_;
+};
+
 class PreloadError {
 public:
-    PreloadError(rust::Box<CacheDownloadError> &&error);
+    PreloadError(rust::Box<CacheDownloadError> &&error, rust::Box<RustDownloadInfo> &&rust_info);
     PreloadError(PreloadError &&) noexcept;
     PreloadError &operator=(PreloadError &&) &noexcept;
     ~PreloadError();
@@ -101,9 +127,11 @@ public:
     int32_t GetCode() const;
     std::string GetMessage() const;
     ErrorKind GetErrorKind() const;
+    std::shared_ptr<CppDownloadInfo> GetDownloadInfo() const;
 
 private:
     CacheDownloadError *error_;
+    std::shared_ptr<CppDownloadInfo> download_info_;
 };
 
 struct PreloadCallback {
@@ -133,32 +161,6 @@ struct PreloadOptions {
     std::vector<std::tuple<std::string, std::string>> headers;
     SslType sslType;
     std::string caPath;
-};
-
-class CppDownloadInfo {
-public:
-    CppDownloadInfo(rust::Box<RustDownloadInfo> rust_info);
-    CppDownloadInfo(CppDownloadInfo &&other) noexcept;
-    CppDownloadInfo &operator=(CppDownloadInfo &&other) noexcept;
-
-    CppDownloadInfo(const CppDownloadInfo &) = delete;
-    CppDownloadInfo &operator=(const CppDownloadInfo &) = delete;
-
-    ~CppDownloadInfo();
-
-    double dns_time() const;
-    double connect_time() const;
-    double tls_time() const;
-    double first_send_time() const;
-    double first_recv_time() const;
-    double redirect_time() const;
-    double total_time() const;
-    int64_t resource_size() const;
-    std::string server_addr() const;
-    std::vector<std::string> dns_servers() const;
-
-private:
-    RustDownloadInfo *rust_info_;
 };
 
 class Preload {

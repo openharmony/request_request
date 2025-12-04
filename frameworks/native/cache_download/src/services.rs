@@ -31,6 +31,7 @@ use request_utils::task_id::TaskId;
 // Internal dependencies
 use crate::download::task::{DownloadTask, Downloader, TaskHandle};
 use crate::download::CacheDownloadError;
+use crate::info::RustDownloadInfo;
 use crate::observe::NetObserver;
 
 /// Trait defining callback methods for preload operations.
@@ -50,8 +51,9 @@ pub trait PreloadCallback: Send {
     ///
     /// # Parameters
     /// - `error`: The error that caused the failure
+    /// - `info`: Download information for the failed task
     /// - `task_id`: Brief identifier for the failed task
-    fn on_fail(&mut self, error: CacheDownloadError, task_id: &str) {}
+    fn on_fail(&mut self, error: CacheDownloadError, info: RustDownloadInfo, task_id: &str) {}
 
     /// Called when a download operation is cancelled.
     fn on_cancel(&mut self) {}

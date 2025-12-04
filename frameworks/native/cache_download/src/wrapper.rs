@@ -127,11 +127,12 @@ impl PreloadCallback for FfiCallback {
     /// # Parameters
     /// - `error`: The error that caused the failure
     /// - `task_id`: Identifier for the failed task
-    fn on_fail(&mut self, error: CacheDownloadError, task_id: &str) {
+    fn on_fail(&mut self, error: CacheDownloadError, info: RustDownloadInfo, task_id: &str) {
         if self.callback.is_null() {
             return;
         }
-        self.callback.OnFail(Box::new(error), task_id);
+        self.callback
+            .OnFail(Box::new(error), Box::new(info), task_id);
     }
 
     /// Handles download cancellation and notifies C++.
@@ -383,7 +384,12 @@ pub(crate) mod ffi {
 
         // C++ callback methods
         fn OnSuccess(self: &PreloadCallbackWrapper, data: SharedPtr<Data>, task_id: &str);
-        fn OnFail(self: &PreloadCallbackWrapper, error: Box<CacheDownloadError>, task_id: &str);
+        fn OnFail(
+            self: &PreloadCallbackWrapper,
+            error: Box<CacheDownloadError>,
+            info: Box<RustDownloadInfo>,
+            task_id: &str,
+        );
         fn OnCancel(self: &PreloadCallbackWrapper);
         fn OnProgress(self: &PreloadProgressCallbackWrapper, progress: u64, total: u64);
     }

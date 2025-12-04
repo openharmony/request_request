@@ -27,7 +27,7 @@ mod ut_callback {
         impl PreloadCallback for PreloadCallback {
             fn on_progress(&mut self, current: u64, total: u64);
             fn on_success(&mut self, cache: cache_core::Cache, task_id: &str);
-            fn on_fail(&mut self, error: CacheDownloadError, task_id: &str);
+            fn on_fail(&mut self, error: CacheDownloadError, info: RustDownloadInfo, task_id: &str);
             fn on_cancel(&mut self);
         }
     }

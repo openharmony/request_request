@@ -30,7 +30,7 @@ public:
     PreloadCallbackWrapper &operator=(const PreloadCallbackWrapper &) = delete;
 
     void OnSuccess(const std::shared_ptr<Data> data, rust::str TaskId) const;
-    void OnFail(rust::Box<CacheDownloadError> error, rust::str TaskId) const;
+    void OnFail(rust::Box<CacheDownloadError> error, rust::Box<RustDownloadInfo> info, rust::str TaskId) const;
     void OnCancel() const;
 
 private:

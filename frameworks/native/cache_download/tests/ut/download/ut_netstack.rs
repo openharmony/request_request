@@ -20,7 +20,7 @@ mod ut_netstack {
 
     use mockall::automock;
     use netstack_rs::error::HttpClientError;
-    use netstack_rs::info::DownloadInfoMgr;
+    use netstack_rs::info::{DownloadInfo, DownloadInfoMgr};
     use netstack_rs::request::{Request, RequestCallback};
     use netstack_rs::response::Response;
     use request_utils::test::log::init;
@@ -106,7 +106,7 @@ mod ut_netstack {
                 self.common_success(response);
             }
 
-            fn on_fail(&mut self, error: HttpClientError) {
+            fn on_fail(&mut self, error: HttpClientError, _info: DownloadInfo) {
                 self.common_fail(error);
             }
 
@@ -187,7 +187,9 @@ mod ut_netstack {
     #[test]
     fn ut_common_error_msg() {
         let mut mock_error = MockMockHttpClientError::new();
-        mock_error.expect_msg().returning(|| "Not Found".to_string());
+        mock_error
+            .expect_msg()
+            .returning(|| "Not Found".to_string());
         assert_eq!(mock_error.msg(), "Not Found");
     }
 
@@ -538,7 +540,9 @@ mod ut_netstack {
         let mut callback = MockPrimeCallback::new("test_task_id");
         let mut mock_error = MockMockHttpClientError::new();
         mock_error.expect_code().returning(|| 404);
-        mock_error.expect_msg().returning(|| "Not Found".to_string());
+        mock_error
+            .expect_msg()
+            .returning(|| "Not Found".to_string());
         callback.common_fail(mock_error);
         assert!(callback.fail_flag.load(Ordering::Acquire));
     }

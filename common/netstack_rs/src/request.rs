@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Module for constructing and managing HTTP requests.
-//! 
+//!
 //! This module provides a builder pattern implementation for creating HTTP requests
 //! with configurable options and callbacks for handling various request events.
 
@@ -22,7 +22,7 @@ use cxx::{let_cxx_string, UniquePtr};
 use request_utils::task_id::TaskId;
 
 use crate::error::HttpClientError;
-use crate::info::DownloadInfoMgr;
+use crate::info::{DownloadInfo, DownloadInfoMgr};
 use crate::response::Response;
 use crate::task::RequestTask;
 use crate::wrapper::ffi::{HttpClientRequest, NewHttpClientRequest, SetBody, SetRequestSslType};
@@ -276,7 +276,7 @@ impl<C: RequestCallback> Request<C> {
 /// # Examples
 ///
 /// ```
-/// use netstack_rs::{RequestCallback, Response, HttpClientError};
+/// use netstack_rs::{RequestCallback, Response, HttpClientError, DownloadInfo};
 ///
 /// struct MyDownloadHandler {
 ///     bytes_received: u64,
@@ -287,7 +287,7 @@ impl<C: RequestCallback> Request<C> {
 ///         println!("Download completed successfully with status: {}", response.status_code());
 ///     }
 ///     
-///     fn on_fail(&mut self, error: HttpClientError) {
+///     fn on_fail(&mut self, error: HttpClientError, _info: DownloadInfo) {
 ///         println!("Download failed: {:?}", error);
 ///     }
 ///     
@@ -314,7 +314,7 @@ pub trait RequestCallback {
     /// # Arguments
     ///
     /// * `error` - The error that occurred during the request
-    fn on_fail(&mut self, error: HttpClientError) {}
+    fn on_fail(&mut self, error: HttpClientError, info: DownloadInfo) {}
 
     /// Called when the request is canceled by the user.
     ///

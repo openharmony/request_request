@@ -12,6 +12,7 @@
 // limitations under the License.
 
 use crate::error::HttpClientError;
+use crate::info::DownloadInfo;
 use crate::request::{Request, RequestCallback};
 use crate::response::Response;
 use crate::task::RequestTask;
@@ -32,7 +33,7 @@ impl RequestCallback for MockCallback {
         self.on_success_called = true;
     }
 
-    fn on_fail(&mut self, _error: HttpClientError) {
+    fn on_fail(&mut self, _error: HttpClientError, _info: DownloadInfo) {
         self.on_fail_called = true;
     }
 

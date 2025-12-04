@@ -15,6 +15,7 @@
 mod ut_request {
     use super::*;
     use crate::error::HttpClientError;
+    use crate::info::DownloadInfo;
     use crate::response::Response;
     use request_utils::task_id::TaskId;
     use std::sync::{Arc, Mutex};
@@ -40,7 +41,7 @@ mod ut_request {
             self.last_response = Some(response);
         }
 
-        fn on_fail(&mut self, error: HttpClientError) {
+        fn on_fail(&mut self, error: HttpClientError, _info: DownloadInfo) {
             self.on_fail_called = true;
             self.last_error = Some(error);
         }

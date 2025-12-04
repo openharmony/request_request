@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Module for FFI wrapper and callback handling.
-//! 
+//!
 //! This module provides a bridge between Rust code and C++ FFI components,
 //! managing HTTP request callbacks and task lifecycle.
 
@@ -144,7 +144,7 @@ impl CallbackWrapper {
                 HttpErrorCode::HttpNoneErr,
                 (response.status() as u32).to_string(),
             );
-            callback.on_fail(error);
+            callback.on_fail(error, self.info.clone());
         } else {
             // For success codes, call the success callback
             callback.on_success(response);
@@ -176,27 +176,28 @@ impl CallbackWrapper {
         // Store download information for future reference
         self.info_mgr
             .insert_download_info(self.task_id.clone(), self.info.clone());
-        
+
         // Convert FFI error to Rust error
         let error = HttpClientError::from_ffi(error);
-        
+
         // Handle write errors as cancellations
         if *error.code() == HttpErrorCode::HttpWriteError {
             self.on_cancel(request, response);
             return;
         }
-        
+
         // Take the user callback if available
         let Some(callback) = self.inner.take() else {
             return;
         };
 
+        let info = self.info.clone();
         // Attempt to create a new task for retrying
         let (new_task, mut new_callback) = match self.create_new_task(callback, request) {
             NewTaskResult::Success(new_task, new_callback) => (new_task, new_callback),
             NewTaskResult::Failed(mut callback) => {
                 // If task creation failed, call the fail callback
-                callback.on_fail(error);
+                callback.on_fail(error, info);
                 return;
             }
         };
@@ -224,7 +225,7 @@ impl CallbackWrapper {
             }
             // If no reset signal after waiting, call the fail callback
             if let Some(mut callback) = new_callback.inner {
-                callback.on_fail(error);
+                callback.on_fail(error, info);
             }
         });
     }
@@ -557,7 +558,7 @@ pub(crate) mod ffi {
 
 impl TryFrom<ffi::TaskStatus> for TaskStatus {
     type Error = ffi::TaskStatus;
-    
+
     /// Converts an FFI task status to a Rust task status.
     ///
     /// # Arguments
@@ -582,7 +583,7 @@ impl TryFrom<ffi::TaskStatus> for TaskStatus {
 
 impl TryFrom<ffi::ResponseCode> for ResponseCode {
     type Error = ffi::ResponseCode;
-    
+
     /// Converts an FFI response code to a Rust response code.
     ///
     /// # Arguments
@@ -641,7 +642,7 @@ impl TryFrom<ffi::ResponseCode> for ResponseCode {
 
 impl TryFrom<ffi::HttpErrorCode> for HttpErrorCode {
     type Error = ffi::HttpErrorCode;
-    
+
     /// Converts an FFI HTTP error code to a Rust HTTP error code.
     ///
     /// # Arguments

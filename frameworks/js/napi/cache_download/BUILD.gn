@@ -13,6 +13,13 @@
 
 import("//build/ohos.gni")
 
+config("cachedownload_napi_config") {
+  include_dirs = [
+    "include",
+    "../../../../interfaces/inner_kits/cache_download/napi/include"
+  ]
+}
+
 ohos_shared_library("cachedownload") {
   sanitize = {
     integer_overflow = true
@@ -23,11 +30,13 @@ ohos_shared_library("cachedownload") {
     debug = false
   }
 
-  include_dirs = [ "include" ]
+  public_configs = [ ":cachedownload_napi_config" ]
+  version_script = "libcache_download.map"
 
   sources = [
     "src/napi_utils.cpp",
     "src/preload_common.cpp",
+    "src/preload_napi.cpp",
     "src/preload_module.cpp",
   ]
   deps = [

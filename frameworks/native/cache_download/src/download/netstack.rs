@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Netstack client integration for cache download operations.
-//! 
+//!
 //! This module provides integration with the netstack HTTP client library for performing
 //! download operations. It implements required traits and provides task management
 //! functionality.
@@ -21,7 +21,7 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
 
 use netstack_rs::error::HttpClientError;
-use netstack_rs::info::DownloadInfoMgr;
+use netstack_rs::info::{DownloadInfo, DownloadInfoMgr};
 use netstack_rs::request::{Request, RequestCallback};
 use netstack_rs::response::Response;
 use netstack_rs::task::RequestTask;
@@ -71,8 +71,8 @@ impl RequestCallback for PrimeCallback {
     ///
     /// # Parameters
     /// - `error`: The HTTP client error object.
-    fn on_fail(&mut self, error: HttpClientError) {
-        self.common_fail(error);
+    fn on_fail(&mut self, error: HttpClientError, info: DownloadInfo) {
+        self.common_fail(error, info);
     }
 
     /// Handles cancellation notification from the HTTP client.
