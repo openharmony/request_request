@@ -123,7 +123,7 @@
           }
         },
         {
-          "name": "//base/request/request/frameworks/js/napi/cache_download:cachedownload",
+          "name": "//base/request/request/frameworks/js/napi/preload_napi:preload_napi",
           "header": {
             "header_files": [
               "preload_napi.h"

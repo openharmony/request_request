@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Copyright (C) 2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -13,7 +13,14 @@
 
 import("//build/ohos.gni")
 
-ohos_shared_library("cachedownload") {
+config("preload_napi_config") {
+  include_dirs = [
+    "include",
+    "../../../../interfaces/inner_kits/cache_download/napi/include"
+  ]
+}
+
+ohos_shared_library("preload_napi") {
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -23,16 +30,16 @@ ohos_shared_library("cachedownload") {
     debug = false
   }
 
-  include_dirs = [
-    "include"
-  ]
+  public_configs = [ ":preload_napi_config" ]
+  version_script = "libcache_download.map"
 
   sources = [
-    "src/preload_module.cpp",
+    "src/napi_utils.cpp",
+    "src/preload_common.cpp",
+    "src/preload_napi.cpp",
   ]
   deps = [
     "../../../native/cache_download:preload_native",
-    "../preload_napi:preload_napi"
   ]
 
   external_deps = [
@@ -42,17 +49,15 @@ ohos_shared_library("cachedownload") {
     "ability_runtime:data_ability_helper",
     "ability_runtime:extensionkit_native",
     "ability_runtime:napi_base_context",
-    "access_token:libaccesstoken_sdk",
-    "access_token:libtokenid_sdk",
     "c_utils:utils",
     "curl:curl_shared",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "rust_cxx:cxx_cppdeps",
   ]
 
-  relative_install_dir = "module/request"
   subsystem_name = "request"
   part_name = "request"
 }
