@@ -14,6 +14,15 @@
 1.0 {
   global:
     *BuildDownloadInfo*;
+    *BuildInfo*;
+    *SetOptions*;
+    *GetCacheStrategy*;
+    *GetValue*;
+    *GetString*;
+    *GetNamedProperty*;
+    *ThrowError*;
+    *SetStringPropertyUtf8*;
+    *SetUint32Property*;
   local:
     *;
 };
