@@ -39,6 +39,16 @@ export default function cacheDownloadInfo() {
       });
     };
 
+    let cbSuccess1 = () => {
+      console.info("cbSuccess1");
+      cacheDownload.offDownloadSuccess("https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt", cbSuccess1);
+    }
+
+    let cbError1 = () => {
+      console.info("cbError1");
+      cacheDownload.offDownloadError("https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt", cbError1);
+    }
+
     /**
      * @tc.number: testSetInfoListSize001
      * @tc.name: testSetInfoListSize001
@@ -1016,6 +1026,1321 @@ export default function cacheDownloadInfo() {
         console.error('testCacheStrategy009 download error.');
         expect(false).assertTrue();
         done();
+      }
+    });
+    /**
+     * @tc.number: testDownloadSuccess001
+     * @tc.name: testDownloadSuccess001
+     * @tc.desc: Test the scenario of successful download with success callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register download success callback
+     *           2. Invoke cacheDownload.download to download a valid file
+     *           3. Verify the success callback is triggered within timeout
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess001', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+
+      // 创建Promise包装回调，显式指定类型
+      const successPromise: Promise<void> = new Promise<void>((resolve: () => void) => {
+        cacheDownload.onDownloadSuccess(url, () => {
+          resolve();
+        });
+      });
+
+      // 创建超时Promise，显式指定类型
+      const timeoutPromise: Promise<never> = new Promise<never>((_resolve, reject: (error: Error) => void) => {
+        setTimeout(() => {
+          reject(new Error('Timeout after 5 seconds'));
+        }, 5000);
+      });
+
+      cacheDownload.download(url, {});
+
+      try {
+        // 使用Promise.race，显式指定返回类型
+        await Promise.race<Promise<void>[]>([successPromise, timeoutPromise]);
+
+        // 成功执行到这说明回调已触发
+        expect(true).assertTrue();
+      } catch (err) {
+        // 超时或其他错误
+        console.error('testDownloadSuccess001 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+    /**
+     * @tc.number: testDownloadSuccess002
+     * @tc.name: testDownloadSuccess002
+     * @tc.desc: Test multiple download requests with success callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register download success callback
+     *           2. Invoke cacheDownload.download twice to download a valid file
+     *           3. Verify the success callback is triggered for both downloads
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess002', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+      let callbackCount = 0;
+      
+      // 创建Promise包装回调
+      const successPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadSuccess(url, () => {
+          callbackCount++;
+          if (callbackCount === 2) resolve();
+        });
+      });
+
+      // 创建超时Promise
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+      );
+
+      try {
+        cacheDownload.download(url, {});
+        cacheDownload.download(url, {});
+        
+        // 等待回调执行（带超时）
+        await Promise.race([successPromise, timeoutPromise]);
+        
+        // 成功断言
+        expect(true).assertTrue();
+      } catch (err) {
+        console.error('testDownloadSuccess002 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadSuccess003
+     * @tc.name: testDownloadSuccess003
+     * @tc.desc: Test nested success callbacks scenario
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register download success callback that registers another callback
+     *           2. Invoke cacheDownload.download to download a valid file
+     *           3. Verify both callbacks are triggered correctly
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess003', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+      
+      // 创建Promise包装嵌套回调
+      const successPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadSuccess(url, () => {
+          console.log('testDownloadSuccess003 first success');
+          cacheDownload.onDownloadSuccess(url, () => {
+            console.log('testDownloadSuccess003 second success');
+            resolve();
+          });
+        });
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+      );
+
+      try {
+        cacheDownload.download(url, {});
+        await Promise.race([successPromise, timeoutPromise]);
+        expect(true).assertTrue();
+      } catch (err) {
+        console.error('testDownloadSuccess003 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadSuccess004
+     * @tc.name: testDownloadSuccess004
+     * @tc.desc: Test unregister success callback immediately after registration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register download success callback
+     *           2. Immediately unregister the callback
+     *           3. Invoke cacheDownload.download to download a valid file
+     *           4. Verify the callback is not triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess004', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+      let callbackCalled = false;
+      
+      // 创建Promise包装回调
+      const successPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadSuccess(url, () => {
+          callbackCalled = true;
+          resolve();
+        });
+      });
+
+      const timeoutPromise = new Promise<void>((resolve) => 
+        setTimeout(() => resolve(), 5000)
+      );
+
+      try {
+        // 注册后立即取消
+        cacheDownload.offDownloadSuccess(url);
+        cacheDownload.download(url, {});
+        
+        // 等待5秒看回调是否被调用
+        await Promise.race([successPromise, timeoutPromise]);
+        
+        // 验证回调未被调用
+        expect(callbackCalled).assertFalse();
+      } catch (err) {
+        console.error('testDownloadSuccess004 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadSuccess005
+     * @tc.name: testDownloadSuccess005
+     * @tc.desc: Test unregistering multiple success callbacks
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register download success callback
+     *           2. Unregister all callbacks
+     *           3. Invoke cacheDownload.download to download a valid file
+     *           4. Verify the callback is not triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess005', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+      let callbackCalled = false;
+      
+      const successPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadSuccess(url, () => {
+          callbackCalled = true;
+          resolve();
+        });
+      });
+
+      const timeoutPromise = new Promise<void>((resolve) => 
+        setTimeout(() => resolve(), 5000)
+      );
+
+      try {
+        // 注册多个回调后全部取消
+        cacheDownload.offDownloadSuccess(url);
+        cacheDownload.download(url, {});
+        
+        await Promise.race([successPromise, timeoutPromise]);
+        expect(callbackCalled).assertFalse();
+      } catch (err) {
+        console.error('testDownloadSuccess005 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadSuccess006
+     * @tc.name: testDownloadSuccess006
+     * @tc.desc: Test multiple success callbacks execution order
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register multiple download success callbacks
+     *           2. Invoke cacheDownload.download to download a valid file
+     *           3. Verify all callbacks are triggered in registration order
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess006', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+      let cbString = "";
+      
+      // 创建Promise等待两个回调执行
+      const successPromise = new Promise<void>((resolve) => {
+        let count = 0;
+        const checkComplete = () => {
+          if (count === 2) resolve();
+        };
+        
+        cacheDownload.onDownloadSuccess(url, () => {
+          cbString += "a";
+          count++;
+          checkComplete();
+        });
+        
+        cacheDownload.onDownloadSuccess(url, () => {
+          cbString += "b";
+          count++;
+          checkComplete();
+        });
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+      );
+
+      try {
+        cacheDownload.download(url, {});
+        await Promise.race([successPromise, timeoutPromise]);
+        expect(cbString).assertEqual("ab");
+      } catch (err) {
+        console.error('testDownloadSuccess006 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadSuccess007
+     * @tc.name: testDownloadSuccess007
+     * @tc.desc: Test callback override behavior for success callbacks
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register multiple download success callbacks
+     *           2. Invoke cacheDownload.download to download a valid file
+     *           3. Verify only the last registered callback is triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess007', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+      let cbString = "";
+      
+      const successPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadSuccess(url, () => {
+          cbString += "b";
+          resolve();
+        });
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+      );
+
+      try {
+        // 注册多个回调，最后一个覆盖前面的
+        cacheDownload.onDownloadSuccess(url, () => { cbString += "a"; });
+        cacheDownload.onDownloadSuccess(url, () => { cbString += "b"; });
+        cacheDownload.onDownloadSuccess(url, () => { cbString += "a"; });
+        
+        cacheDownload.download(url, {});
+        await Promise.race([successPromise, timeoutPromise]);
+        expect(cbString).assertEqual("b");
+      } catch (err) {
+        console.error('testDownloadSuccess007 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadSuccess008
+     * @tc.name: testDownloadSuccess008
+     * @tc.desc: Test selective unregistration of success callbacks
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register multiple named download success callbacks
+     *           2. Unregister only one specific callback
+     *           3. Invoke cacheDownload.download to download a valid file
+     *           4. Verify only the remaining callback is triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess008', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+      let cbString = "";
+      
+      const successPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadSuccess(url, () => {
+          cbString += "b";
+          resolve();
+        });
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+      );
+
+      try {
+        const callbackA = () => { cbString += "a"; };
+        const callbackB = () => { cbString += "b"; };
+        
+        cacheDownload.onDownloadSuccess(url, callbackA);
+        cacheDownload.onDownloadSuccess(url, callbackB);
+        
+        // 取消第一个回调
+        cacheDownload.offDownloadSuccess(url, callbackA);
+        
+        cacheDownload.download(url, {});
+        await Promise.race([successPromise, timeoutPromise]);
+        expect(cbString).assertEqual("b");
+      } catch (err) {
+        console.error('testDownloadSuccess008 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadSuccess009
+     * @tc.name: testDownloadSuccess009
+     * @tc.desc: Test unregistration of multiple identical success callbacks
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register the same callback function multiple times
+     *           2. Unregister the callback once
+     *           3. Invoke cacheDownload.download to download a valid file
+     *           4. Verify the callback is not triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess009', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+      let cbString = "";
+      
+      const successPromise = new Promise<void>((resolve) => {
+        // 设置超时检查
+        setTimeout(() => {
+          resolve();
+        }, 3000);
+      });
+
+      try {
+        const callback = () => { cbString += "a"; };
+        
+        // 注册多个相同回调
+        cacheDownload.onDownloadSuccess(url, callback);
+        cacheDownload.onDownloadSuccess(url, callback);
+        
+        // 取消所有该回调
+        cacheDownload.offDownloadSuccess(url, callback);
+        
+        cacheDownload.download(url, {});
+        await successPromise;
+        expect(cbString).assertEqual("");
+      } catch (err) {
+        console.error('testDownloadSuccess009 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadSuccess010
+     * @tc.name: testDownloadSuccess010
+     * @tc.desc: Test unregistering all success callbacks
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register multiple download success callbacks
+     *           2. Unregister all callbacks using offDownloadSuccess without parameters
+     *           3. Invoke cacheDownload.download to download a valid file
+     *           4. Verify no callbacks are triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess010', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+      let cbString = "";
+      
+      const successPromise = new Promise<void>((resolve) => {
+        setTimeout(() => resolve(), 3000);
+      });
+
+      try {
+        cacheDownload.onDownloadSuccess(url, () => { cbString += "a"; });
+        cacheDownload.onDownloadSuccess(url, () => { cbString += "a"; });
+        
+        // 取消所有回调
+        cacheDownload.offDownloadSuccess(url);
+        
+        cacheDownload.download(url, {});
+        await successPromise;
+        expect(cbString).assertEqual("");
+      } catch (err) {
+        console.error('testDownloadSuccess010 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadSuccess011
+     * @tc.name: testDownloadSuccess011
+     * @tc.desc: Test unregistering another callback from within a success callback
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register multiple download success callbacks
+     *           2. Make one callback unregister another callback
+     *           3. Invoke cacheDownload.download to download a valid file
+     *           4. Verify only the first callback is triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess011', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+      let cbString = "";
+      
+      const successPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadSuccess(url, () => {
+          cbString += "a";
+          resolve();
+        });
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+      );
+
+      try {
+        const callbackB = () => { cbString += "b"; };
+        
+        cacheDownload.onDownloadSuccess(url, () => {
+          cbString += "a";
+          // 在回调中取消另一个回调
+          cacheDownload.offDownloadSuccess(url, callbackB);
+        });
+        
+        cacheDownload.onDownloadSuccess(url, callbackB);
+        
+        cacheDownload.download(url, {});
+        await Promise.race([successPromise, timeoutPromise]);
+        expect(cbString).assertEqual("a");
+      } catch (err) {
+        console.error('testDownloadSuccess011 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadSuccess012
+     * @tc.name: testDownloadSuccess012
+     * @tc.desc: Test unregistering other callbacks during multiple downloads
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register multiple download success callbacks
+     *           2. Make one callback unregister another callback during first download
+     *           3. Invoke cacheDownload.download twice
+     *           4. Verify callback behavior across both downloads
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess012', 0, async () => {
+      const url = "https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/bird.png";
+      let cbString = "";
+      let downloadCounter = 0;
+      
+      // 定义回调函数
+      const callbackB = () => {
+        cbString += "b";
+      };
+      
+      const callbackA = () => {
+        cbString += "a";
+        downloadCounter++;
+        
+        // 在第一次下载的回调中取消callbackB
+        if (downloadCounter === 1) {
+          cacheDownload.offDownloadSuccess(url, callbackB);
+        }
+      };
+
+      // 创建Promise等待两次下载完成
+      const downloadPromise = new Promise<void>((resolve) => {
+        // 使用轮询检查是否两次下载都已完成
+        const checkInterval = setInterval(() => {
+          if (downloadCounter >= 2) {
+            clearInterval(checkInterval);
+            resolve();
+          }
+        }, 100);
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 15 seconds')), 15000)
+      );
+
+      try {
+        // 注册回调
+        cacheDownload.onDownloadSuccess(url, callbackB);
+        cacheDownload.onDownloadSuccess(url, callbackA);
+        
+        // 发起两次下载
+        cacheDownload.download(url, {});
+        cacheDownload.download(url, {});
+        
+        // 等待两次下载完成
+        await Promise.race([downloadPromise, timeoutPromise]);
+        
+        console.log(`testDownloadSuccess012 cbString: ${cbString}, downloadCounter: ${downloadCounter}`);
+        
+        expect(cbString).assertEqual("baa");
+      } catch (err) {
+        console.error('testDownloadSuccess012 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadSuccess013
+     * @tc.name: testDownloadSuccess013
+     * @tc.desc: Test self-unregistering success callback during multiple downloads
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register a self-unregistering success callback and a normal callback
+     *           2. Invoke cacheDownload.download twice
+     *           3. Verify the self-unregistering callback only triggers once
+     * @tc.require: issues#1650
+     */
+    it('testDownloadSuccess013', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
+      let cbString = "";
+      let downloadCounter = 0;
+      
+      // 定义自解绑回调函数
+      const cbSuccess1 = () => {
+        cbString += "a";
+        // 自解绑
+        cacheDownload.offDownloadSuccess(url, cbSuccess1);
+      };
+
+      // 普通回调函数
+      const callbackB = () => {
+        cbString += "b";
+        downloadCounter++;
+      };
+
+      // 创建Promise等待两次下载完成
+      const downloadPromise = new Promise<void>((resolve) => {
+        // 使用轮询检查是否两次下载都已完成
+        const checkInterval = setInterval(() => {
+          if (downloadCounter >= 2) {
+            clearInterval(checkInterval);
+            resolve();
+          }
+        }, 100);
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 15 seconds')), 15000)
+      );
+
+      try {
+        // 注册回调
+        cacheDownload.onDownloadSuccess(url, cbSuccess1);
+        cacheDownload.onDownloadSuccess(url, callbackB);
+        
+        // 发起两次下载
+        cacheDownload.download(url, {});
+        cacheDownload.download(url, {});
+        
+        // 等待两次下载完成
+        await Promise.race([downloadPromise, timeoutPromise]);
+        
+        console.log(`testDownloadSuccess013 cbString: ${cbString}, downloadCounter: ${downloadCounter}`);
+        
+        expect(cbString).assertEqual("abb");
+      } catch (err) {
+        console.error('testDownloadSuccess013 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadError001
+     * @tc.name: testDownloadError001
+     * @tc.desc: Test basic error callback registration and triggering
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register download error callback
+     *           2. Invoke cacheDownload.download with invalid URL
+     *           3. Verify error callback is triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError001', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt";
+      
+      const errorPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadError(url, (error: cacheDownload.DownloadError) => {
+          resolve();
+        });
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+      );
+
+      try {
+        cacheDownload.download(url, {});
+        await Promise.race([errorPromise, timeoutPromise]);
+        expect(true).assertTrue();
+      } catch (err) {
+        console.error('testDownloadError001 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadError002
+     * @tc.name: testDownloadError002
+     * @tc.desc: Test error callback triggering for multiple downloads
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register download error callback
+     *           2. Invoke cacheDownload.download twice with invalid URL
+     *           3. Verify error callback is triggered twice
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError002', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt";
+      let errorCount = 0;
+      
+      const errorPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadError(url, (error: cacheDownload.DownloadError) => {
+          errorCount++;
+          if (errorCount === 2) resolve();
+        });
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 10 seconds')), 10000)
+      );
+
+      try {
+        cacheDownload.download(url, {});
+        cacheDownload.download(url, {});
+        await Promise.race([errorPromise, timeoutPromise]);
+        expect(true).assertTrue();
+      } catch (err) {
+        console.error('testDownloadError002 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadError003
+     * @tc.name: testDownloadError003
+     * @tc.desc: Test dynamic callback registration during error handling
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register first error callback
+     *           2. In first callback, register second error callback
+     *           3. Invoke cacheDownload.download with invalid URL
+     *           4. Verify both callbacks are triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError003', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt";
+      
+      const errorPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadError(url, (error: cacheDownload.DownloadError) => {
+          console.log('testDownloadError003 first error');
+          cacheDownload.onDownloadError(url, (error: cacheDownload.DownloadError) => {
+            console.log('testDownloadError003 second error');
+            resolve();
+          });
+        });
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+      );
+
+      try {
+        cacheDownload.download(url, {});
+        await Promise.race([errorPromise, timeoutPromise]);
+        expect(true).assertTrue();
+      } catch (err) {
+        console.error('testDownloadError003 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadError004
+     * @tc.name: testDownloadError004
+     * @tc.desc: Test callback unregistration before download
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register download error callback
+     *           2. Immediately unregister the callback
+     *           3. Invoke cacheDownload.download with invalid URL
+     *           4. Verify callback is not triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError004', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt";
+      let callbackCalled = false;
+      
+      const errorPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadError(url, () => {
+          callbackCalled = true;
+          resolve();
+        });
+      });
+
+      const timeoutPromise = new Promise<void>((resolve) => 
+        setTimeout(() => resolve(), 5000)
+      );
+
+      try {
+        // 注册后立即取消
+        cacheDownload.offDownloadError(url);
+        cacheDownload.download(url, {});
+        
+        await Promise.race([errorPromise, timeoutPromise]);
+        expect(callbackCalled).assertFalse();
+      } catch (err) {
+        console.error('testDownloadError004 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadError005
+     * @tc.name: testDownloadError005
+     * @tc.desc: Test unregistering all callbacks before download
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register download error callback
+     *           2. Unregister all callbacks
+     *           3. Invoke cacheDownload.download with invalid URL
+     *           4. Verify callback is not triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError005', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt";
+      let callbackCalled = false;
+      
+      const errorPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadError(url, () => {
+          callbackCalled = true;
+          resolve();
+        });
+      });
+
+      const timeoutPromise = new Promise<void>((resolve) => 
+        setTimeout(() => resolve(), 5000)
+      );
+
+      try {
+        // 注册多个回调后全部取消
+        cacheDownload.offDownloadError(url);
+        cacheDownload.download(url, {});
+        
+        await Promise.race([errorPromise, timeoutPromise]);
+        expect(callbackCalled).assertFalse();
+      } catch (err) {
+        console.error('testDownloadError005 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadError006
+     * @tc.name: testDownloadError006
+     * @tc.desc: Test multiple error callbacks execution order
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register two error callbacks
+     *           2. Invoke cacheDownload.download with invalid URL
+     *           3. Verify both callbacks are triggered in registration order
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError006', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt";
+      let cbString = "";
+      
+      const errorPromise = new Promise<void>((resolve) => {
+        let count = 0;
+        const checkComplete = () => {
+          if (count === 2) resolve();
+        };
+        
+        cacheDownload.onDownloadError(url, () => {
+          cbString += "a";
+          count++;
+          checkComplete();
+        });
+        
+        cacheDownload.onDownloadError(url, () => {
+          cbString += "b";
+          count++;
+          checkComplete();
+        });
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+      );
+
+      try {
+        cacheDownload.download(url, {});
+        await Promise.race([errorPromise, timeoutPromise]);
+        expect(cbString).assertEqual("ab");
+      } catch (err) {
+        console.error('testDownloadError006 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadError007
+     * @tc.name: testDownloadError007
+     * @tc.desc: Test selective callback unregistration
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register two different error callbacks
+     *           2. Unregister only the first callback
+     *           3. Invoke cacheDownload.download with invalid URL
+     *           4. Verify only the second callback is triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError007', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt";
+      let cbString = "";
+      
+      const errorPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadError(url, () => {
+          cbString += "b";
+          resolve();
+        });
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+      );
+
+      try {
+        const callbackA = () => { cbString += "a"; };
+        const callbackB = () => { cbString += "b"; };
+        
+        cacheDownload.onDownloadError(url, callbackA);
+        cacheDownload.onDownloadError(url, callbackB);
+        
+        // 取消第一个回调
+        cacheDownload.offDownloadError(url, callbackA);
+        
+        cacheDownload.download(url, {});
+        await Promise.race([errorPromise, timeoutPromise]);
+        expect(cbString).assertEqual("b");
+      } catch (err) {
+        console.error('testDownloadError007 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadError008
+     * @tc.name: testDownloadError008
+     * @tc.desc: Test selective callback unregistration with same function
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register two named error callbacks
+     *           2. Unregister only the first named callback
+     *           3. Invoke cacheDownload.download with invalid URL
+     *           4. Verify only the second callback is triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError008', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt";
+      let cbString = "";
+      
+      const errorPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadError(url, () => {
+          cbString += "b";
+          resolve();
+        });
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+      );
+
+      try {
+        const callbackA = () => { cbString += "a"; };
+        const callbackB = () => { cbString += "b"; };
+        
+        cacheDownload.onDownloadError(url, callbackA);
+        cacheDownload.onDownloadError(url, callbackB);
+        
+        // 取消第一个回调
+        cacheDownload.offDownloadError(url, callbackA);
+        
+        cacheDownload.download(url, {});
+        await Promise.race([errorPromise, timeoutPromise]);
+        expect(cbString).assertEqual("b");
+      } catch (err) {
+        console.error('testDownloadError008 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadError009
+     * @tc.name: testDownloadError009
+     * @tc.desc: Test unregistering duplicate callbacks
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register the same error callback multiple times
+     *           2. Unregister the callback
+     *           3. Invoke cacheDownload.download with invalid URL
+     *           4. Verify callback is not triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError009', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt";
+      let cbString = "";
+      
+      const errorPromise = new Promise<void>((resolve) => {
+        setTimeout(() => resolve(), 3000);
+      });
+
+      try {
+        const callback = () => { cbString += "a"; };
+        
+        // 注册多个相同回调
+        cacheDownload.onDownloadError(url, callback);
+        cacheDownload.onDownloadError(url, callback);
+        
+        // 取消所有该回调
+        cacheDownload.offDownloadError(url, callback);
+        
+        cacheDownload.download(url, {});
+        await errorPromise;
+        expect(cbString).assertEqual("");
+      } catch (err) {
+        console.error('testDownloadError009 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadError010
+     * @tc.name: testDownloadError010
+     * @tc.desc: Test unregistering all anonymous callbacks
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register two anonymous error callbacks
+     *           2. Unregister all callbacks
+     *           3. Invoke cacheDownload.download with invalid URL
+     *           4. Verify no callbacks are triggered
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError010', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt";
+      let cbString = "";
+      
+      const errorPromise = new Promise<void>((resolve) => {
+        setTimeout(() => resolve(), 3000);
+      });
+
+      try {
+        cacheDownload.onDownloadError(url, () => { cbString += "a"; });
+        cacheDownload.onDownloadError(url, () => { cbString += "a"; });
+        
+        // 取消所有回调
+        cacheDownload.offDownloadError(url);
+        
+        cacheDownload.download(url, {});
+        await errorPromise;
+        expect(cbString).assertEqual("");
+      } catch (err) {
+        console.error('testDownloadError010 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadError011
+     * @tc.name: testDownloadError011
+     * @tc.desc: Test unregistering callbacks during error handling
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register two error callbacks
+     *           2. In first callback, unregister the second callback
+     *           3. Invoke cacheDownload.download with invalid URL
+     *           4. Verify only the first callback completes execution
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError011', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt";
+      let cbString = "";
+      
+      const errorPromise = new Promise<void>((resolve) => {
+        cacheDownload.onDownloadError(url, () => {
+          cbString += "a";
+          resolve();
+        });
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
+      );
+
+      try {
+        const callbackB = () => { cbString += "b"; };
+        
+        cacheDownload.onDownloadError(url, () => {
+          cbString += "a";
+          // 在回调中取消另一个回调
+          cacheDownload.offDownloadError(url, callbackB);
+        });
+        
+        cacheDownload.onDownloadError(url, callbackB);
+        
+        cacheDownload.download(url, {});
+        await Promise.race([errorPromise, timeoutPromise]);
+        expect(cbString).assertEqual("a");
+      } catch (err) {
+        console.error('testDownloadError011 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+
+    /**
+     * @tc.number: testDownloadError012
+     * @tc.name: testDownloadError012
+     * @tc.desc: Test unregistering other callbacks during multiple download errors
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register multiple download error callbacks
+     *           2. Make one callback unregister another callback during first download
+     *           3. Invoke cacheDownload.download twice with invalid URLs
+     *           4. Verify callback behavior across both downloads
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError012', 0, async () => {
+      const url = "https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/bird123.png";
+      let cbString = "";
+      let downloadCounter = 0;
+      
+      // 定义回调函数
+      const callbackB = (error: cacheDownload.DownloadError) => {
+        cbString += "b";
+      };
+      
+      const callbackA = (error: cacheDownload.DownloadError) => {
+        cbString += "a";
+        downloadCounter++;
+        
+        // 在第一次下载的回调中取消callbackB
+        if (downloadCounter === 1) {
+          cacheDownload.offDownloadError(url, callbackB);
+        }
+      };
+
+      // 创建Promise等待两次下载完成
+      const downloadPromise = new Promise<void>((resolve) => {
+        // 使用轮询检查是否两次下载都已完成
+        const checkInterval = setInterval(() => {
+          if (downloadCounter >= 2) {
+            clearInterval(checkInterval);
+            resolve();
+          }
+        }, 100);
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 15 seconds')), 15000)
+      );
+
+      try {
+        // 注册回调
+        cacheDownload.onDownloadError(url, callbackB);
+        cacheDownload.onDownloadError(url, callbackA);
+        
+        // 发起两次下载
+        cacheDownload.download(url, {});
+        cacheDownload.download(url, {});
+        
+        // 等待两次下载完成
+        await Promise.race([downloadPromise, timeoutPromise]);
+        
+        console.log(`testDownloadError012 cbString: ${cbString}, downloadCounter: ${downloadCounter}`);
+        
+        expect(cbString).assertEqual("baa");
+      } catch (err) {
+        console.error('testDownloadError012 download error:', (err as Error).message);
+        expect(false).assertTrue();
+      }
+    });
+    /**
+     * @tc.number: testDownloadError013
+     * @tc.name: testDownloadError013
+     * @tc.desc: Test self-unregistering error callback during multiple downloads
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     * @tc.step: 1. Register a self-unregistering error callback and a normal callback
+     *           2. Invoke cacheDownload.download twice with invalid URLs
+     *           3. Verify the self-unregistering callback only triggers once
+     * @tc.require: issues#1650
+     */
+    it('testDownloadError013', 0, async () => {
+      const url = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test123.txt";
+      let cbString = "";
+      let downloadCounter = 0;
+      
+      // 定义自解绑回调函数
+      const cbError1 = (error: cacheDownload.DownloadError) => {
+        cbString += "a";
+        // 自解绑
+        cacheDownload.offDownloadError(url, cbError1);
+      };
+
+      // 普通回调函数
+      const callbackB = (error: cacheDownload.DownloadError) => {
+        cbString += "b";
+        downloadCounter++;
+      };
+
+      // 创建Promise等待两次下载完成
+      const downloadPromise = new Promise<void>((resolve) => {
+        // 使用轮询检查是否两次下载都已完成
+        const checkInterval = setInterval(() => {
+          if (downloadCounter >= 2) {
+            clearInterval(checkInterval);
+            resolve();
+          }
+        }, 100);
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout after 15 seconds')), 15000)
+      );
+
+      try {
+        // 注册回调
+        cacheDownload.onDownloadError(url, cbError1);
+        cacheDownload.onDownloadError(url, callbackB);
+        
+        // 发起两次下载
+        cacheDownload.download(url, {});
+        cacheDownload.download(url, {});
+        
+        // 等待两次下载完成
+        await Promise.race([downloadPromise, timeoutPromise]);
+        
+        console.log(`testDownloadError013 cbString: ${cbString}, downloadCounter: ${downloadCounter}`);
+        
+        expect(cbString).assertEqual("abb");
+      } catch (err) {
+        console.error('testDownloadError013 download error:', (err as Error).message);
+        expect(false).assertTrue();
       }
     });
   })

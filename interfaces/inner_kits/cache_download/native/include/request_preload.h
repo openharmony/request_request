@@ -88,7 +88,10 @@ private:
 enum ErrorKind {
     HTTP,
     IO,
-    CACHE,
+    DNS,
+    TCP,
+    SSL,
+    OTHERS
 };
 
 class CppDownloadInfo {

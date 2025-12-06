@@ -23,6 +23,7 @@
     *ThrowError*;
     *SetStringPropertyUtf8*;
     *SetUint32Property*;
+    *Convert2JSValue*;
   local:
     *;
 };
