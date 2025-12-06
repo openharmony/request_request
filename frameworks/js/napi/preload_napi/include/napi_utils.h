@@ -23,6 +23,10 @@
 #include "napi/native_common.h"
 #include "request_preload.h"
 namespace OHOS::Request {
+static constexpr int32_t NO_ARG = 0;
+static constexpr int32_t ONE_ARG = 1;
+static constexpr int32_t TWO_ARG = 2;
+static constexpr int32_t THE_ARG = 3;
 napi_valuetype GetValueType(napi_env env, napi_value value);
 napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
 std::string GetStringValueWithDefault(napi_env env, napi_value value);
@@ -36,5 +40,6 @@ void ThrowError(napi_env env, int32_t code, const std::string &msg);
 void SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &name, const std::string &value);
 void SetUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value);
 napi_value Convert2JSValue(napi_env env, const std::string &str);
+napi_value Convert2JSValue(napi_env env, uint32_t code);
 } // namespace OHOS::Request
 #endif

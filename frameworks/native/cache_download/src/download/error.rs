@@ -19,6 +19,63 @@
 use std::io;
 
 use super::common::CommonError;
+use netstack_rs::error::HttpErrorCode;
+
+/// DNS error codes using HttpErrorCode enum values
+const DNS_ERROR_CODES: &[i32] = &[
+    HttpErrorCode::HttpCouldntResolveProxy as i32,
+    HttpErrorCode::HttpCouldntResolveHost as i32,
+];
+
+/// TCP error codes using HttpErrorCode enum values
+const TCP_ERROR_CODES: &[i32] = &[
+    HttpErrorCode::HttpCouldntConnect as i32,
+    HttpErrorCode::HttpSendError as i32,
+    HttpErrorCode::HttpRecvError as i32,
+];
+
+/// SSL error codes using HttpErrorCode enum values
+const SSL_ERROR_CODES: &[i32] = &[
+    HttpErrorCode::HttpSslCertproblem as i32,
+    HttpErrorCode::HttpSslCipher as i32,
+    HttpErrorCode::HttpPeerFailedVerification as i32,
+    HttpErrorCode::HttpSslCacertBadfile as i32,
+    HttpErrorCode::HttpSslPinnedpubkeynotmatch as i32,
+];
+
+/// HTTP error codes using HttpErrorCode enum values
+const HTTP_ERROR_CODES: &[i32] = &[
+    HttpErrorCode::HttpRemoteAccessDenied as i32,
+    HttpErrorCode::HttpHttp2Error as i32,
+    HttpErrorCode::HttpPostError as i32,
+    HttpErrorCode::HttpTooManyRedirects as i32,
+    HttpErrorCode::HttpRemoteDiskFull as i32,
+    HttpErrorCode::HttpRemoteFileExists as i32,
+    HttpErrorCode::HttpRemoteFileNotFound as i32,
+    HttpErrorCode::HttpAuthError as i32,
+    HttpErrorCode::HttpNoneErr as i32,
+    HttpErrorCode::HttpPartialFile as i32,
+    HttpErrorCode::HttpBadContentEncoding as i32,
+];
+
+/// OTHERS error codes using HttpErrorCode enum values
+const OTHERS_ERROR_CODES: &[i32] = &[
+    HttpErrorCode::HttpPermissionDeniedCode as i32,
+    HttpErrorCode::HttpParseErrorCode as i32,
+    HttpErrorCode::HttpUnsupportedProtocol as i32,
+    HttpErrorCode::HttpFailedInit as i32,
+    HttpErrorCode::HttpUrlMalformat as i32,
+    HttpErrorCode::HttpOutOfMemory as i32,
+    HttpErrorCode::HttpUnknownOtherError as i32,
+    HttpErrorCode::HttpWeirdServerReply as i32,
+    HttpErrorCode::HttpWriteError as i32,
+    HttpErrorCode::HttpUploadFailed as i32,
+    HttpErrorCode::HttpReadError as i32,
+    HttpErrorCode::HttpOperationTimedout as i32,
+    HttpErrorCode::HttpTaskCanceled as i32,
+    HttpErrorCode::HttpGotNothing as i32,
+    HttpErrorCode::HttpFilesizeExceeded as i32,
+];
 
 /// Primary error type for cache download operations.
 ///
@@ -66,6 +123,14 @@ pub enum ErrorKind {
     Http,
     /// I/O-related errors, typically from file operations
     Io,
+    /// DNS-related errors, typically from network operations
+    Dns,
+    /// TCP-related errors, typically from network operations
+    Tcp,
+    /// SSL-related errors, typically from network operations
+    Ssl,
+    /// Others errors, typically from network operations
+    Others,
 }
 
 impl From<io::Error> for CacheDownloadError {
@@ -93,7 +158,7 @@ where
 {
     /// Converts a reference to any type implementing `CommonError` into a cache download error.
     ///
-    /// Sets the error kind to Http and preserves both the error code and message.
+    /// Sets the error kind based on error code ranges and preserves both the error code and message.
     ///
     /// # Type Parameters
     /// - `E`: Type implementing `CommonError`
@@ -104,10 +169,21 @@ where
     /// # Returns
     /// A new `CacheDownloadError` with the converted error information.
     fn from(err: &'a E) -> Self {
+        let code = err.code();
+        let kind = match code {
+            code if DNS_ERROR_CODES.contains(&code) => ErrorKind::Dns,
+            code if TCP_ERROR_CODES.contains(&code) => ErrorKind::Tcp,
+            code if SSL_ERROR_CODES.contains(&code) => ErrorKind::Ssl,
+            code if HTTP_ERROR_CODES.contains(&code) => ErrorKind::Http,
+            code if OTHERS_ERROR_CODES.contains(&code) => ErrorKind::Others,
+            // default case for unknown error codes
+            _ => ErrorKind::Others,
+        };
+
         CacheDownloadError {
-            code: Some(err.code()),
+            code: Some(code),
             message: err.msg().to_string(),
-            kind: ErrorKind::Http,
+            kind,
         }
     }
 }

@@ -141,10 +141,10 @@ napi_value Convert2JSValue(napi_env env, const std::string &str)
     return value;
 }
 
-napi_value Convert2JSValue(napi_env env, uint32_t num)
+napi_value Convert2JSValue(napi_env env, uint32_t code)
 {
     napi_value value = nullptr;
-    if (napi_create_uint32(env, num, &value) != napi_ok) {
+    if (napi_create_uint32(env, code, &value) != napi_ok) {
         return nullptr;
     }
     return value;
