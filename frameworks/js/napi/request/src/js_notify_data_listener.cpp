@@ -71,12 +71,12 @@ void JSNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData
     std::string filePath;
     {
         std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
-        auto item = JsTask::taskMap_.find(std::to_string(notifyData->taskId));
-        if (item == JsTask::taskMap_.end()) {
+        auto it = JsTask::taskContextMap_.find(std::to_string(notifyData->taskId));
+        if (it == JsTask::taskContextMap_.end() || it->second->task == nullptr) {
             REQUEST_HILOGE("Task ID not found");
             return;
         }
-        JsTask *task = item->second;
+        JsTask *task = it->second->task;
         if (task->config_.multipart) {
             index = 0;
         }
@@ -207,7 +207,6 @@ void JSNotifyDataListener::DoJSTask(const std::shared_ptr<NotifyData> &notifyDat
         REQUEST_HILOGD("jstask %{public}s clear file", tid.c_str());
         this->OnMessageReceive(values, paramNumber);
         JsTask::RemoveTaskContext(tid);
-        JsTask::ClearTaskMap(tid);
         REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
     }
 }

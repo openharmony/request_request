@@ -25,6 +25,15 @@ namespace OHOS::Request {
 class JsTask {
 public:
     ~JsTask();
+    struct ContextInfo : public AsyncCall::Context {
+        JsTask *task = nullptr;
+        napi_ref taskRef = nullptr;
+        napi_ref baseContext = nullptr;
+        Config config{};
+        std::string tid{};
+        std::string token = "null";
+        bool contextIf = false;
+    };
     static napi_value JsCreate(napi_env env, napi_callback_info info);
     static napi_value JsUpload(napi_env env, napi_callback_info info);
     static napi_value JsDownload(napi_env env, napi_callback_info info);
@@ -44,8 +53,6 @@ public:
     static void SubscribeSA();
     static void UnsubscribeSA();
     static void ReloadListener();
-    static void ClearTaskMap(const std::string &key);
-    static void AddTaskMap(const std::string &key, JsTask *task);
     static bool SetDirsPermission(std::vector<std::string> &dirs);
     static void ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls);
     static void RemoveDirsPermission(const std::vector<std::string> &dirs);
@@ -55,24 +62,13 @@ public:
     bool isGetPermission;
     static bool register_;
     static std::mutex taskMutex_;
-    static std::map<std::string, JsTask *> taskMap_;
+    static std::map<std::string, std::shared_ptr<ContextInfo>> taskContextMap_;
 
     std::mutex listenerMutex_;
     std::shared_ptr<JSResponseListener> responseListener_;
     std::map<SubscribeType, std::shared_ptr<JSNotifyDataListener>> notifyDataListenerMap_;
 
 private:
-    struct ContextInfo : public AsyncCall::Context {
-        JsTask *task = nullptr;
-        napi_ref taskRef = nullptr;
-        napi_ref jsConfig = nullptr;
-        napi_ref baseContext = nullptr;
-        Config config{};
-        std::string tid{};
-        std::string token = "null";
-        bool contextIf = false;
-    };
-
     struct ContextCallbackData {
         std::shared_ptr<ContextInfo> context = nullptr;
     };
@@ -94,10 +90,15 @@ private:
     static napi_value RequestFile(napi_env env, napi_callback_info info);
     static napi_value RequestFileV8(napi_env env, napi_callback_info info);
     static int32_t CreateExec(const std::shared_ptr<ContextInfo> &context, int32_t seq);
+    static napi_status CreateInput(
+        std::shared_ptr<ContextInfo> context, const int32_t seq, size_t argc, napi_value *argv);
     static napi_value GetTaskCtor(napi_env env);
     static napi_value GetTaskCreate(napi_env env, napi_callback_info info);
     static void GetTaskExecution(std::shared_ptr<ContextInfo> context);
-    static bool GetTaskOutput(std::shared_ptr<ContextInfo> context);
+    static napi_status GetTaskOutput(std::shared_ptr<ContextInfo> context, napi_value *result, int32_t seq);
+    static napi_status CtorJsTask(std::shared_ptr<ContextInfo> context, napi_value *result);
+    static napi_status CheckTaskInMap(
+        std::shared_ptr<ContextInfo> context, std::shared_ptr<ContextInfo> mapContext, napi_value *result);
     static ExceptionError ParseGetTask(
         napi_env env, size_t argc, napi_value *argv, std::shared_ptr<ContextInfo> context);
     static ExceptionError ParseTid(napi_env env, size_t argc, napi_value *argv, std::string &tid);
@@ -112,10 +113,9 @@ private:
         napi_env env, size_t argc, napi_value *argv, std::shared_ptr<TouchContext> context);
     static int64_t ParseBefore(napi_env env, napi_value value);
     static int64_t ParseAfter(napi_env env, napi_value value, int64_t before);
-    static void AddTaskContextMap(const std::string &key, std::shared_ptr<ContextInfo> context);
-    static void UnrefTaskContextMap(std::shared_ptr<ContextInfo> context);
+    static void DeleteContextTaskRef(std::shared_ptr<ContextInfo> context);
     static void RegisterForegroundResume();
-    static void AddTask(std::shared_ptr<ContextInfo> context);
+    static void AddTaskWhenCreate(std::shared_ptr<ContextInfo> context);
     static void AddRemoveListener(const std::shared_ptr<ContextInfo> &context);
     static bool ParseTouchCheck(const napi_env env, const size_t argc, const napi_value *argv,
         const std::shared_ptr<TouchContext> context, ExceptionError &err);
@@ -130,8 +130,6 @@ private:
     static thread_local napi_ref createCtor;
     static std::mutex getTaskCreateMutex_;
     static thread_local napi_ref getTaskCreateCtor;
-    static std::mutex taskContextMutex_;
-    static std::map<std::string, std::shared_ptr<ContextInfo>> taskContextMap_;
     std::string tid_;
 };
 } // namespace OHOS::Request

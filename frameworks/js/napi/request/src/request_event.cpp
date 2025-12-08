@@ -482,9 +482,9 @@ int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
     std::string tid = context->task->GetTid();
     {
         std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
-        const auto it = JsTask::taskMap_.find(tid);
-        if (it == JsTask::taskMap_.end()) {
-            REQUEST_HILOGE("Can not find task in JsTask::taskMap_ by tid: %{public}s.", tid.c_str());
+        auto it = JsTask::taskContextMap_.find(tid);
+        if (it == JsTask::taskContextMap_.end() || it->second->task == nullptr) {
+            REQUEST_HILOGE("Start taskContextMap_ not find %{public}s.", tid.c_str());
             // In JS d.ts, only can throw 201/13400003/21900007（E_TASK_STATE）
             return E_TASK_STATE;
         }
