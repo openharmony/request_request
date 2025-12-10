@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::io::{Read, Write};
+use std::io::Write;
 use std::sync::{Arc, LazyLock};
 use std::time::Duration;
 use std::{fs, io};
@@ -25,13 +25,37 @@ const TEST_STRING: &str = "你这猴子真让我欢喜";
 const TEST_STRING_SIZE: usize = TEST_STRING.len();
 const TEST_SIZE: u64 = 128;
 
-// @tc.name: ut_cache_file_create
-// @tc.desc: Test the creation of file cache
+// @tc.name: ut_cache_file_new
+// @tc.desc: Test creation of file cache with specified size
 // @tc.precon: NA
-// @tc.step: 1. Initialize CacheManager with test size
-//           2. Create RamCache with test data
-//           3. Call FileCache::try_create method
-// @tc.expect: File cache is created successfully
+// @tc.step: 1. Initialize CacheManager with file cache size limit
+//           2. Create a new FileCache instance
+// @tc.expect: FileCache size matches specified size and task ID is set
+// @tc.type: FUNC
+// @tc.require: issue#ICN31I
+#[test]
+fn ut_cache_file_new() {
+    init();
+    static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
+    CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
+
+    init_curr_store_dir();
+
+    let task_id = TaskId::new(fast_random().to_string());
+    let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+    ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
+    let file_cache = FileCache::new(task_id.clone(), ram_cache.size() as u64);
+    assert_eq!(file_cache.size(), ram_cache.size() as u64);
+    assert_eq!(file_cache.task_id().brief(), task_id.brief());
+}
+
+// @tc.name: ut_cache_file_create
+// @tc.desc: Test creation of file cache with specified size
+// @tc.precon: NA
+// @tc.step: 1. Initialize CacheManager with file cache size limit
+//           2. Create a new FileCache instance
+//           3. Verify file cache is created successfully
+// @tc.expect: File cache is successfully created.
 // @tc.type: FUNC
 // @tc.require: issue#ICN31I
 #[test]
@@ -41,121 +65,48 @@ fn ut_cache_file_create() {
     CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
 
     init_curr_store_dir();
-    // cache not update
-    for _ in 0..1000 {
-        let task_id = TaskId::new(fast_random().to_string());
-        let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
-        ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
-        FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
-    }
 
-    // cache update
-    for _ in 0..1000 {
-        let task_id = TaskId::new(fast_random().to_string());
-        let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
-        ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
-        let file_cache =
-            FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
-        CACHE_MANAGER
-            .files
-            .lock()
-            .unwrap()
-            .insert(task_id, file_cache);
-    }
+    let task_id = TaskId::new(fast_random().to_string());
+    let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
+    ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
+    assert!(FileCache::create_file(&task_id, Arc::new(ram_cache)).is_ok());
+    let read_cache = FileCache::read(&task_id, &CACHE_MANAGER);
+    assert!(read_cache.is_ok());
+    let read_cache = read_cache.unwrap();
+    let data = read_cache.cursor().into_inner();
+    assert_eq!(data, TEST_STRING.as_bytes());
+    FileCache::remove_file(&task_id);
 }
 
-// @tc.name: ut_cache_file_try_new_fail
-// @tc.desc: Test failure to create file cache when size exceeds limit
+// @tc.name: ut_cache_file_try_add_beyond_limit
+// @tc.desc: Test failure to add file cache when size exceeds limit
 // @tc.precon: NA
 // @tc.step: 1. Initialize CacheManager with limited size
 //           2. Fill cache until full
-//           3. Attempt to create another file cache
-// @tc.expect: File cache creation returns None
+//           3. Attempt to add another file cache
+// @tc.expect: File cache addition succeeds.
 // @tc.type: FUNC
 // @tc.require: issue#ICN31I
 #[test]
-fn ut_cache_file_try_new_fail() {
+fn ut_cache_file_try_add_beyond_limit() {
     init();
     static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
     CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
 
     init_curr_store_dir();
     let mut total = TEST_STRING_SIZE as u64;
-    let mut v = vec![];
     while total < TEST_SIZE {
         let task_id = TaskId::new(fast_random().to_string());
         let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
         ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
-        v.push(
-            FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap(),
-        );
+        CACHE_MANAGER.update_file_cache(task_id.clone(), Arc::new(ram_cache));
         total += TEST_STRING_SIZE as u64;
     }
     let task_id = TaskId::new(fast_random().to_string());
     let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
     ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
-    assert!(FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).is_none());
-    v.pop();
-    let task_id = TaskId::new(fast_random().to_string());
-    let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
-    ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
-    FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
-}
-
-// @tc.name: ut_cache_file_drop
-// @tc.desc: Test file cache drop and resource release
-// @tc.precon: NA
-// @tc.step: 1. Create FileCache instance
-//           2. Drop the FileCache
-//           3. Check used_ram is released
-// @tc.expect: used_ram is reset to 0 after drop
-// @tc.type: FUNC
-// @tc.require: issue#ICN31I
-#[test]
-fn ut_cache_file_drop() {
-    init();
-    static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
-    CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
-
-    init_curr_store_dir();
-    let task_id = TaskId::new(fast_random().to_string());
-    let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
-    ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
-    let file_cache =
-        FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
-    assert_eq!(
-        CACHE_MANAGER.file_handle.lock().unwrap().used_capacity,
-        TEST_STRING_SIZE as u64
-    );
-    drop(file_cache);
-    assert_eq!(CACHE_MANAGER.file_handle.lock().unwrap().used_capacity, 0);
-}
-
-// @tc.name: ut_cache_file_content
-// @tc.desc: Test file cache content integrity
-// @tc.precon: NA
-// @tc.step: 1. Create FileCache with test data
-//           2. Open the cache file
-//           3. Read and verify content
-// @tc.expect: Read content matches original test string
-// @tc.type: FUNC
-// @tc.require: issue#ICN31I
-#[test]
-fn ut_cache_file_content() {
-    init();
-    static CACHE_MANAGER: LazyLock<CacheManager> = LazyLock::new(CacheManager::new);
-    CACHE_MANAGER.set_file_cache_size(TEST_SIZE);
-
-    init_curr_store_dir();
-    let task_id = TaskId::new(fast_random().to_string());
-    let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
-    ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
-    let file_cache =
-        FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
-    let mut file = file_cache.open().unwrap();
-    let mut buf = String::new();
-    file.read_to_string(&mut buf).unwrap();
-    assert_eq!(buf, TEST_STRING);
+    CACHE_MANAGER.update_file_cache(task_id.clone(), Arc::new(ram_cache));
+    assert!(!CACHE_MANAGER.contains(&task_id));
 }
 
 // @tc.name: ut_cache_file_restore_files
@@ -192,8 +143,8 @@ fn ut_cache_file_restore_files() {
             .unwrap();
         std::thread::sleep(Duration::from_millis(10));
     }
-    for (i, file) in restore_files_inner(path.as_path()).enumerate() {
-        assert_eq!(file.to_string(), (i * 2).to_string());
+    for (i, file) in get_info_from_path(path.as_path()).enumerate() {
+        assert_eq!(file.task_id().to_string(), (i * 2).to_string());
     }
     for i in 0..5 {
         let path = path.join(format!("{}", i));
@@ -221,13 +172,15 @@ fn ut_cache_file_update_ram_from_file() {
     let task_id = TaskId::new(fast_random().to_string());
     let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
     ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
-    let file_cache =
-        FileCache::try_create(task_id.clone(), &CACHE_MANAGER, Arc::new(ram_cache)).unwrap();
+    let file_cache = FileCache::new(task_id.clone(), ram_cache.size() as u64);
+    assert!(FileCache::create_file(&task_id, Arc::new(ram_cache)).is_ok());
     CACHE_MANAGER
-        .files
+        .file_manager
+        .caches
         .lock()
         .unwrap()
-        .insert(task_id.clone(), file_cache);
+        .files
+        .insert(task_id.clone(), Arc::new(Mutex::new(file_cache)));
 
     let mut v = vec![];
     for _ in 0..1000 {
@@ -242,4 +195,5 @@ fn ut_cache_file_update_ram_from_file() {
     for j in v {
         assert!(j.join().unwrap());
     }
+    FileCache::remove_file(&task_id);
 }

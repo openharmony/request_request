@@ -44,21 +44,27 @@ fn ut_cache_manager_update_file() {
     cache.finish_write();
     thread::sleep(Duration::from_millis(100));
 
-    // files contain cache
-    let mut file = CACHE_MANAGER
-        .files
+    let task_id = CACHE_MANAGER
+        .file_manager
+        .caches
         .lock()
         .unwrap()
+        .files
         .remove(&task_id)
         .unwrap()
-        .open()
-        .unwrap();
+        .lock()
+        .unwrap()
+        .task_id()
+        .clone();
+    // files contain cache
+    let mut file = FileCache::open(&task_id).unwrap();
     let mut buf = String::new();
     file.read_to_string(&mut buf).unwrap();
     assert_eq!(buf, TEST_STRING);
 
     // backup caches removed for file exist
     assert!(!CACHE_MANAGER
+        .file_manager
         .backup_rams
         .lock()
         .unwrap()
@@ -152,11 +158,13 @@ fn ut_cache_manager_cache_from_file_clean() {
     CACHE_MANAGER.get_cache(&task_id).unwrap();
     assert!(CACHE_MANAGER.rams.lock().unwrap().contains_key(&task_id));
     assert!(!CACHE_MANAGER
+        .file_manager
         .backup_rams
         .lock()
         .unwrap()
         .contains_key(&task_id));
     assert!(!CACHE_MANAGER
+        .file_manager
         .update_from_file_once
         .lock()
         .unwrap()

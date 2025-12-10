@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! RAM-based caching implementation for task data.
-//! 
+//!
 //! This module provides functionality for in-memory caching of task data,
 //! including memory allocation management, data storage, and cleanup mechanisms.
 //! The cache implementation manages memory allocation limits and automatically
@@ -209,34 +209,6 @@ impl Write for RamCache {
     /// Ok(()) indicating success
     fn flush(&mut self) -> std::io::Result<()> {
         self.data.flush()
-    }
-}
-
-impl CacheManager {
-    /// Updates the RAM cache for a task.
-    ///
-    /// Inserts the cache into the manager's collection. If a previous cache exists for
-    /// the same task, removes the associated file cache and logs the replacement.
-    /// Also removes the task from the update-from-file tracking set.
-    ///
-    /// # Parameters
-    /// - `cache`: The cache to update in the manager
-    pub(crate) fn update_ram_cache(&'static self, cache: Arc<RamCache>) {
-        let task_id = cache.task_id().clone();
-
-        if self
-            .rams
-            .lock()
-            .unwrap()
-            .insert(task_id.clone(), cache.clone())
-            .is_some()
-        {
-            // If there was a previous cache, remove associated file cache
-            self.files.lock().unwrap().remove(&task_id);
-            info!("{} old caches delete", task_id.brief());
-        }
-        // Prevent updating from file again for this task
-        self.update_from_file_once.lock().unwrap().remove(&task_id);
     }
 }
 

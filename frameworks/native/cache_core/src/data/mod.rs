@@ -21,8 +21,9 @@ pub use file::{
     get_curr_store_dir, init_curr_store_dir, init_history_store_dir, is_history_init, FileStoreDir,
     HistoryDir,
 };
-pub(crate) use file::{restore_files, FileCache};
+
+pub(crate) use file::{get_cached_files_info, FileCache, FileCacheInfo};
 pub use ram::RamCache;
-pub(crate) use space::ResourceManager;
+pub(crate) use space::SpaceManager;
 
 pub(crate) const MAX_CACHE_SIZE: u64 = 20971520;

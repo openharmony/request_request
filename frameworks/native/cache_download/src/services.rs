@@ -197,8 +197,11 @@ impl CacheDownloadService {
                 error!("Panic occurred {:?}", info);
                 old_hook(info);
             }));
-            // Restore cached files from previous sessions
-            cache_download.cache_manager.restore_files();
+            cache_core::init_curr_store_dir();
+            crate::spawn(|| {
+                // Restore cached files from previous sessions
+                cache_download.cache_manager.build_cached_files_index();
+            });
             // Register network observer to monitor connectivity changes
             cache_download.net_registrar.add_observer(NetObserver);
             if let Err(e) = cache_download.net_registrar.register() {
