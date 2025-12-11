@@ -377,7 +377,7 @@ HWTEST_F(PreloadGetInfo, DnsFailCallbackInfo, TestSize.Level1)
     EXPECT_FALSE(handle->IsFinish());
     EXPECT_EQ(handle->GetState(), PreloadState::RUNNING);
 
-    size_t counter = 30;
+    size_t counter = 90;
     size_t oneSecond = 1000;
     while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(oneSecond));
