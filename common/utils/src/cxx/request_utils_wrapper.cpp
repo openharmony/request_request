@@ -73,17 +73,6 @@ std::shared_ptr<AbilityRuntime::Context> GetStageModeContext(AniEnv **env, AniOb
     return AbilityRuntime::GetStageModeContext(reinterpret_cast<ani_env *>(*env), *reinterpret_cast<ani_object *>(obj));
 }
 
-int32_t DataAbilityOpenFile(std::shared_ptr<Context> const &context, const std::string &path)
-{
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(path);
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> dataAbilityHelper =
-        AppExecFwk::DataAbilityHelper::Creator(context, uri);
-    if (dataAbilityHelper == nullptr) {
-        return -1;
-    }
-    return dataAbilityHelper->OpenFile(*uri, "r");
-}
-
 bool IsCleartextPermitted(std::string const &hostname)
 {
     bool cleartextPermitted = true;

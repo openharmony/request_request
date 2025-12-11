@@ -126,8 +126,6 @@ mod ffi {
 
         fn FileUriGetRealPath(uri: &CxxString) -> String;
 
-        fn DataAbilityOpenFile(context: &SharedPtr<Context>, path: &CxxString) -> i32;
-
         #[namespace = "OHOS::AppExecFwk"]
         type BundleType;
 

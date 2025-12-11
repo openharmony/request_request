@@ -68,8 +68,6 @@ inline rust::string FileUriGetRealPath(std::string const &uri)
     return fileUri->GetRealPath();
 }
 
-int32_t DataAbilityOpenFile(std::shared_ptr<Context> const &context, const std::string &path);
-
 bool IsCleartextPermitted(std::string const &hostname);
 
 rust::vec<rust::string> GetTrustAnchorsForHostName(std::string const &hostname);

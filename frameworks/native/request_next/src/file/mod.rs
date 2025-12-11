@@ -307,8 +307,13 @@ impl FileManager {
         Ok(())
     }
 
+    fn data_ability_open_file(context: &Context, target_file: String) -> i32 {
+        let_cxx_string!(target_file = target_file);
+        request_data_ability::dataability::DataAbilityOpenFile(&context.inner, &target_file)
+    }
+
     fn check_upload_user_file(file_spec: &mut FileSpec, context: &Context) -> Result<(), i32> {
-        let fd = context.data_ability_open_file(file_spec.path.clone());
+        let fd = Self::data_ability_open_file(context, file_spec.path.clone());
         if fd < 0 {
             return Err(401);
         }
