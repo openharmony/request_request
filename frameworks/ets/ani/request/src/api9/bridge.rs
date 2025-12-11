@@ -260,7 +260,12 @@ impl From<UploadConfig> for TaskConfig {
         if let Some(headers) = config.header {
             config_builder.headers(headers);
         }
-        config_builder.method(config.method);
+        let method = config.method.to_uppercase();
+        if method == "POST" || method == "PUT" {
+            config_builder.method(method); 
+        } else {
+            config_builder.method("POST".to_string());
+        }
         if let Some(index) = config.index {
             config_builder.index(index);
         }
