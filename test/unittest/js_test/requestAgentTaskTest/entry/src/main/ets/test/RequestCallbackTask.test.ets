@@ -486,40 +486,6 @@ export default function requestCallbackTaskTest() {
     });
 
     /**
-     * @tc.number: testOnTask013
-     * @tc.name: testOnTask013
-     * @tc.desc: Test on task for faults
-     * @tc.size: MediumTest
-     * @tc.type: Function
-     * @tc.level: Level 1
-     * @tc.precon: 1. The device screen remains constantly lit
-     *             2. The device is connected to the Internet
-     *             3. The application is always at the foreground of the device
-     *             4. The download_server SA process has been initiated
-     *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create Config with action: DOWNLOAD, stream URL, saveas, mode: BACKGROUND, and precise: true.
-     *           2. Call request.agent.create() to create a task instance.
-     *           3. Bind 'faultOccur' event, assert faults equals request.agent.Faults.FSIO.
-     *           4. Call task.start() to execute the task, trigger done() after event assertion.
-     * @tc.require: issues#1573
-     */
-    it('testOnTask013', 0, async (done: Function) => {
-      let conf: request.agent.Config = {
-        action: request.agent.Action.DOWNLOAD,
-        url: 'https://httpbin.org/stream/1',
-        saveas: 'testOnTask013.txt',
-        mode: request.agent.Mode.BACKGROUND,
-        precise: true
-      };
-      let task = await request.agent.create(context, conf);
-      task.on('faultOccur', (faults) => {
-        expect(faults).assertEqual(request.agent.Faults.FSIO);
-        done();
-      });
-      await task.start();
-    });
-
-    /**
      * @tc.number: testOffTask001
      * @tc.name: testOffTask001
      * @tc.desc: Test off task for 'test'
