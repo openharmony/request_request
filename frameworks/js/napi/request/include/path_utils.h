@@ -23,20 +23,15 @@
 #include <mutex>
 #include <vector>
 
+#include "request_common.h"
+
 namespace OHOS::Request {
 class PathUtils {
 public:
-    static bool AddPathsToMap(const std::string &path);
+    static bool AddPathsToMap(const std::string &path, const Action action);
     static bool SubPathsToMap(const std::string &path);
     static bool CheckBelongAppBaseDir(const std::string &filepath);
     static std::string ShieldPath(const std::string &path);
-    static void InitChmod(const std::string &path);
-
-    static const mode_t WRITE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
-    static const mode_t READ_MODE = S_IRUSR | S_IWUSR | S_IRGRP;
-
-private:
-    static const mode_t INITIAL_MODE = S_IRUSR | S_IWUSR | S_IRGRP;
 };
 } // namespace OHOS::Request
 #endif // PATH_UTILS

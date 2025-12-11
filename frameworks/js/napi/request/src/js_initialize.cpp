@@ -239,15 +239,9 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
             SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_00, config.bundleName, "", error.errInfo);
             return false;
         }
-        int32_t ret = chmod(path.c_str(), PathUtils::WRITE_MODE);
-        if (ret != 0) {
-            REQUEST_HILOGE("body chmod fail: %{public}d", ret);
-            SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
-        };
-
         int32_t retClose = fclose(bodyFile);
         if (retClose != 0) {
-            REQUEST_HILOGE("upload body fclose fail: %{public}d", ret);
+            REQUEST_HILOGE("upload body fclose fail: %{public}d", retClose);
             SysEventLog::SendSysEventLog(
                 FAULT_EVENT, STANDARD_FAULT_02, config.bundleName, "", std::to_string(retClose));
         }
@@ -299,16 +293,9 @@ bool JsInitialize::GetFdDownload(const std::string &path, const Config &config, 
         SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_00, config.bundleName, "", error.errInfo);
         return false;
     }
-
-    int32_t ret = chmod(path.c_str(), PathUtils::WRITE_MODE);
-    if (ret != 0) {
-        REQUEST_HILOGE("download file chmod fail: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
-    };
-
     int32_t retClose = fclose(file);
     if (retClose != 0) {
-        REQUEST_HILOGE("download fclose fail: %{public}d", ret);
+        REQUEST_HILOGE("download fclose fail: %{public}d", retClose);
         SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_02, config.bundleName, "", std::to_string(retClose));
     }
     return true;
@@ -329,14 +316,9 @@ bool JsInitialize::GetFdUpload(const std::string &path, const Config &config, Ex
         return false;
     }
     REQUEST_HILOGD("upload file fopen ok");
-    int32_t ret = chmod(path.c_str(), PathUtils::READ_MODE);
-    if (ret != 0) {
-        REQUEST_HILOGE("upload file chmod fail: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
-    }
     int32_t retClose = fclose(file);
     if (retClose != 0) {
-        REQUEST_HILOGE("upload fclose fail: %{public}d", ret);
+        REQUEST_HILOGE("upload fclose fail: %{public}d", retClose);
         SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_02, config.bundleName, "", std::to_string(retClose));
     }
     return true;

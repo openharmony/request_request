@@ -226,8 +226,7 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         }
     }
 
-    REQUEST_HILOGI(
-        "%{public}s on %{public}s", jsParam.task->GetTid().c_str(), jsParam.type.c_str());
+    REQUEST_HILOGI("%{public}s on %{public}s", jsParam.task->GetTid().c_str(), jsParam.type.c_str());
     return nullptr;
 }
 
@@ -471,10 +470,7 @@ int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
     FileSpec file = config.files[0];
     if (JsInitialize::FindDir(file.uri) && config.action == Action::DOWNLOAD && !task->isGetPermission) {
         REQUEST_HILOGD("Found the downloaded file");
-        if (chmod(file.uri.c_str(), PathUtils::WRITE_MODE) != 0) {
-            REQUEST_HILOGD("File add OTH access Failed.");
-        }
-        if (!PathUtils::AddPathsToMap(file.uri)) {
+        if (!PathUtils::AddPathsToMap(file.uri, config.action)) {
             REQUEST_HILOGE("Set path permission fail.");
             return E_FILE_IO;
         }

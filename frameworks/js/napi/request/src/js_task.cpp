@@ -233,7 +233,7 @@ int32_t JsTask::AuthorizePath(const Config &config)
         if (fileSpec.isUserFile) {
             return E_OK;
         }
-        if (!PathUtils::AddPathsToMap(fileSpec.uri)) {
+        if (!PathUtils::AddPathsToMap(fileSpec.uri, config.action)) {
             REQUEST_HILOGE("Add Path acl failed, %{public}s", PathUtils::ShieldPath(fileSpec.uri).c_str());
             return E_FILE_IO;
         }
@@ -242,13 +242,14 @@ int32_t JsTask::AuthorizePath(const Config &config)
             if (fileSpec.isUserFile) {
                 continue;
             }
-            if (!PathUtils::AddPathsToMap(fileSpec.uri)) {
+            if (!PathUtils::AddPathsToMap(fileSpec.uri, config.action)) {
                 return E_FILE_IO;
             }
         }
 
         for (auto &path : config.bodyFileNames) {
-            if (!PathUtils::AddPathsToMap(path)) {
+            // bodyFileNames need rw.
+            if (!PathUtils::AddPathsToMap(path, Action::DOWNLOAD)) {
                 return E_FILE_IO;
             }
         }
@@ -1046,10 +1047,8 @@ bool JsTask::SetDirsPermission(std::vector<std::string> &dirs)
             if (!fs::exists(newfilePath)) {
                 fs::copy(existfilePath, newfilePath);
             }
-            if (chmod(newfilePath.c_str(), PathUtils::READ_MODE) != 0) {
-                REQUEST_HILOGD("File add OTH access Failed.");
-            }
-            if (!PathUtils::AddPathsToMap(newfilePath)) {
+            // Certs only need read permission.
+            if (!PathUtils::AddPathsToMap(newfilePath, Action::UPLOAD)) {
                 REQUEST_HILOGE("Set path permission fail.");
                 return false;
             }
@@ -1070,7 +1069,6 @@ void JsTask::RemoveDirsPermission(const std::vector<std::string> &dirs)
             fs::path path = entry.path();
             std::string filePath = folder.string() + "/" + path.filename().string();
             PathUtils::SubPathsToMap(filePath);
-            PathUtils::InitChmod(filePath);
         }
     }
 }
@@ -1094,7 +1092,6 @@ void JsTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls
             }
             err.clear();
             PathUtils::SubPathsToMap(filePath);
-            PathUtils::InitChmod(filePath);
             NapiUtils::RemoveFile(filePath);
         }
     }
@@ -1102,7 +1099,6 @@ void JsTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls
         // Reset Acl permission
         for (auto &file : context->task->config_.files) {
             PathUtils::SubPathsToMap(file.uri);
-            PathUtils::InitChmod(file.uri);
         }
         context->task->isGetPermission = false;
     }
