@@ -355,11 +355,7 @@ impl Observer {
         let mut index = notify_data.progress.index as usize;
         let mut file_path = String::new();
         let mut len = 0;
-
-        let tasks_lock = RequestClient::get_instance()
-                                        .task_manager.tasks.lock()
-                                        .unwrap();
-        let item = tasks_lock.get(&(notify_data.task_id as i64));
+        let item = RequestClient::get_instance().task_manager.get_by_id(&(notify_data.task_id as i64));
 
         if item.is_none() {
             error!("Task ID not found");

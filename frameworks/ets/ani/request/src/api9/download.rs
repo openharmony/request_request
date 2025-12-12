@@ -35,6 +35,46 @@ use super::bridge::{DownloadConfig, DownloadTask};
 use crate::api9::bridge::DownloadInfo;
 use crate::seq::TaskSeq;
 
+#[ani_rs::native]
+pub fn check_config(
+    env: &AniEnv,
+    context: AniRef,
+    config: DownloadConfig,
+) -> Result<i64, BusinessError> {
+    let context = AniObject::from(context);
+    debug!("is {}", is_stage_context(env, &context));
+
+    // Generate a new sequential task ID for tracking
+    let seq = TaskSeq::next().0.get();
+    info!("check task, seq: {}", seq);
+    let context = Context::new(env, &context);
+
+    let mut config: TaskConfig = config.into();
+    config.bundle_type = context.get_bundle_type() as u32;
+    config.bundle = context.get_bundle_name();
+
+    // Create the download task
+    match RequestClient::get_instance().check_config(
+        context,
+        seq,
+        config
+    ) {
+        Ok(()) => Ok(seq as i64),
+        Err(CreateTaskError::DownloadPath(_)) => {
+            return Err(BusinessError::new(
+                13400001,
+                "Invalid file or file system error.".to_string(),
+            ))
+        }
+        Err(CreateTaskError::Code(code)) => {
+            return Err(BusinessError::new(
+                code,
+                "Download failed.".to_string(),
+            ))
+        }
+    }
+}
+
 /// Creates and starts a download task with the given configuration.
 ///
 /// # Parameters
@@ -78,24 +118,15 @@ use crate::seq::TaskSeq;
 pub fn download_file(
     env: &AniEnv,
     context: AniRef,
-    config: DownloadConfig,
+    seq: i64
 ) -> Result<DownloadTask, BusinessError> {
     let context = AniObject::from(context);
-    info!("is {}", is_stage_context(env, &context));
-
-    // Generate a new sequential task ID for tracking
-    let seq = TaskSeq::next();
-    info!("Api9 task, seq: {}", seq.0);
+    debug!("is {}", is_stage_context(env, &context));
     let context = Context::new(env, &context);
-
-    let mut config: TaskConfig = config.into();
-    config.bundle_type = context.get_bundle_type() as u32;
-    config.bundle = context.get_bundle_name();
-
     // Create the download task
     let task = match RequestClient::get_instance().create_task(
         context,
-        config
+        seq as u64
     ) {
         Ok(task_id) => DownloadTask { task_id: task_id.to_string() },
         Err(CreateTaskError::DownloadPath(_)) => {
@@ -116,7 +147,7 @@ pub fn download_file(
     // Start the download task
     match RequestClient::get_instance().start(tid) {
         Ok(_) => {
-            info!("Api9 download started successfully, seq: {}", seq.0);
+            info!("Api9 download started successfully, seq: {}", seq);
             Ok(task)
         }
         Err(e) => {
