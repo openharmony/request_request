@@ -21,6 +21,9 @@ use ani_rs::business_error::BusinessError;
 use request_client::RequestClient;
 
 use crate::api10::bridge::Task;
+use crate::constant::*;
+
+const MIN_SPEED_LIMIT: i64 = 16 * 1024;
 
 /// Starts a request task.
 ///
@@ -177,6 +180,12 @@ pub fn stop(this: Task) -> Result<(), BusinessError> {
 /// ```
 #[ani_rs::native]
 pub fn set_max_speed(this: Task, speed: i64) -> Result<(), BusinessError> {
+    if (speed < MIN_SPEED_LIMIT) {
+        return Err(BusinessError::new(
+            ExceptionErrorCode::E_PARAMETER_CHECK as i32,
+            "Incorrect parameter value, minimum speed value is 16 KB/s".to_string()
+        ));
+    }
     // Convert task ID from string to integer for internal use
     let task_id = this.tid.parse().unwrap();
     RequestClient::get_instance()

@@ -35,6 +35,7 @@ use crate::api9::bridge::DownloadInfo;
 use crate::seq::TaskSeq;
 
 use crate::api9::bridge::{UploadConfig, UploadTask};
+use crate::constant::*;
 
 #[ani_rs::native]
 pub fn check_config(env: &AniEnv, context: AniRef, config: UploadConfig) -> Result<i64, BusinessError> {
@@ -171,7 +172,15 @@ pub fn upload_file(env: &AniEnv, context: AniRef, seq: i64) -> Result<UploadTask
 ///
 /// This is a placeholder implementation that always succeeds.
 #[ani_rs::native]
-pub fn delete(this: UploadTask) -> Result<(), BusinessError> {
-    // Placeholder implementation that always succeeds
-    Ok(())
+pub fn delete(this: UploadTask) -> Result<bool, BusinessError> {
+    RequestClient::get_instance()
+        .remove(this.task_id.parse().unwrap())
+        .map_err(|e| {
+            if e != ExceptionErrorCode::E_PERMISSION as i32 {
+                Ok(true)
+            } else {
+                Err(BusinessError::new(e, "Failed to delete download task".to_string()))
+            }
+        });
+    Ok(true)
 }

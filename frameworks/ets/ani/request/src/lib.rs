@@ -24,6 +24,7 @@ use ani_rs::ani_constructor;
 pub mod api10; // API version 10 implementation
 pub mod api9;  // API version 9 implementation
 mod seq;       // Internal sequence ID generation
+pub mod constant;
 
 #[macro_use]
 extern crate request_utils;
@@ -87,6 +88,8 @@ ani_constructor!(
         "getTaskSync": api10::agent::get_task,                // Get existing task
         "removeSync": api10::agent::remove,                   // Remove task
         "showSync": api10::agent::show,                       // Show task notification
+        "checkToken": api10::agent::check_token,              // Check Touch Config
+        "checkTid": api10::agent::check_tid,                  // Check Task Id
         "touchSync": api10::agent::touch,                     // Update task timestamp
         "searchSync": api10::agent::search,                   // Search tasks
         "querySync": api10::agent::query,                     // Query task details

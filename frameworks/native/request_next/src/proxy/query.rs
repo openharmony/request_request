@@ -22,7 +22,7 @@ use ipc::parcel::MsgParcel;
 use ipc::remote;
 
 // Download core dependencies
-use request_core::config::Action;
+use request_core::config::{Action,TaskConfig};
 use request_core::filter::SearchFilter;
 use request_core::info::{State, TaskInfo};
 use request_core::interface;
@@ -43,7 +43,7 @@ impl RequestProxy {
     ///
     /// # Notes
     /// This method is currently not fully implemented and contains a `todo!()` placeholder.
-    pub(crate) fn query(&self, task_id: i64) -> Result<(), i32> {
+    pub(crate) fn query(&self, task_id: i64) -> Result<TaskInfo, i32> {
         let remote = self.remote()?;
 
         let mut data = MsgParcel::new();
@@ -56,7 +56,11 @@ impl RequestProxy {
 
         let code = reply.read::<i32>().unwrap(); // error code
 
-        todo!()
+        if code != 0 {
+            return Err(code);
+        }
+        let task_info = reply.read::<TaskInfo>().unwrap(); // task info
+        Ok(task_info)
     }
 
     /// Queries the MIME type of a specific download task.
@@ -170,7 +174,7 @@ impl RequestProxy {
     ///
     /// # Notes
     /// This method is currently not fully implemented and contains a `todo!()` placeholder.
-    pub(crate) fn touch(&self, task_id: i64, token: String) -> Result<(), i32> {
+    pub(crate) fn touch(&self, task_id: i64, token: String) -> Result<TaskInfo, i32> {
         let remote = self.remote()?;
 
         let mut data = MsgParcel::new();
@@ -186,7 +190,12 @@ impl RequestProxy {
         if code != 0 {
             return Err(code);
         }
-        todo!()
+        let code = reply.read::<i32>().unwrap(); // error code
+        if code != 0 {
+            return Err(code);
+        }
+        let task_info = reply.read::<TaskInfo>().unwrap(); // task info
+        Ok(task_info)
     }
 
     /// Searches for download tasks based on specified filter criteria.
@@ -299,23 +308,27 @@ impl RequestProxy {
     ///
     /// # Notes
     /// This method is currently not fully implemented and contains a `todo!()` placeholder.
-    pub(crate) fn get_task(&self, task_id: i64, token: String) -> Result<(), i32> {
+    pub(crate) fn get_task(&self, task_id: i64, token: Option<String>) -> Result<TaskConfig, i32> {
         let remote = self.remote()?;
 
         let mut data = MsgParcel::new();
         data.write_interface_token(SERVICE_TOKEN).unwrap();
 
         data.write(&task_id.to_string()).unwrap();
-        data.write(&token).unwrap(); // authentication token
+        match token {
+            Some(t) => data.write(&t).unwrap(),
+            None => data.write(&"".to_string()).unwrap(),
+        } // authentication token
 
         let mut reply = remote.send_request(interface::GET_TASK, &mut data).map_err(|_| 13400003)?;
 
         let code = reply.read::<i32>().unwrap(); // error code
-        if code != 0 {
+        if code != 0 && code != 5 {
             return Err(code);
         }
 
-        // Handle the task details if needed
-        todo!()
+        //Deserialize
+        let task_config = reply.read::<TaskConfig>().unwrap();
+        Ok(task_config)
     }
 }

@@ -21,59 +21,59 @@ import BaseContext from 'application.BaseContext';
 export default namespace request {
   loadLibrary("request_ani")
 
-  const EXCEPTION_PERMISSION: int;
-  const EXCEPTION_PARAMCHECK: int;
-  const EXCEPTION_UNSUPPORTED: int;
-  const EXCEPTION_FILEIO: int;
-  const EXCEPTION_FILEPATH: int;
-  const EXCEPTION_SERVICE: int;
-  const EXCEPTION_OTHERS: int;
+  const EXCEPTION_PERMISSION: int = 201;
+  const EXCEPTION_PARAMCHECK: int = 401;
+  const EXCEPTION_UNSUPPORTED: int = 801;
+  const EXCEPTION_FILEIO: int = 13400001;
+  const EXCEPTION_FILEPATH: int = 13400002;
+  const EXCEPTION_SERVICE: int = 13400003;
+  const EXCEPTION_OTHERS: int = 13499999;
 
-  const NETWORK_MOBILE: int;
+  const NETWORK_MOBILE: int = 1;
 
-  const NETWORK_WIFI: int;
+  const NETWORK_WIFI: int = 65536;
 
-  const ERROR_CANNOT_RESUME: int;
+  const ERROR_CANNOT_RESUME: int = 0;
 
-  const ERROR_DEVICE_NOT_FOUND: int;
+  const ERROR_DEVICE_NOT_FOUND: int = 1;
 
-  const ERROR_FILE_ALREADY_EXISTS: int;
+  const ERROR_FILE_ALREADY_EXISTS: int = 2;
 
-  const ERROR_FILE_ERROR: int;
+  const ERROR_FILE_ERROR: int = 3;
 
-  const ERROR_HTTP_DATA_ERROR: int;
+  const ERROR_HTTP_DATA_ERROR: int = 4;
 
-  const ERROR_INSUFFICIENT_SPACE: int;
+  const ERROR_INSUFFICIENT_SPACE: int = 5;
 
-  const ERROR_TOO_MANY_REDIRECTS: int;
+  const ERROR_TOO_MANY_REDIRECTS: int = 6;
 
-  const ERROR_UNHANDLED_HTTP_CODE: int;
+  const ERROR_UNHANDLED_HTTP_CODE: int = 7;
 
-  const ERROR_UNKNOWN: int;
+  const ERROR_UNKNOWN: int = 8;
 
-  const ERROR_OFFLINE: int;
+  const ERROR_OFFLINE: int = 9;
 
-  const ERROR_UNSUPPORTED_NETWORK_TYPE: int;
+  const ERROR_UNSUPPORTED_NETWORK_TYPE: int = 10;
 
-  const PAUSED_QUEUED_FOR_WIFI: int;
+  const PAUSED_QUEUED_FOR_WIFI: int = 0;
 
-  const PAUSED_WAITING_FOR_NETWORK: int;
+  const PAUSED_WAITING_FOR_NETWORK: int = 1;
 
-  const PAUSED_WAITING_TO_RETRY: int;
+  const PAUSED_WAITING_TO_RETRY: int = 2;
 
-  const PAUSED_BY_USER: int;
+  const PAUSED_BY_USER: int = 3;
 
-  const PAUSED_UNKNOWN: int;
+  const PAUSED_UNKNOWN: int = 4;
 
-  const SESSION_SUCCESSFUL: int;
+  const SESSION_SUCCESSFUL: int = 0;
 
-  const SESSION_RUNNING: int;
+  const SESSION_RUNNING: int = 1;
 
-  const SESSION_PENDING: int;
+  const SESSION_PENDING: int = 2;
 
-  const SESSION_PAUSED: int;
+  const SESSION_PAUSED: int = 3;
 
-  const SESSION_FAILED: int;
+  const SESSION_FAILED: int = 4;
 
   native function downloadFileSync(context: BaseContext, seq: long): DownloadTask;
   native function checkDownloadConfig(context: BaseContext, config: DownloadConfig): long;
@@ -157,7 +157,7 @@ export default namespace request {
     downloadTotalBytes: long;
   }
 
-  class DownloadInfoInner implements DownloadInfo{
+  export class DownloadInfoInner implements DownloadInfo{
     description: string;
     downloadedBytes: long;
     downloadId: long;
@@ -455,12 +455,35 @@ export default namespace request {
     type: string;
   }
 
+  export class FileInner implements File {
+    filename: string;
+    name: string;
+    uri: string;
+    type: string;
+  }
+
   interface RequestData {
     name: string;
     value: string;
   }
 
+  export class RequestDataInner implements RequestData {
+    name: string;
+    value: string;
+  }
+
   interface UploadConfig {
+    url: string;
+    header: Record<string, string>;
+    method: string;
+    index?: int;
+    begins?: long;
+    ends?: long;
+    files: Array<File>;
+    data: Array<RequestData>;
+  }
+
+  export class UploadConfigInner implements UploadConfig {
     url: string;
     header: Record<string, string>;
     method: string;
@@ -477,7 +500,7 @@ export default namespace request {
     message: string;
   }
 
-  class TaskStateInner implements TaskState {
+  export class TaskStateInner implements TaskState {
     path: string;
     responseCode: int;
     message: string;
@@ -514,7 +537,7 @@ export default namespace request {
     delete(): Promise<boolean>;
   }
 
-  class UploadTaskInner implements UploadTask {
+  export class UploadTaskInner implements UploadTask {
     readonly taskId: string;
     native deleteSync(): boolean;
 
@@ -652,7 +675,7 @@ export default namespace request {
       extras?: Record<string, string>;
     }
 
-    class FileSpecInner implements FileSpec {
+    export class FileSpecInner implements FileSpec {
       path: string;
       contentType?: string;
       filename?: string;
@@ -664,12 +687,17 @@ export default namespace request {
       value: string | FileSpec | Array<FileSpec>;
     }
 
-    class FormItemInner implements FormItem {
+    export class FormItemInner implements FormItem {
       name: string;
       value: string | FileSpec | Array<FileSpec>;
     }
 
     interface Notification {
+      title?: string;
+      text?: string;
+    }
+
+    export class NotificationInner implements Notification {
       title?: string;
       text?: string;
     }
@@ -704,7 +732,7 @@ export default namespace request {
       notification?: Notification;
     }
 
-    class ConfigInner implements Config {
+    export class ConfigInner implements Config {
       action: Action;
       url: string;
       title?: string;
@@ -754,7 +782,7 @@ export default namespace request {
       readonly extras?: Record<string, string>;
     }
 
-    class ProgressInner implements Progress {
+    export class ProgressInner implements Progress {
       readonly state: State;
       readonly index: int;
       readonly processed: long;
@@ -776,6 +804,15 @@ export default namespace request {
     }
 
     interface Filter {
+      bundle?: string;
+      before?: long;
+      after?: long;
+      state?: State;
+      action?: Action;
+      mode?: Mode;
+    }
+
+    export class FilterInner implements Filter {
       bundle?: string;
       before?: long;
       after?: long;
@@ -808,7 +845,7 @@ export default namespace request {
       readonly extras?: Record<string, string>;
     }
 
-    class TaskInfoInner implements TaskInfo{
+    export class TaskInfoInner implements TaskInfo{
       readonly uid?: string;
       readonly bundle?: string;
       readonly saveas?: string;
@@ -839,7 +876,7 @@ export default namespace request {
       readonly headers: Map<string, Array<string>>;
     }
 
-    class HttpResponseInner implements HttpResponse {
+    export class HttpResponseInner implements HttpResponse {
       readonly version: string;
       readonly statusCode: int;
       readonly reason: string;
@@ -1180,8 +1217,16 @@ export default namespace request {
     }
 
     native function getTaskSync(context: BaseContext, id: string, token?: string): Task;
+    native function checkTid(id: string): void;
+    native function checkToken(token: string): void;
 
     export function getTask(context: BaseContext, id: string, token?: string): Promise<Task> {
+      if (token == undefined) {
+        checkTid(id);
+      } else {
+        checkTid(id);
+        checkToken(token);
+      }
       return new Promise<Task>((resolve, reject) => {
         taskpool.execute((): Task => {
           return getTaskSync(context, id, token);
@@ -1196,6 +1241,7 @@ export default namespace request {
     native function removeSync(id: string): void;
 
     export function remove(id: string, callback: AsyncCallback<void>): void {
+      checkTid(id);
       let p1 = taskpool.execute((): void => {
         return removeSync(id);
       });
@@ -1207,6 +1253,7 @@ export default namespace request {
     }
 
     export function remove(id: string): Promise<void> {
+      checkTid(id);
       return new Promise<void>((resolve, reject) => {
         taskpool.execute((): void => {
           return removeSync(id);
@@ -1221,6 +1268,7 @@ export default namespace request {
     native function showSync(id: string): TaskInfo;
 
     export function show(id: string, callback: AsyncCallback<TaskInfo>): void {
+      checkTid(id);
       let p1 = taskpool.execute((): TaskInfo => {
         return showSync(id);
       });
@@ -1232,6 +1280,7 @@ export default namespace request {
     }
 
     export function show(id: string): Promise<TaskInfo> {
+      checkTid(id);
       return new Promise<TaskInfo>((resolve, reject) => {
         taskpool.execute((): TaskInfo => {
           return showSync(id);
@@ -1246,6 +1295,8 @@ export default namespace request {
     native function touchSync(id: string, token: string): TaskInfo;
 
     export function touch(id: string, token: string, callback: AsyncCallback<TaskInfo>): void {
+      checkTid(id);
+      checkToken(token);
       let p1 = taskpool.execute((): TaskInfo => {
         return touchSync(id, token);
       });
@@ -1257,6 +1308,8 @@ export default namespace request {
     }
 
     export function touch(id: string, token: string): Promise<TaskInfo> {
+      checkTid(id);
+      checkToken(token);
       return new Promise<TaskInfo>((resolve, reject) => {
         taskpool.execute((): TaskInfo => {
           return touchSync(id, token);
@@ -1268,7 +1321,7 @@ export default namespace request {
       });
     }
 
-  native function searchSync(filter?: Filter): Array<string>;
+    native function searchSync(filter?: Filter): Array<string>;
 
     export function search(callback: AsyncCallback<Array<string>>): void {
       let p1 = taskpool.execute((): Array<string> => {
@@ -1307,6 +1360,7 @@ export default namespace request {
     export native function querySync(id: string): TaskInfo;
 
     export function query(id: string, callback: AsyncCallback<TaskInfo>): void {
+      checkTid(id);
       let p1 = taskpool.execute((): TaskInfo => {
         return querySync(id);
       });
@@ -1318,6 +1372,7 @@ export default namespace request {
     }
 
     export function query(id: string): Promise<TaskInfo> {
+      checkTid(id);
       return new Promise<TaskInfo>((resolve, reject) => {
         taskpool.execute((): TaskInfo => {
           return querySync(id);
@@ -1330,6 +1385,11 @@ export default namespace request {
     }
 
     interface GroupConfig {
+      gauge?: boolean;
+      notification: Notification;
+    }
+
+    export class GroupConfigInner implements GroupConfig {
       gauge?: boolean;
       notification: Notification;
     }
@@ -1355,21 +1415,21 @@ export default namespace request {
         taskpool.execute((): void => {
           return attachGroupSync(gid, tids);
         }).then(() => {
-          resolve(undefined);;
+          resolve(undefined);
         }, (err: Error): void => {
           reject(err as BusinessError);
         });
       });
     }
 
-    native function deleteGroupSync(gid: string, tids: string[]): void;
+    native function deleteGroupSync(gid: string): void;
 
     export function deleteGroup(gid: string): Promise<void> {
       return new Promise<void>((resolve, reject) => {
         taskpool.execute((): void => {
-          return deleteGroupSync(gid, []);
+          return deleteGroupSync(gid);
         }).then(() => {
-          resolve(undefined);;
+          resolve(undefined);
         }, (err: Error): void => {
           reject(err as BusinessError);
         });

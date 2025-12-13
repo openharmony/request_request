@@ -44,6 +44,8 @@ pub mod info;    // Download information and metrics
 pub mod observe; // Observation and monitoring functionality
 pub mod services; // Service interfaces and types
 
+pub use services::{CacheDownloadService, DownloadRequest, PreloadCallback};
+
 // Re-export downloader enum for public API use
 pub use download::task::Downloader;
 

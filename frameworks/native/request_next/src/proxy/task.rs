@@ -71,19 +71,6 @@ impl RequestProxy {
         data.write(&1u32).unwrap();
         data.write(config).unwrap();
 
-        // Write additional boolean flags (purpose not documented in code)
-        data.write(&false).unwrap();
-        data.write(&false).unwrap();
-        data.write(&false).unwrap();
-        data.write(&false).unwrap();
-
-        // Write gauge configuration based on task settings
-        if config.common_data.gauge {
-            data.write(&3u32).unwrap();
-        } else {
-            data.write(&1u32).unwrap();
-        }
-
         // Send request to construct the task
         let mut reply = remote
             .send_request(interface::CONSTRUCT, &mut data)

@@ -18,7 +18,10 @@
 //! to be displayed together in the notification system.
 
 // Local dependencies
-use crate::proxy::RequestProxy;
+use ipc::parcel::MsgParcel;
+use ipc::remote;
+use crate::proxy::{RequestProxy, SERVICE_TOKEN};
+use request_core::interface;
 
 impl RequestProxy {
     /// Creates a new notification group for download tasks.
@@ -30,8 +33,40 @@ impl RequestProxy {
     /// # Notes
     /// This method is currently not implemented. It will remain as a placeholder until
     /// the notification grouping functionality is fully developed.
-    pub(crate) fn create_group(&self) -> Result<(), i32> {
-        todo!()
+    pub(crate) fn create_group(&self, gauge: Option<bool>, title: Option<String>,
+        text: Option<String>, disable: Option<bool>) -> Result<String, i32> {
+
+        let remote = self.remote()?;
+        let mut data = MsgParcel::new();
+
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        match gauge {
+            Some(g) => data.write(&g).unwrap(),
+            None => data.write(&false).unwrap(),
+        }
+        match title {
+            Some(ref t) => {
+                data.write(&true).unwrap();
+                data.write(t).unwrap();
+            }
+            None => data.write(&false).unwrap(),
+        }
+        match text {
+            Some(ref t) => {
+                data.write(&true).unwrap();
+                data.write(t).unwrap();
+            }
+            None => data.write(&false).unwrap(),
+        }
+        match disable {
+            Some(d) => data.write(&d).unwrap(),
+            None => data.write(&false).unwrap(),
+        }
+
+        let mut reply = remote.send_request(interface::CREATE_GROUP, &mut data).unwrap();
+
+        let group_id = reply.read::<u32>().unwrap();
+        Ok(group_id.to_string())
     }
 
     /// Deletes an existing notification group.
@@ -46,8 +81,20 @@ impl RequestProxy {
     /// # Notes
     /// This method is currently not implemented. It will remain as a placeholder until
     /// the notification grouping functionality is fully developed.
-    pub(crate) fn delete_group(&self, group_id: i64) -> Result<(), i32> {
-        todo!()
+    pub(crate) fn delete_group(&self, group_id: String) -> Result<(), i32> {
+        let remote = self.remote()?;
+        let mut data = MsgParcel::new();
+
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+        data.write(&group_id).unwrap();
+
+        let mut reply = remote.send_request(interface::DELETE_GROUP, &mut data).unwrap();
+
+        let code = reply.read::<i32>().unwrap();
+        if code != 0 {
+            return Err(code);
+        }
+        Ok(())
     }
 
     /// Attaches download tasks to a notification group.
@@ -63,7 +110,21 @@ impl RequestProxy {
     /// # Notes
     /// This method is currently not implemented. It will remain as a placeholder until
     /// the notification grouping functionality is fully developed.
-    pub(crate) fn attach_group(&self, group_id: i64, task_ids: Vec<i64>) -> Result<(), i32> {
-        todo!()
+    pub(crate) fn attach_group(&self, group_id: String, task_ids: Vec<String>) -> Result<(), i32> {
+        let remote = self.remote()?;
+        let mut data = MsgParcel::new();
+
+        data.write_interface_token(SERVICE_TOKEN).unwrap();
+
+        data.write(&group_id).unwrap();
+        data.write(&task_ids).unwrap();
+
+        let mut reply = remote.send_request(interface::ATTACH_GROUP, &mut data).unwrap();
+
+        let code = reply.read::<i32>().unwrap();
+        if code != 0 {
+            return Err(code);
+        }
+        Ok(())
     }
 }

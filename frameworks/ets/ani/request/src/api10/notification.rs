@@ -15,17 +15,66 @@ use ani_rs::business_error::BusinessError;
 
 use crate::api10::bridge::GroupConfig;
 
+use request_client::RequestClient;
+use crate::constant::*;
+
+const MAX_TITLE_LENGTH: usize = 1024;
+const MAX_TEXT_LENGTH: usize = 3072;
+
+fn ParseTitleText(title: &Option<String>, text: &Option<String>) -> Result<(), BusinessError> {
+    if let Some(v) = title {
+        if v.len() > MAX_TITLE_LENGTH {
+            return Err(BusinessError::new(
+                ExceptionErrorCode::E_PARAMETER_CHECK as i32,
+                "wrong parameters".to_string(),
+            ));
+        }
+    }
+    if let Some(v) = text {
+        if v.len() > MAX_TEXT_LENGTH {
+            return Err(BusinessError::new(
+                ExceptionErrorCode::E_PARAMETER_CHECK as i32,
+                "wrong parameters".to_string(),
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn ParseGid(gid: &str) -> Result<(), BusinessError> {
+    if gid.is_empty() {
+        return Err(BusinessError::new(
+            ExceptionErrorCode::E_PARAMETER_CHECK as i32,
+            "wrong parameters".to_string()
+        ));
+    }
+    Ok(())
+}
+
 #[ani_rs::native]
 pub fn create_group(config: GroupConfig) -> Result<String, BusinessError> {
-    todo!()
+    ParseTitleText(&config.notification.title, &config.notification.text)?;
+    RequestClient::get_instance()
+        .create_group(config.gauge, config.notification.title, config.notification.text, None)
+        .map(|info| {
+            info!("create_group: {:?}", info);
+            info
+        })
+        .map_err(|e| BusinessError::new_static(e, "Failed to create group"))
 }
 
 #[ani_rs::native]
 pub fn attach_group(gid: String, tids: Vec<String>) -> Result<(), BusinessError> {
-    todo!()
+    ParseGid(&gid)?;
+    RequestClient::get_instance()
+        .attach_group(gid, tids)
+        .map_err(|e| BusinessError::new_static(e, "Failed to attach group"))
 }
 
 #[ani_rs::native]
 pub fn delete_group(gid: String) -> Result<(), BusinessError> {
-    todo!()
+    ParseGid(&gid)?;
+    RequestClient::get_instance()
+        .delete_group(gid)
+        .map_err(|e| BusinessError::new_static(e, "Failed to delete group"))
 }

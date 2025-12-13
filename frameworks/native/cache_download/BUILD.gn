@@ -17,6 +17,42 @@ rust_cxx("preload_native_rust_gen") {
   sources = [ "src/wrapper.rs" ]
 }
 
+ohos_rust_static_library("preload_native_rlib") {
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    boundary_sanitize = true
+    all_ubsan = true
+    debug = false
+  }
+
+  features = [
+    "ohos",
+    "netstack",
+  ]
+
+  sources = [ "src/lib.rs" ]
+
+  deps = [
+    ":preload_native_static",
+    "../../../common/ffrt_rs:ffrt_rs",
+    "../../../common/netstack_rs:netstack_rs",
+    "../../../common/utils:request_utils",
+    "../cache_core:cache_core",
+  ]
+  external_deps = [
+    "rust_cxx:lib",
+    "hilog:libhilog",
+    "hilog:hilog_rust",
+  ]
+
+  clippy_lints = "none"
+
+  subsystem_name = "request"
+  part_name = "request"
+}
+
 ohos_rust_shared_ffi("preload_native_rust") {
   sanitize = {
     integer_overflow = true
