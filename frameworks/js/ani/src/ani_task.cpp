@@ -58,14 +58,14 @@ static void ThrowBusinessError(ani_env *env, int errCode, std::string&& errMsg)
     if (env == nullptr) {
         return;
     }
-    static const char *errorClsName = "L@ohos/base/BusinessError;";
+    static const char *errorClsName = "@ohos.base.BusinessError";
     ani_class cls {};
     if (env->FindClass(errorClsName, &cls) != ANI_OK) {
         REQUEST_HILOGE("find class BusinessError %{public}s failed", errorClsName);
         return;
     }
     ani_method ctor;
-    if (env->Class_FindMethod(cls, "<ctor>", ":V", &ctor) != ANI_OK) {
+    if (env->Class_FindMethod(cls, "<ctor>", ":", &ctor) != ANI_OK) {
         REQUEST_HILOGE("find method BusinessError.constructor failed");
         return;
     }
@@ -236,7 +236,7 @@ void ResponseListener::OnResponseReceive(const std::shared_ptr<Response> &respon
         return;
     }
     ani_object httpResponse = AniObjectUtils::Create(workerEnv, "@ohos.request.request", "agent",
-        "LHttpResponseImpl;", AniStringUtils::ToAni(workerEnv, response->version),
+        "HttpResponseImpl", AniStringUtils::ToAni(workerEnv, response->version),
         static_cast<ani_double>(response->statusCode), AniStringUtils::ToAni(workerEnv, response->reason));
     std::vector<ani_ref> args = {httpResponse};
     OnMessageReceive(workerEnv, args);

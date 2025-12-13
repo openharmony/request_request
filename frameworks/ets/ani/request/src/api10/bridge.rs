@@ -178,7 +178,7 @@ pub enum Value {
     /// String value type.
     S(String),
     /// File specification type.
-    #[serde(rename = "L@ohos/request/request/agent/FileSpec;")]
+    #[serde(rename = "@ohos.request.request.agent.FileSpec")]
     FileSpec(FileSpec),
     /// Array of file specifications.
     Array(Vec<FileSpec>),
@@ -186,7 +186,7 @@ pub enum Value {
 
 /// Represents an item in a form for data submission.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/FormItemInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.FormItemInner")]
 pub struct FormItem {
     /// Name of the form item.
     name: String,
