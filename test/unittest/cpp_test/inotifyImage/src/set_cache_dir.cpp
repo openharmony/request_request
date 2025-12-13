@@ -110,7 +110,8 @@ HWTEST_F(FileCachePath, SetFileCachePathTest, TestSize.Level1)
     std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback), std::move(options));
 
-    while (!handle->IsFinish()) {
+    size_t counter = 100;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
 
