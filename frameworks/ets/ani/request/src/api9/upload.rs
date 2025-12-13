@@ -36,6 +36,39 @@ use crate::seq::TaskSeq;
 
 use crate::api9::bridge::{UploadConfig, UploadTask};
 
+#[ani_rs::native]
+pub fn check_config(env: &AniEnv, context: AniRef, config: UploadConfig) -> Result<i64, BusinessError> {
+    // Placeholder implementation that returns a task with ID 0
+    let context = AniObject::from(context);
+    let seq = TaskSeq::next().0.get();
+    info!("Check task, seq: {}", seq);
+    let context = Context::new(env, &context);
+
+    let mut config: TaskConfig = config.into();
+    config.bundle_type = context.get_bundle_type() as u32;
+    config.bundle = context.get_bundle_name();
+
+    match RequestClient::get_instance().check_config(
+        context,
+        seq,
+        config,
+    ) {
+        Ok(()) => Ok(seq as i64),
+        Err(CreateTaskError::DownloadPath(_)) => {
+            return Err(BusinessError::new(
+                13400001,
+                "Invalid file or file system error.".to_string(),
+            ))
+        },
+        Err(CreateTaskError::Code(code)) => {
+            return Err(BusinessError::new(
+                code,
+                "Upload failed.".to_string(),
+            ))
+        }
+    }
+}
+
 /// Creates an upload task with the given configuration.
 ///
 /// # Parameters
@@ -71,20 +104,14 @@ use crate::api9::bridge::{UploadConfig, UploadTask};
 ///
 /// This is a placeholder implementation that returns a task with ID 0.
 #[ani_rs::native]
-pub fn upload_file(env: &AniEnv, context: AniRef, config: UploadConfig) -> Result<UploadTask, BusinessError> {
+pub fn upload_file(env: &AniEnv, context: AniRef, seq: i64) -> Result<UploadTask, BusinessError> {
     // Placeholder implementation that returns a task with ID 0
     let context = AniObject::from(context);
-    let seq = TaskSeq::next();
-    info!("Api9 task, seq: {}", seq.0);
     let context = Context::new(env, &context);
-
-    let mut config: TaskConfig = config.into();
-    config.bundle_type = context.get_bundle_type() as u32;
-    config.bundle = context.get_bundle_name();
 
     let task = match RequestClient::get_instance().create_task(
         context,
-        config,
+        seq as u64,
     ) {
         Ok(task_id) => UploadTask { task_id: task_id.to_string() },
         Err(CreateTaskError::DownloadPath(_)) => {
@@ -104,7 +131,7 @@ pub fn upload_file(env: &AniEnv, context: AniRef, config: UploadConfig) -> Resul
     let tid = task.task_id.parse().unwrap();
     match RequestClient::get_instance().start(tid) {
         Ok(_) => {
-            info!("Api9 upload started successfully, seq: {}", seq.0);
+            info!("Api9 upload started successfully, seq: {}", seq);
             Ok(task)
         }
         Err(e) => {

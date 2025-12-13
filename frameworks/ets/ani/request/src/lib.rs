@@ -46,6 +46,8 @@ ani_constructor!(
     // API 9 namespace bindings for direct function calls
     namespace "L@ohos/request/request"
     [
+        "checkDownloadConfig": api9::download::check_config,  
+        "checkUploadConfig": api9::upload::check_config, 
         "downloadFileSync": api9::download::download_file, // Synchronous file download
         "uploadFileSync": api9::upload::upload_file,       // Synchronous file upload
     ]
@@ -80,6 +82,7 @@ ani_constructor!(
     // API 10 namespace bindings for agent operations
     namespace "L@ohos/request/request/agent"
     [
+        "checkConfig": api10::agent::check_config,            // Verify config
         "createSync": api10::agent::create,                   // Create new task
         "getTaskSync": api10::agent::get_task,                // Get existing task
         "removeSync": api10::agent::remove,                   // Remove task

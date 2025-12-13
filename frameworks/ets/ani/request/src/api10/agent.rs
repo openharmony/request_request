@@ -32,6 +32,43 @@ use request_core::config::TaskConfig;
 use crate::api10::bridge::{Config, Filter, Task, TaskInfo};
 use crate::seq::TaskSeq;
 
+#[ani_rs::native]
+pub fn check_config(env: &AniEnv, context: AniRef, config: Config) -> Result<i64, BusinessError> {
+    let context = AniObject::from(context);
+    // Generate a new sequential task ID for tracking
+    let seq = TaskSeq::next().0.get();
+    info!("Check Config, seq: {}", seq);
+    let context = Context::new(env, &context);
+    let mut config: TaskConfig = config.into();
+    // TODO: CHECK NULLPTR
+    config.bundle_type = context.get_bundle_type() as u32;
+    config.bundle = context.get_bundle_name();
+
+    match RequestClient::get_instance().check_config(
+        context,
+        seq,
+        config,
+    ) {
+        Ok(_) => Ok(seq as i64),
+        Err(e) => {
+            error!("Create task failed: {:?}", e);
+            // Handle specific error types and return appropriate business errors
+            match e {
+                CreateTaskError::DownloadPath(err) => {
+                    let (code, message) = match err {
+                        DownloadPathError::InvalidPath => (401, "Invalid Path"),
+                        _ => (13400001, "Invalid file or file system error.")
+                    };
+                    Err(BusinessError::new_static(code, message))
+                },
+                CreateTaskError::Code(code) => {
+                    Err(BusinessError::new_static(code, "Create Task Failed"))
+                }
+            }
+        }
+    }
+}
+
 /// Creates a new download task with the given configuration.
 ///
 /// # Parameters
@@ -74,26 +111,15 @@ use crate::seq::TaskSeq;
 /// }
 /// ```
 #[ani_rs::native]
-pub fn create(env: &AniEnv, context: AniRef, config: Config) -> Result<Task, BusinessError> {
+pub fn create(env: &AniEnv, context: AniRef, seq: i64) -> Result<String, BusinessError> {
     let context = AniObject::from(context);
-    // Generate a new sequential task ID for tracking
-    let seq = TaskSeq::next();
-    info!("Api10 task, seq: {}", seq.0);
     let context = Context::new(env, &context);
-    let input_config = config.clone();
-    let mut config: TaskConfig = config.into();
-    // TODO: CHECK NULLPTR
-    config.bundle_type = context.get_bundle_type() as u32;
-    config.bundle = context.get_bundle_name();
 
     match RequestClient::get_instance().create_task(
         context,
-        config,
+        seq as u64,
     ) {
-        Ok(task_id) => Ok(Task {
-            tid: task_id.to_string(),
-            config: input_config,
-        }),
+        Ok(task_id) => Ok(task_id.to_string()),
         Err(e) => {
             error!("Create task failed: {:?}", e);
             // Handle specific error types and return appropriate business errors

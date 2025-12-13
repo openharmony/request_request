@@ -75,11 +75,13 @@ export default namespace request {
 
   const SESSION_FAILED: int;
 
-  native function downloadFileSync(context: BaseContext, config: DownloadConfig): DownloadTask;
+  native function downloadFileSync(context: BaseContext, seq: long): DownloadTask;
+  native function checkDownloadConfig(context: BaseContext, config: DownloadConfig): long;
 
   export function downloadFile(context: BaseContext, config: DownloadConfig, callback: AsyncCallback<DownloadTask>): void {
+    let seq = checkDownloadConfig(context, config);
     let p1 = taskpool.execute((): DownloadTask => {
-        return downloadFileSync(context, config);
+        return downloadFileSync(context, seq);
     })
     p1.then((content: NullishType) => {
         callback(null, content as DownloadTask);
@@ -89,9 +91,10 @@ export default namespace request {
   }
 
   export function downloadFile(context: BaseContext, config: DownloadConfig): Promise<DownloadTask> {
+    let seq = checkDownloadConfig(context, config);
     return new Promise<DownloadTask>((resolve, reject) => {
       taskpool.execute((): DownloadTask => {
-          return downloadFileSync(context, config);
+          return downloadFileSync(context, seq);
       }).then((content: NullishType) => {
           resolve(content as DownloadTask);
       }, (err: Error): void => {
@@ -100,11 +103,13 @@ export default namespace request {
     });
   }
 
-  native function uploadFileSync(context: BaseContext, config: UploadConfig): UploadTask;
+  native function uploadFileSync(context: BaseContext, seq: long): UploadTask;
+  native function checkUploadConfig(context: BaseContext, config: UploadConfig): long;
 
   export function uploadFile(context: BaseContext, config: UploadConfig, callback: AsyncCallback<UploadTask>): void {
+    let seq = checkUploadConfig(context,config);
     let p1 = taskpool.execute((): UploadTask => {
-        return uploadFileSync(context,config);
+        return uploadFileSync(context, seq);
     })
     p1.then((content: NullishType) => {
         callback(null, content as UploadTask);
@@ -114,9 +119,10 @@ export default namespace request {
   }
 
   export function uploadFile(context: BaseContext, config: UploadConfig): Promise<UploadTask> {
+    let seq = checkUploadConfig(context,config);
     return new Promise<UploadTask>((resolve, reject) => {
       taskpool.execute((): UploadTask => {
-          return uploadFileSync(context, config);
+          return uploadFileSync(context, seq);
       }).then((content: NullishType) => {
           resolve(content as UploadTask);
       }, (err: Error): void => {
@@ -1134,11 +1140,19 @@ export default namespace request {
     }
   }
 
-    native function createSync(context: BaseContext, config: Config): Task;
+    native function checkConfig(context: BaseContext, config: Config): long;
+
+    native function createSync(context: BaseContext, seq: long): String;
 
     export function create(context: BaseContext, config: Config, callback: AsyncCallback<Task>): void {
+      let seq = checkConfig(context, config);
       let p1 = taskpool.execute((): Task => {
-        return createSync(context, config);
+        let tid = createSync(context, seq);
+        let task: TaskInner = {
+          tid: tid,
+          config: config
+        };
+        return task;
       });
       p1.then((content: NullishType) => {
         callback(null, content as Task);
@@ -1148,9 +1162,15 @@ export default namespace request {
     }
 
     export function create(context: BaseContext, config: Config): Promise<Task> {
+      let seq = checkConfig(context, config);
       return new Promise<Task>((resolve, reject) => {
         taskpool.execute((): Task => {
-          return createSync(context, config);
+          let tid = createSync(context, seq);
+          let task: TaskInner = {
+            tid: tid,
+            config: config
+          };
+          return task;
         }).then((content: NullishType) => {
           resolve(content as Task);
         }, (err: Error): void => {
