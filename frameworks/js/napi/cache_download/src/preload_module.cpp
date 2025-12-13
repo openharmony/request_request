@@ -142,9 +142,9 @@ void CallbackInfo::CleanupCallbacks()
             }
             return false;
         });
-    int deletedCount = std::distance(newEnd, allCb_.end());
+    size_t deletedCount = static_cast<size_t>(std::distance(newEnd, allCb_.end()));
     allCb_.erase(newEnd, allCb_.end());
-    toDeleteCount_ = std::max(0, toDeleteCount_ - deletedCount);
+    toDeleteCount_ = (toDeleteCount_ > deletedCount) ? (toDeleteCount_ - deletedCount) : 0;
 }
 
 void CallbackInfo::InvokeSuccessCallbacks(napi_value values[])
@@ -711,15 +711,28 @@ static void NapiCreateEnumCacheStrategy(napi_env env, napi_value &cacheStrategy)
     SetUint32Property(env, cacheStrategy, "LAZY", static_cast<uint32_t>(CacheStrategy::LAZY));
 }
 
+static void NapiCreateEnumErrorCode(napi_env env, napi_value &errorCode)
+{
+    napi_create_object(env, &errorCode);
+    SetUint32Property(env, errorCode, "OTHERS", static_cast<uint32_t>(ErrorCode::OTHERS));
+    SetUint32Property(env, errorCode, "DNS", static_cast<uint32_t>(ErrorCode::DNS));
+    SetUint32Property(env, errorCode, "TCP", static_cast<uint32_t>(ErrorCode::TCP));
+    SetUint32Property(env, errorCode, "SSL", static_cast<uint32_t>(ErrorCode::SSL));
+    SetUint32Property(env, errorCode, "HTTP", static_cast<uint32_t>(ErrorCode::HTTP));
+}
+
 static napi_value registerFunc(napi_env env, napi_value exports)
 {
     napi_value sslType = nullptr;
     napi_value cacheStrategy = nullptr;
+    napi_value errorCode = nullptr;
     NapiCreateEnumSslType(env, sslType);
     NapiCreateEnumCacheStrategy(env, cacheStrategy);
+    NapiCreateEnumErrorCode(env, errorCode);
     napi_property_descriptor desc[]{
         DECLARE_NAPI_PROPERTY("SslType", sslType),
         DECLARE_NAPI_PROPERTY("CacheStrategy", cacheStrategy),
+        DECLARE_NAPI_PROPERTY("ErrorCode", errorCode),
         DECLARE_NAPI_FUNCTION("download", download),
         DECLARE_NAPI_FUNCTION("cancel", cancel),
         DECLARE_NAPI_FUNCTION("setMemoryCacheSize", setMemoryCacheSize),
