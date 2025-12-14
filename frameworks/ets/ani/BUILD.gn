@@ -19,5 +19,8 @@ group("ani_package") {
     "request:request",
     "request:request_ani",
     "request:request_etc",
+    "cache_download:cache_download",
+    "cache_download:cache_download_ani",
+    "cache_download:cache_download_etc",
   ]
 }

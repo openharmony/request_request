@@ -51,7 +51,7 @@ pub struct DownloadConfig {
 /// Configuration for an upload task.
 ///
 /// Represents the parameters needed to configure an upload operation through the ETS API.
-#[ani_rs::ani]
+#[ani_rs::ani(path = "L@ohos/request/request/UploadConfigInner")]
 pub struct UploadConfig {
     /// The URL to upload to.
     pub url: String,
@@ -147,7 +147,7 @@ impl From<File> for FileSpec {
     }
 }
 
-#[ani_rs::ani]
+#[ani_rs::ani(path = "L@ohos/request/request/RequestDataInner")]
 pub struct RequestData {
     /// Name of the form field.
     name: String,
@@ -207,7 +207,14 @@ impl From<DownloadConfig> for TaskConfig {
             config_builder.roaming(enable_roaming);
         }
         if let Some(network_type) = config.network_type {
-            config_builder.network_type(NetworkConfig::from(network_type));
+            const NETWORK_MOBILE: i32 = 0x00000001;
+            const NETWORK_WIFI: i32 = 0x00010000;
+            let network_type = match network_type {
+                NETWORK_MOBILE => NetworkConfig::Cellular,
+                NETWORK_WIFI => NetworkConfig::Wifi,
+                _ => NetworkConfig::Any,
+            };
+            config_builder.network_type(network_type);
         }
         if let Some(description) = config.description {
             config_builder.description(description);

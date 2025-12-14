@@ -25,14 +25,18 @@ impl ConfigVerifier for NotificationVerifier {
             return Ok(());
         }
 
-        if config.notification.title.len() > NOTIFICATION_TITLE_MAX_LEN {
-            error!("notification title length must be less than 1024");
-            return Err(401);
+        if let Some(title) = &config.notification.title {
+            if title.len() > NOTIFICATION_TITLE_MAX_LEN {
+                error!("notification title length must be less than 1024");
+                return Err(401);
+            }
         }
 
-        if config.notification.text.len() > NOTIFICATION_TEXT_MAX_LEN {
-            error!("notification text length must be less than 3072");
-            return Err(401);
+        if let Some(text) = &config.notification.text {
+            if (text.len() > NOTIFICATION_TEXT_MAX_LEN) {
+                error!("notification text length must be less than 3072");
+                return Err(401);
+            }
         }
 
         Ok(())

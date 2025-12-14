@@ -18,7 +18,7 @@
 
 use std::collections::HashMap;
 
-use request_core::config::{self, CommonTaskConfig, NetworkConfig, TaskConfig, Version};
+use request_core::config::{self, CommonTaskConfig, NetworkConfig, TaskConfig, Version, MinSpeed, Timeout};
 use serde::{Deserialize, Serialize};
 
 /// Defines the type of action for a request task.
@@ -195,21 +195,22 @@ pub struct FormItem {
 }
 
 /// Represents notification details for a request task.
-#[derive(Clone, Serialize)]
-#[ani_rs::ani]
+#[derive(Clone)]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/NotificationInner")]
 pub struct Notification {
     /// Optional title for the notification.
-    title: Option<String>,
+    pub title: Option<String>,
     /// Optional text content for the notification.
-    text: Option<String>,
+    pub text: Option<String>,
+    // pub disable: Option<bool>,
 }
 
 /// Represents different data types for request body content.
 impl From<Notification> for request_core::config::Notification {
     fn from(value: Notification) -> Self {
         request_core::config::Notification {
-            title: value.title.unwrap_or("".to_string()),
-            text: value.text.unwrap_or("".to_string()),
+            title: value.title,
+            text: value.text,
         }
     }
 }
@@ -441,7 +442,7 @@ impl From<request_core::info::Faults> for Faults {
     }
 }
 
-#[ani_rs::ani]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/FilterInner")]
 pub struct Filter {
     /// Optional bundle name filter.
     pub bundle: Option<String>,
@@ -587,12 +588,45 @@ pub struct Task {
 }
 
 /// Represents configuration for a task group.
-#[ani_rs::ani]
+#[ani_rs::ani(path = "L@ohos/request/request/agent/GroupConfigInner")]
 pub struct GroupConfig {
     /// Optional gauge flag for the group.
     pub gauge: Option<bool>,
     /// Notification details for the group.
     pub notification: Notification,
+}
+
+impl From<request_core::config::TaskConfig> for Config {
+    fn from(value: request_core::config::TaskConfig) -> Self {
+        Config {
+            action: Action::from(value.common_data.action),
+            url: value.url,
+            title: if value.title.is_empty() { None } else { Some(value.title) },
+            description: if value.description.is_empty() { None } else { Some(value.description) },
+            mode: Some(Mode::from(value.common_data.mode)),
+            overwrite: None,
+            method: if value.method == "GET" { None } else { Some(value.method) },
+            headers: if value.headers.is_empty() { None } else { Some(value.headers) },
+            data: Some(Data::S(value.data)),
+            saveas: None,
+            network: Some(value.common_data.network_config.into()),
+            metered: Some(value.common_data.metered),
+            roaming: Some(value.common_data.roaming),
+            retry: Some(value.common_data.retry),
+            redirect: Some(value.common_data.redirect),
+            proxy: if value.proxy.is_empty() { None } else { Some(value.proxy) },
+            index: Some(value.common_data.index as i32),
+            begins: Some(value.common_data.begins as i64),
+            ends: Some(value.common_data.ends),
+            gauge: Some(value.common_data.gauge),
+            precise: Some(value.common_data.precise),
+            token: if value.token.is_empty() { None } else { Some(value.token) },
+            priority: Some(value.common_data.priority as i32),
+            extras: if value.extras.is_empty() { None } else { Some(value.extras) },
+            multipart: Some(value.common_data.multipart),
+            notification: None,
+        }
+    }
 }
 
 /// Converts from API Config to core TaskConfig.
@@ -685,12 +719,20 @@ impl From<Config> for TaskConfig {
                 background: !matches!(value.mode, Some(Mode::Foreground)),
                 multipart: value.multipart.unwrap_or(false),
                 mode: value.mode.unwrap_or(Mode::Background).into(),
+                min_speed: MinSpeed {
+                    speed: 0,
+                    duration: 0,
+                },
+                timeout: Timeout {
+                    connection_timeout: 0,
+                    total_timeout: 0,
+                },
             },
             saveas: value.saveas.unwrap_or_default(),
             overwrite: value.overwrite.unwrap_or(false),
             notification: value.notification.map(Into::into).unwrap_or(request_core::config::Notification {
-                title: "".to_string(),
-                text: "".to_string(),
+                title: None,
+                text: None,
             }),
         }
     }

@@ -34,6 +34,7 @@ use request_core::config::TaskConfig;
 use super::bridge::{DownloadConfig, DownloadTask};
 use crate::api9::bridge::DownloadInfo;
 use crate::seq::TaskSeq;
+use crate::constant::*;
 
 #[ani_rs::native]
 pub fn check_config(
@@ -190,10 +191,17 @@ pub fn download_file(
 /// }
 /// ```
 #[ani_rs::native]
-pub fn delete(this: DownloadTask) -> Result<(), BusinessError> {
+pub fn delete(this: DownloadTask) -> Result<bool, BusinessError> {
     RequestClient::get_instance()
         .remove(this.task_id.parse().unwrap())
-        .map_err(|e| BusinessError::new(e, "Failed to delete download task".to_string()))
+        .map_err(|e| {
+            if e != ExceptionErrorCode::E_PERMISSION as i32 {
+                Ok(true)
+            } else {
+                Err(BusinessError::new(e, "Failed to delete download task".to_string()))
+            }
+        });
+    Ok(true)
 }
 
 /// Suspends a download task.
@@ -226,10 +234,17 @@ pub fn delete(this: DownloadTask) -> Result<(), BusinessError> {
 /// }
 /// ```
 #[ani_rs::native]
-pub fn suspend(this: DownloadTask) -> Result<(), BusinessError> {
+pub fn suspend(this: DownloadTask) -> Result<bool, BusinessError> {
     RequestClient::get_instance()
         .pause(this.task_id.parse().unwrap())
-        .map_err(|e| BusinessError::new(e, "Failed to suspend download task".to_string()))
+        .map_err(|e| {
+            if e != ExceptionErrorCode::E_PERMISSION as i32 {
+                Ok(true)
+            } else {
+                Err(BusinessError::new(e, "Failed to delete download task".to_string()))
+            }
+        });
+    Ok(true)
 }
 
 /// Restores a suspended download task.
@@ -262,10 +277,17 @@ pub fn suspend(this: DownloadTask) -> Result<(), BusinessError> {
 /// }
 /// ```
 #[ani_rs::native]
-pub fn restore(this: DownloadTask) -> Result<(), BusinessError> {
+pub fn restore(this: DownloadTask) -> Result<bool, BusinessError> {
     RequestClient::get_instance()
         .resume(this.task_id.parse().unwrap())
-        .map_err(|e| BusinessError::new(e, "Failed to restore download task".to_string()))
+        .map_err(|e| {
+            if e != ExceptionErrorCode::E_PERMISSION as i32 {
+                Ok(true)
+            } else {
+                Err(BusinessError::new(e, "Failed to delete download task".to_string()))
+            }
+        });
+    Ok(true)
 }
 
 /// Retrieves information about a download task.
@@ -334,5 +356,16 @@ pub fn get_task_info(this: DownloadTask) -> Result<DownloadInfo, BusinessError> 
 /// ```
 #[ani_rs::native]
 pub fn get_task_mime_type(this: DownloadTask) -> Result<String, BusinessError> {
-    Ok("application/octet-stream".to_string())
+    let task_id = this.task_id.parse().unwrap();
+    let result = RequestClient::get_instance().query_mime_type(task_id);
+    match result {
+        Ok(info) => Ok(info),
+        Err(e) => {
+            if e != ExceptionErrorCode::E_PERMISSION as i32 {
+                Ok("".to_string())
+            } else {
+                Err(BusinessError::new(e, "Failed to get task mime type".to_string()))
+            }
+        }
+    }
 }

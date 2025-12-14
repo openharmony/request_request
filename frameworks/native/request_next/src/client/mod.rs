@@ -310,6 +310,11 @@ impl<'a> RequestClient<'a> {
         }
     }
 
+    pub fn get_task(&self, task_id: i64, token: Option<String>) -> Result<TaskConfig, i32> {
+        
+        self.proxy.get_task(task_id, token)
+    }
+
     /// Starts a download task with the specified ID.
     ///
     /// # Parameters
@@ -378,6 +383,10 @@ impl<'a> RequestClient<'a> {
         self.proxy.set_max_speed(task_id, speed)
     }
 
+    pub fn query_mime_type(&self, task_id: i64) -> Result<String, i32> {
+        self.proxy.query_mime_type(task_id)
+    }
+
     /// Registers a callback for task status updates.
     ///
     /// # Parameters
@@ -420,5 +429,25 @@ impl<'a> RequestClient<'a> {
     /// A list of matching task IDs on success, or an error code on failure
     pub fn search(&self, keyword: SearchFilter) -> Result<Vec<String>, i32> {
         self.proxy.search(keyword)
+    }
+
+    pub fn touch(&self, task_id: i64, token: String) -> Result<TaskInfo, i32> {
+        self.proxy.touch(task_id, token)
+    }
+
+    pub fn query(&self, task_id: i64) -> Result<TaskInfo, i32> {
+        self.proxy.query(task_id)
+    }
+
+    pub fn create_group(&self, gauge: Option<bool>, title: Option<String>, text: Option<String>, disable: Option<bool>) -> Result<String, i32> {
+        self.proxy.create_group(gauge, title, text, disable)
+    }
+
+    pub fn attach_group(&self, group_id: String, task_ids: Vec<String>) -> Result<(), i32> {
+        self.proxy.attach_group(group_id, task_ids)
+    }
+
+    pub fn delete_group(&self, group_id: String) -> Result<(), i32> {
+        self.proxy.delete_group(group_id)
     }
 }

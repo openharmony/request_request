@@ -19,7 +19,7 @@
 
 use std::collections::HashMap;
 use std::fs::File;
-use std::os::fd::FromRawFd;
+use std::os::fd::{FromRawFd, IntoRawFd, RawFd};
 
 use crate::file::FileSpec;
 
@@ -281,12 +281,20 @@ impl TaskConfigBuilder {
                 priority: 0,
                 background: self.background.unwrap_or(false),
                 multipart: false,
+                min_speed: MinSpeed {
+                    speed: 0,
+                    duration: 0,
+                },
+                timeout: Timeout {
+                    connection_timeout: 0,
+                    total_timeout: 0,
+                },
             },
             saveas: self.file_path.unwrap_or_default(),
             overwrite: false,
             notification: Notification {
-                title: "".to_string(),
-                text: "".to_string(),
+                title: None,
+                text: None,
             },
             // notification: self.notification.unwrap_or(Notification {
             //     title: "".to_string(),
@@ -328,10 +336,10 @@ impl ipc::parcel::Serialize for TaskConfig {
         parcel.write(&self.common_data.priority)?;
 
         // Write placeholders for future fields
-        parcel.write(&0i64)?; // todo: minSpeed.speed
-        parcel.write(&0i64)?; // todo: minSpeed.duration
-        parcel.write(&0u64)?; // todo: timeout.connectionTimeout
-        parcel.write(&0u64)?; // todo: timeout.totalTimeout
+        parcel.write(&self.common_data.min_speed.speed)?;
+        parcel.write(&self.common_data.min_speed.duration)?;
+        parcel.write(&self.common_data.timeout.connection_timeout)?;
+        parcel.write(&self.common_data.timeout.total_timeout)?;
 
         // Serialize basic string fields
         parcel.write(&self.url)?;
@@ -392,6 +400,30 @@ impl ipc::parcel::Serialize for TaskConfig {
             parcel.write(extra.1)?;
         }
 
+        //Serialize notification fields
+        if let Some(title) = &self.notification.title {
+            parcel.write(&true)?;
+            parcel.write(title)?;
+        } else {
+            parcel.write(&false)?;
+        }
+
+        if let Some(text) = &self.notification.text {
+            parcel.write(&true)?;
+            parcel.write(text)?;
+        } else {
+            parcel.write(&false)?;
+        }
+
+        parcel.write(&false).unwrap(); //want_agent
+        parcel.write(&false).unwrap(); //disable
+
+        // Write gauge configuration based on task settings
+        if self.common_data.gauge {
+            parcel.write(&3u32).unwrap();
+        } else {
+            parcel.write(&1u32).unwrap();
+        }
         Ok(())
     }
 }
@@ -466,6 +498,16 @@ pub enum Mode {
     FrontEnd,
 }
 
+impl From<u32> for Mode {
+    fn from(value: u32) -> Self {
+        match value {
+            0 => Mode::BackGround,
+            1 => Mode::FrontEnd,
+            _ => unimplemented!(),
+        }
+    }
+}
+
 /// Network type configuration for task execution.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum NetworkConfig {
@@ -491,6 +533,20 @@ impl From<i32> for NetworkConfig {
             _ => unimplemented!(),
         }
     }
+}
+
+/// task min speed
+#[derive(Copy, Clone, Debug, Default)]
+pub struct MinSpeed {
+    pub speed: i64,
+    pub duration: i64,
+}
+
+/// task Timeout
+#[derive(Copy, Clone, Debug, Default)]
+pub struct Timeout {
+    pub connection_timeout: u64,
+    pub total_timeout: u64,
 }
 
 /// Common configuration parameters for network tasks.
@@ -536,10 +592,132 @@ pub struct CommonTaskConfig {
     pub background: bool,
     /// Whether to use multi-part form encoding.
     pub multipart: bool,
+    /// the min speed
+    pub min_speed: MinSpeed,
+    /// the timeout of task
+    pub timeout: Timeout,
+}
+
+//deserialize by service file stub.rs function serialize_task_config
+impl ipc::parcel::Deserialize for TaskConfig {
+    fn deserialize(parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<Self> {
+        // deserialize common configuration fields
+        let action_repr = parcel.read::<u32>()?;
+        let action = Action::from(action_repr);
+        let mode_repr = parcel.read::<u32>()?;
+        let mode = Mode::from(mode_repr);
+        let bundle_type: u32 = parcel.read()?;
+        let cover: bool = parcel.read()?;
+        let network: u32 = parcel.read()?;
+        let metered: bool = parcel.read()?;
+        let roaming: bool = parcel.read()?;
+        let retry: bool = parcel.read()?;
+        let redirect: bool = parcel.read()?;
+        let index: u32 = parcel.read()?;
+        let begins: i64 = parcel.read()?;
+        let ends: i64 = parcel.read()?;
+        let gauge: bool = parcel.read()?;
+        let precise: bool = parcel.read()?;
+        let priority: u32 = parcel.read()?;
+        let background: bool = parcel.read()?;
+        let multipart: bool = parcel.read()?;
+        let bundle: String = parcel.read()?;
+        let url: String = parcel.read()?;
+        let title: String = parcel.read()?;
+        let description: String = parcel.read()?;
+        let method: String = parcel.read()?;
+
+        // deserialize HashMap：headers
+        let headers_len = parcel.read::<u32>()? as usize;
+        let mut headers = HashMap::with_capacity(headers_len);
+        for _ in 0..headers_len {
+            let k = parcel.read::<String>()?;
+            let v = parcel.read::<String>()?;
+            headers.insert(k, v);
+        }
+        let data = parcel.read::<String>()?;
+        let token = parcel.read::<String>()?;
+
+        // deserialize HashMap：extras
+        let extras_len = parcel.read::<u32>()? as usize;
+        let mut extras = HashMap::with_capacity(extras_len);
+        for _ in 0..extras_len {
+            let k = parcel.read::<String>()?;
+            let v = parcel.read::<String>()?;
+            extras.insert(k, v);
+        }
+        let version = parcel.read::<u32>()?;
+
+        // deserialize form_items
+        let form_len = parcel.read::<u32>()? as usize;
+        let mut form_items = Vec::with_capacity(form_len);
+        for _ in 0..form_len {
+            let name = parcel.read::<String>()?;
+            let value = parcel.read::<String>()?;
+            form_items.push(FormItem { name, value });
+        }
+
+        // deserialize file_specs
+        let file_specs_len = parcel.read::<u32>()? as usize;
+        let mut file_specs = Vec::with_capacity(file_specs_len);
+        for _ in 0..file_specs_len {
+            let name = parcel.read::<String>()?;
+            let path = parcel.read::<String>()?;
+            let file_name = parcel.read::<String>()?;
+            let mime_type = parcel.read::<String>()?;
+            file_specs.push(FileSpec { name, path, file_name, mime_type, is_user_file: false, fd: None });
+        }
+
+        // deserialize body_file_names
+        let body_file_names_len = parcel.read::<u32>()? as usize;
+        let mut body_file_names = Vec::with_capacity(body_file_names_len);
+        for _ in 0..body_file_names_len {
+            let name = parcel.read::<String>()?;
+            body_file_names.push(name);
+        }
+        
+        // deserialize min_speed
+        let min_speed_speed = parcel.read::<i64>()?;
+        let min_speed_duration = parcel.read::<i64>()?;
+
+        Ok(TaskConfig {
+            bundle,
+            bundle_type,
+            atomic_account: "".to_string(),
+            url,
+            title,
+            description,
+            method,
+            headers,
+            data,
+            token,
+            proxy: "".to_string(),
+            certificate_pins: "".to_string(),
+            extras,
+            version: version.into(),
+            form_items,
+            file_specs,
+            body_file_paths: vec![],
+            certs_path: vec![],
+            common_data: CommonTaskConfig {
+                task_id: 0, uid: 0, token_id: 0, action, mode, cover, network_config: NetworkConfig::Any,
+                metered, roaming, retry, redirect, index, begins: begins as u64, ends,
+                gauge, precise, priority, background, multipart,
+                min_speed: MinSpeed{ speed: min_speed_speed, duration: min_speed_duration },
+                timeout: Timeout{connection_timeout: 0, total_timeout: 0}
+            },
+            saveas: "".to_string(),
+            overwrite: cover,
+            notification: Notification {
+                title: None,
+                text: None,
+            },
+        })
+    }
 }
 
 #[derive(Clone, Debug)]
 pub struct Notification {
-    pub title: String,
-    pub text: String,
+    pub title: Option<String>,
+    pub text: Option<String>,
 }

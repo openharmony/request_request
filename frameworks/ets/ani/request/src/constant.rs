@@ -11,24 +11,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashMap;
-
-#[ani_rs::ani(path = "L@ohos/request/cacheDownload/cacheDownload/SslType")]
-pub enum SslType {
-    TLS,
-    TLCP,
-}
-
-#[ani_rs::ani(path = "L@ohos/request/cacheDownload/cacheDownload/CacheStrategy")]
-pub enum CacheStrategy {
-    FORCE,
-    LAZY,
-}
-
-#[ani_rs::ani(path = "L@ohos/request/cacheDownload/cacheDownload/CacheDownloadOptions")]
-pub struct CacheDownloadOptions {
-    pub headers: Option<HashMap<String, String>>,
-    pub ssl_type: Option<SslType>,
-    pub cache_strategy: Option<CacheStrategy>,
-    pub caPath: Option<String>,
+#[repr(i32)]
+pub enum ExceptionErrorCode {
+    E_OK = 0,
+    E_UNLOADING_SA,
+    E_IPC_SIZE_TOO_LARGE,
+    E_MIMETYPE_NOT_FOUND,
+    E_TASK_INDEX_TOO_LARGE,
+    E_CHANNEL_NOT_OPEN = 5,
+    E_PERMISSION = 201,
+    E_NOT_SYSTEM_APP = 202,
+    E_PARAMETER_CHECK = 401,
+    E_UNSUPPORTED = 801,
+    E_FILE_IO = 13400001,
+    E_FILE_PATH = 13400002,
+    E_SERVICE_ERROR = 13400003,
+    E_OTHER = 13499999,
+    E_TASK_QUEUE = 21900004,
+    E_TASK_MODE = 21900005,
+    E_TASK_NOT_FOUND = 21900006,
+    E_TASK_STATE = 21900007,
+    E_GROUP_NOT_FOUND = 21900008,
 }
