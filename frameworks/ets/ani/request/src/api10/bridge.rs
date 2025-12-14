@@ -656,13 +656,15 @@ impl From<Config> for TaskConfig {
                             });
                         }
                         Value::FileSpec(file_spec) => {
-                            // FileSpec 类型的 value，转换为 FileSpec 并添加到 file_specs
-                            file_specs.push(file_spec.into());
+                            let mut file_spec: request_core::file::FileSpec = file_spec.into();
+                            file_spec.name = form_item.name;
+                            file_specs.push(file_spec);
                         }
                         Value::Array(file_spec_array) => {
-                            // FileSpec 数组类型的 value，转换为多个 FileSpec 并添加到 file_specs
                             for file_spec in file_spec_array {
-                                file_specs.push(file_spec.into());
+                                let mut file_spec: request_core::file::FileSpec = file_spec.into();
+                                file_spec.name = form_item.name.clone();
+                                file_specs.push(file_spec);
                             }
                         }
                     }

@@ -319,11 +319,13 @@ impl FileManager {
             .rsplit_once('/')
             .map(|(_, name)| name.to_string())
             .unwrap_or_default();
-        file_spec.mime_type = file_spec
-            .file_name
-            .rsplit_once('.')
-            .map(|(_, name)| name.to_string())
-            .unwrap_or_default();
+        if file_spec.mime_type.is_empty() {
+            file_spec.mime_type = file_spec
+                .file_name
+                .rsplit_once('.')
+                .map(|(_, name)| name.to_string())
+                .unwrap_or_default();
+        }
         if file_spec.name.is_empty() {
             file_spec.name.push_str("file");
         }
@@ -578,11 +580,13 @@ impl FileManager {
             .rsplit_once('/')
             .map(|(_, name)| name.to_string())
             .unwrap_or_default();
-        file_spec.mime_type = file_spec
-            .file_name
-            .rsplit_once('.')
-            .map(|(_, name)| name.to_string())
-            .unwrap_or_default();
+        if file_spec.mime_type.is_empty() {
+            file_spec.mime_type = file_spec
+                .file_name
+                .rsplit_once('.')
+                .map(|(_, name)| name.to_string())
+                .unwrap_or_default();
+        }
         if file_spec.name.is_empty() {
             file_spec.name.push_str("file");
         }
