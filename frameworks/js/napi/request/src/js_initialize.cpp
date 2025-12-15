@@ -97,10 +97,9 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
     RequestManager::GetInstance()->RestoreListener(JsTask::ReloadListener);
     // `finalize` executes on the JS thread
     auto finalize = [](napi_env env, void *data, void *hint) {
-        REQUEST_HILOGD("destructed task");
         JsTask *task = reinterpret_cast<JsTask *>(data);
-        JsTask::ClearTaskMap(task->GetTid());
         RequestManager::GetInstance()->RemoveAllListeners(task->GetTid());
+        REQUEST_HILOGI("finalize task %{public}s", task->GetTid().c_str());
         delete task;
     };
     if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
@@ -1188,14 +1187,6 @@ bool JsInitialize::ParseDownloadConfig(napi_env env, napi_value jsConfig, Config
     config.background = NapiUtils::Convert2Boolean(env, jsConfig, PARAM_KEY_BACKGROUND);
     config.method = "GET";
     return true;
-}
-
-void JsInitialize::CreatProperties(napi_env env, napi_value &self, napi_value config, JsTask *task)
-{
-    if (task->config_.version == Version::API10) {
-        NapiUtils::SetStringPropertyUtf8(env, self, "tid", task->GetTid());
-        napi_set_named_property(env, self, "config", config);
-    }
 }
 
 void JsInitialize::StandardizeFileSpec(FileSpec &file)

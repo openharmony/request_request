@@ -37,6 +37,7 @@ static constexpr int32_t NO_ARG = 0;
 static constexpr int32_t ONE_ARG = 1;
 static constexpr int32_t TWO_ARG = 2;
 static constexpr int32_t THE_ARG = 3;
+static constexpr int32_t ONE_REF = 1;
 
 static constexpr int32_t FIRST_ARGV = 0;
 static constexpr int32_t SECOND_ARGV = 1;
