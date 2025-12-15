@@ -24,6 +24,7 @@ ohos_fuzztest("RequestServiceProxyFuzzTest") {
         "../../../frameworks/native/request/include",
         "../../../common/include",
         "../../../common/sys_event/include",
+        "../../../common/utf8_utils/include",
         "../../../interfaces/inner_kits/running_count/include",
     ]
 
@@ -46,10 +47,14 @@ ohos_fuzztest("RequestServiceProxyFuzzTest") {
         "../../../frameworks/native/request/src/response_message_receiver.cpp",
         "../../../frameworks/native/request/src/runcount_notify_stub.cpp",
         "../../../common/sys_event/src/sys_event.cpp",
+        "../../../common/utf8_utils/src/utf8_utils.cpp",
         "requestserviceproxy_fuzzer.cpp",
     ]
 
-    deps = [ "../../../common/sys_event:request_sysevent" ]
+    deps = [
+        "../../../common/sys_event:request_sysevent",
+        "../../../common/utf8_utils:request_utf8_utils",       
+    ]
 
     external_deps = [
         "ability_runtime:extensionkit_native",

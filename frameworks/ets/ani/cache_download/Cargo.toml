@@ -21,4 +21,4 @@ ani_rs = { git = "https://gitee.com/openharmony/communication_netmanager_base", 
 serde = { version = "1.0", features = ["derive"] }
 
 request_utils = { path = "../../../../common/utils" }
-preload_native = { path = "../../../native/cache_download" }
+preload_native_rlib = { path = "../../../native/cache_download" }

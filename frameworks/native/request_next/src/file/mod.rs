@@ -319,11 +319,13 @@ impl FileManager {
             .rsplit_once('/')
             .map(|(_, name)| name.to_string())
             .unwrap_or_default();
-        file_spec.mime_type = file_spec
-            .file_name
-            .rsplit_once('.')
-            .map(|(_, name)| name.to_string())
-            .unwrap_or_default();
+        if file_spec.mime_type.is_empty() {
+            file_spec.mime_type = file_spec
+                .file_name
+                .rsplit_once('.')
+                .map(|(_, name)| name.to_string())
+                .unwrap_or_default();
+        }
         if file_spec.name.is_empty() {
             file_spec.name.push_str("file");
         }
@@ -398,9 +400,9 @@ impl FileManager {
         match version {
             Version::API9 => {
                 if path.starts_with(ABSOLUTE_PREFIX) {
-                    // if path.len() == ABSOLUTE_PREFIX.len() {
-                    //     return Err(401);
-                    // }
+                    if path.len() == ABSOLUTE_PREFIX.len() {
+                        return Err(401);
+                    }
                     return Ok(PathBuf::from(path));
                 } else {
                     let file_name = match path.find(INTERNAL_PATTERN) {
@@ -408,7 +410,7 @@ impl FileManager {
                         _ => &path,
                     };
                     if file_name.is_empty() {
-                        return Err(401);
+                        return Err(13400001);
                     }
                     let cache_dir = context.get_cache_dir();
 
@@ -483,7 +485,7 @@ impl FileManager {
         if let Some(0) = path.find(INTERNAL_PREFIX) {
             let path = path.split_at(INTERNAL_PREFIX.len()).1;
             if path.is_empty() {
-                return Err(401);
+                return Err(13400001);
             }
             let base_dir = context.get_base_dir();
             return Ok(PathBuf::from(Self::normalize(&format!("{}/{}", base_dir, path))?));
@@ -496,7 +498,7 @@ impl FileManager {
         };
 
         if path.is_empty() {
-            return Err(401);
+            return Err(13400001);
         }
         let cache_dir = context.get_cache_dir();
 
@@ -578,11 +580,13 @@ impl FileManager {
             .rsplit_once('/')
             .map(|(_, name)| name.to_string())
             .unwrap_or_default();
-        file_spec.mime_type = file_spec
-            .file_name
-            .rsplit_once('.')
-            .map(|(_, name)| name.to_string())
-            .unwrap_or_default();
+        if file_spec.mime_type.is_empty() {
+            file_spec.mime_type = file_spec
+                .file_name
+                .rsplit_once('.')
+                .map(|(_, name)| name.to_string())
+                .unwrap_or_default();
+        }
         if file_spec.name.is_empty() {
             file_spec.name.push_str("file");
         }

@@ -51,7 +51,7 @@ pub struct DownloadConfig {
 /// Configuration for an upload task.
 ///
 /// Represents the parameters needed to configure an upload operation through the ETS API.
-#[ani_rs::ani]
+#[ani_rs::ani(path = "@ohos.request.request.UploadConfigInner")]
 pub struct UploadConfig {
     /// The URL to upload to.
     pub url: String,
@@ -74,7 +74,7 @@ pub struct UploadConfig {
 /// Represents a download task.
 ///
 /// Provides a handle to interact with a download operation.
-#[ani_rs::ani(path = "L@ohos/request/request/DownloadTaskInner")]
+#[ani_rs::ani(path = "@ohos.request.request.DownloadTaskInner")]
 pub struct DownloadTask {
     /// The unique identifier of the download task.
     pub task_id: String,
@@ -83,7 +83,7 @@ pub struct DownloadTask {
 /// Represents an upload task.
 ///
 /// Provides a handle to interact with an upload operation.
-#[ani_rs::ani(path = "L@ohos/request/request/UploadTaskInner")]
+#[ani_rs::ani(path = "@ohos.request.request.UploadTaskInner")]
 pub struct UploadTask {
     /// The unique identifier of the upload task.
     pub task_id: String,
@@ -93,7 +93,7 @@ pub struct UploadTask {
 ///
 /// Contains detailed information about the state and progress of a download operation.
 #[allow(non_snake_case)]
-#[ani_rs::ani(path = "L@ohos/request/request/DownloadInfoInner")]
+#[ani_rs::ani(path = "@ohos.request.request.DownloadInfoInner")]
 pub struct DownloadInfo {
     /// Description of the download.
     pub description: String,
@@ -122,7 +122,7 @@ pub struct DownloadInfo {
 /// Represents a file to be uploaded.
 ///
 /// Contains information about a file that will be included in an upload request.
-#[ani_rs::ani(path = "L@ohos/request/request/FileInner")]
+#[ani_rs::ani(path = "@ohos.request.request.FileInner")]
 pub struct File {
     /// Original filename of the file.
     filename: String,
@@ -147,7 +147,7 @@ impl From<File> for FileSpec {
     }
 }
 
-#[ani_rs::ani]
+#[ani_rs::ani(path = "@ohos.request.request.RequestDataInner")]
 pub struct RequestData {
     /// Name of the form field.
     name: String,
@@ -167,7 +167,7 @@ impl From<RequestData> for FormItem {
     }
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/TaskStateInner")]
+#[ani_rs::ani(path = "@ohos.request.request.TaskStateInner")]
 #[derive(Clone)]
 pub struct TaskState {
     /// Path associated with the task.
@@ -207,7 +207,14 @@ impl From<DownloadConfig> for TaskConfig {
             config_builder.roaming(enable_roaming);
         }
         if let Some(network_type) = config.network_type {
-            config_builder.network_type(NetworkConfig::from(network_type));
+            const NETWORK_MOBILE: i32 = 0x00000001;
+            const NETWORK_WIFI: i32 = 0x00010000;
+            let network_type = match network_type {
+                NETWORK_MOBILE => NetworkConfig::Cellular,
+                NETWORK_WIFI => NetworkConfig::Wifi,
+                _ => NetworkConfig::Any,
+            };
+            config_builder.network_type(network_type);
         }
         if let Some(description) = config.description {
             config_builder.description(description);
@@ -260,7 +267,12 @@ impl From<UploadConfig> for TaskConfig {
         if let Some(headers) = config.header {
             config_builder.headers(headers);
         }
-        config_builder.method(config.method);
+        let method = config.method.to_uppercase();
+        if method == "POST" || method == "PUT" {
+            config_builder.method(method); 
+        } else {
+            config_builder.method("POST".to_string());
+        }
         if let Some(index) = config.index {
             config_builder.index(index);
         }

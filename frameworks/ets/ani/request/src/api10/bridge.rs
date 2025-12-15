@@ -18,12 +18,12 @@
 
 use std::collections::HashMap;
 
-use request_core::config::{self, CommonTaskConfig, NetworkConfig, TaskConfig, Version};
+use request_core::config::{self, CommonTaskConfig, NetworkConfig, TaskConfig, Version, MinSpeed, Timeout};
 use serde::{Deserialize, Serialize};
 
 /// Defines the type of action for a request task.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Action")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.Action")]
 pub enum Action {
     /// Download action type.
     Download,
@@ -64,7 +64,7 @@ impl From<u8> for Action {
 
 /// Defines the execution mode for a request task.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Mode")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.Mode")]
 pub enum Mode {
     /// Background execution mode.
     Background,
@@ -105,7 +105,7 @@ impl From<u8> for Mode {
 
 /// Defines network preferences for a request task.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Network")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.Network")]
 pub enum Network {
     /// Any network type is acceptable.
     Any,
@@ -138,7 +138,7 @@ impl From<NetworkConfig> for Network {
 }
 
 /// Defines broadcast event types for request tasks.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/BroadcastEvent")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.BroadcastEvent")]
 pub enum BroadcastEvent {
     /// Event emitted when a task completes.
     Complete,
@@ -146,7 +146,7 @@ pub enum BroadcastEvent {
 
 /// Represents file specifications for upload or download operations.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/FileSpecInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.FileSpecInner")]
 pub struct FileSpec {
     /// Path to the file.
     path: String,
@@ -195,21 +195,22 @@ pub struct FormItem {
 }
 
 /// Represents notification details for a request task.
-#[derive(Clone, Serialize)]
-#[ani_rs::ani]
+#[derive(Clone)]
+#[ani_rs::ani(path = "@ohos.request.request.agent.NotificationInner")]
 pub struct Notification {
     /// Optional title for the notification.
-    title: Option<String>,
+    pub title: Option<String>,
     /// Optional text content for the notification.
-    text: Option<String>,
+    pub text: Option<String>,
+    // pub disable: Option<bool>,
 }
 
 /// Represents different data types for request body content.
 impl From<Notification> for request_core::config::Notification {
     fn from(value: Notification) -> Self {
         request_core::config::Notification {
-            title: value.title.unwrap_or("".to_string()),
-            text: value.text.unwrap_or("".to_string()),
+            title: value.title,
+            text: value.text,
         }
     }
 }
@@ -225,7 +226,7 @@ pub enum Data {
 
 /// Represents configuration for a request task.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/ConfigInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.ConfigInner")]
 pub struct Config {
     /// Action type (download or upload).
     pub action: Action,
@@ -282,7 +283,7 @@ pub struct Config {
 }
 
 /// Represents the state of a request task.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/State")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.State")]
 pub enum State {
     /// Task is initialized but not yet started.
     Initialized = 0x00,
@@ -358,7 +359,7 @@ impl From<u8> for State {
 }
 
 /// Represents progress information for a request task.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/ProgressInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.ProgressInner")]
 pub struct Progress {
     /// Current state of the task.
     state: State,
@@ -399,7 +400,7 @@ impl From<&request_core::info::InfoProgress> for Progress {
 }
 
 /// Represents error types for request tasks.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Faults")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.Faults")]
 pub enum Faults {
     /// Other or unspecified error.
     Others = 0xFF,
@@ -441,7 +442,7 @@ impl From<request_core::info::Faults> for Faults {
     }
 }
 
-#[ani_rs::ani]
+#[ani_rs::ani(path = "@ohos.request.request.agent.FilterInner")]
 pub struct Filter {
     /// Optional bundle name filter.
     pub bundle: Option<String>,
@@ -472,7 +473,7 @@ impl From<Filter> for request_core::filter::SearchFilter {
 }
 
 /// Represents detailed information about a request task.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInfoInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.TaskInfoInner")]
 pub struct TaskInfo {
     /// Optional user ID.
     pub uid: Option<String>,
@@ -554,7 +555,7 @@ impl From<request_core::info::TaskInfo> for TaskInfo {
 }
 
 /// Represents an HTTP response.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/HttpResponseInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.HttpResponseInner")]
 pub struct HttpResponse {
     /// HTTP version.
     version: String,
@@ -579,7 +580,7 @@ impl From<&request_core::info::Response> for HttpResponse {
 }
 
 /// Represents a request task.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.TaskInner")]
 pub struct Task {
     /// Task ID.
     pub tid: String,
@@ -587,12 +588,45 @@ pub struct Task {
 }
 
 /// Represents configuration for a task group.
-#[ani_rs::ani]
+#[ani_rs::ani(path = "@ohos.request.request.agent.GroupConfigInner")]
 pub struct GroupConfig {
     /// Optional gauge flag for the group.
     pub gauge: Option<bool>,
     /// Notification details for the group.
     pub notification: Notification,
+}
+
+impl From<request_core::config::TaskConfig> for Config {
+    fn from(value: request_core::config::TaskConfig) -> Self {
+        Config {
+            action: Action::from(value.common_data.action),
+            url: value.url,
+            title: if value.title.is_empty() { None } else { Some(value.title) },
+            description: if value.description.is_empty() { None } else { Some(value.description) },
+            mode: Some(Mode::from(value.common_data.mode)),
+            overwrite: None,
+            method: if value.method == "GET" { None } else { Some(value.method) },
+            headers: if value.headers.is_empty() { None } else { Some(value.headers) },
+            data: Some(Data::S(value.data)),
+            saveas: None,
+            network: Some(value.common_data.network_config.into()),
+            metered: Some(value.common_data.metered),
+            roaming: Some(value.common_data.roaming),
+            retry: Some(value.common_data.retry),
+            redirect: Some(value.common_data.redirect),
+            proxy: if value.proxy.is_empty() { None } else { Some(value.proxy) },
+            index: Some(value.common_data.index as i32),
+            begins: Some(value.common_data.begins as i64),
+            ends: Some(value.common_data.ends),
+            gauge: Some(value.common_data.gauge),
+            precise: Some(value.common_data.precise),
+            token: if value.token.is_empty() { None } else { Some(value.token) },
+            priority: Some(value.common_data.priority as i32),
+            extras: if value.extras.is_empty() { None } else { Some(value.extras) },
+            multipart: Some(value.common_data.multipart),
+            notification: None,
+        }
+    }
 }
 
 /// Converts from API Config to core TaskConfig.
@@ -622,13 +656,15 @@ impl From<Config> for TaskConfig {
                             });
                         }
                         Value::FileSpec(file_spec) => {
-                            // FileSpec 类型的 value，转换为 FileSpec 并添加到 file_specs
-                            file_specs.push(file_spec.into());
+                            let mut file_spec: request_core::file::FileSpec = file_spec.into();
+                            file_spec.name = form_item.name;
+                            file_specs.push(file_spec);
                         }
                         Value::Array(file_spec_array) => {
-                            // FileSpec 数组类型的 value，转换为多个 FileSpec 并添加到 file_specs
                             for file_spec in file_spec_array {
-                                file_specs.push(file_spec.into());
+                                let mut file_spec: request_core::file::FileSpec = file_spec.into();
+                                file_spec.name = form_item.name.clone();
+                                file_specs.push(file_spec);
                             }
                         }
                     }
@@ -685,12 +721,20 @@ impl From<Config> for TaskConfig {
                 background: !matches!(value.mode, Some(Mode::Foreground)),
                 multipart: value.multipart.unwrap_or(false),
                 mode: value.mode.unwrap_or(Mode::Background).into(),
+                min_speed: MinSpeed {
+                    speed: 0,
+                    duration: 0,
+                },
+                timeout: Timeout {
+                    connection_timeout: 0,
+                    total_timeout: 0,
+                },
             },
             saveas: value.saveas.unwrap_or_default(),
             overwrite: value.overwrite.unwrap_or(false),
             notification: value.notification.map(Into::into).unwrap_or(request_core::config::Notification {
-                title: "".to_string(),
-                text: "".to_string(),
+                title: None,
+                text: None,
             }),
         }
     }

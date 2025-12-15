@@ -28,10 +28,12 @@ ohos_rust_shared_library("cache_download_ani") {
   external_deps = [
     "netmanager_base:ani_rs",
     "runtime_core:ani",
+    "hilog:libhilog",
+    "hilog:hilog_rust",
   ]
 
   deps = [
-    "../../../native/cache_download:preload_native",
+    "../../../native/cache_download:preload_native_rlib",
     "//third_party/rust/crates/serde/serde:lib",
   ]
 

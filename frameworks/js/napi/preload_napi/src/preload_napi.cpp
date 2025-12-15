@@ -27,6 +27,9 @@ namespace OHOS::Request {
 
 napi_value BuildDownloadInfo(napi_env env, const CppDownloadInfo &result)
 {
+    if (env == nullptr) {
+        return nullptr;
+    }
     napi_status status;
     napi_value jsInfo;
     status = napi_create_object(env, &jsInfo);

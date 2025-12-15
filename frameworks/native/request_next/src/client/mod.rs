@@ -112,7 +112,7 @@ use std::sync::{Arc, OnceLock};
 
 // External dependencies
 use request_core::config::{Action, TaskConfig, Version};
-use request_core::error_code::CHANNEL_NOT_OPEN;
+use request_core::error_code::{CHANNEL_NOT_OPEN, OTHER};
 use request_core::file::FileSpec;
 use request_core::filter::SearchFilter;
 use request_core::info::TaskInfo;
@@ -177,6 +177,25 @@ impl<'a> RequestClient<'a> {
             res.open_channel();
             res
         })
+    }
+
+    pub fn check_config(
+        &self,
+        context: Context,
+        seq: u64,
+        mut config: TaskConfig,
+    ) -> Result<(), CreateTaskError> {
+        debug!("Creating task with config: {:?}", config);
+        // todo: errcode and errmsg
+        TaskConfigVerifier::get_instance().verify(&config)?;
+        let token = FileManager::get_instance().apply(context, &mut config)?;
+        let task = NativeTask {
+            config,
+            token,
+        };
+        self.task_manager.insert(seq, task);
+
+        Ok(())
     }
 
     /// Creates a new download task with the specified configuration.
@@ -264,16 +283,13 @@ impl<'a> RequestClient<'a> {
     pub fn create_task(
         &self,
         context: Context,
-        mut config: TaskConfig,
+        seq: u64
     ) -> Result<i64, CreateTaskError> {
-        debug!("Creating task with config: {:?}", config);
-        // todo: errcode and errmsg
-        TaskConfigVerifier::get_instance().verify(&config)?;
-        let token = FileManager::get_instance().apply(context, &mut config)?;
+        let task = self.task_manager.get_by_seq(&seq).ok_or(CreateTaskError::Code(OTHER))?;
 
         // Retry loop for channel reconnection
         loop {
-            let res = match self.proxy.create(&config) {
+            let res = match self.proxy.create(&task.config) {
                 Err(e) => {
                     error!("Failed to create task: {:?}", e);
                     // Attempt to reopen channel if it's closed
@@ -281,24 +297,22 @@ impl<'a> RequestClient<'a> {
                         self.open_channel();
                         continue;
                     }
+                    self.task_manager.remove(&seq);
                     Err(e)
                 }
                 Ok(task_id) => {
                     info!("Task created successfully with ID: {}", task_id);
-                    let task = NativeTask {
-                        config: config,
-                        token: token,
-                    };
-                    self.task_manager
-                        .tasks
-                        .lock()
-                        .unwrap()
-                        .insert(task_id, task);
+                    self.task_manager.bind(task_id, seq);
                     Ok(task_id)
                 }
             };
             break res;
         }
+    }
+
+    pub fn get_task(&self, task_id: i64, token: Option<String>) -> Result<TaskConfig, i32> {
+        
+        self.proxy.get_task(task_id, token)
     }
 
     /// Starts a download task with the specified ID.
@@ -342,7 +356,7 @@ impl<'a> RequestClient<'a> {
     /// # Returns
     /// `Ok(())` on success, or an error code on failure
     pub fn remove(&self, task_id: i64) -> Result<(), i32> {
-        self.task_manager.tasks.lock().unwrap().remove(&task_id);
+        self.task_manager.remove_task(&task_id);
         self.proxy.remove(task_id)
     }
 
@@ -367,6 +381,10 @@ impl<'a> RequestClient<'a> {
     /// `Ok(())` on success, or an error code on failure
     pub fn set_max_speed(&self, task_id: i64, speed: i64) -> Result<(), i32> {
         self.proxy.set_max_speed(task_id, speed)
+    }
+
+    pub fn query_mime_type(&self, task_id: i64) -> Result<String, i32> {
+        self.proxy.query_mime_type(task_id)
     }
 
     /// Registers a callback for task status updates.
@@ -411,5 +429,25 @@ impl<'a> RequestClient<'a> {
     /// A list of matching task IDs on success, or an error code on failure
     pub fn search(&self, keyword: SearchFilter) -> Result<Vec<String>, i32> {
         self.proxy.search(keyword)
+    }
+
+    pub fn touch(&self, task_id: i64, token: String) -> Result<TaskInfo, i32> {
+        self.proxy.touch(task_id, token)
+    }
+
+    pub fn query(&self, task_id: i64) -> Result<TaskInfo, i32> {
+        self.proxy.query(task_id)
+    }
+
+    pub fn create_group(&self, gauge: Option<bool>, title: Option<String>, text: Option<String>, disable: Option<bool>) -> Result<String, i32> {
+        self.proxy.create_group(gauge, title, text, disable)
+    }
+
+    pub fn attach_group(&self, group_id: String, task_ids: Vec<String>) -> Result<(), i32> {
+        self.proxy.attach_group(group_id, task_ids)
+    }
+
+    pub fn delete_group(&self, group_id: String) -> Result<(), i32> {
+        self.proxy.delete_group(group_id)
     }
 }

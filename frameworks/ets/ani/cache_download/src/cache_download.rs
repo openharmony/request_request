@@ -18,10 +18,7 @@
 //! cache download service.
 
 use ani_rs::business_error::BusinessError;
-use preload_native::services::{CacheDownloadService, DownloadRequest};
-use preload_native::traits::PreloadCallback;
-use preload_native::cache_download;
-
+use preload_native_rlib::{CacheDownloadService, DownloadRequest, PreloadCallback, Downloader};
 use crate::bridge::CacheDownloadOptions;
 
 /// Empty callback implementation for preload operations.
@@ -31,6 +28,9 @@ struct Callback;
 
 impl PreloadCallback for Callback {}
 
+const MAX_FILE_SIZE: i64 = 4294967296;
+const MAX_MEM_SIZE: i64 = 1073741824;
+const MAX_UTL_LENGTH: usize = 8192;
 /// Initiates a download of a resource with the specified URL and options.
 ///
 /// Creates a new download request, configures it with any provided headers, and submits
@@ -67,20 +67,29 @@ impl PreloadCallback for Callback {}
 /// );
 /// ```
 #[ani_rs::native]
-fn download(url: String, options: CacheDownloadOptions) -> Result<(), BusinessError> {
+pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), BusinessError> {
+    if (url.len() > MAX_UTL_LENGTH as usize) {
+        return Err(BusinessError::new(
+            401,
+            "url exceeds the maximum length".to_string()
+        ));
+    }
     let mut request = DownloadRequest::new(&url);
     // Create a boxed callback to handle download events
     let callback = Box::new(Callback);
     // Apply headers if provided in options
-    if let Some(headers) = options.header {
-        request.headers(headers);
+    let headers = options.headers.unwrap_or_default();
+    let headers_vec: Vec<(String, String)> = headers.into_iter().collect();
+    let borrowed: Vec<(&str, &str)> = headers_vec.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    if !borrowed.is_empty() {
+        request.headers(borrowed);
     }
     // Initiate preloading with Netstack downloader and auto-refresh enabled
     CacheDownloadService::get_instance().preload(
         request,
         callback,
         true,  // Enable auto-refresh of cached resources
-        cache_download::Downloader::Netstack,
+        Downloader::Netstack,
     );
     Ok(())
 }
@@ -108,7 +117,13 @@ fn download(url: String, options: CacheDownloadOptions) -> Result<(), BusinessEr
 /// let result: Result<(), BusinessError> = cancel("https://example.com/resource.mp4".to_string());
 /// ```
 #[ani_rs::native]
-fn cancel(url: String) -> Result<(), BusinessError> {
+pub fn cancel(url: String) -> Result<(), BusinessError> {
+    if (url.len() > MAX_UTL_LENGTH as usize) {
+        return Err(BusinessError::new(
+            401,
+            "url exceeds the maximum length".to_string()
+        ));
+    }
     CacheDownloadService::get_instance().cancel(&url);
     Ok(())
 }
@@ -136,7 +151,13 @@ fn cancel(url: String) -> Result<(), BusinessError> {
 /// let result: Result<(), BusinessError> = set_memory_cache_size(50 * 1024 * 1024);
 /// ```
 #[ani_rs::native]
-fn set_memory_cache_size(size: i64) -> Result<(), BusinessError> {
+pub fn set_memory_cache_size(size: i64) -> Result<(), BusinessError> {
+    if (size > MAX_MEM_SIZE) {
+        return Err(BusinessError::new(
+            401,
+            "memory cache size exceeds the maximum value".to_string()
+        ));
+    }
     // Convert signed i64 to unsigned u64 for cache size
     CacheDownloadService::get_instance().set_ram_cache_size(size as u64);
     Ok(())
@@ -165,7 +186,13 @@ fn set_memory_cache_size(size: i64) -> Result<(), BusinessError> {
 /// let result: Result<(), BusinessError> = set_file_cache_size(500 * 1024 * 1024);
 /// ```
 #[ani_rs::native]
-fn set_file_cache_size(size: i64) -> Result<(), BusinessError> {
+pub fn set_file_cache_size(size: i64) -> Result<(), BusinessError> {
+    if (size > MAX_FILE_SIZE) {
+        return Err(BusinessError::new(
+            401,
+            "file cache size exceeds the maximum value".to_string()
+        ));
+    }
     // Convert signed i64 to unsigned u64 for cache size
     CacheDownloadService::get_instance().set_file_cache_size(size as u64);
     Ok(())

@@ -11,14 +11,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod bridge;
-mod cache_download;
-ani_rs::ani_constructor! {
-    namespace "@ohos.request.cacheDownload.cacheDownload"
-    [
-        "download" : cache_download::download,
-        "cancel" : cache_download::cancel,
-        "setMemoryCacheSize" : cache_download::set_memory_cache_size,
-        "setFileCacheSize" : cache_download::set_file_cache_size,
-    ]
+#[repr(i32)]
+pub enum ExceptionErrorCode {
+    E_OK = 0,
+    E_UNLOADING_SA,
+    E_IPC_SIZE_TOO_LARGE,
+    E_MIMETYPE_NOT_FOUND,
+    E_TASK_INDEX_TOO_LARGE,
+    E_CHANNEL_NOT_OPEN = 5,
+    E_PERMISSION = 201,
+    E_NOT_SYSTEM_APP = 202,
+    E_PARAMETER_CHECK = 401,
+    E_UNSUPPORTED = 801,
+    E_FILE_IO = 13400001,
+    E_FILE_PATH = 13400002,
+    E_SERVICE_ERROR = 13400003,
+    E_OTHER = 13499999,
+    E_TASK_QUEUE = 21900004,
+    E_TASK_MODE = 21900005,
+    E_TASK_NOT_FOUND = 21900006,
+    E_TASK_STATE = 21900007,
+    E_GROUP_NOT_FOUND = 21900008,
 }

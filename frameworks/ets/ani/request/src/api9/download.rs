@@ -34,6 +34,47 @@ use request_core::config::TaskConfig;
 use super::bridge::{DownloadConfig, DownloadTask};
 use crate::api9::bridge::DownloadInfo;
 use crate::seq::TaskSeq;
+use crate::constant::*;
+
+#[ani_rs::native]
+pub fn check_config(
+    env: &AniEnv,
+    context: AniRef,
+    config: DownloadConfig,
+) -> Result<i64, BusinessError> {
+    let context = AniObject::from(context);
+    debug!("is {}", is_stage_context(env, &context));
+
+    // Generate a new sequential task ID for tracking
+    let seq = TaskSeq::next().0.get();
+    info!("check task, seq: {}", seq);
+    let context = Context::new(env, &context);
+
+    let mut config: TaskConfig = config.into();
+    config.bundle_type = context.get_bundle_type() as u32;
+    config.bundle = context.get_bundle_name();
+
+    // Create the download task
+    match RequestClient::get_instance().check_config(
+        context,
+        seq,
+        config
+    ) {
+        Ok(()) => Ok(seq as i64),
+        Err(CreateTaskError::DownloadPath(_)) => {
+            return Err(BusinessError::new(
+                13400001,
+                "Invalid file or file system error.".to_string(),
+            ))
+        }
+        Err(CreateTaskError::Code(code)) => {
+            return Err(BusinessError::new(
+                code,
+                "Download failed.".to_string(),
+            ))
+        }
+    }
+}
 
 /// Creates and starts a download task with the given configuration.
 ///
@@ -78,24 +119,15 @@ use crate::seq::TaskSeq;
 pub fn download_file(
     env: &AniEnv,
     context: AniRef,
-    config: DownloadConfig,
+    seq: i64
 ) -> Result<DownloadTask, BusinessError> {
     let context = AniObject::from(context);
-    info!("is {}", is_stage_context(env, &context));
-
-    // Generate a new sequential task ID for tracking
-    let seq = TaskSeq::next();
-    info!("Api9 task, seq: {}", seq.0);
+    debug!("is {}", is_stage_context(env, &context));
     let context = Context::new(env, &context);
-
-    let mut config: TaskConfig = config.into();
-    config.bundle_type = context.get_bundle_type() as u32;
-    config.bundle = context.get_bundle_name();
-
     // Create the download task
     let task = match RequestClient::get_instance().create_task(
         context,
-        config
+        seq as u64
     ) {
         Ok(task_id) => DownloadTask { task_id: task_id.to_string() },
         Err(CreateTaskError::DownloadPath(_)) => {
@@ -116,7 +148,7 @@ pub fn download_file(
     // Start the download task
     match RequestClient::get_instance().start(tid) {
         Ok(_) => {
-            info!("Api9 download started successfully, seq: {}", seq.0);
+            info!("Api9 download started successfully, seq: {}", seq);
             Ok(task)
         }
         Err(e) => {
@@ -159,10 +191,17 @@ pub fn download_file(
 /// }
 /// ```
 #[ani_rs::native]
-pub fn delete(this: DownloadTask) -> Result<(), BusinessError> {
+pub fn delete(this: DownloadTask) -> Result<bool, BusinessError> {
     RequestClient::get_instance()
         .remove(this.task_id.parse().unwrap())
-        .map_err(|e| BusinessError::new(e, "Failed to delete download task".to_string()))
+        .map_err(|e| {
+            if e != ExceptionErrorCode::E_PERMISSION as i32 {
+                Ok(true)
+            } else {
+                Err(BusinessError::new(e, "Failed to delete download task".to_string()))
+            }
+        });
+    Ok(true)
 }
 
 /// Suspends a download task.
@@ -195,10 +234,17 @@ pub fn delete(this: DownloadTask) -> Result<(), BusinessError> {
 /// }
 /// ```
 #[ani_rs::native]
-pub fn suspend(this: DownloadTask) -> Result<(), BusinessError> {
+pub fn suspend(this: DownloadTask) -> Result<bool, BusinessError> {
     RequestClient::get_instance()
         .pause(this.task_id.parse().unwrap())
-        .map_err(|e| BusinessError::new(e, "Failed to suspend download task".to_string()))
+        .map_err(|e| {
+            if e != ExceptionErrorCode::E_PERMISSION as i32 {
+                Ok(true)
+            } else {
+                Err(BusinessError::new(e, "Failed to delete download task".to_string()))
+            }
+        });
+    Ok(true)
 }
 
 /// Restores a suspended download task.
@@ -231,10 +277,17 @@ pub fn suspend(this: DownloadTask) -> Result<(), BusinessError> {
 /// }
 /// ```
 #[ani_rs::native]
-pub fn restore(this: DownloadTask) -> Result<(), BusinessError> {
+pub fn restore(this: DownloadTask) -> Result<bool, BusinessError> {
     RequestClient::get_instance()
         .resume(this.task_id.parse().unwrap())
-        .map_err(|e| BusinessError::new(e, "Failed to restore download task".to_string()))
+        .map_err(|e| {
+            if e != ExceptionErrorCode::E_PERMISSION as i32 {
+                Ok(true)
+            } else {
+                Err(BusinessError::new(e, "Failed to delete download task".to_string()))
+            }
+        });
+    Ok(true)
 }
 
 /// Retrieves information about a download task.
@@ -303,5 +356,16 @@ pub fn get_task_info(this: DownloadTask) -> Result<DownloadInfo, BusinessError> 
 /// ```
 #[ani_rs::native]
 pub fn get_task_mime_type(this: DownloadTask) -> Result<String, BusinessError> {
-    Ok("application/octet-stream".to_string())
+    let task_id = this.task_id.parse().unwrap();
+    let result = RequestClient::get_instance().query_mime_type(task_id);
+    match result {
+        Ok(info) => Ok(info),
+        Err(e) => {
+            if e != ExceptionErrorCode::E_PERMISSION as i32 {
+                Ok("".to_string())
+            } else {
+                Err(BusinessError::new(e, "Failed to get task mime type".to_string()))
+            }
+        }
+    }
 }

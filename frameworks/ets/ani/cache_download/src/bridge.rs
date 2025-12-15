@@ -11,7 +11,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[ani_rs::ani]
+use std::collections::HashMap;
+
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.SslType")]
+pub enum SslType {
+    TLS,
+    TLCP,
+}
+
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.CacheStrategy")]
+pub enum CacheStrategy {
+    FORCE,
+    LAZY,
+}
+
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.CacheDownloadOptions")]
 pub struct CacheDownloadOptions {
-    pub header: Option<HashMap<String, String>>,
+    pub headers: Option<HashMap<String, String>>,
+    pub ssl_type: Option<SslType>,
+    pub cache_strategy: Option<CacheStrategy>,
+    pub caPath: Option<String>,
 }

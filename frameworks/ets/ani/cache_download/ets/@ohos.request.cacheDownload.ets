@@ -17,9 +17,25 @@
 import { BusinessError } from '@ohos.base';
 
 export default namespace cacheDownload {
+    loadLibrary("cache_download_ani")
+
     export interface CacheDownloadOptions {
         headers?: Record<string, string>;
+        sslType?: SslType;
+        caPath?: string;
+        cacheStrategy?: CacheStrategy;
     }
+
+    export enum SslType {
+        TLS = 'TLS',
+        TLCP = 'TLCP'
+    }
+
+    export enum CacheStrategy {
+        FORCE = 0,
+        LAZY = 1
+    }
+
     export native function download(url: string, options: CacheDownloadOptions): void;
 
     export native function cancel(url: string): void;
