@@ -67,6 +67,7 @@ ohos_rust_static_library("cache_core") {
     ":cache_core_cxx",
     "../../../common/ffrt_rs:ffrt_rs",
     "../../../common/utils:request_utils",
+    "../../../common/utils:request_data_ability",
   ]
 
   external_deps = [

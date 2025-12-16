@@ -38,6 +38,7 @@ ohos_rust_shared_library("request_ani") {
   deps = [
     "../../../../common/request_core:request_core",
     "../../../../common/utils:request_utils",
+    "../../../../common/utils:request_data_ability",
     "../../../native/request_next:request_client",
     "//third_party/rust/crates/serde/serde:lib",
   ]

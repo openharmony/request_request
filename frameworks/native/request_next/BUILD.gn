@@ -66,6 +66,7 @@ ohos_rust_static_library("request_client") {
   deps = [
     "../../../common/request_core:request_core",
     "../../../common/utils:request_utils",
+    "../../../common/utils:request_data_ability",
     "//third_party/rust/crates/serde/serde:lib",
 #    ":request_next_cxx",
   ]
