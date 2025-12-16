@@ -80,7 +80,7 @@ protected:
     std::recursive_mutex allCbMutex_;
     std::atomic<uint32_t> validCbNum{ 0 };
     bool isInvoked_{ false };
-    int toDeleteCount_{ 0 };
+    size_t toDeleteCount_{ 0 };
     
     void CleanupCallbacks();
 };
