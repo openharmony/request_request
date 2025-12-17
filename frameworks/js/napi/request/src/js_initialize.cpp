@@ -66,7 +66,7 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
     napi_value self = nullptr;
     size_t argc = NapiUtils::MAX_ARGC;
     napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+    REQUEST_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr), "napi_get_cb_info failed");
     int32_t number = version == Version::API8 ? NapiUtils::ONE_ARG : NapiUtils::TWO_ARG;
     if (static_cast<int32_t>(argc) < number) {
         NapiUtils::ThrowError(
@@ -996,7 +996,7 @@ bool JsInitialize::Convert2FormItems(
 {
     bool isArray = false;
     napi_is_array(env, jsValue, &isArray);
-    NAPI_ASSERT_BASE(env, isArray, "not array", false);
+    REQUEST_NAPI_ASSERT_BASE(env, isArray, E_OTHER, "not array", false);
     uint32_t length = 0;
     napi_get_array_length(env, jsValue, &length);
     for (uint32_t i = 0; i < length; ++i) {

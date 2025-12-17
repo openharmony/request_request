@@ -58,7 +58,7 @@ bool UploadTaskNapiV5::ParseCallback(napi_env env, napi_callback_info info)
     napi_value self = nullptr;
     size_t argc = JSUtil::MAX_ARGC;
     napi_value argv[JSUtil::MAX_ARGC] = { nullptr };
-    NAPI_CALL_BASE(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr), false);
+    REQUEST_NAPI_CALL_RETURN(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr), "napi_get_cb_info", false);
     bool successCb = JSUtil::ParseFunction(env, argv[FIRST_ARGV], "success", success_);
     bool failCb = JSUtil::ParseFunction(env, argv[FIRST_ARGV], "fail", fail_);
     bool completeCb = JSUtil::ParseFunction(env, argv[FIRST_ARGV], "complete", complete_);
@@ -79,19 +79,19 @@ napi_value UploadTaskNapiV5::JsUpload(napi_env env, napi_callback_info info)
     napi_value self = nullptr;
     size_t argc = JSUtil::MAX_ARGC;
     napi_value argv[JSUtil::MAX_ARGC] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+    REQUEST_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr), "napi_get_cb_info failed");
 
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
     napi_status getStatus = JsInitialize::GetContext(env, argv[FIRST_ARGV], context);
     if (getStatus != napi_ok) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "GetContext fail.");
-        NAPI_ASSERT(env, false, "GetContext fail");
+        REQUEST_NAPI_ASSERT(env, "GetContext fail", false);
     }
 
     std::shared_ptr<UploadConfig> uploadConfig = JSUtil::ParseUploadConfig(env, argv[FIRST_ARGV], API3);
     if (uploadConfig == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "ParseUploadConfig fail.");
-        NAPI_ASSERT(env, false, "ParseUploadConfig fail");
+        REQUEST_NAPI_ASSERT(env, "ParseUploadConfig fail", false);
     }
 
     AddCallbackToConfig(env, uploadConfig);

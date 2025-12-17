@@ -288,7 +288,7 @@ napi_value JsTask::GetCtorV10(napi_env env)
     std::lock_guard<std::mutex> lock(createMutex_);
     napi_value cons;
     if (createCtor != nullptr) {
-        NAPI_CALL(env, napi_get_reference_value(env, createCtor, &cons));
+        REQUEST_NAPI_CALL(env, napi_get_reference_value(env, createCtor, &cons), "napi_get_reference_value failed");
         return cons;
     }
     size_t count = sizeof(clzDes) / sizeof(napi_property_descriptor);
@@ -301,7 +301,8 @@ napi_value JsTask::GetCtorV9(napi_env env)
     std::lock_guard<std::mutex> lock(requestFileMutex_);
     napi_value cons;
     if (requestFileCtor != nullptr) {
-        NAPI_CALL(env, napi_get_reference_value(env, requestFileCtor, &cons));
+        REQUEST_NAPI_CALL(env, napi_get_reference_value(env, requestFileCtor, &cons),
+            "napi_get_reference_value failed");
         return cons;
     }
     size_t count = sizeof(clzDesV9) / sizeof(napi_property_descriptor);
@@ -314,7 +315,7 @@ napi_value JsTask::GetCtorV8(napi_env env)
     std::lock_guard<std::mutex> lock(requestMutex_);
     napi_value cons;
     if (requestCtor != nullptr) {
-        NAPI_CALL(env, napi_get_reference_value(env, requestCtor, &cons));
+        REQUEST_NAPI_CALL(env, napi_get_reference_value(env, requestCtor, &cons), "napi_get_reference_value failed");
         return cons;
     }
     size_t count = sizeof(clzDesV9) / sizeof(napi_property_descriptor);
@@ -362,7 +363,8 @@ napi_value JsTask::GetTaskCtor(napi_env env)
     std::lock_guard<std::mutex> lock(getTaskCreateMutex_);
     napi_value cons;
     if (getTaskCreateCtor != nullptr) {
-        NAPI_CALL(env, napi_get_reference_value(env, getTaskCreateCtor, &cons));
+        REQUEST_NAPI_CALL(env, napi_get_reference_value(env, getTaskCreateCtor, &cons),
+            "napi_get_reference_value failed");
         return cons;
     }
     size_t count = sizeof(clzDes) / sizeof(napi_property_descriptor);
@@ -880,7 +882,7 @@ int64_t JsTask::ParseBefore(napi_env env, napi_value value)
         return now;
     }
     int64_t ret = 0;
-    NAPI_CALL_BASE(env, napi_get_value_int64(env, value1, &ret), now);
+    REQUEST_NAPI_CALL_RETURN(env, napi_get_value_int64(env, value1, &ret), "napi_get_value_int64 failed", now);
     return ret;
 }
 
@@ -895,7 +897,7 @@ int64_t JsTask::ParseAfter(napi_env env, napi_value value, int64_t before)
         return defaultValue;
     }
     int64_t ret = 0;
-    NAPI_CALL_BASE(env, napi_get_value_int64(env, value1, &ret), defaultValue);
+    REQUEST_NAPI_CALL_RETURN(env, napi_get_value_int64(env, value1, &ret), "napi_get_value_int64", defaultValue);
     return ret;
 }
 

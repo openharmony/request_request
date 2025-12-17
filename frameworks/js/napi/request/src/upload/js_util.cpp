@@ -40,7 +40,7 @@ std::string JSUtil::Convert2String(napi_env env, napi_value jsString)
     size_t maxLen = JSUtil::MAX_LEN;
     napi_status status = napi_get_value_string_utf8(env, jsString, NULL, 0, &maxLen);
     if (status != napi_ok) {
-        GET_AND_THROW_LAST_ERROR((env));
+        REQUEST_GET_AND_THROW_LAST_ERROR((env), "napi_get_value_string_utf8 failed");
         maxLen = JSUtil::MAX_LEN;
     }
     if (maxLen == 0) {
@@ -53,7 +53,7 @@ std::string JSUtil::Convert2String(napi_env env, napi_value jsString)
     size_t len = 0;
     status = napi_get_value_string_utf8(env, jsString, buf, maxLen + 1, &len);
     if (status != napi_ok) {
-        GET_AND_THROW_LAST_ERROR((env));
+        REQUEST_GET_AND_THROW_LAST_ERROR((env), "napi_get_value_string_utf8 failed");
     }
     buf[len] = 0;
     std::string value(buf);
@@ -143,18 +143,21 @@ napi_value JSUtil::GetNamedProperty(napi_env env, napi_value object, const std::
 {
     napi_value value = nullptr;
     bool hasProperty = false;
-    NAPI_CALL(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty));
+    REQUEST_NAPI_CALL(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty),
+        "napi_has_named_property failed");
     if (!hasProperty) {
         return value;
     }
-    NAPI_CALL(env, napi_get_named_property(env, object, propertyName.c_str(), &value));
+    REQUEST_NAPI_CALL(env, napi_get_named_property(env, object, propertyName.c_str(), &value),
+        "napi_get_named_property failed");
     return value;
 }
 
 bool JSUtil::HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
     bool hasProperty = false;
-    NAPI_CALL_BASE(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty), false);
+    REQUEST_NAPI_CALL_BASE(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty),
+        E_OTHER, "napi_has_named_property failed", false);
     return hasProperty;
 }
 
@@ -278,7 +281,7 @@ std::vector<Upload::File> JSUtil::Convert2FileVector(napi_env env, napi_value js
 {
     bool isArray = false;
     napi_is_array(env, jsFiles, &isArray);
-    NAPI_ASSERT_BASE(env, isArray, "not array", {});
+    REQUEST_NAPI_ASSERT_BASE(env, isArray, E_OTHER, "not array", {});
     uint32_t length = 0;
     napi_get_array_length(env, jsFiles, &length);
     std::vector<Upload::File> files;
@@ -326,7 +329,7 @@ std::vector<Upload::RequestData> JSUtil::Convert2RequestDataVector(napi_env env,
 {
     bool isArray = false;
     napi_is_array(env, jsRequestDatas, &isArray);
-    NAPI_ASSERT_BASE(env, isArray, "not array", {});
+    REQUEST_NAPI_ASSERT_BASE(env, isArray, E_OTHER, "not array", {});
     uint32_t length = 0;
     napi_get_array_length(env, jsRequestDatas, &length);
     std::vector<Upload::RequestData> requestDatas;
@@ -349,9 +352,10 @@ napi_value JSUtil::CreateBusinessError(
     napi_value msg = nullptr;
     auto iter = ErrorCodeToMsg.find(errorCode);
     std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + "   " + errorMessage;
-    NAPI_CALL(env, napi_create_string_utf8(env, strMsg.c_str(), strMsg.length(), &msg));
-    NAPI_CALL(env, napi_create_uint32(env, errorCode, &code));
-    NAPI_CALL(env, napi_create_error(env, nullptr, msg, &error));
+    REQUEST_NAPI_CALL(env, napi_create_string_utf8(env, strMsg.c_str(), strMsg.length(), &msg),
+        "napi_create_string_utf8 failed");
+    REQUEST_NAPI_CALL(env, napi_create_uint32(env, errorCode, &code), "napi_create_uint32 failed");
+    REQUEST_NAPI_CALL(env, napi_create_error(env, nullptr, msg, &error), "napi_create_error failed");
     napi_set_named_property(env, error, "code", code);
     return error;
 }

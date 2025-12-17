@@ -431,9 +431,11 @@ napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::
 napi_status RequestEvent::ParseInputParameters(
     napi_env env, size_t argc, napi_value self, const std::shared_ptr<ExecContext> &context)
 {
-    NAPI_ASSERT_BASE(env, self != nullptr, "self is nullptr", napi_invalid_arg);
-    NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&context->task)), napi_invalid_arg);
-    NAPI_ASSERT_BASE(env, context->task != nullptr, "there is no native task", napi_invalid_arg);
+    REQUEST_NAPI_ASSERT_BASE(env, self != nullptr, E_OTHER, "self is nullptr", napi_invalid_arg);
+    REQUEST_NAPI_CALL_RETURN(env, napi_unwrap(env, self, reinterpret_cast<void **>(&context->task)),
+        "napi_unwrap failed", napi_invalid_arg);
+    REQUEST_NAPI_ASSERT_BASE(env, context->task != nullptr,
+        E_OTHER, "there is no native task", napi_invalid_arg);
     context->version_ = context->task->config_.version;
     context->withErrCode_ = context->version_ != Version::API8;
     return napi_ok;

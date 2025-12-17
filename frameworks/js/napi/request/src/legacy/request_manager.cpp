@@ -35,7 +35,8 @@ bool RequestManager::IsLegacy(napi_env env, napi_callback_info info)
 {
     size_t argc = DOWNLOAD_ARGC;
     napi_value argv[DOWNLOAD_ARGC]{};
-    NAPI_CALL_BASE(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr), false);
+    REQUEST_NAPI_CALL_BASE(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr),
+        E_OTHER, "napi_get_cb_info failed", false);
     auto successCb = NapiUtils::GetNamedProperty(env, argv[0], "success");
     auto failCb = NapiUtils::GetNamedProperty(env, argv[0], "fail");
     auto completeCb = NapiUtils::GetNamedProperty(env, argv[0], "complete");
@@ -243,7 +244,7 @@ napi_value RequestManager::Download(napi_env env, napi_callback_info info)
 {
     size_t argc = DOWNLOAD_ARGC;
     napi_value argv[DOWNLOAD_ARGC]{};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    REQUEST_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr), "napi_get_cb_info failed");
     napi_value res = NapiUtils::GetUndefined(env);
 
     auto option = ParseOption(env, argv[0]);
@@ -275,7 +276,7 @@ napi_value RequestManager::OnDownloadComplete(napi_env env, napi_callback_info i
 {
     size_t argc = DOWNLOAD_ARGC;
     napi_value argv[DOWNLOAD_ARGC]{};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    REQUEST_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr), "napi_get_cb_info failed");
     napi_value res = NapiUtils::GetUndefined(env);
 
     auto token = NapiUtils::Convert2String(env, argv[0], "token");
