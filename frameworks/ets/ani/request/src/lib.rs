@@ -22,9 +22,9 @@ use ani_rs::ani_constructor;
 
 // Public API modules
 pub mod api10; // API version 10 implementation
-pub mod api9;  // API version 9 implementation
-mod seq;       // Internal sequence ID generation
+pub mod api9; // API version 9 implementation
 pub mod constant;
+mod seq; // Internal sequence ID generation
 
 #[macro_use]
 extern crate request_utils;
@@ -47,8 +47,8 @@ ani_constructor!(
     // API 9 namespace bindings for direct function calls
     namespace "L@ohos/request/request"
     [
-        "checkDownloadConfig": api9::download::check_config,  
-        "checkUploadConfig": api9::upload::check_config, 
+        "checkDownloadConfig": api9::download::check_config,
+        "checkUploadConfig": api9::upload::check_config,
         "downloadFileSync": api9::download::download_file, // Synchronous file download
         "uploadFileSync": api9::upload::upload_file,       // Synchronous file upload
     ]
@@ -93,6 +93,7 @@ ani_constructor!(
         "touchSync": api10::agent::touch,                     // Update task timestamp
         "searchSync": api10::agent::search,                   // Search tasks
         "querySync": api10::agent::query,                     // Query task details
+        "checkGroupConfig": api10::notification::check_group_config, // Check notification group config
         "createGroupSync": api10::notification::create_group, // Create notification group
         "attachGroupSync": api10::notification::attach_group, // Attach task to notification group
         "deleteGroupSync": api10::notification::delete_group, // Delete notification group
@@ -107,10 +108,13 @@ ani_constructor!(
         "onEvent": api10::callback::on_event,
         "onResponseEvent": api10::callback::on_response_event,
         "onFaultEvent": api10::callback::on_fault_event,
+        "onWaitEvent": api10::callback::on_wait_event,
+        "checkMaxSpeed": api10::task::check_max_speed,
         "setMaxSpeedSync": api10::task::set_max_speed,
         "offEvent": api10::callback::off_event,
         "offResponseEvent": api10::callback::off_response_event,
         "offFaultEvent": api10::callback::off_fault_event,
+        "offWaitEvent": api10::callback::off_wait_event,
         "offEvents": api10::callback::off_events,
     ]
 );

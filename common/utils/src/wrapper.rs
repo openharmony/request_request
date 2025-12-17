@@ -229,6 +229,11 @@ mod ffi {
         /// The bundle type.
         fn BundleType(application_info: &SharedPtr<ApplicationInfo>) -> BundleType;
 
+        /// #Safety
+        ///
+        /// This function is unsafe because it works with raw pointers that must be valid.
+        unsafe fn StringfyWantAgent(env: *mut AniEnv, obj: *mut AniObject) -> String;
+
         #[namespace = "OHOS::AbilityRuntime"]
         type Context;
 

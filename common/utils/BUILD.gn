@@ -115,6 +115,8 @@ ohos_static_library("request_utils_cxx") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:ani_base_context",
     "ability_runtime:app_context",
+    "ability_runtime:wantagent_innerkits",
+    "ability_runtime:ani_wantagent_common",
     "bundle_framework:appexecfwk_core_headers",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",

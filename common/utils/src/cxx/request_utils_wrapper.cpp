@@ -20,9 +20,12 @@
 
 #include "ani.h"
 #include "ani_base_context.h"
-#include "openssl/sha.h"
+#include "ani_common_want_agent.h"
 #include "data_ability_helper.h"
 #include "network_security_config.h"
+#include "openssl/sha.h"
+#include "want_agent.h"
+#include "want_agent_helper.h"
 
 namespace OHOS::Request {
 
@@ -99,5 +102,19 @@ rust::string GetCertificatePinsForHostName(std::string const &hostname)
     std::string certificatePins;
     OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().GetPinSetForHostName(hostname, certificatePins);
     return certificatePins;
+}
+
+rust::string StringfyWantAgent(AniEnv *env, AniObject *obj)
+{
+    AbilityRuntime::WantAgent::WantAgent *wantAgentPtr = nullptr;
+    AppExecFwk::UnwrapWantAgent(reinterpret_cast<ani_env *>(env), *reinterpret_cast<ani_object *>(obj),
+        reinterpret_cast<void **>(&wantAgentPtr));
+    if (wantAgentPtr == nullptr) {
+        return rust::string::lossy("");
+    }
+    std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> wantAgent =
+        std::make_shared<AbilityRuntime::WantAgent::WantAgent>(*wantAgentPtr);
+    std::string ret = OHOS::AbilityRuntime::WantAgent::WantAgentHelper::ToString(wantAgent);
+    return rust::string::lossy(ret);
 }
 } // namespace OHOS::Request

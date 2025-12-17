@@ -20,5 +20,7 @@ ani_rs::ani_constructor! {
         "cancel" : cache_download::cancel,
         "setMemoryCacheSize" : cache_download::set_memory_cache_size,
         "setFileCacheSize" : cache_download::set_file_cache_size,
+        "getDownloadInfo" : cache_download::get_download_info,
+        "setDownloadInfoListSize" : cache_download::set_download_info_list_size,
     ]
 }

@@ -21,17 +21,17 @@
 use ani_rs::business_error::BusinessError;
 use ani_rs::objects::{AniObject, AniRef};
 use ani_rs::AniEnv;
+use request_client::check::file::DownloadPathError;
 use request_client::client::error::CreateTaskError;
 use request_client::RequestClient;
-use request_client::check::file::DownloadPathError;
+use request_core::config::TaskConfig;
 use request_core::config::Version;
 use request_core::filter::SearchFilter;
 use request_utils::context::Context;
-use request_core::config::TaskConfig;
 
 use crate::api10::bridge::{Config, Filter, Task, TaskInfo};
-use crate::seq::TaskSeq;
 use crate::constant::*;
+use crate::seq::TaskSeq;
 
 const TOKEN_MIN_BYTES: usize = 8;
 const TOKEN_MAX_BYTES: usize = 2048;
@@ -41,13 +41,13 @@ pub fn check_tid(id: String) -> Result<(), BusinessError> {
     if id.is_empty() {
         return Err(BusinessError::new(
             ExceptionErrorCode::E_PARAMETER_CHECK as i32,
-            "Parameter verification failed, tid is empty".to_string()
+            "Parameter verification failed, tid is empty".to_string(),
         ));
     }
     if id.len() > 32 {
         return Err(BusinessError::new(
             ExceptionErrorCode::E_TASK_NOT_FOUND as i32,
-            "task not found error".to_string()
+            "task not found error".to_string(),
         ));
     }
     Ok(())
@@ -58,7 +58,8 @@ pub fn check_token(token: String) -> Result<(), BusinessError> {
     if token.len() < TOKEN_MIN_BYTES || token.len() > TOKEN_MAX_BYTES {
         return Err(BusinessError::new(
             ExceptionErrorCode::E_PARAMETER_CHECK as i32,
-            "Parameter verification failed, the length of token should between 8 and 2048 bytes".to_string()
+            "Parameter verification failed, the length of token should between 8 and 2048 bytes"
+                .to_string(),
         ));
     }
     Ok(())
@@ -71,16 +72,20 @@ pub fn check_config(env: &AniEnv, context: AniRef, config: Config) -> Result<i64
     let seq = TaskSeq::next().0.get();
     info!("Check Config, seq: {}", seq);
     let context = Context::new(env, &context);
+
+    let want_agent = config.notification.as_ref().and_then(|n| {
+        n.want_agent
+            .as_ref()
+            .map(|agent| Context::stringfy_want_agent(env, agent))
+    });
+
     let mut config: TaskConfig = config.into();
     // TODO: CHECK NULLPTR
     config.bundle_type = context.get_bundle_type() as u32;
     config.bundle = context.get_bundle_name();
+    config.notification.want_agent = want_agent;
 
-    match RequestClient::get_instance().check_config(
-        context,
-        seq,
-        config,
-    ) {
+    match RequestClient::get_instance().check_config(context, seq, config) {
         Ok(_) => Ok(seq as i64),
         Err(e) => {
             error!("Create task failed: {:?}", e);
@@ -89,10 +94,10 @@ pub fn check_config(env: &AniEnv, context: AniRef, config: Config) -> Result<i64
                 CreateTaskError::DownloadPath(err) => {
                     let (code, message) = match err {
                         DownloadPathError::InvalidPath => (401, "Invalid Path"),
-                        _ => (13400001, "Invalid file or file system error.")
+                        _ => (13400001, "Invalid file or file system error."),
                     };
                     Err(BusinessError::new_static(code, message))
-                },
+                }
                 CreateTaskError::Code(code) => {
                     Err(BusinessError::new_static(code, "Create Task Failed"))
                 }
@@ -147,10 +152,7 @@ pub fn create(env: &AniEnv, context: AniRef, seq: i64) -> Result<String, Busines
     let context = AniObject::from(context);
     let context = Context::new(env, &context);
 
-    match RequestClient::get_instance().create_task(
-        context,
-        seq as u64,
-    ) {
+    match RequestClient::get_instance().create_task(context, seq as u64) {
         Ok(task_id) => Ok(task_id.to_string()),
         Err(e) => {
             error!("Create task failed: {:?}", e);
@@ -159,10 +161,10 @@ pub fn create(env: &AniEnv, context: AniRef, seq: i64) -> Result<String, Busines
                 CreateTaskError::DownloadPath(err) => {
                     let (code, message) = match err {
                         DownloadPathError::InvalidPath => (401, "Invalid Path"),
-                        _ => (13400001, "Invalid file or file system error.")
+                        _ => (13400001, "Invalid file or file system error."),
                     };
                     Err(BusinessError::new_static(code, message))
-                },
+                }
                 CreateTaskError::Code(code) => {
                     Err(BusinessError::new_static(code, "Create Task Failed"))
                 }
@@ -187,18 +189,19 @@ pub fn create(env: &AniEnv, context: AniRef, seq: i64) -> Result<String, Busines
 ///
 /// Panics as this function is unimplemented (`todo!()`).
 #[ani_rs::native]
-pub fn get_task(
-    context: AniRef,
-    id: String,
-    token: Option<String>,
-) -> Result<Task, BusinessError> {
-    let task_id = id
-        .parse::<i64>()
-        .map_err(|_| BusinessError::new(ExceptionErrorCode::E_PARAMETER_CHECK as i32,
-            "Invalid task ID format".to_string()))?;
+pub fn get_task(context: AniRef, id: String, token: Option<String>) -> Result<Task, BusinessError> {
+    let task_id = id.parse::<i64>().map_err(|_| {
+        BusinessError::new(
+            ExceptionErrorCode::E_PARAMETER_CHECK as i32,
+            "Invalid task ID format".to_string(),
+        )
+    })?;
     RequestClient::get_instance()
         .get_task(task_id, token)
-        .map(|c| Task { tid: id, config: Config::from(c) })
+        .map(|c| Task {
+            tid: id,
+            config: Config::from(c),
+        })
         .map_err(|e| BusinessError::new(e, "Failed to get download task".to_string()))
 }
 
@@ -231,10 +234,12 @@ pub fn get_task(
 /// ```
 #[ani_rs::native]
 pub fn remove(id: String) -> Result<(), BusinessError> {
-    let task_id = id
-        .parse::<i64>()
-        .map_err(|_| BusinessError::new(ExceptionErrorCode::E_TASK_NOT_FOUND as i32,
-            "Invalid task ID format".to_string()))?;
+    let task_id = id.parse::<i64>().map_err(|_| {
+        BusinessError::new(
+            ExceptionErrorCode::E_TASK_NOT_FOUND as i32,
+            "Invalid task ID format".to_string(),
+        )
+    })?;
     RequestClient::get_instance()
         .remove(task_id)
         .map_err(|e| BusinessError::new_static(e, "Failed to remove task"))
@@ -268,9 +273,12 @@ pub fn remove(id: String) -> Result<(), BusinessError> {
 #[ani_rs::native]
 pub fn show(id: String) -> Result<TaskInfo, BusinessError> {
     // Parse string task ID to integer for internal use
-    let task_id = id.parse::<i64>()
-        .map_err(|_| BusinessError::new(ExceptionErrorCode::E_PARAMETER_CHECK as i32,
-            "Invalid task ID format".to_string()))?;
+    let task_id = id.parse::<i64>().map_err(|_| {
+        BusinessError::new(
+            ExceptionErrorCode::E_PARAMETER_CHECK as i32,
+            "Invalid task ID format".to_string(),
+        )
+    })?;
     RequestClient::get_instance()
         .show_task(task_id)
         .map(|info| {
@@ -294,10 +302,12 @@ pub fn show(id: String) -> Result<TaskInfo, BusinessError> {
 /// * `Ok(())` unconditionally (placeholder implementation)
 #[ani_rs::native]
 pub fn touch(id: String, token: String) -> Result<TaskInfo, BusinessError> {
-    let task_id = id
-        .parse::<i64>()
-        .map_err(|_| BusinessError::new(ExceptionErrorCode::E_TASK_NOT_FOUND as i32,
-            "task not found error".to_string()))?;
+    let task_id = id.parse::<i64>().map_err(|_| {
+        BusinessError::new(
+            ExceptionErrorCode::E_TASK_NOT_FOUND as i32,
+            "task not found error".to_string(),
+        )
+    })?;
     RequestClient::get_instance()
         .touch(task_id, token)
         .map(|info| {
@@ -374,10 +384,12 @@ pub fn search(filter: Option<Filter>) -> Result<Vec<String>, BusinessError> {
 /// Panics as this function is unimplemented (`todo!()`).
 #[ani_rs::native]
 pub fn query(id: String) -> Result<TaskInfo, BusinessError> {
-    let task_id = id
-        .parse::<i64>()
-        .map_err(|_| BusinessError::new(ExceptionErrorCode::E_PARAMETER_CHECK as i32,
-            "Invalid task ID format".to_string()))?;
+    let task_id = id.parse::<i64>().map_err(|_| {
+        BusinessError::new(
+            ExceptionErrorCode::E_PARAMETER_CHECK as i32,
+            "Invalid task ID format".to_string(),
+        )
+    })?;
     RequestClient::get_instance()
         .query(task_id)
         .map(|info| {

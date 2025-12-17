@@ -23,8 +23,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 use ani_rs::objects::{AniFnObject, GlobalRefCallback};
 use ani_rs::AniEnv;
 use request_client::RequestClient;
-use request_core::info::{Progress, Response, Faults};
-
+use request_core::info::{Progress, Response, Faults, WaitingReason};
 use crate::api10::bridge::{self, Task};
 
 /// Registers a callback for a specific task event.
@@ -86,6 +85,7 @@ pub fn on_event(
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![]),
                     on_fault: Mutex::new(vec![]),
+                    on_wait: Mutex::new(vec![]),
                 })
             }
         }
@@ -103,6 +103,7 @@ pub fn on_event(
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![]),
                     on_fault: Mutex::new(vec![]),
+                    on_wait: Mutex::new(vec![]),
                 })
             }
         }
@@ -120,6 +121,7 @@ pub fn on_event(
                     on_fail: Mutex::new(vec![callback]),
                     on_response: Mutex::new(vec![]),
                     on_fault: Mutex::new(vec![]),
+                    on_wait: Mutex::new(vec![]),
                 })
             }
         }
@@ -137,6 +139,7 @@ pub fn on_event(
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![]),
                     on_fault: Mutex::new(vec![]),
+                    on_wait: Mutex::new(vec![]),
                 })
             }
         }
@@ -154,6 +157,7 @@ pub fn on_event(
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![]),
                     on_fault: Mutex::new(vec![]),
+                    on_wait: Mutex::new(vec![]),
                 })
             }
         }
@@ -171,6 +175,7 @@ pub fn on_event(
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![]),
                     on_fault: Mutex::new(vec![]),
+                    on_wait: Mutex::new(vec![]),
                 })
             }
         }
@@ -243,6 +248,7 @@ pub fn on_response_event(
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![callback]),
                     on_fault: Mutex::new(vec![]),
+                    on_wait: Mutex::new(vec![]),
                 })
             }
         }
@@ -280,6 +286,7 @@ pub fn on_fault_event(
                     on_fail: Mutex::new(vec![]),
                     on_response: Mutex::new(vec![]),
                     on_fault: Mutex::new(vec![callback]),
+                    on_wait: Mutex::new(vec![]),
                 })
             }
         }
@@ -287,6 +294,48 @@ pub fn on_fault_event(
     };
 
     // Register callback with request client and add to manager
+    RequestClient::get_instance().register_callback(task_id, coll.clone());
+    callback_mgr.tasks.lock().unwrap().insert(task_id, coll);
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn on_wait_event(
+    env: &AniEnv,
+    this: Task,
+    event: String,
+    callback: AniFnObject,
+) -> Result<(), ani_rs::business_error::BusinessError> {
+    // Convert task ID from string to integer for internal use
+    let task_id = this.tid.parse().unwrap();
+    info!("on_event called with event: {}", event);
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+
+    // Handle wait event type
+    let coll = match event.as_str() {
+        "wait" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                // Add to existing callback collection if it exists
+                coll.on_wait.lock().unwrap().push(callback);
+                return Ok(());
+            } else {
+                // Create new callback collection if none exists
+                Arc::new(CallbackColl {
+                    on_progress: Mutex::new(vec![]),
+                    on_complete: Mutex::new(vec![]),
+                    on_pause: Mutex::new(vec![]),
+                    on_resume: Mutex::new(vec![]),
+                    on_remove: Mutex::new(vec![]),
+                    on_fail: Mutex::new(vec![]),
+                    on_response: Mutex::new(vec![]),
+                    on_fault: Mutex::new(vec![]),
+                    on_wait: Mutex::new(vec![callback]),
+                })
+            }
+        }
+        _ => unimplemented!()
+    };
     RequestClient::get_instance().register_callback(task_id, coll.clone());
     callback_mgr.tasks.lock().unwrap().insert(task_id, coll);
     Ok(())
@@ -384,6 +433,28 @@ pub fn off_fault_event(
 }
 
 #[ani_rs::native]
+pub fn off_wait_event(
+    env: &AniEnv,
+    this: Task,
+    event: String,
+    callback: AniFnObject,
+) -> Result<(), ani_rs::business_error::BusinessError> {
+    let task_id = this.tid.parse().unwrap();
+    info!("off_wait_event called");
+    let callback_mgr = CallbackManager::get_instance();
+    let callback = callback.into_global_callback(env).unwrap();
+    match event.as_str() {
+        "wait" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_wait.lock().unwrap().retain(|x| *x != callback);
+            }
+        }
+        _ => unimplemented!()
+    };
+    Ok(())
+}
+
+#[ani_rs::native]
 pub fn off_events(
     env: &AniEnv,
     this: Task,
@@ -433,6 +504,11 @@ pub fn off_events(
                 coll.on_response.lock().unwrap().clear();
             }
         }
+        "wait" => {
+            if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
+                coll.on_wait.lock().unwrap().clear();
+            }
+        }
         _ => unimplemented!()
     };
     Ok(())
@@ -454,6 +530,7 @@ pub struct CallbackColl {
     /// Callbacks to be executed when HTTP response is received.
     on_response: Mutex<Vec<GlobalRefCallback<(bridge::HttpResponse,)>>>,
     on_fault: Mutex<Vec<GlobalRefCallback<(bridge::Faults,)>>>,
+    on_wait: Mutex<Vec<GlobalRefCallback<(bridge::WaitingReason,)>>>,
 }
 
 impl request_client::Callback for CallbackColl {
@@ -549,6 +626,13 @@ impl request_client::Callback for CallbackColl {
         let callbacks = self.on_fault.lock().unwrap();
         for callback in callbacks.iter() {
             callback.execute((faults.into(),));
+        }
+    }
+
+    fn on_wait(&self, waiting_reason: WaitingReason) {
+        let callbacks = self.on_wait.lock().unwrap();
+        for callback in callbacks.iter() {
+            callback.execute((waiting_reason.into(),));
         }
     }
 }

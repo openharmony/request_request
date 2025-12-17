@@ -19,7 +19,7 @@
 
 use ani_rs::objects::AniObject;
 use ani_rs::AniEnv;
-use cxx::{SharedPtr};
+use cxx::SharedPtr;
 
 use super::wrapper::GetCacheDir;
 use crate::wrapper::{self, IsStageContext};
@@ -137,5 +137,14 @@ impl Context {
 
     pub fn get_bundle_type(&self) -> BundleType {
         wrapper::BundleType(&self.inner.GetApplicationInfo()).into()
+    }
+
+    pub fn stringfy_want_agent(env: &AniEnv, ani_object: &AniObject) -> String {
+        unsafe {
+            let env = env as *const AniEnv as *mut AniEnv as *mut wrapper::AniEnv;
+            let ani_object =
+                ani_object as *const AniObject as *mut AniObject as *mut wrapper::AniObject;
+            wrapper::StringfyWantAgent(env, ani_object)
+        }
     }
 }
