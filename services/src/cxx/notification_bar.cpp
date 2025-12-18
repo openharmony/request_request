@@ -47,29 +47,82 @@ static constexpr int32_t REQUEST_STYLE_SIMPLE = 8;
 
 static const std::string CLOSE_ICON_PATH = "/etc/request/xmark.svg";
 
-rust::string GetSystemResourceString(const rust::str name)
+const std::vector<std::string> RESOURCE_STRING_KEYS = {
+    "request_agent_download_file",
+    "request_agent_download_success",
+    "request_agent_download_fail",
+    "request_agent_upload_file",
+    "request_agent_upload_success",
+    "request_agent_upload_fail",
+    "request_agent_task_count",
+    "request_agent_download_complete"
+};
+
+struct RequestSystemResourceStringInfo {
+    std::unordered_map<std::string, std::string> stringMap;
+    std::string curSystemLanguage;
+    std::mutex mtx;
+};
+
+RequestSystemResourceStringInfo g_resourceStringInfo;
+
+/* Check whether the system language is consistent */
+bool IsSystemLanguageConsistent(const std::string &curLanguage)
+{
+    return g_resourceStringInfo.curSystemLanguage == curLanguage;
+}
+
+/* Updating the System Resource String Cache */
+int UpdateSystemResourceStringMap(std::string &curLanguage)
 {
     auto resourceMgr = Resource::GetSystemResourceManagerNoSandBox();
     if (resourceMgr == nullptr) {
         REQUEST_HILOGE("GetSystemResourceManagerNoSandBox failed");
-        return "";
+        return -1;
     }
     std::unique_ptr<Resource::ResConfig> config(Resource::CreateResConfig());
     if (config == nullptr) {
         REQUEST_HILOGE("Create ResConfig failed");
-        return "";
+        return -1;
     }
     UErrorCode status = U_ZERO_ERROR;
-    icu::Locale locale = icu::Locale::forLanguageTag(I18n::LocaleConfig::GetSystemLanguage(), status);
+    icu::Locale locale = icu::Locale::forLanguageTag(curLanguage, status);
     config->SetLocaleInfo(locale);
     resourceMgr->UpdateResConfig(*config);
 
+    g_resourceStringInfo.curSystemLanguage = curLanguage.c_str();
+
     std::string outValue;
-    auto ret = resourceMgr->GetStringByName(name.data(), outValue);
-    if (ret != Resource::RState::SUCCESS) {
-        REQUEST_HILOGE("GetStringById failed: %{public}d", ret);
+    for (int i = 0; i < RESOURCE_STRING_KEYS.size(); ++i) {
+        auto ret = resourceMgr->GetStringByName(RESOURCE_STRING_KEYS[i].c_str(), outValue);
+        if (ret != Resource::RState::SUCCESS) {
+            REQUEST_HILOGE("Get system resource string %{public}s failed: %{public}d",
+                RESOURCE_STRING_KEYS[i].c_str(), ret);
+
+            /* If an item fails to be obtained, it is marked as the initial state and will be retried next time */
+            g_resourceStringInfo.curSystemLanguage.clear();
+        }
+        g_resourceStringInfo.stringMap[RESOURCE_STRING_KEYS[i]] = outValue;
     }
-    return rust::string(outValue);
+
+    Resource::ReleaseSystemResourceManager();
+
+    return 0;
+}
+
+rust::string GetSystemResourceString(const rust::str name)
+{
+    std::lock_guard<std::mutex> lock(g_resourceStringInfo.mtx);
+    auto curLanguage = I18n::LocaleConfig::GetSystemLanguage();
+    if (IsSystemLanguageConsistent(curLanguage.c_str()) != true) {
+        /* Language change or initialization */
+        int ret = UpdateSystemResourceStringMap(curLanguage);
+        if (ret != 0) {
+            return "";
+        }
+    }
+
+    return rust::string(g_resourceStringInfo.stringMap[name.data()]);
 }
 
 rust::string GetSystemLanguage()
