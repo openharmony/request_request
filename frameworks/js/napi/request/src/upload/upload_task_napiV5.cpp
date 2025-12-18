@@ -46,7 +46,7 @@ UploadTaskNapiV5::~UploadTaskNapiV5()
             delete callbackData;
         }
     };
-    int32_t ret = napi_send_event(env_, afterCallback, napi_eprio_high);
+    int32_t ret = napi_send_event(env_, afterCallback, napi_eprio_high, "request:upload");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete callbackData;
@@ -131,7 +131,7 @@ void UploadTaskNapiV5::OnSystemSuccess(napi_env env, napi_ref ref, Upload::Uploa
         napi_close_handle_scope(successCallback->env, scope);
         delete successCallback;
     };
-    int32_t ret = napi_send_event(env, afterCallback, napi_eprio_high);
+    int32_t ret = napi_send_event(env, afterCallback, napi_eprio_high, "request:upload");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete successCallback;
@@ -168,7 +168,7 @@ void UploadTaskNapiV5::OnSystemFail(napi_env env, napi_ref ref, std::string &dat
         napi_close_handle_scope(failCallback->env, scope);
         delete failCallback;
     };
-    int32_t ret = napi_send_event(env, afterCallback, napi_eprio_high);
+    int32_t ret = napi_send_event(env, afterCallback, napi_eprio_high, "request:upload");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete failCallback;
@@ -205,7 +205,7 @@ void UploadTaskNapiV5::OnSystemComplete(std::shared_ptr<Upload::UploadTaskNapiV5
         napi_close_handle_scope(completeCallback->proxy->env_, scope);
         delete completeCallback;
     };
-    int32_t ret = napi_send_event(completeCallback->proxy->env_, afterCallback, napi_eprio_high);
+    int32_t ret = napi_send_event(completeCallback->proxy->env_, afterCallback, napi_eprio_high, "request:upload");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete completeCallback;
