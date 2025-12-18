@@ -1165,7 +1165,8 @@ void JsTask::DeleteContextTaskRef(std::shared_ptr<ContextInfo> context)
         return;
     };
 
-    int32_t ret = napi_send_event(data->context->env_, callback, napi_eprio_high);
+    int32_t ret = napi_send_event(data->context->env_, callback, napi_eprio_high,
+        "request:download|downloadfile|upload|uploadfile|agent.create");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete data;

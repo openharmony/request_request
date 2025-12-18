@@ -67,7 +67,8 @@ void JSResponseListener::OnResponseReceive(const std::shared_ptr<Response> &resp
             listener->OnMessageReceive(&value, 1);
             napi_close_handle_scope(listener->env_, scope);
         },
-        napi_eprio_high);
+        napi_eprio_high,
+        "request:task.on");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
     }

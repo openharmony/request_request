@@ -83,7 +83,8 @@ void RequestManager::CallFunctionAsync(napi_env env, napi_ref func, const ArgsGe
             napi_close_handle_scope(data->env_, scope);
             delete data;
         },
-        napi_eprio_high);
+        napi_eprio_high,
+        "request:download");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete data;

@@ -63,7 +63,8 @@ public:
                 napi_close_handle_scope(holder->env, scope);
                 delete holder;
             };
-            int32_t ret = napi_send_event(env_, afterCallback, napi_eprio_high);
+            int32_t ret = napi_send_event(env_, afterCallback, napi_eprio_high,
+                "request:download|upload|agent.create|agent.getTask");
             if (ret != napi_ok) {
                 REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
                 delete holder;

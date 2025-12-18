@@ -273,7 +273,8 @@ void CallbackManager::InvokeSuccessCallbacks(const std::string &url, std::shared
             napi_value values[2] = {nullptr};
             info->InvokeSuccessCallbacks(values);
         },
-        napi_eprio_high);
+        napi_eprio_high,
+        "request:cachedownload.download");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
     }
@@ -306,7 +307,8 @@ void CallbackManager::InvokeErrorCallbacks(const std::string &url, std::shared_p
 
             info->InvokeErrorCallbacks(values);
         },
-        napi_eprio_high);
+        napi_eprio_high,
+        "request:cachedownload.download");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
     }
