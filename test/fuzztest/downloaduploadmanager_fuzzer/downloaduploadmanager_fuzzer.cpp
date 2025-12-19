@@ -16,6 +16,7 @@
 #define protected public
 
 #include "downloaduploadmanager_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include <securec.h>
 
@@ -42,7 +43,239 @@ using namespace OHOS::Security::AccessToken;
 #undef private
 #undef protected
 
+const int MAX_NUM = 20;
+const int MAX_LENGTH = 50;
+
 namespace OHOS {
+
+constexpr std::array<OHOS::Request::ExceptionErrorCode, 19> exceptionErrorCodes = {
+    E_OK, E_UNLOADING_SA, E_IPC_SIZE_TOO_LARGE, E_MIMETYPE_NOT_FOUND, E_TASK_INDEX_TOO_LARGE,
+    E_CHANNEL_NOT_OPEN, E_PERMISSION, E_NOT_SYSTEM_APP, E_PARAMETER_CHECK, E_UNSUPPORTED,
+    E_FILE_IO, E_FILE_PATH, E_SERVICE_ERROR, E_OTHER, E_TASK_QUEUE, E_TASK_MODE,
+    E_TASK_NOT_FOUND, E_TASK_STATE, E_GROUP_NOT_FOUND
+};
+
+constexpr std::array<Action, 3> actions = {
+    Action::DOWNLOAD,
+    Action::UPLOAD,
+    Action::ANY,
+};
+
+constexpr std::array<OHOS::Request::Version, 3> versions = {
+    Version::API8,
+    Version::API9,
+    Version::API10,
+};
+
+constexpr std::array<OHOS::Request::Mode, 3> modes = {
+    Mode::BACKGROUND,
+    Mode::FOREGROUND,
+    Mode::ANY,
+};
+
+Filter convertToFilter(FuzzedDataProvider &provider)
+{
+    std::string bundle = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    int64_t before = provider.ConsumeIntegral<int64_t>();
+    int64_t after = provider.ConsumeIntegral<int64_t>();
+    Filter filter;
+    filter.bundle = bundle;
+    filter.before = before;
+    filter.after = after;
+    return filter;
+}
+
+std::vector<TaskIdAndToken> convertToVectorTaskIdAndToken(FuzzedDataProvider &provider)
+{
+    std::vector<TaskIdAndToken> result;
+    int len = provider.ConsumeIntegralInRange<int>(1, MAX_NUM);
+    for (int i = 0; i < len; i++) {
+        std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        std::string token = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        TaskIdAndToken taskIdAndToken;
+        taskIdAndToken.tid = tid;
+        taskIdAndToken.token = token;
+        result.push_back(taskIdAndToken);
+    }
+    return result;
+}
+
+std::vector<TaskInfoRet> convertToVectorTaskInfoRet(FuzzedDataProvider &provider)
+{
+    std::vector<TaskInfoRet> result;
+    int len = provider.ConsumeIntegralInRange<int>(1, MAX_NUM);
+    for (int i = 0; i < len; i++) {
+        size_t index = provider.ConsumeIntegralInRange<size_t>(0, exceptionErrorCodes.size() - 1);
+        ExceptionErrorCode code = exceptionErrorCodes[index];
+        TaskInfoRet infoRet{ .code = code };
+        result.push_back(infoRet);
+    }
+    return result;
+}
+
+std::vector<FormItem> convertToVectorFormItem(FuzzedDataProvider &provider)
+{
+    std::vector<FormItem> result;
+    int len = provider.ConsumeIntegralInRange<int>(1, MAX_NUM);
+    for (int i = 0; i < len; i++) {
+        std::string name = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        std::string value = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        FormItem forItem;
+        forItem.name = name;
+        forItem.value = value;
+        result.push_back(forItem);
+    }
+    return result;
+}
+
+std::vector<FileSpec> convertToVectorFileSpec(FuzzedDataProvider &provider)
+{
+    std::vector<FileSpec> result;
+    int len = provider.ConsumeIntegralInRange<int>(1, MAX_NUM);
+    for (int i = 0; i < len; i++) {
+        std::string name = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        std::string uri = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        std::string filename = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        std::string type = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        FileSpec fileSpec;
+        fileSpec.name = name;
+        fileSpec.uri = uri;
+        fileSpec.filename = filename;
+        fileSpec.type = type;
+        result.push_back(fileSpec);
+    }
+    return result;
+}
+
+std::vector<std::string> convertToVectorString(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> result;
+    int len = provider.ConsumeIntegralInRange<int>(1, MAX_NUM);
+    for (int i = 0; i < len; i++) {
+        std::string name = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        result.push_back(name);
+    }
+    return result;
+}
+
+std::map<std::string, std::string> convertToMapString(FuzzedDataProvider &provider)
+{
+    std::map<std::string, std::string> result;
+    int len = provider.ConsumeIntegralInRange<int>(1, MAX_NUM);
+    for (int i = 0; i < len; i++) {
+        std::string key = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        std::string value = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        result.insert({key, value});
+    }
+    return result;
+}
+
+std::vector<TaskRet> convertToVectorTaskRet(FuzzedDataProvider &provider)
+{
+    std::vector<TaskRet> result;
+    int len = provider.ConsumeIntegralInRange<int>(1, MAX_NUM);
+    for (int i = 0; i < len; i++) {
+        size_t index = provider.ConsumeIntegralInRange<size_t>(0, exceptionErrorCodes.size() - 1);
+        ExceptionErrorCode code = exceptionErrorCodes[index];
+        std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        TaskRet task;
+        task.code = code;
+        task.tid = tid;
+        result.push_back(task);
+    }
+    return result;
+}
+
+std::vector<ExceptionErrorCode> convertToVectorExceptionErrorCode(FuzzedDataProvider &provider)
+{
+    std::vector<ExceptionErrorCode> result;
+    int len = provider.ConsumeIntegralInRange<int>(1, MAX_NUM);
+    for (int i = 0; i < len; i++) {
+        size_t index = provider.ConsumeIntegralInRange<size_t>(0, exceptionErrorCodes.size() - 1);
+        ExceptionErrorCode code = exceptionErrorCodes[index];
+        result.push_back(code);
+    }
+    return result;
+}
+
+Config convertToConfig(FuzzedDataProvider &provider)
+{
+    size_t actionIndex = provider.ConsumeIntegralInRange<size_t>(0, actions.size() - 1);
+    Action action = actions[actionIndex];
+    std::string url = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    std::vector<std::string> certsPath = convertToVectorString(provider);
+    size_t versionIndex = provider.ConsumeIntegralInRange<size_t>(0, versions.size() - 1);
+    Version version = versions[versionIndex];
+    std::string bundleName = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    std::string title = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    std::string saveas = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    std::string method = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    std::string description = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    std::string data = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    std::string proxy = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    std::string certificatePins = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    std::map<std::string, std::string> headers = convertToMapString(provider);
+    std::vector<FormItem> forms = convertToVectorFormItem(provider);
+    std::vector<FileSpec> files = convertToVectorFileSpec(provider);
+    std::vector<std::string> bodyFileNames = convertToVectorString(provider);
+    std::map<std::string, std::string> extras = convertToMapString(provider);
+    Config config;
+    config.action = action;
+    config.url = url;
+    config.certsPath = certsPath;
+    config.version = version;
+    config.bundleName = bundleName;
+    config.title = title;
+    config.saveas = saveas;
+    config.method = method;
+    config.description = description;
+    config.data = data;
+    config.proxy = proxy;
+    config.certificatePins = certificatePins;
+    config.headers = headers;
+    config.forms = forms;
+    config.files = files;
+    config.bodyFileNames = bodyFileNames;
+    config.extras = extras;
+    return config;
+}
+
+std::vector<Config> convertToVectorConfig(FuzzedDataProvider &provider)
+{
+    std::vector<Config> result;
+    int len = provider.ConsumeIntegralInRange<int>(1, MAX_NUM);
+    for (int i = 0; i < len; i++) {
+        Config config = convertToConfig(provider);
+        result.push_back(config);
+    }
+    return result;
+}
+
+std::vector<SpeedConfig> convertToVectorSpeedConfig(FuzzedDataProvider &provider)
+{
+    std::vector<SpeedConfig> result;
+    int len = provider.ConsumeIntegralInRange<int>(1, MAX_NUM);
+    for (int i = 0; i < len; i++) {
+        std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        int32_t speed = provider.ConsumeIntegral<int32_t>();
+        SpeedConfig speedConfig;
+        speedConfig.tid = tid;
+        speedConfig.maxSpeed = speed;
+        result.push_back(speedConfig);
+    }
+    return result;
+}
+
+std::vector<uint8_t> convertToVectorUint8_t(FuzzedDataProvider &provider)
+{
+    std::vector<uint8_t> result;
+    int len = provider.ConsumeIntegralInRange<int>(1, MAX_NUM);
+    for (int i = 0; i < len; i++) {
+        uint8_t value = provider.ConsumeIntegral<uint8_t>();
+        result.push_back(value);
+    }
+    return result;
+}
 
 uint32_t ConvertToUint32(const uint8_t *ptr, size_t size)
 {
@@ -1508,6 +1741,133 @@ void ResponseMessageFuzzTestNotifyDataFromParcel(const uint8_t *data, size_t siz
     ResponseMessageReceiver::NotifyDataFromParcel(notifyData, parcel, testSize);
 }
 
+void RequestManagerFuzzTestCreateTasks(FuzzedDataProvider &provider)
+{
+    std::vector<Config> configs = convertToVectorConfig(provider);
+    std::vector<TaskRet> rets = convertToVectorTaskRet(provider);
+    RequestManager::GetInstance()->CreateTasks(configs, rets);
+}
+
+void RequestManagerFuzzTestStartTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    RequestManager::GetInstance()->StartTasks(tids, err);
+}
+
+void RequestManagerFuzzTestStopTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    RequestManager::GetInstance()->StopTasks(tids, err);
+}
+
+void RequestManagerFuzzTestResumeTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    RequestManager::GetInstance()->ResumeTasks(tids, err);
+}
+
+void RequestManagerFuzzTestRemoveTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    Version version = versions[provider.ConsumeIntegralInRange<size_t>(0, versions.size() - 1)];
+    RequestManager::GetInstance()->RemoveTasks(tids, version, err);
+}
+
+void RequestManagerFuzzTestPauseTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    Version version = versions[provider.ConsumeIntegralInRange<size_t>(0, versions.size() - 1)];
+    RequestManager::GetInstance()->PauseTasks(tids, version, err);
+}
+
+void RequestManagerFuzzTestShowTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    std::vector<TaskInfoRet> tasks = convertToVectorTaskInfoRet(provider);
+    RequestManager::GetInstance()->ShowTasks(tids, tasks);
+}
+
+void RequestManagerFuzzTestTouchTasks(FuzzedDataProvider &provider)
+{
+    std::vector<TaskIdAndToken> taskid = convertToVectorTaskIdAndToken(provider);
+    std::vector<TaskInfoRet> taskinfo = convertToVectorTaskInfoRet(provider);
+    RequestManager::GetInstance()->TouchTasks(taskid, taskinfo);
+}
+
+void RequestManagerFuzzTestSetMaxSpeeds(FuzzedDataProvider &provider)
+{
+    std::vector<SpeedConfig> speedconfig = convertToVectorSpeedConfig(provider);
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    RequestManager::GetInstance()->SetMaxSpeeds(speedconfig, err);
+}
+
+void RequestManagerFuzzTestSetMode(FuzzedDataProvider &provider)
+{
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    Mode mode = modes[provider.ConsumeIntegralInRange<size_t>(0, modes.size() - 1)];
+    RequestManager::GetInstance()->SetMode(tid, mode);
+}
+
+void RequestManagerFuzzTestDisableTaskNotification(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    RequestManager::GetInstance()->DisableTaskNotification(tids, err);
+}
+
+void RequestManagerFuzzTestSetMaxSpeed(FuzzedDataProvider &provider)
+{
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    int64_t maxSpeed = provider.ConsumeIntegral<int64_t>();
+    RequestManager::GetInstance()->SetMaxSpeed(tid, maxSpeed);
+    RequestManager::GetInstance()->LoadRequestServer();
+}
+
+void RequestManagerFuzzTestCreateGroup(FuzzedDataProvider &provider)
+{
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    bool gauge = provider.ConsumeBool();
+    Notification notification;
+    RequestManager::GetInstance()->CreateGroup(tid, gauge, notification);
+}
+
+void RequestManagerFuzzTestAttachGroup(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    RequestManager::GetInstance()->AttachGroup(tid, tids);
+}
+
+void RequestManagerFuzzTestDeleteGroup(FuzzedDataProvider &provider)
+{
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    RequestManager::GetInstance()->DeleteGroup(tid);
+}
+
+void RequestManagerFuzzTest(FuzzedDataProvider &provider)
+{
+    OHOS::RequestManagerFuzzTestCreateTasks(provider);
+    OHOS::RequestManagerFuzzTestStartTasks(provider);
+    OHOS::RequestManagerFuzzTestStopTasks(provider);
+    OHOS::RequestManagerFuzzTestResumeTasks(provider);
+    OHOS::RequestManagerFuzzTestRemoveTasks(provider);
+    OHOS::RequestManagerFuzzTestPauseTasks(provider);
+    OHOS::RequestManagerFuzzTestShowTasks(provider);
+    OHOS::RequestManagerFuzzTestTouchTasks(provider);
+    OHOS::RequestManagerFuzzTestSetMaxSpeeds(provider);
+    OHOS::RequestManagerFuzzTestSetMode(provider);
+    OHOS::RequestManagerFuzzTestDisableTaskNotification(provider);
+    OHOS::RequestManagerFuzzTestSetMaxSpeed(provider);
+    OHOS::RequestManagerFuzzTestCreateGroup(provider);
+    OHOS::RequestManagerFuzzTestAttachGroup(provider);
+    OHOS::RequestManagerFuzzTestDeleteGroup(provider);
+}
+
 class FuzzRemoteObjectImpl : public OHOS::IRemoteObject {};
 
 } // namespace OHOS
@@ -1575,5 +1935,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::ResponseMessageFuzzTestResponseFromParcel(data, size);
     OHOS::ResponseMessageFuzzTestTaskStatesFromParcel(data, size);
     OHOS::ResponseMessageFuzzTestNotifyDataFromParcel(data, size);
+    FuzzedDataProvider provider(data, size);
+    OHOS::RequestManagerFuzzTest(provider);
     return 0;
 }
