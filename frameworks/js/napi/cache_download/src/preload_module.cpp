@@ -394,7 +394,7 @@ napi_value download(napi_env env, napi_callback_info info)
     }
     size_t argc = 2;
     napi_value args[2] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
     if (GetValueType(env, args[0]) != napi_string || GetValueType(env, args[1]) != napi_object) {
         ThrowError(env, E_PARAMETER_CHECK, "parameter error");
         return nullptr;
@@ -424,7 +424,7 @@ napi_value cancel(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
     if (GetValueType(env, args[0]) != napi_string) {
         ThrowError(env, E_PARAMETER_CHECK, "parameter error");
         return nullptr;
@@ -443,7 +443,7 @@ napi_value setMemoryCacheSize(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
 
     if (GetValueType(env, args[0]) != napi_number) {
         ThrowError(env, E_PARAMETER_CHECK, "parameter error");
@@ -462,7 +462,7 @@ napi_value setFileCacheSize(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
 
     if (GetValueType(env, args[0]) != napi_number) {
         ThrowError(env, E_PARAMETER_CHECK, "parameter error");
@@ -481,7 +481,7 @@ napi_value setDownloadInfoListSize(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
 
     if (GetValueType(env, args[0]) != napi_number) {
         ThrowError(env, E_PARAMETER_CHECK, "parameter error");
@@ -509,7 +509,7 @@ napi_value getDownloadInfo(napi_env env, napi_callback_info info)
     }
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
     if (GetValueType(env, args[0]) != napi_string) {
         ThrowError(env, E_PARAMETER_CHECK, "parameter error");
         return nullptr;
@@ -749,7 +749,8 @@ static napi_value registerFunc(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("offDownloadError", offDownloadError),
 
     };
-    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
+    PRELOAD_NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc),
+        "napi_define_properties failed");
     return exports;
 }
 

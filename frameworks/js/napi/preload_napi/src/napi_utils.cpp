@@ -29,10 +29,12 @@ napi_value CreateBusinessError(napi_env env, int32_t errorCode, const std::strin
 {
     napi_value error = nullptr;
     napi_value msg = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, errorMessage.c_str(), errorMessage.length(), &msg));
-    NAPI_CALL(env, napi_create_error(env, nullptr, msg, &error));
+    PRELOAD_NAPI_CALL(env, napi_create_string_utf8(env, errorMessage.c_str(), errorMessage.length(), &msg),
+        "napi_create_string_utf8 failed");
+    PRELOAD_NAPI_CALL(env, napi_create_error(env, nullptr, msg, &error), "napi_create_error failed");
     napi_value code = nullptr;
-    NAPI_CALL(env, napi_create_uint32(env, static_cast<uint32_t>(errorCode), &code));
+    PRELOAD_NAPI_CALL(env, napi_create_uint32(env, static_cast<uint32_t>(errorCode), &code),
+        "napi_create_uint32 failed");
     napi_set_named_property(env, error, "code", code);
     return error;
 }
@@ -49,28 +51,30 @@ napi_valuetype GetValueType(napi_env env, napi_value value)
         return napi_undefined;
     }
     napi_valuetype valueType = napi_undefined;
-    NAPI_CALL_BASE(env, napi_typeof(env, value, &valueType), napi_undefined);
+    PRELOAD_NAPI_CALL_BASE(env, napi_typeof(env, value, &valueType), E_OTHER, "napi_typeof failed", napi_undefined);
     return valueType;
 }
 
 size_t GetStringLength(napi_env env, napi_value value)
 {
     size_t length;
-    NAPI_CALL_BASE(env, napi_get_value_string_utf8(env, value, nullptr, 0, &length), 0);
+    PRELOAD_NAPI_CALL_BASE(env, napi_get_value_string_utf8(env, value, nullptr, 0, &length), E_OTHER,
+        "napi_get_value_string_utf8 failed", 0);
     return length;
 }
 
 std::string GetValueString(napi_env env, napi_value value, size_t length)
 {
     char chars[length + 1];
-    NAPI_CALL(env, napi_get_value_string_utf8(env, value, chars, sizeof(chars), &length));
+    PRELOAD_NAPI_CALL(env, napi_get_value_string_utf8(env, value, chars, sizeof(chars), &length),
+        "napi_get_value_string_utf8 failed");
     return std::string(chars);
 }
 
 int64_t GetValueNum(napi_env env, napi_value value)
 {
     int64_t ret;
-    NAPI_CALL_BASE(env, napi_get_value_int64(env, value, &ret), 0);
+    PRELOAD_NAPI_CALL_BASE(env, napi_get_value_int64(env, value, &ret), E_OTHER, "napi_get_value_int64 failed", 0);
     return ret;
 }
 
@@ -78,9 +82,11 @@ std::vector<std::string> GetPropertyNames(napi_env env, napi_value object)
 {
     std::vector<std::string> ret;
     napi_value names = nullptr;
-    NAPI_CALL_BASE(env, napi_get_property_names(env, object, &names), ret);
+    PRELOAD_NAPI_CALL_BASE(env, napi_get_property_names(env, object, &names), E_OTHER,
+        "napi_get_property_names failed", ret);
     uint32_t length = 0;
-    NAPI_CALL_BASE(env, napi_get_array_length(env, names, &length), ret);
+    PRELOAD_NAPI_CALL_BASE(env, napi_get_array_length(env, names, &length), E_OTHER, "napi_get_array_length failed",
+        ret);
     for (uint32_t index = 0; index < length; ++index) {
         napi_value name = nullptr;
         if (napi_get_element(env, names, index, &name) != napi_ok) {
@@ -98,7 +104,8 @@ std::vector<std::string> GetPropertyNames(napi_env env, napi_value object)
 bool HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
     bool hasProperty = false;
-    NAPI_CALL_BASE(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty), false);
+    PRELOAD_NAPI_CALL_BASE(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty),
+        E_OTHER, "napi_has_named_property failed", false);
     return hasProperty;
 }
 
@@ -106,11 +113,13 @@ napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &
 {
     napi_value value = nullptr;
     bool hasProperty = false;
-    NAPI_CALL(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty));
+    PRELOAD_NAPI_CALL(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty),
+        "napi_has_named_property failed");
     if (!hasProperty) {
         return value;
     }
-    NAPI_CALL(env, napi_get_named_property(env, object, propertyName.c_str(), &value));
+    PRELOAD_NAPI_CALL(env, napi_get_named_property(env, object, propertyName.c_str(), &value),
+        "napi_get_named_property failed");
     return value;
 }
 

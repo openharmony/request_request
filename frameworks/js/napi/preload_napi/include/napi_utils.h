@@ -27,6 +27,18 @@ static constexpr int32_t NO_ARG = 0;
 static constexpr int32_t ONE_ARG = 1;
 static constexpr int32_t TWO_ARG = 2;
 static constexpr int32_t THE_ARG = 3;
+
+#define PRELOAD_NAPI_CALL_BASE(env, theCall, code, message, retVal) \
+    do {                                                            \
+        if ((theCall) != napi_ok) {                                 \
+            ThrowError(env, code, message);                         \
+            return retVal;                                          \
+        }                                                           \
+    } while (0)
+
+#define PRELOAD_NAPI_CALL(env, theCall, message) \
+    PRELOAD_NAPI_CALL_BASE(env, theCall, E_OTHER, message, nullptr)
+
 napi_valuetype GetValueType(napi_env env, napi_value value);
 napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
 std::string GetStringValueWithDefault(napi_env env, napi_value value);
