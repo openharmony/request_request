@@ -21,6 +21,7 @@
 #include "log.h"
 #include "napi/native_node_api.h"
 #include "napi_utils.h"
+#include "path_utils.h"
 #include "request_event.h"
 #include "request_manager.h"
 
@@ -90,6 +91,7 @@ void JSNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData
     NapiUtils::ReadBytesFromFile(filePath, notifyData->progress.bodyBytes);
     // Waiting for "complete" to read and delete.
     if (!(notifyData->version == Version::API10 && index + 1 == len && notifyData->type == SubscribeType::PROGRESS)) {
+        PathUtils::SubPathsToMap(filePath);
         NapiUtils::RemoveFile(filePath);
     }
 }

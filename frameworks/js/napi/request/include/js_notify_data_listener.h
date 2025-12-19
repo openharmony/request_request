@@ -18,6 +18,7 @@
 
 #include "i_notify_data_listener.h"
 #include "listener_list.h"
+#include "path_utils.h"
 #include "request_common.h"
 
 namespace OHOS::Request {
