@@ -232,7 +232,7 @@ mod ffi {
         /// #Safety
         ///
         /// This function is unsafe because it works with raw pointers that must be valid.
-        unsafe fn StringfyWantAgent(env: *mut AniEnv, obj: *mut AniObject) -> String;
+        unsafe fn StringfyWantAgent(env: *mut *mut AniEnv, obj: *mut AniObject) -> String;
 
         #[namespace = "OHOS::AbilityRuntime"]
         type Context;
