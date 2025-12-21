@@ -12,7 +12,7 @@
 # limitations under the License.
 
 [package]
-name = "preload_native"
+name = "preload_native_rlib"
 version = "0.1.0"
 edition = "2021"
 

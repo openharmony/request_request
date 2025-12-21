@@ -17,6 +17,7 @@
 import { AsyncCallback, Callback } from '@ohos.base';
 import { BusinessError } from '@ohos.base';
 import BaseContext from 'application.BaseContext';
+import { WantAgent } from '@ohos.app.ability.wantAgent';
 
 export default namespace request {
   loadLibrary("request_ani")
@@ -648,6 +649,10 @@ export default namespace request {
   export namespace agent {
     loadLibrary("request_ani")
 
+    const VISIBILITY_COMPLETION: int = 1;
+
+    const VISIBILITY_PROGRESS:int = 2;
+
     enum Action {
       DOWNLOAD,
       UPLOAD
@@ -695,11 +700,27 @@ export default namespace request {
     interface Notification {
       title?: string;
       text?: string;
+      disable?: boolean;
+      visibility?: int;
+      wantAgent?: WantAgent;
     }
 
     export class NotificationInner implements Notification {
       title?: string;
       text?: string;
+      disable?: boolean;
+      visibility?: int;
+      wantAgent?: WantAgent;
+    }
+
+    interface MinSpeed {
+      speed: long;
+      duration: int;
+    }
+
+    interface Timeout {
+      connectionTimeout?: int;
+      totalTimeout?: int;
     }
 
     interface Config {
@@ -730,6 +751,8 @@ export default namespace request {
       extras?: Record<string, string>;
       multipart?: boolean;
       notification?: Notification;
+      minSpeed?: MinSpeed;
+      timeout?: Timeout;
     }
 
     export class ConfigInner implements Config {
@@ -760,6 +783,8 @@ export default namespace request {
       extras?: Record<string, string>;
       multipart?: boolean;
       notification?: Notification;
+      minSpeed?: MinSpeed;
+      timeout?: Timeout;
     }
 
     enum State {
@@ -800,7 +825,15 @@ export default namespace request {
       DNS = 0x50,
       TCP = 0x60,
       SSL = 0x70,
-      REDIRECT = 0x80
+      REDIRECT = 0x80,
+      LOW_SPEED = 0x90
+    }
+
+    enum WaitingReason {
+      TASK_QUEUE_FULL = 0x00,
+      NETWORK_NOT_MATCH = 0x01,
+      APP_BACKGROUND = 0x02,
+      USER_INACTIVATED = 0x03
     }
 
     interface Filter {
@@ -908,6 +941,8 @@ export default namespace request {
       offResponse(callback?: Callback<HttpResponse>): void;
       onFaultOccur(callback: Callback<Faults>): void;
       offFaultOccur(callback?: Callback<Faults>): void;
+      onWait(callback: Callback<WaitingReason>): void;
+      offWait(callback?: Callback<WaitingReason>): void;
 
       start(callback: AsyncCallback<void>): void;
       start(): Promise<void>;
@@ -941,6 +976,8 @@ export default namespace request {
 
     native onFaultEvent(event: string, callback: Callback<Faults>): void;
 
+    native onWaitEvent(event: string, callback: Callback<WaitingReason>): void;
+
     native offEvent(event: string, callback?: ProgressCallback): void;
 
     native offResponseEvent(event: string, callback: Callback<HttpResponse>): void;
@@ -948,6 +985,8 @@ export default namespace request {
     native offFaultEvent(event: string, callback: Callback<Faults>): void;
 
     native offEvents(event: string): void;
+
+    native offWaitEvent(event: string, callback: Callback<WaitingReason>): void;
 
     on(event: string, callback: Callback<Any>): void {
       if (event == "response") {
@@ -1067,6 +1106,18 @@ export default namespace request {
       }
     }
 
+    onWait(callback: Callback<WaitingReason>): void {
+      this.onWaitEvent("wait", callback);
+    }
+
+    offWait(callback?: Callback<WaitingReason>): void {
+      if (callback == undefined) {
+        this.offEvents("wait");
+      } else {
+        this.offWaitEvent("wait", callback);
+      }
+    }
+
     start(callback: AsyncCallback<void>): void {
         let p1 = taskpool.execute((): void => {
          return this.startSync();
@@ -1162,9 +1213,12 @@ export default namespace request {
         });
     }
 
+    native checkMaxSpeed(speed:long): void;
+
     native setMaxSpeedSync(speed:long): void;
 
     setMaxSpeed(speed: long): Promise<void> {
+        this.checkMaxSpeed(speed);
         return new Promise<void>((resolve, reject) => {
             taskpool.execute(() => {
                 this.setMaxSpeedSync(speed);
@@ -1394,9 +1448,12 @@ export default namespace request {
       notification: Notification;
     }
 
+    native function checkGroupConfig(config: GroupConfig): void;
+
     export native function createGroupSync(config: GroupConfig): string;
 
     export function createGroup(config: GroupConfig): Promise<string> {
+      checkGroupConfig(config);
       return new Promise<string>((resolve, reject) => {
         taskpool.execute((): string => {
           return createGroupSync(config);

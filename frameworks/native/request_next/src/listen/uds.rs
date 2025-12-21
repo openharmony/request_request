@@ -23,7 +23,7 @@ use std::io;
 use std::os::fd::{FromRawFd, IntoRawFd};
 use std::os::unix;
 
-use request_core::info::{FaultOccur, Faults, NotifyData, Response};
+use request_core::info::{FaultOccur, Faults, NotifyData, Response, Wait};
 use ylong_runtime::net::UnixDatagram;
 
 // Local dependencies
@@ -45,6 +45,7 @@ const HTTP_RESPONSE: i16 = 0;
 /// Indicates that the message contains notification data about download tasks.
 const NOTIFY_DATA: i16 = 1;
 const FAULTS: i16 = 2;
+const WAIT: i16 = 3;
 
 /// Listener for Unix Domain Socket messages.
 ///
@@ -162,6 +163,9 @@ impl UdsListener {
         } else if msg_type == FAULTS {
             let fault_occur: FaultOccur = uds.read();
             Ok(Message::Faults(fault_occur))
+        } else if msg_type == WAIT {
+            let wait: Wait = uds.read();
+            Ok(Message::WAIT(wait))
         } else {
             Err(io::Error::new(
                 io::ErrorKind::InvalidData,
@@ -180,6 +184,7 @@ pub enum Message {
     /// Notification data message containing status updates for download tasks
     NotifyData(NotifyData),
     Faults(FaultOccur),
+    WAIT(Wait),
 }
 
 /// Validates the header of a received message.

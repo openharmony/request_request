@@ -191,13 +191,13 @@ impl RequestServiceStub {
         };
         if ret != ErrorCode::ErrOk {
             error!(
-                "End Service attach_group, task_id: {:?}, group_id: {}, failed: ret is not ErrOk",
-                task_ids, group_id
+                "End Service attach_group, task_id: {:?}, group_id: {}, failed: {:?}",
+                task_ids, group_id, ret
             );
             sys_event!(
                 ExecError,
                 DfxCode::INVALID_IPC_MESSAGE_A38,
-                &format!("End Service attach_group, task_id: {:?}, group_id: {}, failed: ret is not ErrOk",task_ids, group_id)
+                &format!("End Service attach_group, task_id: {:?}, group_id: {}, failed: {:?}",task_ids, group_id, ret)
             );
         }
         reply.write(&(ret as i32))?;

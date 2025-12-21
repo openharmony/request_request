@@ -12,14 +12,14 @@
 // limitations under the License.
 
 //! Cache download functionality for animation resources.
-//! 
+//!
 //! This module provides functions for downloading, canceling, and configuring cache settings
 //! for animation resources. It serves as a bridge between the ETS interface and the native
 //! cache download service.
 
+use crate::bridge::{CacheDownloadOptions, DownloadInfo, SslType};
 use ani_rs::business_error::BusinessError;
-use preload_native_rlib::{CacheDownloadService, DownloadRequest, PreloadCallback, Downloader};
-use crate::bridge::CacheDownloadOptions;
+use preload_native_rlib::{CacheDownloadService, DownloadRequest, Downloader, PreloadCallback};
 
 /// Empty callback implementation for preload operations.
 ///
@@ -31,6 +31,8 @@ impl PreloadCallback for Callback {}
 const MAX_FILE_SIZE: i64 = 4294967296;
 const MAX_MEM_SIZE: i64 = 1073741824;
 const MAX_UTL_LENGTH: usize = 8192;
+const MAX_INFO_LIST_SIZE: u16 = 8192;
+
 /// Initiates a download of a resource with the specified URL and options.
 ///
 /// Creates a new download request, configures it with any provided headers, and submits
@@ -51,13 +53,13 @@ const MAX_UTL_LENGTH: usize = 8192;
 /// ```rust
 /// use ani_cache_download::cache_download::{download, CacheDownloadOptions};
 /// use ani_rs::business_error::BusinessError;
-/// 
+///
 /// // Basic download
 /// let result: Result<(), BusinessError> = download(
 ///     "https://example.com/resource.mp4".to_string(),
 ///     CacheDownloadOptions { header: None }
 /// );
-/// 
+///
 /// // Download with headers
 /// let mut headers = std::collections::HashMap::new();
 /// headers.insert("Authorization".to_string(), "Bearer token123".to_string());
@@ -71,7 +73,7 @@ pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), Busine
     if (url.len() > MAX_UTL_LENGTH as usize) {
         return Err(BusinessError::new(
             401,
-            "url exceeds the maximum length".to_string()
+            "url exceeds the maximum length".to_string(),
         ));
     }
     let mut request = DownloadRequest::new(&url);
@@ -80,15 +82,29 @@ pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), Busine
     // Apply headers if provided in options
     let headers = options.headers.unwrap_or_default();
     let headers_vec: Vec<(String, String)> = headers.into_iter().collect();
-    let borrowed: Vec<(&str, &str)> = headers_vec.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    let borrowed: Vec<(&str, &str)> = headers_vec
+        .iter()
+        .map(|(k, v)| (k.as_str(), v.as_str()))
+        .collect();
     if !borrowed.is_empty() {
         request.headers(borrowed);
+    }
+    if let Some(ssl_type) = options.ssl_type {
+        match ssl_type {
+            SslType::TLS => request.ssl_type("TLS"),
+            SslType::TLCP => request.ssl_type("TLCP"),
+        };
+    }
+    if let Some(ref ca_path) = options.ca_path {
+        if !ca_path.is_empty() {
+            request.ca_path(ca_path);
+        }
     }
     // Initiate preloading with Netstack downloader and auto-refresh enabled
     CacheDownloadService::get_instance().preload(
         request,
         callback,
-        true,  // Enable auto-refresh of cached resources
+        true, // Enable auto-refresh of cached resources
         Downloader::Netstack,
     );
     Ok(())
@@ -112,7 +128,7 @@ pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), Busine
 /// ```rust
 /// use ani_cache_download::cache_download::cancel;
 /// use ani_rs::business_error::BusinessError;
-/// 
+///
 /// // Cancel a download
 /// let result: Result<(), BusinessError> = cancel("https://example.com/resource.mp4".to_string());
 /// ```
@@ -121,7 +137,7 @@ pub fn cancel(url: String) -> Result<(), BusinessError> {
     if (url.len() > MAX_UTL_LENGTH as usize) {
         return Err(BusinessError::new(
             401,
-            "url exceeds the maximum length".to_string()
+            "url exceeds the maximum length".to_string(),
         ));
     }
     CacheDownloadService::get_instance().cancel(&url);
@@ -146,7 +162,7 @@ pub fn cancel(url: String) -> Result<(), BusinessError> {
 /// ```rust
 /// use ani_cache_download::cache_download::set_memory_cache_size;
 /// use ani_rs::business_error::BusinessError;
-/// 
+///
 /// // Set memory cache size to 50MB
 /// let result: Result<(), BusinessError> = set_memory_cache_size(50 * 1024 * 1024);
 /// ```
@@ -155,7 +171,7 @@ pub fn set_memory_cache_size(size: i64) -> Result<(), BusinessError> {
     if (size > MAX_MEM_SIZE) {
         return Err(BusinessError::new(
             401,
-            "memory cache size exceeds the maximum value".to_string()
+            "memory cache size exceeds the maximum value".to_string(),
         ));
     }
     // Convert signed i64 to unsigned u64 for cache size
@@ -181,7 +197,7 @@ pub fn set_memory_cache_size(size: i64) -> Result<(), BusinessError> {
 /// ```rust
 /// use ani_cache_download::cache_download::set_file_cache_size;
 /// use ani_rs::business_error::BusinessError;
-/// 
+///
 /// // Set file cache size to 500MB
 /// let result: Result<(), BusinessError> = set_file_cache_size(500 * 1024 * 1024);
 /// ```
@@ -190,10 +206,46 @@ pub fn set_file_cache_size(size: i64) -> Result<(), BusinessError> {
     if (size > MAX_FILE_SIZE) {
         return Err(BusinessError::new(
             401,
-            "file cache size exceeds the maximum value".to_string()
+            "file cache size exceeds the maximum value".to_string(),
         ));
     }
     // Convert signed i64 to unsigned u64 for cache size
     CacheDownloadService::get_instance().set_file_cache_size(size as u64);
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn get_download_info(url: String) -> Result<Option<DownloadInfo>, BusinessError> {
+    if (url.len() > MAX_UTL_LENGTH as usize) {
+        return Err(BusinessError::new(
+            401,
+            "url exceeds the maximum length".to_string(),
+        ));
+    }
+    let info = CacheDownloadService::get_instance()
+        .get_download_info(&url)
+        .map(|info| {
+            DownloadInfo::from_native(
+                preload_native_rlib::info::RustDownloadInfo::from_download_info(info),
+            )
+        });
+    Ok(info)
+}
+
+#[ani_rs::native]
+pub fn set_download_info_list_size(size: i64) -> Result<(), BusinessError> {
+    if (size > MAX_INFO_LIST_SIZE as i64) {
+        return Err(BusinessError::new(
+            401,
+            "info list size exceeds the maximum value".to_string(),
+        ));
+    }
+    if (size < 0) {
+        return Err(BusinessError::new(
+            401,
+            "info list size is negative".to_string(),
+        ));
+    }
+    CacheDownloadService::get_instance().set_info_list_size(size as u16);
     Ok(())
 }

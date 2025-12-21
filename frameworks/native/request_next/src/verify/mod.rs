@@ -21,6 +21,8 @@ mod notification;
 mod proxy;
 mod title;
 mod token;
+mod min_speed;
+mod timeout;
 
 //todo
 pub(crate) mod url;
@@ -56,6 +58,8 @@ impl TaskConfigVerifier {
                 Box::new(token::TokenVerifier {}),
                 Box::new(description::DescriptionVerifier {}),
                 Box::new(notification::NotificationVerifier {}),
+                Box::new(min_speed::MinSpeedVerifier {}),
+                Box::new(timeout::TimeoutVerifier {}),
             ],
         })
     }

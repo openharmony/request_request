@@ -25,7 +25,7 @@ use std::sync::{Arc, Mutex};
 
 // External dependencies
 use request_core::config::{Action, Version};
-use request_core::info::{Faults, Progress, Response, SubscribeType, TaskState, NotifyData};
+use request_core::info::{Faults, Progress, Response, SubscribeType, TaskState, NotifyData, WaitingReason};
 use ylong_runtime::task::JoinHandle;
 use crate::client::RequestClient;
 use crate::file::FileManager;
@@ -131,6 +131,7 @@ pub trait Callback {
     fn on_fault(&self, faults: Faults) {}
     fn on_complete_upload(&self, task_states: Vec<TaskState>) {}
     fn on_fail_upload(&self, task_states: Vec<TaskState>) {}
+    fn on_wait(&self, waiting_reason: WaitingReason) {}
 }
 
 impl Observer {
@@ -275,6 +276,12 @@ impl Observer {
                             let task_id = faultOccur.task_id as i64;
                             if let Some(callback) = callbacks.lock().unwrap().get(&task_id) {
                                 callback.on_fault(faultOccur.faults);
+                            }
+                        }
+                        Message::WAIT(wait) => {
+                            let task_id = wait.task_id as i64;
+                            if let Some(callback) = callbacks.lock().unwrap().get(&task_id) {
+                                callback.on_wait(wait.waiting_reason);
                             }
                         }
                     },

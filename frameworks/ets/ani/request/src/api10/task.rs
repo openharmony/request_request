@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Task management module for API 10.
-//! 
+//!
 //! This module provides functions for controlling request tasks in API 10,
 //! including operations like starting, pausing, resuming, stopping tasks,
 //! and setting speed limits.
@@ -41,7 +41,7 @@ const MIN_SPEED_LIMIT: i64 = 16 * 1024;
 /// ```rust
 /// use request_api10::api10::task::start;
 /// use request_api10::api10::bridge::Task;
-/// 
+///
 /// // Assuming task is properly initialized
 /// match start(task) {
 ///     Ok(_) => println!("Task started successfully"),
@@ -73,7 +73,7 @@ pub fn start(this: Task) -> Result<(), BusinessError> {
 /// ```rust
 /// use request_api10::api10::task::pause;
 /// use request_api10::api10::bridge::Task;
-/// 
+///
 /// // Assuming task is properly initialized
 /// match pause(task) {
 ///     Ok(_) => println!("Task paused successfully"),
@@ -105,7 +105,7 @@ pub fn pause(this: Task) -> Result<(), BusinessError> {
 /// ```rust
 /// use request_api10::api10::task::resume;
 /// use request_api10::api10::bridge::Task;
-/// 
+///
 /// // Assuming task is properly initialized
 /// match resume(task) {
 ///     Ok(_) => println!("Task resumed successfully"),
@@ -137,7 +137,7 @@ pub fn resume(this: Task) -> Result<(), BusinessError> {
 /// ```rust
 /// use request_api10::api10::task::stop;
 /// use request_api10::api10::bridge::Task;
-/// 
+///
 /// // Assuming task is properly initialized
 /// match stop(task) {
 ///     Ok(_) => println!("Task stopped successfully"),
@@ -170,7 +170,7 @@ pub fn stop(this: Task) -> Result<(), BusinessError> {
 /// ```rust
 /// use request_api10::api10::task::set_max_speed;
 /// use request_api10::api10::bridge::Task;
-/// 
+///
 /// // Assuming task is properly initialized
 /// // Set max speed to 1MB per second
 /// match set_max_speed(task, 1_048_576) {
@@ -183,7 +183,7 @@ pub fn set_max_speed(this: Task, speed: i64) -> Result<(), BusinessError> {
     if (speed < MIN_SPEED_LIMIT) {
         return Err(BusinessError::new(
             ExceptionErrorCode::E_PARAMETER_CHECK as i32,
-            "Incorrect parameter value, minimum speed value is 16 KB/s".to_string()
+            "Incorrect parameter value, minimum speed value is 16 KB/s".to_string(),
         ));
     }
     // Convert task ID from string to integer for internal use
@@ -191,4 +191,17 @@ pub fn set_max_speed(this: Task, speed: i64) -> Result<(), BusinessError> {
     RequestClient::get_instance()
         .set_max_speed(task_id, speed)
         .map_err(|e| BusinessError::new_static(e, "Failed to set task max speed"))
+}
+
+#[ani_rs::native]
+pub fn check_max_speed(this: Task, speed: i64) -> Result<(), BusinessError> {
+    if let Some(ref min_speed) = this.config.min_speed {
+        if speed < min_speed.speed {
+            return Err(BusinessError::new(
+                ExceptionErrorCode::E_PARAMETER_CHECK as i32,
+                "Incorrect parameter value, max speed value is less than min speed".to_string(),
+            ));
+        }
+    }
+    Ok(())
 }
