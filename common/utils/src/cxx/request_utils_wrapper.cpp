@@ -104,10 +104,10 @@ rust::string GetCertificatePinsForHostName(std::string const &hostname)
     return certificatePins;
 }
 
-rust::string StringfyWantAgent(AniEnv *env, AniObject *obj)
+rust::string StringfyWantAgent(AniEnv **env, AniObject *obj)
 {
     AbilityRuntime::WantAgent::WantAgent *wantAgentPtr = nullptr;
-    AppExecFwk::UnwrapWantAgent(reinterpret_cast<ani_env *>(env), *reinterpret_cast<ani_object *>(obj),
+    AppExecFwk::UnwrapWantAgent(reinterpret_cast<ani_env *>(*env), *reinterpret_cast<ani_object *>(obj),
         reinterpret_cast<void **>(&wantAgentPtr));
     if (wantAgentPtr == nullptr) {
         return rust::string::lossy("");

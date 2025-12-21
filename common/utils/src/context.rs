@@ -141,7 +141,7 @@ impl Context {
 
     pub fn stringfy_want_agent(env: &AniEnv, ani_object: &AniObject) -> String {
         unsafe {
-            let env = env as *const AniEnv as *mut AniEnv as *mut wrapper::AniEnv;
+            let env = env as *const AniEnv as *mut AniEnv as *mut *mut wrapper::AniEnv;
             let ani_object =
                 ani_object as *const AniObject as *mut AniObject as *mut wrapper::AniObject;
             wrapper::StringfyWantAgent(env, ani_object)

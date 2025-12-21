@@ -74,6 +74,6 @@ rust::vec<rust::string> GetTrustAnchorsForHostName(std::string const &hostname);
 
 rust::string GetCertificatePinsForHostName(std::string const &hostname);
 
-rust::string StringfyWantAgent(AniEnv *env, AniObject *obj);
+rust::string StringfyWantAgent(AniEnv **env, AniObject *obj);
 } // namespace OHOS::Request
 #endif
