@@ -70,6 +70,8 @@ pub struct TaskConfig {
     pub saveas: String,
     pub overwrite: bool,
     pub notification: Notification,
+    pub min_speed: MinSpeed,
+    pub timeout: Timeout,
 }
 
 /// Builder for creating a `TaskConfig` with a fluent interface.
@@ -115,6 +117,8 @@ pub struct TaskConfigBuilder {
     data: Option<Vec<FormItem>>,
     action: Action,
     // notification: Option<Notification>,
+    min_speed: Option<MinSpeed>,
+    timeout: Option<Timeout>,
 }
 
 impl TaskConfigBuilder {
@@ -139,6 +143,8 @@ impl TaskConfigBuilder {
             data: None,
             action: Action::Download,
             // notification: None,
+            min_speed: None,
+            timeout: None,
         }
     }
 
@@ -236,6 +242,16 @@ impl TaskConfigBuilder {
     //     self
     // }
 
+    pub fn min_speed(&mut self, min_speed: MinSpeed) -> &mut Self {
+        self.min_speed = Some(min_speed);
+        self
+    }
+
+    pub fn timeout(&mut self, timeout: Timeout) -> &mut Self {
+        self.timeout = Some(timeout);
+        self
+    }
+
     /// Constructs a `TaskConfig` with the current builder configuration.
     ///
     /// # Notes
@@ -295,11 +311,18 @@ impl TaskConfigBuilder {
             notification: Notification {
                 title: None,
                 text: None,
+                disable: None,
+                visibility: None,
+                want_agent: None,
             },
-            // notification: self.notification.unwrap_or(Notification {
-            //     title: "".to_string(),
-            //     text: "".to_string(),
-            // }),
+            min_speed: self.min_speed.unwrap_or(MinSpeed {
+                speed: 0,
+                duration: 0,
+            }),
+            timeout: self.timeout.unwrap_or(Timeout {
+                connection_timeout: 60,
+                total_timeout: 604800,
+            }),
         }
     }
 }
@@ -336,10 +359,10 @@ impl ipc::parcel::Serialize for TaskConfig {
         parcel.write(&self.common_data.priority)?;
 
         // Write placeholders for future fields
-        parcel.write(&self.common_data.min_speed.speed)?;
-        parcel.write(&self.common_data.min_speed.duration)?;
-        parcel.write(&self.common_data.timeout.connection_timeout)?;
-        parcel.write(&self.common_data.timeout.total_timeout)?;
+        parcel.write(&self.min_speed.speed)?;
+        parcel.write(&self.min_speed.duration)?;
+        parcel.write(&self.timeout.connection_timeout)?;
+        parcel.write(&self.timeout.total_timeout)?;
 
         // Serialize basic string fields
         parcel.write(&self.url)?;
@@ -415,14 +438,28 @@ impl ipc::parcel::Serialize for TaskConfig {
             parcel.write(&false)?;
         }
 
-        parcel.write(&false).unwrap(); //want_agent
-        parcel.write(&false).unwrap(); //disable
-
-        // Write gauge configuration based on task settings
-        if self.common_data.gauge {
-            parcel.write(&3u32).unwrap();
+        if let Some(ref agent) = self.notification.want_agent {
+            parcel.write(&true)?;
+            parcel.write(agent)?;
         } else {
-            parcel.write(&1u32).unwrap();
+            parcel.write(&false)?;
+        }
+
+        if let Some(disable) = self.notification.disable {
+            parcel.write(&disable)?;
+        } else {
+            parcel.write(&false)?;
+        }
+
+        if let Some(visibility) = self.notification.visibility {
+            parcel.write(&(visibility as u32))?;
+        } else {
+            // Write gauge configuration based on task settings
+            if self.common_data.gauge {
+                parcel.write(&3u32)?;
+            } else {
+                parcel.write(&1u32)?;
+            }
         }
         Ok(())
     }
@@ -665,7 +702,14 @@ impl ipc::parcel::Deserialize for TaskConfig {
             let path = parcel.read::<String>()?;
             let file_name = parcel.read::<String>()?;
             let mime_type = parcel.read::<String>()?;
-            file_specs.push(FileSpec { name, path, file_name, mime_type, is_user_file: false, fd: None });
+            file_specs.push(FileSpec {
+                name,
+                path,
+                file_name,
+                mime_type,
+                is_user_file: false,
+                fd: None,
+            });
         }
 
         // deserialize body_file_names
@@ -675,7 +719,7 @@ impl ipc::parcel::Deserialize for TaskConfig {
             let name = parcel.read::<String>()?;
             body_file_names.push(name);
         }
-        
+
         // deserialize min_speed
         let min_speed_speed = parcel.read::<i64>()?;
         let min_speed_duration = parcel.read::<i64>()?;
@@ -700,17 +744,50 @@ impl ipc::parcel::Deserialize for TaskConfig {
             body_file_paths: vec![],
             certs_path: vec![],
             common_data: CommonTaskConfig {
-                task_id: 0, uid: 0, token_id: 0, action, mode, cover, network_config: NetworkConfig::Any,
-                metered, roaming, retry, redirect, index, begins: begins as u64, ends,
-                gauge, precise, priority, background, multipart,
-                min_speed: MinSpeed{ speed: min_speed_speed, duration: min_speed_duration },
-                timeout: Timeout{connection_timeout: 0, total_timeout: 0}
+                task_id: 0,
+                uid: 0,
+                token_id: 0,
+                action,
+                mode,
+                cover,
+                network_config: NetworkConfig::Any,
+                metered,
+                roaming,
+                retry,
+                redirect,
+                index,
+                begins: begins as u64,
+                ends,
+                gauge,
+                precise,
+                priority,
+                background,
+                multipart,
+                min_speed: MinSpeed {
+                    speed: min_speed_speed,
+                    duration: min_speed_duration,
+                },
+                timeout: Timeout {
+                    connection_timeout: 0,
+                    total_timeout: 0,
+                },
             },
             saveas: "".to_string(),
             overwrite: cover,
             notification: Notification {
                 title: None,
                 text: None,
+                disable: None,
+                visibility: None,
+                want_agent: None,
+            },
+            min_speed: MinSpeed {
+                speed: min_speed_speed,
+                duration: min_speed_duration,
+            },
+            timeout: Timeout {
+                connection_timeout: 0,
+                total_timeout: 0,
             },
         })
     }
@@ -720,4 +797,15 @@ impl ipc::parcel::Deserialize for TaskConfig {
 pub struct Notification {
     pub title: Option<String>,
     pub text: Option<String>,
+    pub disable: Option<bool>,
+    pub visibility: Option<i32>,
+    pub want_agent: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub struct GroupConfig {
+    /// Optional gauge flag for the group.
+    pub gauge: Option<bool>,
+    /// Notification details for the group.
+    pub notification: Notification,
 }

@@ -25,7 +25,7 @@ use std::io::Read;
 // External dependencies
 use request_core::config::{Action, Version};
 use request_core::info::{
-    FaultOccur, Faults, NotifyData, Progress, Reason, Response, State, SubscribeType, TaskState,
+    FaultOccur, Faults, NotifyData, Progress, Reason, Response, State, SubscribeType, TaskState, Wait, WaitingReason
 };
 
 /// Binary deserializer for Unix Domain Socket communications.
@@ -225,6 +225,24 @@ impl Serialize for Reason {
     fn read(ser: &mut UdsSer) -> Self {
         let reason: u32 = ser.read();
         Reason::from(reason)
+    }
+}
+
+impl Serialize for Wait {
+    fn read(ser: &mut UdsSer) -> Self {
+        let task_id = ser.read::<i32>();
+        let waiting_reason = ser.read::<WaitingReason>();
+        Wait {
+            task_id,
+            waiting_reason,
+        }
+    }
+}
+
+impl Serialize for WaitingReason {
+    fn read(ser: &mut UdsSer) -> Self {
+        let waiting_reason: u32 = ser.read();
+        WaitingReason::from(waiting_reason)
     }
 }
 

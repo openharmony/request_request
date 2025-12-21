@@ -111,7 +111,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
 
 // External dependencies
-use request_core::config::{Action, TaskConfig, Version};
+use request_core::config::{Action, Notification, TaskConfig, Version};
 use request_core::error_code::{CHANNEL_NOT_OPEN, OTHER};
 use request_core::file::FileSpec;
 use request_core::filter::SearchFilter;
@@ -189,10 +189,7 @@ impl<'a> RequestClient<'a> {
         // todo: errcode and errmsg
         TaskConfigVerifier::get_instance().verify(&config)?;
         let token = FileManager::get_instance().apply(context, &mut config)?;
-        let task = NativeTask {
-            config,
-            token,
-        };
+        let task = NativeTask { config, token };
         self.task_manager.insert(seq, task);
 
         Ok(())
@@ -280,12 +277,11 @@ impl<'a> RequestClient<'a> {
     ///     }
     /// }
     /// ```
-    pub fn create_task(
-        &self,
-        context: Context,
-        seq: u64
-    ) -> Result<i64, CreateTaskError> {
-        let task = self.task_manager.get_by_seq(&seq).ok_or(CreateTaskError::Code(OTHER))?;
+    pub fn create_task(&self, context: Context, seq: u64) -> Result<i64, CreateTaskError> {
+        let task = self
+            .task_manager
+            .get_by_seq(&seq)
+            .ok_or(CreateTaskError::Code(OTHER))?;
 
         // Retry loop for channel reconnection
         loop {
@@ -311,7 +307,6 @@ impl<'a> RequestClient<'a> {
     }
 
     pub fn get_task(&self, task_id: i64, token: Option<String>) -> Result<TaskConfig, i32> {
-        
         self.proxy.get_task(task_id, token)
     }
 
@@ -439,8 +434,12 @@ impl<'a> RequestClient<'a> {
         self.proxy.query(task_id)
     }
 
-    pub fn create_group(&self, gauge: Option<bool>, title: Option<String>, text: Option<String>, disable: Option<bool>) -> Result<String, i32> {
-        self.proxy.create_group(gauge, title, text, disable)
+    pub fn create_group(
+        &self,
+        gauge: Option<bool>,
+        notification: Notification,
+    ) -> Result<String, i32> {
+        self.proxy.create_group(gauge, notification)
     }
 
     pub fn attach_group(&self, group_id: String, task_ids: Vec<String>) -> Result<(), i32> {

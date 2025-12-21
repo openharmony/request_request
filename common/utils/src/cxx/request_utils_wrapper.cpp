@@ -20,9 +20,12 @@
 
 #include "ani.h"
 #include "ani_base_context.h"
-#include "openssl/sha.h"
+#include "ani_common_want_agent.h"
 #include "data_ability_helper.h"
 #include "network_security_config.h"
+#include "openssl/sha.h"
+#include "want_agent.h"
+#include "want_agent_helper.h"
 
 namespace OHOS::Request {
 
@@ -73,17 +76,6 @@ std::shared_ptr<AbilityRuntime::Context> GetStageModeContext(AniEnv **env, AniOb
     return AbilityRuntime::GetStageModeContext(reinterpret_cast<ani_env *>(*env), *reinterpret_cast<ani_object *>(obj));
 }
 
-int32_t DataAbilityOpenFile(std::shared_ptr<Context> const &context, const std::string &path)
-{
-    std::shared_ptr<Uri> uri = std::make_shared<Uri>(path);
-    std::shared_ptr<AppExecFwk::DataAbilityHelper> dataAbilityHelper =
-        AppExecFwk::DataAbilityHelper::Creator(context, uri);
-    if (dataAbilityHelper == nullptr) {
-        return -1;
-    }
-    return dataAbilityHelper->OpenFile(*uri, "r");
-}
-
 bool IsCleartextPermitted(std::string const &hostname)
 {
     bool cleartextPermitted = true;
@@ -110,5 +102,19 @@ rust::string GetCertificatePinsForHostName(std::string const &hostname)
     std::string certificatePins;
     OHOS::NetManagerStandard::NetworkSecurityConfig::GetInstance().GetPinSetForHostName(hostname, certificatePins);
     return certificatePins;
+}
+
+rust::string StringfyWantAgent(AniEnv *env, AniObject *obj)
+{
+    AbilityRuntime::WantAgent::WantAgent *wantAgentPtr = nullptr;
+    AppExecFwk::UnwrapWantAgent(reinterpret_cast<ani_env *>(env), *reinterpret_cast<ani_object *>(obj),
+        reinterpret_cast<void **>(&wantAgentPtr));
+    if (wantAgentPtr == nullptr) {
+        return rust::string::lossy("");
+    }
+    std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> wantAgent =
+        std::make_shared<AbilityRuntime::WantAgent::WantAgent>(*wantAgentPtr);
+    std::string ret = OHOS::AbilityRuntime::WantAgent::WantAgentHelper::ToString(wantAgent);
+    return rust::string::lossy(ret);
 }
 } // namespace OHOS::Request

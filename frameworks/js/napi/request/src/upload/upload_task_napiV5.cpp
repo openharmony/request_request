@@ -46,7 +46,7 @@ UploadTaskNapiV5::~UploadTaskNapiV5()
             delete callbackData;
         }
     };
-    int32_t ret = napi_send_event(env_, afterCallback, napi_eprio_high);
+    int32_t ret = napi_send_event(env_, afterCallback, napi_eprio_high, "request:upload");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete callbackData;
@@ -58,7 +58,7 @@ bool UploadTaskNapiV5::ParseCallback(napi_env env, napi_callback_info info)
     napi_value self = nullptr;
     size_t argc = JSUtil::MAX_ARGC;
     napi_value argv[JSUtil::MAX_ARGC] = { nullptr };
-    NAPI_CALL_BASE(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr), false);
+    REQUEST_NAPI_CALL_RETURN(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr), "napi_get_cb_info", false);
     bool successCb = JSUtil::ParseFunction(env, argv[FIRST_ARGV], "success", success_);
     bool failCb = JSUtil::ParseFunction(env, argv[FIRST_ARGV], "fail", fail_);
     bool completeCb = JSUtil::ParseFunction(env, argv[FIRST_ARGV], "complete", complete_);
@@ -79,19 +79,19 @@ napi_value UploadTaskNapiV5::JsUpload(napi_env env, napi_callback_info info)
     napi_value self = nullptr;
     size_t argc = JSUtil::MAX_ARGC;
     napi_value argv[JSUtil::MAX_ARGC] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+    REQUEST_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr), "napi_get_cb_info failed");
 
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
     napi_status getStatus = JsInitialize::GetContext(env, argv[FIRST_ARGV], context);
     if (getStatus != napi_ok) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "GetContext fail.");
-        NAPI_ASSERT(env, false, "GetContext fail");
+        REQUEST_NAPI_ASSERT(env, "GetContext fail", false);
     }
 
     std::shared_ptr<UploadConfig> uploadConfig = JSUtil::ParseUploadConfig(env, argv[FIRST_ARGV], API3);
     if (uploadConfig == nullptr) {
         UPLOAD_HILOGE(UPLOAD_MODULE_JS_NAPI, "ParseUploadConfig fail.");
-        NAPI_ASSERT(env, false, "ParseUploadConfig fail");
+        REQUEST_NAPI_ASSERT(env, "ParseUploadConfig fail", false);
     }
 
     AddCallbackToConfig(env, uploadConfig);
@@ -131,7 +131,7 @@ void UploadTaskNapiV5::OnSystemSuccess(napi_env env, napi_ref ref, Upload::Uploa
         napi_close_handle_scope(successCallback->env, scope);
         delete successCallback;
     };
-    int32_t ret = napi_send_event(env, afterCallback, napi_eprio_high);
+    int32_t ret = napi_send_event(env, afterCallback, napi_eprio_high, "request:upload");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete successCallback;
@@ -168,7 +168,7 @@ void UploadTaskNapiV5::OnSystemFail(napi_env env, napi_ref ref, std::string &dat
         napi_close_handle_scope(failCallback->env, scope);
         delete failCallback;
     };
-    int32_t ret = napi_send_event(env, afterCallback, napi_eprio_high);
+    int32_t ret = napi_send_event(env, afterCallback, napi_eprio_high, "request:upload");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete failCallback;
@@ -205,7 +205,7 @@ void UploadTaskNapiV5::OnSystemComplete(std::shared_ptr<Upload::UploadTaskNapiV5
         napi_close_handle_scope(completeCallback->proxy->env_, scope);
         delete completeCallback;
     };
-    int32_t ret = napi_send_event(completeCallback->proxy->env_, afterCallback, napi_eprio_high);
+    int32_t ret = napi_send_event(completeCallback->proxy->env_, afterCallback, napi_eprio_high, "request:upload");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete completeCallback;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,25 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef REQUEST_PATH_UTILS_H
-#define REQUEST_PATH_UTILS_H
+#ifndef REQUEST_UTILS_DATAABILITY_H
+#define REQUEST_UTILS_DATAABILITY_H
 
-#include <sys/stat.h>
-
-#include <cstdint>
-#include <map>
-#include <mutex>
-#include <vector>
-
-#include "request_common.h"
+#include "context.h"
 
 namespace OHOS::Request {
-class PathUtils {
-public:
-    static bool AddPathsToMap(const std::string &path, const Action action);
-    static bool SubPathsToMap(const std::string &path);
-    static bool CheckBelongAppBaseDir(const std::string &filepath);
-    static std::string ShieldPath(const std::string &path);
-};
+using namespace OHOS::AbilityRuntime;
+
+int32_t DataAbilityOpenFile(std::shared_ptr<Context> const &context, const std::string &path);
+
 } // namespace OHOS::Request
-#endif // PATH_UTILS
+#endif

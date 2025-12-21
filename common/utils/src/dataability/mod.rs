@@ -10,17 +10,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+pub mod wrapper;
 
-mod bridge;
-mod cache_download;
-ani_rs::ani_constructor! {
-    namespace "@ohos.request.cacheDownload.cacheDownload"
-    [
-        "download" : cache_download::download,
-        "cancel" : cache_download::cancel,
-        "setMemoryCacheSize" : cache_download::set_memory_cache_size,
-        "setFileCacheSize" : cache_download::set_file_cache_size,
-        "getDownloadInfo" : cache_download::get_download_info,
-        "setDownloadInfoListSize" : cache_download::set_download_info_list_size,
-    ]
-}
+pub use wrapper::DataAbilityOpenFile;

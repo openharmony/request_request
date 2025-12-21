@@ -19,7 +19,7 @@
 
 use ani_rs::objects::AniObject;
 use ani_rs::AniEnv;
-use cxx::{SharedPtr, let_cxx_string};
+use cxx::SharedPtr;
 
 use super::wrapper::GetCacheDir;
 use crate::wrapper::{self, IsStageContext};
@@ -59,7 +59,7 @@ pub fn is_stage_context(env: &AniEnv, ani_object: &AniObject) -> bool {
 
 pub struct Context {
     /// Inner C++ context shared pointer
-    inner: SharedPtr<wrapper::Context>,
+    pub inner: SharedPtr<wrapper::Context>,
 }
 
 pub enum BundleType {
@@ -139,8 +139,12 @@ impl Context {
         wrapper::BundleType(&self.inner.GetApplicationInfo()).into()
     }
 
-    pub fn data_ability_open_file(&self, target_file: String) -> i32 {
-        let_cxx_string!(target_file = target_file);
-        wrapper::DataAbilityOpenFile(&self.inner, &target_file)
+    pub fn stringfy_want_agent(env: &AniEnv, ani_object: &AniObject) -> String {
+        unsafe {
+            let env = env as *const AniEnv as *mut AniEnv as *mut wrapper::AniEnv;
+            let ani_object =
+                ani_object as *const AniObject as *mut AniObject as *mut wrapper::AniObject;
+            wrapper::StringfyWantAgent(env, ani_object)
+        }
     }
 }

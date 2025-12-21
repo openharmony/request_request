@@ -21,6 +21,7 @@
 #include "log.h"
 #include "napi/native_node_api.h"
 #include "napi_utils.h"
+#include "path_utils.h"
 #include "request_event.h"
 #include "request_manager.h"
 
@@ -71,12 +72,12 @@ void JSNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData
     std::string filePath;
     {
         std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
-        auto item = JsTask::taskMap_.find(std::to_string(notifyData->taskId));
-        if (item == JsTask::taskMap_.end()) {
+        auto it = JsTask::taskContextMap_.find(std::to_string(notifyData->taskId));
+        if (it == JsTask::taskContextMap_.end() || it->second->task == nullptr) {
             REQUEST_HILOGE("Task ID not found");
             return;
         }
-        JsTask *task = item->second;
+        JsTask *task = it->second->task;
         if (task->config_.multipart) {
             index = 0;
         }
@@ -90,6 +91,7 @@ void JSNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData
     NapiUtils::ReadBytesFromFile(filePath, notifyData->progress.bodyBytes);
     // Waiting for "complete" to read and delete.
     if (!(notifyData->version == Version::API10 && index + 1 == len && notifyData->type == SubscribeType::PROGRESS)) {
+        PathUtils::SubPathsToMap(filePath);
         NapiUtils::RemoveFile(filePath);
     }
 }
@@ -207,7 +209,6 @@ void JSNotifyDataListener::DoJSTask(const std::shared_ptr<NotifyData> &notifyDat
         REQUEST_HILOGD("jstask %{public}s clear file", tid.c_str());
         this->OnMessageReceive(values, paramNumber);
         JsTask::RemoveTaskContext(tid);
-        JsTask::ClearTaskMap(tid);
         REQUEST_HILOGD("jstask %{public}s removed", tid.c_str());
     }
 }
@@ -242,7 +243,8 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
             napi_close_handle_scope(ptr->listener->env_, scope);
             delete ptr;
         },
-        napi_eprio_high);
+        napi_eprio_high,
+        "request:download|downloadfile|upload|uploadfile|agent.create");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete ptr;
@@ -277,7 +279,8 @@ void JSNotifyDataListener::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
             napi_close_handle_scope(ptr->listener->env_, scope);
             delete ptr;
         },
-        napi_eprio_high);
+        napi_eprio_high,
+        "request:task.on");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete ptr;
@@ -302,7 +305,8 @@ void JSNotifyDataListener::OnWaitReceive(std::int32_t taskId, WaitingReason reas
             me->OnMessageReceive(&value, paramNumber);
             napi_close_handle_scope(me->env_, scope);
         },
-        napi_eprio_high);
+        napi_eprio_high,
+        "request:task.on");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
     }

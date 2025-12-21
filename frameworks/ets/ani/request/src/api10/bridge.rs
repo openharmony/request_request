@@ -18,7 +18,9 @@
 
 use std::collections::HashMap;
 
-use request_core::config::{self, CommonTaskConfig, NetworkConfig, TaskConfig, Version, MinSpeed, Timeout};
+use ani_rs::objects::AniObject;
+use request_core::config::{self, CommonTaskConfig, NetworkConfig, TaskConfig, Version};
+use request_core::info;
 use serde::{Deserialize, Serialize};
 
 /// Defines the type of action for a request task.
@@ -197,26 +199,81 @@ pub struct FormItem {
 /// Represents notification details for a request task.
 #[derive(Clone)]
 #[ani_rs::ani(path = "@ohos.request.request.agent.NotificationInner")]
-pub struct Notification {
+pub struct Notification<'local> {
     /// Optional title for the notification.
     pub title: Option<String>,
     /// Optional text content for the notification.
     pub text: Option<String>,
     // pub disable: Option<bool>,
+    pub disable: Option<bool>,
+    pub visibility: Option<i32>,
+    pub want_agent: Option<AniObject<'local>>,
 }
 
 /// Represents different data types for request body content.
-impl From<Notification> for request_core::config::Notification {
+impl From<Notification<'_>> for request_core::config::Notification {
     fn from(value: Notification) -> Self {
         request_core::config::Notification {
             title: value.title,
             text: value.text,
+            disable: value.disable,
+            visibility: value.visibility,
+            want_agent: None,
         }
     }
 }
 
-#[derive(Clone)]
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize)]
+#[ani_rs::ani]
+pub struct MinSpeed {
+    pub speed: i64,
+    pub duration: i32,
+}
+
+impl From<MinSpeed> for request_core::config::MinSpeed {
+    fn from(value: MinSpeed) -> Self {
+        request_core::config::MinSpeed {
+            speed: value.speed,
+            duration: value.duration as i64,
+        }
+    }
+}
+
+impl From<request_core::config::MinSpeed> for MinSpeed {
+    fn from(value: request_core::config::MinSpeed) -> Self {
+        MinSpeed {
+            speed: value.speed,
+            duration: value.duration as i32,
+        }
+    }
+}
+
+#[derive(Clone, Serialize)]
+#[ani_rs::ani]
+pub struct Timeout {
+    connection_timeout: Option<i32>,
+    total_timeout: Option<i32>,
+}
+
+impl From<Timeout> for request_core::config::Timeout {
+    fn from(value: Timeout) -> Self {
+        request_core::config::Timeout {
+            connection_timeout: value.connection_timeout.unwrap_or(60) as u64,
+            total_timeout: value.total_timeout.unwrap_or(604800) as u64,
+        }
+    }
+}
+
+impl From<request_core::config::Timeout> for Timeout {
+    fn from(value: request_core::config::Timeout) -> Self {
+        Timeout {
+            connection_timeout: Some(value.connection_timeout as i32),
+            total_timeout: Some(value.total_timeout as i32),
+        }
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize)]
 pub enum Data {
     /// String data type.
     S(String),
@@ -227,7 +284,7 @@ pub enum Data {
 /// Represents configuration for a request task.
 #[derive(Clone)]
 #[ani_rs::ani(path = "@ohos.request.request.agent.ConfigInner")]
-pub struct Config {
+pub struct Config<'local> {
     /// Action type (download or upload).
     pub action: Action,
     /// URL to send the request to.
@@ -279,7 +336,9 @@ pub struct Config {
     /// Optional multipart flag.
     pub multipart: Option<bool>,
     /// Optional notification details.
-    pub notification: Option<Notification>,
+    pub notification: Option<Notification<'local>>,
+    pub min_speed: Option<MinSpeed>,
+    pub timeout: Option<Timeout>,
 }
 
 /// Represents the state of a request task.
@@ -422,6 +481,8 @@ pub enum Faults {
     Ssl = 0x70,
     /// Redirect handling error.
     Redirect = 0x80,
+    /// Low speed error.
+    LowSpeed = 0x90,
 }
 
 impl From<request_core::info::Faults> for Faults {
@@ -437,7 +498,27 @@ impl From<request_core::info::Faults> for Faults {
             request_core::info::Faults::Tcp => Faults::Tcp,
             request_core::info::Faults::Ssl => Faults::Ssl,
             request_core::info::Faults::Redirect => Faults::Redirect,
+            request_core::info::Faults::LowSpeed => Faults::LowSpeed,
             _ => unimplemented!(),
+        }
+    }
+}
+
+#[ani_rs::ani(path = "@ohos.request.request.agent.WaitingReason")]
+pub enum WaitingReason {
+    TaskQueueFull = 0x00,
+    NetworkNotMatch = 0x01,
+    AppBackground = 0x02,
+    UserInactivated = 0x03,
+}
+
+impl From<request_core::info::WaitingReason> for WaitingReason {
+    fn from(value: request_core::info::WaitingReason) -> Self {
+        match value {
+            info::WaitingReason::TASK_QUEUE_FULL => WaitingReason::TaskQueueFull,
+            info::WaitingReason::NETWORK_NOT_MATCH => WaitingReason::NetworkNotMatch,
+            info::WaitingReason::APP_BACKGROUND => WaitingReason::AppBackground,
+            info::WaitingReason::USER_INACTIVATED => WaitingReason::UserInactivated,
         }
     }
 }
@@ -525,7 +606,11 @@ impl From<request_core::info::TaskInfo> for TaskInfo {
         let saveas = if value.common_data.action == Action::Upload as u8 {
             "".to_string()
         } else {
-            value.file_specs.get(0).map(|x| x.path.clone()).unwrap_or("".to_string())
+            value
+                .file_specs
+                .get(0)
+                .map(|x| x.path.clone())
+                .unwrap_or("".to_string())
         };
         TaskInfo {
             uid: Some(value.common_data.uid.to_string()),
@@ -547,7 +632,10 @@ impl From<request_core::info::TaskInfo> for TaskInfo {
             mtime: value.common_data.mtime as i64,
             retry: value.common_data.retry,
             tries: value.common_data.tries as i32,
-            faults: request_core::info::Faults::from(request_core::info::Reason::from(value.common_data.reason as u32)).into(),
+            faults: request_core::info::Faults::from(request_core::info::Reason::from(
+                value.common_data.reason as u32,
+            ))
+            .into(),
             reason: value.common_data.reason.to_string(),
             extras: Some(value.extras.clone()),
         }
@@ -581,32 +669,48 @@ impl From<&request_core::info::Response> for HttpResponse {
 
 /// Represents a request task.
 #[ani_rs::ani(path = "@ohos.request.request.agent.TaskInner")]
-pub struct Task {
+pub struct Task<'local> {
     /// Task ID.
     pub tid: String,
-    pub config: Config,
+    pub config: Config<'local>,
 }
 
 /// Represents configuration for a task group.
 #[ani_rs::ani(path = "@ohos.request.request.agent.GroupConfigInner")]
-pub struct GroupConfig {
+pub struct GroupConfig<'local> {
     /// Optional gauge flag for the group.
     pub gauge: Option<bool>,
     /// Notification details for the group.
-    pub notification: Notification,
+    pub notification: Notification<'local>,
 }
 
-impl From<request_core::config::TaskConfig> for Config {
+impl From<request_core::config::TaskConfig> for Config<'_> {
     fn from(value: request_core::config::TaskConfig) -> Self {
         Config {
             action: Action::from(value.common_data.action),
             url: value.url,
-            title: if value.title.is_empty() { None } else { Some(value.title) },
-            description: if value.description.is_empty() { None } else { Some(value.description) },
+            title: if value.title.is_empty() {
+                None
+            } else {
+                Some(value.title)
+            },
+            description: if value.description.is_empty() {
+                None
+            } else {
+                Some(value.description)
+            },
             mode: Some(Mode::from(value.common_data.mode)),
             overwrite: None,
-            method: if value.method == "GET" { None } else { Some(value.method) },
-            headers: if value.headers.is_empty() { None } else { Some(value.headers) },
+            method: if value.method == "GET" {
+                None
+            } else {
+                Some(value.method)
+            },
+            headers: if value.headers.is_empty() {
+                None
+            } else {
+                Some(value.headers)
+            },
             data: Some(Data::S(value.data)),
             saveas: None,
             network: Some(value.common_data.network_config.into()),
@@ -614,17 +718,31 @@ impl From<request_core::config::TaskConfig> for Config {
             roaming: Some(value.common_data.roaming),
             retry: Some(value.common_data.retry),
             redirect: Some(value.common_data.redirect),
-            proxy: if value.proxy.is_empty() { None } else { Some(value.proxy) },
+            proxy: if value.proxy.is_empty() {
+                None
+            } else {
+                Some(value.proxy)
+            },
             index: Some(value.common_data.index as i32),
             begins: Some(value.common_data.begins as i64),
             ends: Some(value.common_data.ends),
             gauge: Some(value.common_data.gauge),
             precise: Some(value.common_data.precise),
-            token: if value.token.is_empty() { None } else { Some(value.token) },
+            token: if value.token.is_empty() {
+                None
+            } else {
+                Some(value.token)
+            },
             priority: Some(value.common_data.priority as i32),
-            extras: if value.extras.is_empty() { None } else { Some(value.extras) },
+            extras: if value.extras.is_empty() {
+                None
+            } else {
+                Some(value.extras)
+            },
             multipart: Some(value.common_data.multipart),
             notification: None,
+            min_speed: Some(MinSpeed::from(value.min_speed)),
+            timeout: Some(Timeout::from(value.timeout)),
         }
     }
 }
@@ -633,7 +751,7 @@ impl From<request_core::config::TaskConfig> for Config {
 ///
 /// Maps API configuration options to the corresponding core task configuration,
 /// providing default values for unspecified fields.
-impl From<Config> for TaskConfig {
+impl From<Config<'_>> for TaskConfig {
     fn from(value: Config) -> Self {
         let mut form_items = vec![];
         let mut file_specs = vec![];
@@ -705,14 +823,20 @@ impl From<Config> for TaskConfig {
                 token_id: 0,
                 action: value.action.into(),
                 cover: false,
-                network_config: value.network.map(|n| n.into()).unwrap_or(NetworkConfig::Any),
+                network_config: value
+                    .network
+                    .map(|n| n.into())
+                    .unwrap_or(NetworkConfig::Any),
                 metered: value.metered.unwrap_or(false),
                 roaming: value.roaming.unwrap_or(true),
                 retry: value.retry.unwrap_or(true),
                 redirect: value.redirect.unwrap_or(true),
                 index: value.index.map(|i| i as u32).unwrap_or(0u32),
                 // todo
-                begins: value.begins.map(|b| if b > 0 { b as u64 } else { 0u64 }).unwrap_or(0u64),
+                begins: value
+                    .begins
+                    .map(|b| if b > 0 { b as u64 } else { 0u64 })
+                    .unwrap_or(0u64),
                 ends: value.ends.unwrap_or(-1),
                 gauge: value.gauge.unwrap_or(false),
                 precise: value.precise.unwrap_or(false),
@@ -721,21 +845,40 @@ impl From<Config> for TaskConfig {
                 background: !matches!(value.mode, Some(Mode::Foreground)),
                 multipart: value.multipart.unwrap_or(false),
                 mode: value.mode.unwrap_or(Mode::Background).into(),
-                min_speed: MinSpeed {
+                min_speed: config::MinSpeed {
                     speed: 0,
                     duration: 0,
                 },
-                timeout: Timeout {
+                timeout: config::Timeout {
                     connection_timeout: 0,
                     total_timeout: 0,
                 },
             },
             saveas: value.saveas.unwrap_or_default(),
             overwrite: value.overwrite.unwrap_or(false),
-            notification: value.notification.map(Into::into).unwrap_or(request_core::config::Notification {
-                title: None,
-                text: None,
-            }),
+            notification: value.notification.map(Into::into).unwrap_or(
+                request_core::config::Notification {
+                    title: None,
+                    text: None,
+                    disable: None,
+                    visibility: None,
+                    want_agent: None,
+                },
+            ),
+            min_speed: value
+                .min_speed
+                .unwrap_or(MinSpeed {
+                    speed: 0,
+                    duration: 0,
+                })
+                .into(),
+            timeout: value
+                .timeout
+                .unwrap_or(Timeout {
+                    connection_timeout: Some(60),
+                    total_timeout: Some(604800),
+                })
+                .into(),
         }
     }
 }

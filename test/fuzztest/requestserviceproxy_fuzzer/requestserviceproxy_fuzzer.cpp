@@ -855,102 +855,186 @@ bool ParcelHelperFuzzTestUnMarshalConfig(FuzzedDataProvider &provider)
     return true;
 }
 
-bool RequestManagerFuzzTest(FuzzedDataProvider &provider)
+void RequestManagerImplFuzzTestSetMode(FuzzedDataProvider &provider)
 {
-    std::vector<Config> configs = convertToVectorConfig(provider);
-    std::vector<TaskRet> rets = convertToVectorTaskRet(provider);
-    std::vector<std::string> tids = convertToVectorString(provider);
-    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
-    Version version = versions[provider.ConsumeIntegralInRange<size_t>(0, versions.size() - 1)];
-    std::vector<TaskInfoRet> tasks = convertToVectorTaskInfoRet(provider);
-    std::vector<TaskIdAndToken> taskid = convertToVectorTaskIdAndToken(provider);
-    std::vector<TaskInfoRet> taskinfo = convertToVectorTaskInfoRet(provider);
-    std::vector<SpeedConfig> speedconfig = convertToVectorSpeedConfig(provider);
     std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     Mode mode = modes[provider.ConsumeIntegralInRange<size_t>(0, modes.size() - 1)];
-    int64_t maxSpeed = provider.ConsumeIntegral<int64_t>();
-    bool gauge = provider.ConsumeBool();
-    Notification notification;
-
-    RequestManager::GetInstance()->CreateTasks(configs, rets);
-    RequestManager::GetInstance()->StartTasks(tids, err);
-    RequestManager::GetInstance()->StopTasks(tids, err);
-    RequestManager::GetInstance()->ResumeTasks(tids, err);
-    RequestManager::GetInstance()->RemoveTasks(tids, version, err);
-    RequestManager::GetInstance()->PauseTasks(tids, version, err);
-    RequestManager::GetInstance()->ShowTasks(tids, tasks);
-    RequestManager::GetInstance()->TouchTasks(taskid, taskinfo);
-    RequestManager::GetInstance()->SetMaxSpeeds(speedconfig, err);
-    RequestManager::GetInstance()->SetMode(tid, mode);
-    RequestManager::GetInstance()->DisableTaskNotification(tids, err);
-    RequestManager::GetInstance()->SetMaxSpeed(tid, maxSpeed);
-    RequestManager::GetInstance()->LoadRequestServer();
-    RequestManager::GetInstance()->CreateGroup(tid, gauge, notification);
-    RequestManager::GetInstance()->AttachGroup(tid, tids);
-    RequestManager::GetInstance()->DeleteGroup(tid);
-    return true;
+    RequestManagerImpl::GetInstance()->SetMode(tid, mode);
 }
 
-bool RequestManagerImplFuzzTest(FuzzedDataProvider &provider)
+void RequestManagerImplFuzzTestDisableTaskNotification(FuzzedDataProvider &provider)
 {
-    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
-    Mode mode = modes[provider.ConsumeIntegralInRange<size_t>(0, modes.size() - 1)];
     std::vector<std::string> tids = convertToVectorString(provider);
     std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    RequestManagerImpl::GetInstance()->DisableTaskNotification(tids, err);
+}
+
+void RequestManagerImplFuzzTestCreateTasks(FuzzedDataProvider &provider)
+{
     std::vector<Config> configs = convertToVectorConfig(provider);
     std::vector<TaskRet> rets = convertToVectorTaskRet(provider);
+    RequestManagerImpl::GetInstance()->CreateTasks(configs, rets);
+}
+
+void RequestManagerImplFuzzTestStartTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    RequestManagerImpl::GetInstance()->StartTasks(tids, err);
+}
+
+void RequestManagerImplFuzzTestStopTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    RequestManagerImpl::GetInstance()->StopTasks(tids, err);
+}
+
+void RequestManagerImplFuzzTestResumeTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    RequestManagerImpl::GetInstance()->ResumeTasks(tids, err);
+}
+
+void RequestManagerImplFuzzTestRemoveTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
     Version version = versions[provider.ConsumeIntegralInRange<size_t>(0, versions.size() - 1)];
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    RequestManagerImpl::GetInstance()->RemoveTasks(tids, version, err);
+}
+
+void RequestManagerImplFuzzTestPauseTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    Version version = versions[provider.ConsumeIntegralInRange<size_t>(0, versions.size() - 1)];
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    RequestManagerImpl::GetInstance()->PauseTasks(tids, version, err);
+}
+
+void RequestManagerImplFuzzTestQueryTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
     std::vector<TaskInfoRet> taskinfo = convertToVectorTaskInfoRet(provider);
+    RequestManagerImpl::GetInstance()->QueryTasks(tids, taskinfo);
+}
+
+void RequestManagerImplFuzzTestShowTasks(FuzzedDataProvider &provider)
+{
+    std::vector<std::string> tids = convertToVectorString(provider);
+    std::vector<TaskInfoRet> taskinfo = convertToVectorTaskInfoRet(provider);
+    RequestManagerImpl::GetInstance()->ShowTasks(tids, taskinfo);
+}
+
+void RequestManagerImplFuzzTestTouchTasks(FuzzedDataProvider &provider)
+{
     std::vector<TaskIdAndToken> taskid = convertToVectorTaskIdAndToken(provider);
+    std::vector<TaskInfoRet> taskinfo = convertToVectorTaskInfoRet(provider);
+    RequestManagerImpl::GetInstance()->TouchTasks(taskid, taskinfo);
+}
+
+void RequestManagerImplFuzzTestSetMaxSpeeds(FuzzedDataProvider &provider)
+{
     std::vector<SpeedConfig> speedconfig = convertToVectorSpeedConfig(provider);
+    std::vector<ExceptionErrorCode> err = convertToVectorExceptionErrorCode(provider);
+    RequestManagerImpl::GetInstance()->SetMaxSpeeds(speedconfig, err);
+}
+
+void RequestManagerImplFuzzTestCreateGroup(FuzzedDataProvider &provider)
+{
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     bool gauge = provider.ConsumeBool();
     Notification notification;
-    int64_t maxSpeed = provider.ConsumeIntegral<int64_t>();
-
-    RequestManagerImpl::GetInstance()->SetMode(tid, mode);
-    RequestManagerImpl::GetInstance()->DisableTaskNotification(tids, err);
-    RequestManagerImpl::GetInstance()->CreateTasks(configs, rets);
-    RequestManagerImpl::GetInstance()->StartTasks(tids, err);
-    RequestManagerImpl::GetInstance()->StopTasks(tids, err);
-    RequestManagerImpl::GetInstance()->ResumeTasks(tids, err);
-    RequestManagerImpl::GetInstance()->RemoveTasks(tids, version, err);
-    RequestManagerImpl::GetInstance()->PauseTasks(tids, version, err);
-    RequestManagerImpl::GetInstance()->QueryTasks(tids, taskinfo);
-    RequestManagerImpl::GetInstance()->ShowTasks(tids, taskinfo);
-    RequestManagerImpl::GetInstance()->TouchTasks(taskid, taskinfo);
-    RequestManagerImpl::GetInstance()->SetMaxSpeeds(speedconfig, err);
     RequestManagerImpl::GetInstance()->CreateGroup(tid, gauge, notification);
+}
+
+void RequestManagerImplFuzzTestAttachGroup(FuzzedDataProvider &provider)
+{
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    std::vector<std::string> tids = convertToVectorString(provider);
     RequestManagerImpl::GetInstance()->AttachGroup(tid, tids);
+}
+
+void RequestManagerImplFuzzTestDeleteGroup(FuzzedDataProvider &provider)
+{
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     RequestManagerImpl::GetInstance()->DeleteGroup(tid);
+}
+
+void RequestManagerImplFuzzTestSetMaxSpeed(FuzzedDataProvider &provider)
+{
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    int64_t maxSpeed = provider.ConsumeIntegral<int64_t>();
     RequestManagerImpl::GetInstance()->SetMaxSpeed(tid, maxSpeed);
     RequestManagerImpl::GetInstance()->OnChannelBroken();
-    return true;
 }
 
-bool RequestManagerImplFuzzTestReceive(FuzzedDataProvider &provider)
+void RequestManagerImplFuzzTestOnResponseReceive(FuzzedDataProvider &provider)
 {
-    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
-    int32_t num32 = provider.ConsumeIntegral<int32_t>();
-    auto num32ptr = std::make_shared<int32_t>(num32);
     Response resp;
     auto respptr = std::make_shared<Response>(resp);
+    RequestManagerImpl::GetInstance()->OnResponseReceive(respptr);
+}
+
+void RequestManagerImplFuzzTestOnNotifyDataReceive(FuzzedDataProvider &provider)
+{
     NotifyData notifyData;
     auto notifyDataptr = std::make_shared<NotifyData>(notifyData);
-    WaitingReason waitingReas = waitingReasons[provider.ConsumeIntegralInRange<size_t>(0, waitingReasons.size() - 1)];
+    RequestManagerImpl::GetInstance()->OnNotifyDataReceive(notifyDataptr);
+}
+
+void RequestManagerImplFuzzTestOnFaultsReceive(FuzzedDataProvider &provider)
+{
+    int32_t num32 = provider.ConsumeIntegral<int32_t>();
+    auto num32ptr = std::make_shared<int32_t>(num32);
     SubscribeType type;
     auto typeptr = std::make_shared<SubscribeType>(type);
     Reason reason;
     auto reasonptr = std::make_shared<Reason>(reason);
-
-    RequestManagerImpl::GetInstance()->OnResponseReceive(respptr);
-    RequestManagerImpl::GetInstance()->OnNotifyDataReceive(notifyDataptr);
     RequestManagerImpl::GetInstance()->OnFaultsReceive(num32ptr, typeptr, reasonptr);
+}
+
+void RequestManagerImplFuzzTestOnWaitReceive(FuzzedDataProvider &provider)
+{
+    int32_t num32 = provider.ConsumeIntegral<int32_t>();
+    WaitingReason waitingReas = waitingReasons[provider.ConsumeIntegralInRange<size_t>(0, waitingReasons.size() - 1)];
     RequestManagerImpl::GetInstance()->OnWaitReceive(num32, waitingReas);
+}
+
+void RequestManagerImplFuzzTestOnRemoveSystemAbility(FuzzedDataProvider &provider)
+{
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    int32_t num32 = provider.ConsumeIntegral<int32_t>();
     RequestManagerImpl::GetInstance()->LoadRequestServer();
     RequestManagerImpl::SystemAbilityStatusChangeListener listener =
         RequestManagerImpl::SystemAbilityStatusChangeListener();
     listener.OnRemoveSystemAbility(num32, tid);
-    return true;
+}
+
+void RequestManagerImplFuzzTest(FuzzedDataProvider &provider)
+{
+    OHOS::RequestManagerImplFuzzTestSetMode(provider);
+    OHOS::RequestManagerImplFuzzTestDisableTaskNotification(provider);
+    OHOS::RequestManagerImplFuzzTestCreateTasks(provider);
+    OHOS::RequestManagerImplFuzzTestStartTasks(provider);
+    OHOS::RequestManagerImplFuzzTestStopTasks(provider);
+    OHOS::RequestManagerImplFuzzTestResumeTasks(provider);
+    OHOS::RequestManagerImplFuzzTestRemoveTasks(provider);
+    OHOS::RequestManagerImplFuzzTestPauseTasks(provider);
+    OHOS::RequestManagerImplFuzzTestQueryTasks(provider);
+    OHOS::RequestManagerImplFuzzTestShowTasks(provider);
+    OHOS::RequestManagerImplFuzzTestTouchTasks(provider);
+    OHOS::RequestManagerImplFuzzTestSetMaxSpeeds(provider);
+    OHOS::RequestManagerImplFuzzTestCreateGroup(provider);
+    OHOS::RequestManagerImplFuzzTestAttachGroup(provider);
+    OHOS::RequestManagerImplFuzzTestDeleteGroup(provider);
+    OHOS::RequestManagerImplFuzzTestSetMaxSpeed(provider);
+    OHOS::RequestManagerImplFuzzTestOnResponseReceive(provider);
+    OHOS::RequestManagerImplFuzzTestOnNotifyDataReceive(provider);
+    OHOS::RequestManagerImplFuzzTestOnFaultsReceive(provider);
+    OHOS::RequestManagerImplFuzzTestOnWaitReceive(provider);
+    OHOS::RequestManagerImplFuzzTestOnRemoveSystemAbility(provider);
 }
 }
 
@@ -994,8 +1078,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::SysEventFuzzTestSendStatisticEvent(provider);
     OHOS::Utf8UtilsFuzzTestGetNextByte(provider);
     OHOS::ParcelHelperFuzzTestUnMarshalConfig(provider);
-    OHOS::RequestManagerFuzzTest(provider);
     OHOS::RequestManagerImplFuzzTest(provider);
-    OHOS::RequestManagerImplFuzzTestReceive(provider);
     return 0;
 }

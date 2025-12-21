@@ -142,9 +142,9 @@ void CallbackInfo::CleanupCallbacks()
             }
             return false;
         });
-    int deletedCount = std::distance(newEnd, allCb_.end());
+    size_t deletedCount = static_cast<size_t>(std::distance(newEnd, allCb_.end()));
     allCb_.erase(newEnd, allCb_.end());
-    toDeleteCount_ = std::max(0, toDeleteCount_ - deletedCount);
+    toDeleteCount_ = (toDeleteCount_ > deletedCount) ? (toDeleteCount_ - deletedCount) : 0;
 }
 
 void CallbackInfo::InvokeSuccessCallbacks(napi_value values[])
@@ -273,7 +273,8 @@ void CallbackManager::InvokeSuccessCallbacks(const std::string &url, std::shared
             napi_value values[2] = {nullptr};
             info->InvokeSuccessCallbacks(values);
         },
-        napi_eprio_high);
+        napi_eprio_high,
+        "request:cachedownload.download");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
     }
@@ -306,7 +307,8 @@ void CallbackManager::InvokeErrorCallbacks(const std::string &url, std::shared_p
 
             info->InvokeErrorCallbacks(values);
         },
-        napi_eprio_high);
+        napi_eprio_high,
+        "request:cachedownload.download");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
     }
@@ -392,7 +394,7 @@ napi_value download(napi_env env, napi_callback_info info)
     }
     size_t argc = 2;
     napi_value args[2] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
     if (GetValueType(env, args[0]) != napi_string || GetValueType(env, args[1]) != napi_object) {
         ThrowError(env, E_PARAMETER_CHECK, "parameter error");
         return nullptr;
@@ -422,7 +424,7 @@ napi_value cancel(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
     if (GetValueType(env, args[0]) != napi_string) {
         ThrowError(env, E_PARAMETER_CHECK, "parameter error");
         return nullptr;
@@ -441,7 +443,7 @@ napi_value setMemoryCacheSize(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
 
     if (GetValueType(env, args[0]) != napi_number) {
         ThrowError(env, E_PARAMETER_CHECK, "parameter error");
@@ -460,7 +462,7 @@ napi_value setFileCacheSize(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
 
     if (GetValueType(env, args[0]) != napi_number) {
         ThrowError(env, E_PARAMETER_CHECK, "parameter error");
@@ -479,7 +481,7 @@ napi_value setDownloadInfoListSize(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
 
     if (GetValueType(env, args[0]) != napi_number) {
         ThrowError(env, E_PARAMETER_CHECK, "parameter error");
@@ -507,7 +509,7 @@ napi_value getDownloadInfo(napi_env env, napi_callback_info info)
     }
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
     if (GetValueType(env, args[0]) != napi_string) {
         ThrowError(env, E_PARAMETER_CHECK, "parameter error");
         return nullptr;
@@ -711,15 +713,28 @@ static void NapiCreateEnumCacheStrategy(napi_env env, napi_value &cacheStrategy)
     SetUint32Property(env, cacheStrategy, "LAZY", static_cast<uint32_t>(CacheStrategy::LAZY));
 }
 
+static void NapiCreateEnumErrorCode(napi_env env, napi_value &errorCode)
+{
+    napi_create_object(env, &errorCode);
+    SetUint32Property(env, errorCode, "OTHERS", static_cast<uint32_t>(ErrorCode::OTHERS));
+    SetUint32Property(env, errorCode, "DNS", static_cast<uint32_t>(ErrorCode::DNS));
+    SetUint32Property(env, errorCode, "TCP", static_cast<uint32_t>(ErrorCode::TCP));
+    SetUint32Property(env, errorCode, "SSL", static_cast<uint32_t>(ErrorCode::SSL));
+    SetUint32Property(env, errorCode, "HTTP", static_cast<uint32_t>(ErrorCode::HTTP));
+}
+
 static napi_value registerFunc(napi_env env, napi_value exports)
 {
     napi_value sslType = nullptr;
     napi_value cacheStrategy = nullptr;
+    napi_value errorCode = nullptr;
     NapiCreateEnumSslType(env, sslType);
     NapiCreateEnumCacheStrategy(env, cacheStrategy);
+    NapiCreateEnumErrorCode(env, errorCode);
     napi_property_descriptor desc[]{
         DECLARE_NAPI_PROPERTY("SslType", sslType),
         DECLARE_NAPI_PROPERTY("CacheStrategy", cacheStrategy),
+        DECLARE_NAPI_PROPERTY("ErrorCode", errorCode),
         DECLARE_NAPI_FUNCTION("download", download),
         DECLARE_NAPI_FUNCTION("cancel", cancel),
         DECLARE_NAPI_FUNCTION("setMemoryCacheSize", setMemoryCacheSize),
@@ -734,7 +749,8 @@ static napi_value registerFunc(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("offDownloadError", offDownloadError),
 
     };
-    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc));
+    PRELOAD_NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc),
+        "napi_define_properties failed");
     return exports;
 }
 

@@ -36,6 +36,60 @@ export default namespace cacheDownload {
         LAZY = 1
     }
 
+    export interface ResourceInfo {
+        readonly size: long;
+    }
+
+    export class ResourceInfoInner implements ResourceInfo {
+        readonly size: long;
+    }
+
+    export interface NetworkInfo {
+        readonly dnsServers: string[];
+        readonly ip?: string;
+    }
+
+    export class NetworkInfoInner implements NetworkInfo {
+        readonly dnsServers: string[];
+        readonly ip?: string;
+    }
+
+    interface PerformanceInfo {
+        readonly dnsTime: double;
+        readonly connectTime: double;
+        readonly tlsTime: double;
+        readonly firstSendTime: double;
+        readonly firstReceiveTime: double;
+        readonly totalTime: double;
+        readonly redirectTime: double;
+    }
+
+    export class PerformanceInfoInner implements PerformanceInfo {
+        readonly dnsTime: double;
+        readonly connectTime: double;
+        readonly tlsTime: double;
+        readonly firstSendTime: double;
+        readonly firstReceiveTime: double;
+        readonly totalTime: double;
+        readonly redirectTime: double;
+    }
+
+    interface DownloadInfo {
+        readonly resource: ResourceInfo;
+        readonly network: NetworkInfo;
+        readonly performance: PerformanceInfo;
+    }
+
+    export class DownloadInfoInner implements DownloadInfo {
+        readonly resource: ResourceInfo;
+        readonly network: NetworkInfo;
+        readonly performance: PerformanceInfo;
+    }
+
+    export native function getDownloadInfo(url: string): DownloadInfo | undefined;
+
+    export native function setDownloadInfoListSize(size: long): void;
+
     export native function download(url: string, options: CacheDownloadOptions): void;
 
     export native function cancel(url: string): void;

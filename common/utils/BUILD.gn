@@ -14,6 +14,72 @@
 import("//base/request/request/request_aafwk.gni")
 import("//build/test.gni")
 
+rust_cxx("request_data_ability_cxx_gen") {
+  sources = [
+    "src/dataability/wrapper.rs"
+  ]
+}
+
+ohos_static_library("request_data_ability_cxx") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "include",
+    "${target_gen_dir}/src",
+  ]
+
+  sources = [
+    "src/cxx/request_utils_dataability.cpp",
+  ]
+
+  sources += get_target_outputs(":request_data_ability_cxx_gen")
+
+  external_deps = [
+    "ability_runtime:ability_context_native",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:ani_base_context",
+    "ability_runtime:app_context",
+    "rust_cxx:cxx_cppdeps",
+    "ability_runtime:data_ability_helper",
+  ]
+  deps = [ ":request_data_ability_cxx_gen" ]
+  subsystem_name = "request"
+  part_name = "request"
+}
+
+ohos_rust_static_library("request_data_ability") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  features = [ "ohos" ]
+
+  deps = [ 
+    ":request_data_ability_cxx",
+    ":request_utils"
+ ]
+
+  external_deps = [
+    "rust_cxx:lib",
+  ]
+  sources = [ "src/dataabilitylib.rs" ]
+  subsystem_name = "request"
+  part_name = "request"
+}
+
 rust_cxx("request_utils_cxx_gen") {
   sources = [
     "src/observe/network/wrapper.rs",
@@ -49,6 +115,8 @@ ohos_static_library("request_utils_cxx") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:ani_base_context",
     "ability_runtime:app_context",
+    "ability_runtime:wantagent_innerkits",
+    "ability_runtime:ani_wantagent_common",
     "bundle_framework:appexecfwk_core_headers",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",

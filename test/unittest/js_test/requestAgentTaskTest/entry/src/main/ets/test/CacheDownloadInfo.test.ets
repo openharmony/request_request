@@ -2343,5 +2343,39 @@ export default function cacheDownloadInfo() {
         expect(false).assertTrue();
       }
     });
+    /**
+     * @tc.number: testCacheDownloadEnum001
+     * @tc.name: testCacheDownloadEnum001
+     * @tc.desc: Test cache download enum values
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Assert cacheDownload.SslType enum values (TLS, TLCP) match expected strings.
+     *           2. Assert cacheDownload.CacheStrategy enum values (FORCE=0, LAZY=1) match expected numbers.
+     *           3. Assert cacheDownload.ErrorCode enum values match expected hexadecimal values.
+     *           4. If all assertions pass, call done(); in catch, assert false (assertion failed) and call done().
+     */
+    it('testCacheDownloadEnum001', 0, async (done: Function) => {
+      try {
+        expect(cacheDownload.SslType.TLS).assertEqual("TLS");
+        expect(cacheDownload.SslType.TLCP).assertEqual("TLCP");
+        expect(cacheDownload.CacheStrategy.FORCE).assertEqual(0);
+        expect(cacheDownload.CacheStrategy.LAZY).assertEqual(1);
+        expect(cacheDownload.ErrorCode.OTHERS).assertEqual(0xFF);
+        expect(cacheDownload.ErrorCode.DNS).assertEqual(0x00);
+        expect(cacheDownload.ErrorCode.TCP).assertEqual(0x10);
+        expect(cacheDownload.ErrorCode.SSL).assertEqual(0x20);
+        expect(cacheDownload.ErrorCode.HTTP).assertEqual(0x30);
+        done();
+      } catch (err) {
+        expect(false).assertTrue();
+        done();
+      }
+    });
   })
 }

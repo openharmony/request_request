@@ -72,8 +72,8 @@ ohos_shared_library("request") {
   ]
 
   deps = [
-    "../../../../common/utf8_utils:request_utf8_utils",
     "../../../../common/sys_event:request_sysevent",
+    "../../../../common/utf8_utils:request_utf8_utils",
     "../../../native/request:request_native",
   ]
 
@@ -84,6 +84,7 @@ ohos_shared_library("request") {
     "ability_runtime:data_ability_helper",
     "ability_runtime:extensionkit_native",
     "ability_runtime:napi_base_context",
+    "ability_runtime:wantagent_innerkits",
     "app_file_service:fileuri_native",
     "c_utils:utils",
     "curl:curl_shared",
@@ -97,7 +98,6 @@ ohos_shared_library("request") {
     "netmanager_base:net_security_config_if",
     "openssl:libssl_shared",
     "storage_service:storage_manager_acl",
-    "ability_runtime:wantagent_innerkits",
   ]
 
   relative_install_dir = "module"
@@ -140,8 +140,8 @@ ohos_static_library("request_static") {
   ]
 
   deps = [
-    "../../../../common/utf8_utils:request_utf8_utils",
     "../../../../common/sys_event:request_sysevent",
+    "../../../../common/utf8_utils:request_utf8_utils",
     "../../../native/request:request_native",
   ]
 

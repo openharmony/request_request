@@ -31,12 +31,15 @@
 #include "request_common.h"
 #include "utf8_utils.h"
 
+#define RETVAL_NOTHING
+
 namespace OHOS::Request::NapiUtils {
 static constexpr int32_t MAX_ARGC = 6;
 static constexpr int32_t NO_ARG = 0;
 static constexpr int32_t ONE_ARG = 1;
 static constexpr int32_t TWO_ARG = 2;
 static constexpr int32_t THE_ARG = 3;
+static constexpr int32_t ONE_REF = 1;
 
 static constexpr int32_t FIRST_ARGV = 0;
 static constexpr int32_t SECOND_ARGV = 1;
@@ -45,6 +48,52 @@ static constexpr int32_t THIRD_ARGV = 2;
 static constexpr int32_t MAX_NUMBER_BYTES = 8;
 static constexpr int32_t MAX_LEN = 4096;
 static constexpr int32_t MAX_STRING_LENGTH = 65536;
+
+#define REQUEST_NAPI_ASSERT_BASE(env, assertion, code, message, retVal) \
+    do {                                                         \
+        if (!(assertion)) {                                      \
+            NapiUtils::ThrowError(env, code, message, true);     \
+            return retVal;                                       \
+        }                                                        \
+    } while (0)
+
+#define REQUEST_NAPI_ASSERT(env, message, assertion) \
+    REQUEST_NAPI_ASSERT_BASE(env, assertion, E_OTHER, message, nullptr)
+
+
+#define REQUEST_NAPI_CALL_BASE(env, theCall, code, message, retVal)  \
+    do {                                                             \
+        if ((theCall) != napi_ok) {                                  \
+            NapiUtils::ThrowError(env, code, message, true);         \
+            return retVal;                                           \
+        }                                                            \
+    } while (0)
+
+#define REQUEST_NAPI_CALL(env, theCall, message) \
+    REQUEST_NAPI_CALL_BASE(env, theCall, E_OTHER, message, nullptr)
+
+#define REQUEST_NAPI_CALL_RETURN(env, theCall, message, retVal) \
+    REQUEST_NAPI_CALL_BASE(env, theCall, E_OTHER, message, retVal)
+
+#define REQUEST_NAPI_CALL_RETURN_VOID(env, theCall, message) \
+    REQUEST_NAPI_CALL_BASE(env, theCall, E_OTHER, message, RETVAL_NOTHING)
+
+
+#define REQUEST_GET_AND_THROW_LAST_ERROR_BASE(env, code, message)                                       \
+    do {                                                                                                \
+        const napi_extended_error_info* errorInfo = nullptr;                                            \
+        napi_get_last_error_info((env), &errorInfo);                                                    \
+        bool isPending = false;                                                                         \
+        napi_is_exception_pending((env), &isPending);                                                   \
+        if (!isPending && errorInfo != nullptr) {                                                       \
+            const char* errorMessage =                                                                  \
+                errorInfo->error_message != nullptr ? errorInfo->error_message : "empty error message"; \
+            NapiUtils::ThrowError(env, code, message, true);                                            \
+        }                                                                                               \
+    } while (0)
+
+#define REQUEST_GET_AND_THROW_LAST_ERROR(env, message) \
+    REQUEST_GET_AND_THROW_LAST_ERROR_BASE(env, E_OTHER, message)
 
 napi_status Convert2JSValue(napi_env env, bool in, napi_value &out);
 napi_status Convert2JSValue(napi_env env, std::string &in, napi_value &out);

@@ -66,7 +66,7 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
     napi_value self = nullptr;
     size_t argc = NapiUtils::MAX_ARGC;
     napi_value argv[NapiUtils::MAX_ARGC] = { nullptr };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+    REQUEST_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr), "napi_get_cb_info failed");
     int32_t number = version == Version::API8 ? NapiUtils::ONE_ARG : NapiUtils::TWO_ARG;
     if (static_cast<int32_t>(argc) < number) {
         NapiUtils::ThrowError(
@@ -97,10 +97,9 @@ napi_value JsInitialize::Initialize(napi_env env, napi_callback_info info, Versi
     RequestManager::GetInstance()->RestoreListener(JsTask::ReloadListener);
     // `finalize` executes on the JS thread
     auto finalize = [](napi_env env, void *data, void *hint) {
-        REQUEST_HILOGD("destructed task");
         JsTask *task = reinterpret_cast<JsTask *>(data);
-        JsTask::ClearTaskMap(task->GetTid());
         RequestManager::GetInstance()->RemoveAllListeners(task->GetTid());
+        REQUEST_HILOGI("finalize task %{public}s", task->GetTid().c_str());
         delete task;
     };
     if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
@@ -240,15 +239,9 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
             SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_00, config.bundleName, "", error.errInfo);
             return false;
         }
-        int32_t ret = chmod(path.c_str(), PathUtils::WRITE_MODE);
-        if (ret != 0) {
-            REQUEST_HILOGE("body chmod fail: %{public}d", ret);
-            SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
-        };
-
         int32_t retClose = fclose(bodyFile);
         if (retClose != 0) {
-            REQUEST_HILOGE("upload body fclose fail: %{public}d", ret);
+            REQUEST_HILOGE("upload body fclose fail: %{public}d", retClose);
             SysEventLog::SendSysEventLog(
                 FAULT_EVENT, STANDARD_FAULT_02, config.bundleName, "", std::to_string(retClose));
         }
@@ -300,16 +293,9 @@ bool JsInitialize::GetFdDownload(const std::string &path, const Config &config, 
         SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_00, config.bundleName, "", error.errInfo);
         return false;
     }
-
-    int32_t ret = chmod(path.c_str(), PathUtils::WRITE_MODE);
-    if (ret != 0) {
-        REQUEST_HILOGE("download file chmod fail: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
-    };
-
     int32_t retClose = fclose(file);
     if (retClose != 0) {
-        REQUEST_HILOGE("download fclose fail: %{public}d", ret);
+        REQUEST_HILOGE("download fclose fail: %{public}d", retClose);
         SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_02, config.bundleName, "", std::to_string(retClose));
     }
     return true;
@@ -330,14 +316,9 @@ bool JsInitialize::GetFdUpload(const std::string &path, const Config &config, Ex
         return false;
     }
     REQUEST_HILOGD("upload file fopen ok");
-    int32_t ret = chmod(path.c_str(), PathUtils::READ_MODE);
-    if (ret != 0) {
-        REQUEST_HILOGE("upload file chmod fail: %{public}d", ret);
-        SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
-    }
     int32_t retClose = fclose(file);
     if (retClose != 0) {
-        REQUEST_HILOGE("upload fclose fail: %{public}d", ret);
+        REQUEST_HILOGE("upload fclose fail: %{public}d", retClose);
         SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_02, config.bundleName, "", std::to_string(retClose));
     }
     return true;
@@ -997,7 +978,7 @@ bool JsInitialize::Convert2FormItems(
 {
     bool isArray = false;
     napi_is_array(env, jsValue, &isArray);
-    NAPI_ASSERT_BASE(env, isArray, "not array", false);
+    REQUEST_NAPI_ASSERT_BASE(env, isArray, E_OTHER, "not array", false);
     uint32_t length = 0;
     napi_get_array_length(env, jsValue, &length);
     for (uint32_t i = 0; i < length; ++i) {
@@ -1188,14 +1169,6 @@ bool JsInitialize::ParseDownloadConfig(napi_env env, napi_value jsConfig, Config
     config.background = NapiUtils::Convert2Boolean(env, jsConfig, PARAM_KEY_BACKGROUND);
     config.method = "GET";
     return true;
-}
-
-void JsInitialize::CreatProperties(napi_env env, napi_value &self, napi_value config, JsTask *task)
-{
-    if (task->config_.version == Version::API10) {
-        NapiUtils::SetStringPropertyUtf8(env, self, "tid", task->GetTid());
-        napi_set_named_property(env, self, "config", config);
-    }
 }
 
 void JsInitialize::StandardizeFileSpec(FileSpec &file)

@@ -453,14 +453,14 @@ bool Convert2Boolean(napi_env env, napi_value object, const std::string &propert
         return false;
     }
     bool ret = false;
-    NAPI_CALL_BASE(env, napi_get_value_bool(env, value, &ret), false);
+    REQUEST_NAPI_CALL_RETURN(env, napi_get_value_bool(env, value, &ret), "napi_get_value_bool failed", false);
     return ret;
 }
 
 uint32_t Convert2Uint32(napi_env env, napi_value value)
 {
     uint32_t ret = 0;
-    NAPI_CALL_BASE(env, napi_get_value_uint32(env, value, &ret), 0);
+    REQUEST_NAPI_CALL_RETURN(env, napi_get_value_uint32(env, value, &ret), "napi_get_value_uint32 failed", 0);
     return ret;
 }
 
@@ -479,14 +479,14 @@ uint32_t Convert2Uint32(napi_env env, napi_value object, const std::string &prop
 int32_t Convert2Int32(napi_env env, napi_value value)
 {
     int32_t ret = 0;
-    NAPI_CALL_BASE(env, napi_get_value_int32(env, value, &ret), 0);
+    REQUEST_NAPI_CALL_RETURN(env, napi_get_value_int32(env, value, &ret), "napi_get_value_int32 failed", 0);
     return ret;
 }
 
 int64_t Convert2Int64(napi_env env, napi_value value)
 {
     int64_t ret = 0;
-    NAPI_CALL_BASE(env, napi_get_value_int64(env, value, &ret), 0);
+    REQUEST_NAPI_CALL_RETURN(env, napi_get_value_int64(env, value, &ret), "napi_get_value_int64 failed", 0);
     return ret;
 }
 
@@ -507,7 +507,8 @@ std::string Convert2String(napi_env env, napi_value value)
     std::string result;
     std::vector<char> str(MAX_STRING_LENGTH + 1, '\0');
     size_t length = 0;
-    NAPI_CALL_BASE(env, napi_get_value_string_utf8(env, value, &str[0], MAX_STRING_LENGTH, &length), result);
+    REQUEST_NAPI_CALL_RETURN(env, napi_get_value_string_utf8(env, value, &str[0], MAX_STRING_LENGTH, &length),
+        "napi_get_value_string_utf8 failed", result);
     if (length > 0) {
         return result.append(&str[0], length);
     }
@@ -566,13 +567,15 @@ napi_value CreateBusinessError(
     napi_value msg = nullptr;
     auto iter = ErrorCodeToMsg.find(errorCode);
     std::string strMsg = (iter != ErrorCodeToMsg.end() ? iter->second : "") + "   " + errorMessage;
-    NAPI_CALL(env, napi_create_string_utf8(env, strMsg.c_str(), strMsg.length(), &msg));
-    NAPI_CALL(env, napi_create_error(env, nullptr, msg, &error));
+    REQUEST_NAPI_CALL(env, napi_create_string_utf8(env, strMsg.c_str(), strMsg.length(), &msg),
+        "napi_create_string_utf8 failed");
+    REQUEST_NAPI_CALL(env, napi_create_error(env, nullptr, msg, &error), "napi_create_error failed");
     if (!withErrCode) {
         return error;
     }
     napi_value code = nullptr;
-    NAPI_CALL(env, napi_create_uint32(env, static_cast<uint32_t>(errorCode), &code));
+    REQUEST_NAPI_CALL(env, napi_create_uint32(env, static_cast<uint32_t>(errorCode), &code),
+        "napi_create_uint32 failed");
     napi_set_named_property(env, error, "code", code);
     return error;
 }
@@ -584,14 +587,15 @@ napi_valuetype GetValueType(napi_env env, napi_value value)
     }
 
     napi_valuetype valueType = napi_undefined;
-    NAPI_CALL_BASE(env, napi_typeof(env, value, &valueType), napi_undefined);
+    REQUEST_NAPI_CALL_RETURN(env, napi_typeof(env, value, &valueType), "napi_typeof failed", napi_undefined);
     return valueType;
 }
 
 bool HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
     bool hasProperty = false;
-    NAPI_CALL_BASE(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty), false);
+    REQUEST_NAPI_CALL_RETURN(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty),
+        "napi_has_named_property failed", false);
     return hasProperty;
 }
 
@@ -599,11 +603,13 @@ napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &
 {
     napi_value value = nullptr;
     bool hasProperty = false;
-    NAPI_CALL(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty));
+    REQUEST_NAPI_CALL(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty),
+        "napi_has_named_property failed");
     if (!hasProperty) {
         return value;
     }
-    NAPI_CALL(env, napi_get_named_property(env, object, propertyName.c_str(), &value));
+    REQUEST_NAPI_CALL(env, napi_get_named_property(env, object, propertyName.c_str(), &value),
+        "napi_has_named_property failed");
     return value;
 }
 
@@ -611,9 +617,9 @@ std::vector<std::string> GetPropertyNames(napi_env env, napi_value object)
 {
     std::vector<std::string> ret;
     napi_value names = nullptr;
-    NAPI_CALL_BASE(env, napi_get_property_names(env, object, &names), ret);
+    REQUEST_NAPI_CALL_RETURN(env, napi_get_property_names(env, object, &names), "napi_get_property_names failed", ret);
     uint32_t length = 0;
-    NAPI_CALL_BASE(env, napi_get_array_length(env, names, &length), ret);
+    REQUEST_NAPI_CALL_RETURN(env, napi_get_array_length(env, names, &length), "napi_get_array_length failed", ret);
     for (uint32_t index = 0; index < length; ++index) {
         napi_value name = nullptr;
         if (napi_get_element(env, names, index, &name) != napi_ok) {
@@ -659,21 +665,21 @@ void SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &n
 napi_value CreateObject(napi_env env)
 {
     napi_value object = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &object));
+    REQUEST_NAPI_CALL(env, napi_create_object(env, &object), "napi_create_object failed");
     return object;
 }
 
 napi_value GetUndefined(napi_env env)
 {
     napi_value undefined = nullptr;
-    NAPI_CALL(env, napi_get_undefined(env, &undefined));
+    REQUEST_NAPI_CALL(env, napi_get_undefined(env, &undefined), "napi_get_undefined failed");
     return undefined;
 }
 
 napi_value CallFunction(napi_env env, napi_value recv, napi_value func, size_t argc, const napi_value *argv)
 {
     napi_value res = nullptr;
-    NAPI_CALL(env, napi_call_function(env, recv, func, argc, argv, &res));
+    REQUEST_NAPI_CALL(env, napi_call_function(env, recv, func, argc, argv, &res), "napi_call_function failed");
     return res;
 }
 
@@ -697,7 +703,7 @@ std::vector<FileSpec> Convert2FileVector(napi_env env, napi_value jsFiles, const
 {
     bool isArray = false;
     napi_is_array(env, jsFiles, &isArray);
-    NAPI_ASSERT_BASE(env, isArray, "not array", {});
+    REQUEST_NAPI_ASSERT_BASE(env, isArray, E_OTHER, "not array", {});
     uint32_t length = 0;
     napi_get_array_length(env, jsFiles, &length);
     std::vector<FileSpec> files;
@@ -763,7 +769,7 @@ std::vector<FormItem> Convert2RequestDataVector(napi_env env, napi_value jsReque
 {
     bool isArray = false;
     napi_is_array(env, jsRequestDatas, &isArray);
-    NAPI_ASSERT_BASE(env, isArray, "not array", {});
+    REQUEST_NAPI_ASSERT_BASE(env, isArray, E_OTHER, "not array", {});
     uint32_t length = 0;
     napi_get_array_length(env, jsRequestDatas, &length);
     std::vector<FormItem> requestDatas;

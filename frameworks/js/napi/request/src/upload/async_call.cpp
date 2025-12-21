@@ -16,6 +16,7 @@
 #include "upload/async_call.h"
 
 #include "constant.h"
+#include "napi_utils.h"
 
 using namespace OHOS::Request::Upload;
 namespace OHOS::Request::UploadNapi {
@@ -28,7 +29,8 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Cont
     size_t argc = JSUtil::MAX_ARGC;
     napi_value self = nullptr;
     napi_value argv[JSUtil::MAX_ARGC] = { nullptr };
-    NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+    REQUEST_NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr),
+        "napi_get_cb_info failed");
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, argv[argc - 1], &valueType);
     if (valueType == napi_function) {

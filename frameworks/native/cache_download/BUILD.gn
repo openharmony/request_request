@@ -73,6 +73,7 @@ ohos_rust_shared_ffi("preload_native_rust") {
     "../../../common/ffrt_rs:ffrt_rs",
     "../../../common/netstack_rs:netstack_rs",
     "../../../common/utils:request_utils",
+    "../../../common/utils:request_data_ability",
     "../cache_core:cache_core",
   ]
   external_deps = [

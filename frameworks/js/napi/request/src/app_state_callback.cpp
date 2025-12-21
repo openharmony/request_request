@@ -33,8 +33,11 @@ void AppStateCallback::OnAbilityForeground(const AbilityRuntime::AbilityLifecycl
     bool hasForeground = false;
     {
         std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
-        for (auto task = JsTask::taskMap_.begin(); task != JsTask::taskMap_.end(); ++task) {
-            if (task->second->config_.mode == Mode::FOREGROUND) {
+        for (auto it = JsTask::taskContextMap_.begin(); it != JsTask::taskContextMap_.end(); ++it) {
+            if (it->second->task == nullptr) {
+                continue;
+            }
+            if (it->second->config.mode == Mode::FOREGROUND) {
                 hasForeground = true;
                 break;
             }

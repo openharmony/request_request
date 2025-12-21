@@ -138,6 +138,7 @@ pub enum Faults {
     Tcp = 0x60,
     Ssl = 0x70,
     Redirect = 0x80,
+    LowSpeed = 0x90,
 }
 
 impl From<u32> for Faults {
@@ -153,6 +154,7 @@ impl From<u32> for Faults {
             0x60 => Faults::Tcp,
             0x70 => Faults::Ssl,
             0x80 => Faults::Redirect,
+            0x90 => Faults::LowSpeed,
             _ => unimplemented!(),
         }
     }
@@ -161,24 +163,28 @@ impl From<u32> for Faults {
 impl From<Reason> for Faults {
     fn from(reason: Reason) -> Self {
         match reason {
-            Reason::NetworkOffline | Reason::NetworkApp | Reason::NetworkAccount
+            Reason::NetworkOffline
+            | Reason::NetworkApp
+            | Reason::NetworkAccount
             | Reason::NetworkAppAccount => Faults::Disconnected,
             Reason::BuildClientFailed | Reason::BuildRequestFailed => Faults::Param,
             Reason::GetFilesizeFailed | Reason::IoError => Faults::Fsio,
             Reason::ContinuousTaskTimeout => Faults::Timeout,
             Reason::ConnectError => Faults::Tcp,
-            Reason::RequestError | Reason::ProtocolError | Reason::UnsupportRangeRequest => Faults::Protocol,
+            Reason::RequestError | Reason::ProtocolError | Reason::UnsupportRangeRequest => {
+                Faults::Protocol
+            }
             Reason::RedirectError => Faults::Redirect,
             Reason::DNS => Faults::Dns,
             Reason::TCP => Faults::Tcp,
             Reason::SSL => Faults::Ssl,
+            Reason::LowSpeed => Faults::LowSpeed,
             _ => Faults::Others,
         }
     }
 }
 
-#[derive(Debug)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Reason {
     ReasonOk = 0,
     TaskSurvivalOneMonth,
@@ -259,6 +265,32 @@ pub struct FaultOccur {
     pub task_id: i32,
     pub subscribe_type: SubscribeType,
     pub faults: Faults,
+}
+
+pub struct Wait {
+    pub task_id: i32,
+    pub waiting_reason: WaitingReason,
+}
+
+#[derive(Copy, Clone)]
+#[repr(u32)]
+pub enum WaitingReason {
+    TASK_QUEUE_FULL = 0x00,
+    NETWORK_NOT_MATCH = 0x01,
+    APP_BACKGROUND = 0x02,
+    USER_INACTIVATED = 0x03,
+}
+
+impl From<u32> for WaitingReason {
+    fn from(value: u32) -> Self {
+        match value {
+            0x00 => WaitingReason::TASK_QUEUE_FULL,
+            0x01 => WaitingReason::NETWORK_NOT_MATCH,
+            0x02 => WaitingReason::APP_BACKGROUND,
+            0x03 => WaitingReason::USER_INACTIVATED,
+            _ => unimplemented!(),
+        }
+    }
 }
 
 #[derive(Debug)]

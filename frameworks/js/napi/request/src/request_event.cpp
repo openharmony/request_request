@@ -226,8 +226,7 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         }
     }
 
-    REQUEST_HILOGI(
-        "%{public}s on %{public}s", jsParam.task->GetTid().c_str(), jsParam.type.c_str());
+    REQUEST_HILOGI("%{public}s on %{public}s", jsParam.task->GetTid().c_str(), jsParam.type.c_str());
     return nullptr;
 }
 
@@ -431,9 +430,11 @@ napi_value RequestEvent::Exec(napi_env env, napi_callback_info info, const std::
 napi_status RequestEvent::ParseInputParameters(
     napi_env env, size_t argc, napi_value self, const std::shared_ptr<ExecContext> &context)
 {
-    NAPI_ASSERT_BASE(env, self != nullptr, "self is nullptr", napi_invalid_arg);
-    NAPI_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&context->task)), napi_invalid_arg);
-    NAPI_ASSERT_BASE(env, context->task != nullptr, "there is no native task", napi_invalid_arg);
+    REQUEST_NAPI_ASSERT_BASE(env, self != nullptr, E_OTHER, "self is nullptr", napi_invalid_arg);
+    REQUEST_NAPI_CALL_RETURN(env, napi_unwrap(env, self, reinterpret_cast<void **>(&context->task)),
+        "napi_unwrap failed", napi_invalid_arg);
+    REQUEST_NAPI_ASSERT_BASE(env, context->task != nullptr,
+        E_OTHER, "there is no native task", napi_invalid_arg);
     context->version_ = context->task->config_.version;
     context->withErrCode_ = context->version_ != Version::API8;
     return napi_ok;
@@ -471,10 +472,7 @@ int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
     FileSpec file = config.files[0];
     if (JsInitialize::FindDir(file.uri) && config.action == Action::DOWNLOAD && !task->isGetPermission) {
         REQUEST_HILOGD("Found the downloaded file");
-        if (chmod(file.uri.c_str(), PathUtils::WRITE_MODE) != 0) {
-            REQUEST_HILOGD("File add OTH access Failed.");
-        }
-        if (!PathUtils::AddPathsToMap(file.uri)) {
+        if (!PathUtils::AddPathsToMap(file.uri, config.action)) {
             REQUEST_HILOGE("Set path permission fail.");
             return E_FILE_IO;
         }
@@ -482,9 +480,9 @@ int32_t RequestEvent::StartExec(const std::shared_ptr<ExecContext> &context)
     std::string tid = context->task->GetTid();
     {
         std::lock_guard<std::mutex> lockGuard(JsTask::taskMutex_);
-        const auto it = JsTask::taskMap_.find(tid);
-        if (it == JsTask::taskMap_.end()) {
-            REQUEST_HILOGE("Can not find task in JsTask::taskMap_ by tid: %{public}s.", tid.c_str());
+        auto it = JsTask::taskContextMap_.find(tid);
+        if (it == JsTask::taskContextMap_.end() || it->second->task == nullptr) {
+            REQUEST_HILOGE("Start taskContextMap_ not find %{public}s.", tid.c_str());
             // In JS d.ts, only can throw 201/13400003/21900007（E_TASK_STATE）
             return E_TASK_STATE;
         }

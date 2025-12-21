@@ -30,9 +30,9 @@ static constexpr int ACL_SUCC = 0;
 // SA side reading and writing are aware of the `Other` permission of `UGO`;
 // otherwise, it will cause concurrency with the Set ACL and generate `Permission denied`.
 static const std::string SA_PERMISSION_U_RW = "u:3815:rw";
-static const std::string SA_PERMISSION_G_X = "g:3815:x";
+static const std::string SA_PERMISSION_U_R = "u:3815:r";
+static const std::string SA_PERMISSION_U_X = "u:3815:x";
 static const std::string SA_PERMISSION_U_CLEAN = "u:3815:---";
-static const std::string SA_PERMISSION_G_CLEAN = "g:3815:---";
 static const std::string AREA1 = "/data/storage/el1/base";
 static const std::string AREA2 = "/data/storage/el2/base";
 static const std::string AREA5 = "/data/storage/el5/base";
@@ -90,13 +90,17 @@ std::vector<std::pair<std::string, bool>> SelectPath(const std::vector<std::stri
     return result;
 }
 
-bool AddAcl(const std::string &path, const bool isFile)
+bool AddAcl(const std::string &path, const bool isFile, const Action action)
 {
     std::string entry;
     if (isFile) {
-        entry = SA_PERMISSION_U_RW;
+        if (action == Action::UPLOAD) {
+            entry = SA_PERMISSION_U_R;
+        } else {
+            entry = SA_PERMISSION_U_RW;
+        }
     } else {
-        entry = SA_PERMISSION_G_X;
+        entry = SA_PERMISSION_U_X;
     }
     if (StorageDaemon::AclSetAccess(path, entry) != ACL_SUCC) {
         REQUEST_HILOGE("Add Acl Failed, %{public}s", PathUtils::ShieldPath(path).c_str());
@@ -105,14 +109,9 @@ bool AddAcl(const std::string &path, const bool isFile)
     return true;
 }
 
-bool SubAcl(const std::string &path, const bool isFile)
+bool SubAcl(const std::string &path)
 {
-    std::string entry;
-    if (isFile) {
-        entry = SA_PERMISSION_U_CLEAN;
-    } else {
-        entry = SA_PERMISSION_G_CLEAN;
-    }
+    std::string entry = SA_PERMISSION_U_CLEAN;
     if (StorageDaemon::AclSetAccess(path, entry) != ACL_SUCC) {
         REQUEST_HILOGE("Sub Acl Failed, %{public}s", PathUtils::ShieldPath(path).c_str());
         return false;
@@ -120,18 +119,18 @@ bool SubAcl(const std::string &path, const bool isFile)
     return true;
 }
 
-bool AddOnePathToMap(const std::string &path, const bool isFile)
+bool AddOnePathToMap(const std::string &path, const bool isFile, const Action action)
 {
     std::lock_guard<std::mutex> lockGuard(pathMutex_);
     auto it = pathMap_.find(path);
     if (it == pathMap_.end()) {
-        if (!AddAcl(path, isFile)) {
+        if (!AddAcl(path, isFile, action)) {
             return false;
         }
         pathMap_.emplace(path, std::tuple(isFile, 1));
     } else {
         // It is necessary to ensure that the permissions are set.
-        if (!AddAcl(path, isFile)) {
+        if (!AddAcl(path, isFile, action)) {
             return false;
         }
         auto &[iFile, count] = it->second;
@@ -160,7 +159,7 @@ bool SubOnePathToMap(const std::string &path, const bool isFile)
     }
     count--;
     if (count == 0) {
-        const bool ret = SubAcl(path, isFile);
+        const bool ret = SubAcl(path);
         pathMap_.erase(it);
         return ret;
     }
@@ -177,7 +176,7 @@ bool SubPathsVec(const std::vector<std::pair<std::string, bool>> &paths)
     return true;
 }
 
-bool PathUtils::AddPathsToMap(const std::string &path)
+bool PathUtils::AddPathsToMap(const std::string &path, const Action action)
 {
     std::vector<std::pair<std::string, bool>> paths = SelectPath(SplitPath(path));
     if (paths.empty()) {
@@ -186,7 +185,7 @@ bool PathUtils::AddPathsToMap(const std::string &path)
     std::vector<std::pair<std::string, bool>> completePaths;
     completePaths.reserve(paths.size());
     for (auto &elem : paths) {
-        if (!AddOnePathToMap(elem.first, elem.second)) {
+        if (!AddOnePathToMap(elem.first, elem.second, action)) {
             SubPathsVec(completePaths);
             return false;
         }
@@ -202,14 +201,6 @@ bool PathUtils::SubPathsToMap(const std::string &path)
         return false;
     }
     return SubPathsVec(paths);
-}
-
-void PathUtils::InitChmod(const std::string &path)
-{
-    int32_t ret = chmod(path.c_str(), PathUtils::INITIAL_MODE);
-    if (ret != 0) {
-        REQUEST_HILOGE("init chmod: %{public}d, %{public}s", ret, PathUtils::ShieldPath(path).c_str());
-    };
 }
 
 // "abcde" -> "**cde"

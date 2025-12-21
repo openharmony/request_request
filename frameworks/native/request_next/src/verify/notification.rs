@@ -39,6 +39,20 @@ impl ConfigVerifier for NotificationVerifier {
             }
         }
 
+        if let Some(ref want_agent) = config.notification.want_agent {
+            if want_agent.is_empty() {
+                error!("notification want_agent string is empty");
+                return Err(401);
+            }
+        }
+
+        if let Some(visibility) = config.notification.visibility {
+            if visibility == 0 || (visibility & 0b11) != visibility {
+                error!("notification visibility must be 1 or 2 or 3");
+                return Err(401);
+            }
+        }
+
         Ok(())
     }
 }
