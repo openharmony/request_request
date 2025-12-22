@@ -45,7 +45,7 @@ pub(crate) const LOG_LABEL: HiLogLabel = HiLogLabel {
 // This macro binds Rust implementations to JavaScript/TypeScript interfaces
 ani_constructor!(
     // API 9 namespace bindings for direct function calls
-    namespace "L@ohos/request/request"
+    namespace "@ohos.request.request"
     [
         "checkDownloadConfig": api9::download::check_config,
         "checkUploadConfig": api9::upload::check_config,
@@ -53,7 +53,7 @@ ani_constructor!(
         "uploadFileSync": api9::upload::upload_file,       // Synchronous file upload
     ]
     // API 9 DownloadTaskInner class method bindings
-    class "L@ohos/request/request/DownloadTaskInner"
+    class "@ohos.request.request.DownloadTaskInner"
     [
         "onProgressInner": api9::callback::on_progress,
         "onEvent": api9::callback::on_event,
@@ -69,7 +69,7 @@ ani_constructor!(
         "offEvents": api9::callback::off_events,
     ]
     // API 9 UploadTaskInner class method bindings
-    class "L@ohos/request/request/UploadTaskInner"
+    class "@ohos.request.request.UploadTaskInner"
     [
         "deleteSync": api9::upload::delete,
         "onProgressInner": api9::callback::on_progress_uploadtask,
@@ -81,7 +81,7 @@ ani_constructor!(
         "offEvents": api9::callback::off_events,
     ]
     // API 10 namespace bindings for agent operations
-    namespace "L@ohos/request/request/agent"
+    namespace "@ohos.request.request.agent"
     [
         "checkConfig": api10::agent::check_config,            // Verify config
         "createSync": api10::agent::create,                   // Create new task
@@ -99,7 +99,7 @@ ani_constructor!(
         "deleteGroupSync": api10::notification::delete_group, // Delete notification group
     ]
     // API 10 TaskInner class method bindings
-    class "L@ohos/request/request/agent/TaskInner"
+    class "@ohos.request.request.agent.TaskInner"
     [
         "startSync": api10::task::start,
         "pauseSync": api10::task::pause,

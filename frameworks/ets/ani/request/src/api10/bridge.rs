@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 
 /// Defines the type of action for a request task.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Action")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.Action")]
 pub enum Action {
     /// Download action type.
     Download,
@@ -66,7 +66,7 @@ impl From<u8> for Action {
 
 /// Defines the execution mode for a request task.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Mode")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.Mode")]
 pub enum Mode {
     /// Background execution mode.
     Background,
@@ -107,7 +107,7 @@ impl From<u8> for Mode {
 
 /// Defines network preferences for a request task.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Network")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.Network")]
 pub enum Network {
     /// Any network type is acceptable.
     Any,
@@ -140,7 +140,7 @@ impl From<NetworkConfig> for Network {
 }
 
 /// Defines broadcast event types for request tasks.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/BroadcastEvent")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.BroadcastEvent")]
 pub enum BroadcastEvent {
     /// Event emitted when a task completes.
     Complete,
@@ -148,7 +148,7 @@ pub enum BroadcastEvent {
 
 /// Represents file specifications for upload or download operations.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/FileSpecInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.FileSpecInner")]
 pub struct FileSpec {
     /// Path to the file.
     path: String,
@@ -180,7 +180,7 @@ pub enum Value {
     /// String value type.
     S(String),
     /// File specification type.
-    #[serde(rename = "L@ohos/request/request/agent/FileSpec;")]
+    #[serde(rename = "@ohos.request.request.agent.FileSpec")]
     FileSpec(FileSpec),
     /// Array of file specifications.
     Array(Vec<FileSpec>),
@@ -188,7 +188,7 @@ pub enum Value {
 
 /// Represents an item in a form for data submission.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/FormItemInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.FormItemInner")]
 pub struct FormItem {
     /// Name of the form item.
     name: String,
@@ -198,7 +198,7 @@ pub struct FormItem {
 
 /// Represents notification details for a request task.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/NotificationInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.NotificationInner")]
 pub struct Notification<'local> {
     /// Optional title for the notification.
     pub title: Option<String>,
@@ -283,7 +283,7 @@ pub enum Data {
 
 /// Represents configuration for a request task.
 #[derive(Clone)]
-#[ani_rs::ani(path = "L@ohos/request/request/agent/ConfigInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.ConfigInner")]
 pub struct Config<'local> {
     /// Action type (download or upload).
     pub action: Action,
@@ -342,7 +342,7 @@ pub struct Config<'local> {
 }
 
 /// Represents the state of a request task.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/State")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.State")]
 pub enum State {
     /// Task is initialized but not yet started.
     Initialized = 0x00,
@@ -418,7 +418,7 @@ impl From<u8> for State {
 }
 
 /// Represents progress information for a request task.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/ProgressInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.ProgressInner")]
 pub struct Progress {
     /// Current state of the task.
     state: State,
@@ -459,7 +459,7 @@ impl From<&request_core::info::InfoProgress> for Progress {
 }
 
 /// Represents error types for request tasks.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/Faults")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.Faults")]
 pub enum Faults {
     /// Other or unspecified error.
     Others = 0xFF,
@@ -504,7 +504,7 @@ impl From<request_core::info::Faults> for Faults {
     }
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/WaitingReason")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.WaitingReason")]
 pub enum WaitingReason {
     TaskQueueFull = 0x00,
     NetworkNotMatch = 0x01,
@@ -523,7 +523,7 @@ impl From<request_core::info::WaitingReason> for WaitingReason {
     }
 }
 
-#[ani_rs::ani(path = "L@ohos/request/request/agent/FilterInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.FilterInner")]
 pub struct Filter {
     /// Optional bundle name filter.
     pub bundle: Option<String>,
@@ -554,7 +554,7 @@ impl From<Filter> for request_core::filter::SearchFilter {
 }
 
 /// Represents detailed information about a request task.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInfoInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.TaskInfoInner")]
 pub struct TaskInfo {
     /// Optional user ID.
     pub uid: Option<String>,
@@ -643,7 +643,7 @@ impl From<request_core::info::TaskInfo> for TaskInfo {
 }
 
 /// Represents an HTTP response.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/HttpResponseInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.HttpResponseInner")]
 pub struct HttpResponse {
     /// HTTP version.
     version: String,
@@ -668,7 +668,7 @@ impl From<&request_core::info::Response> for HttpResponse {
 }
 
 /// Represents a request task.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/TaskInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.TaskInner")]
 pub struct Task<'local> {
     /// Task ID.
     pub tid: String,
@@ -676,7 +676,7 @@ pub struct Task<'local> {
 }
 
 /// Represents configuration for a task group.
-#[ani_rs::ani(path = "L@ohos/request/request/agent/GroupConfigInner")]
+#[ani_rs::ani(path = "@ohos.request.request.agent.GroupConfigInner")]
 pub struct GroupConfig<'local> {
     /// Optional gauge flag for the group.
     pub gauge: Option<bool>,

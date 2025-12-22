@@ -13,19 +13,19 @@
 
 use std::collections::HashMap;
 
-#[ani_rs::ani(path = "L@ohos/request/cacheDownload/cacheDownload/SslType")]
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.SslType")]
 pub enum SslType {
     TLS,
     TLCP,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/cacheDownload/cacheDownload/CacheStrategy")]
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.CacheStrategy")]
 pub enum CacheStrategy {
     FORCE,
     LAZY,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/cacheDownload/cacheDownload/CacheDownloadOptions")]
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.CacheDownloadOptions")]
 pub struct CacheDownloadOptions {
     pub headers: Option<HashMap<String, String>>,
     pub ssl_type: Option<SslType>,
@@ -33,18 +33,18 @@ pub struct CacheDownloadOptions {
     pub cache_strategy: Option<CacheStrategy>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/cacheDownload/cacheDownload/ResourceInfoInner")]
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.ResourceInfoInner")]
 pub struct ResourceInfo {
     pub size: i64,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/cacheDownload/cacheDownload/NetworkInfoInner")]
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.NetworkInfoInner")]
 pub struct NetworkInfo {
     pub dns_servers: Vec<String>,
     pub ip: Option<String>,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/cacheDownload/cacheDownload/PerformanceInfoInner")]
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.PerformanceInfoInner")]
 pub struct PerformanceInfo {
     pub dns_time: f64,
     pub connect_time: f64,
@@ -55,7 +55,7 @@ pub struct PerformanceInfo {
     pub redirect_time: f64,
 }
 
-#[ani_rs::ani(path = "L@ohos/request/cacheDownload/cacheDownload/DownloadInfoInner")]
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.DownloadInfoInner")]
 pub struct DownloadInfo {
     pub resource: ResourceInfo,
     pub network: NetworkInfo,

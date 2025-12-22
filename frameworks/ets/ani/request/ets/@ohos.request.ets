@@ -84,7 +84,7 @@ export default namespace request {
     let p1 = taskpool.execute((): DownloadTask => {
         return downloadFileSync(context, seq);
     })
-    p1.then((content: NullishType) => {
+    p1.then((content: Any) => {
         callback(null, content as DownloadTask);
     }, (err: Error): void => {
         callback(err as BusinessError, new DownloadTaskInner);
@@ -96,7 +96,7 @@ export default namespace request {
     return new Promise<DownloadTask>((resolve, reject) => {
       taskpool.execute((): DownloadTask => {
           return downloadFileSync(context, seq);
-      }).then((content: NullishType) => {
+      }).then((content: Any) => {
           resolve(content as DownloadTask);
       }, (err: Error): void => {
           reject(err as BusinessError);
@@ -112,7 +112,7 @@ export default namespace request {
     let p1 = taskpool.execute((): UploadTask => {
         return uploadFileSync(context, seq);
     })
-    p1.then((content: NullishType) => {
+    p1.then((content: Any) => {
         callback(null, content as UploadTask);
     }, (err: Error): void => {
         callback(err as BusinessError, new UploadTaskInner);
@@ -124,7 +124,7 @@ export default namespace request {
     return new Promise<UploadTask>((resolve, reject) => {
       taskpool.execute((): UploadTask => {
           return uploadFileSync(context, seq);
-      }).then((content: NullishType) => {
+      }).then((content: Any) => {
           resolve(content as UploadTask);
       }, (err: Error): void => {
           reject(err as BusinessError);
@@ -329,7 +329,7 @@ export default namespace request {
         let p1 = taskpool.execute((): boolean => {
             return this.deleteSync();
         })
-        p1.then((content: NullishType) => {
+        p1.then((content: Any) => {
             callback(null, content as boolean);
         }, (err: Error): void => {
             callback(err as BusinessError, false);
@@ -340,7 +340,7 @@ export default namespace request {
         return new Promise<boolean>((resolve, reject) => {
             taskpool.execute((): boolean => {
                 return this.deleteSync();
-            }).then((content: NullishType) => {
+            }).then((content: Any) => {
                 resolve(content as boolean);
             }, (err: Error): void => {
                 reject(err as BusinessError);
@@ -354,7 +354,7 @@ export default namespace request {
         let p1 = taskpool.execute((): boolean => {
             return this.suspendSync();
         })
-        p1.then((content: NullishType) => {
+        p1.then((content: Any) => {
             callback(null, content as boolean);
         }, (err: Error): void => {
             callback(err as BusinessError, false);
@@ -365,7 +365,7 @@ export default namespace request {
         return new Promise<boolean>((resolve, reject) => {
             taskpool.execute((): boolean => {
                 return this.suspendSync();
-            }).then((content: NullishType) => {
+            }).then((content: Any) => {
                 resolve(content as boolean);
             }, (err: Error): void => {
                 reject(err as BusinessError);
@@ -379,7 +379,7 @@ export default namespace request {
         let p1 = taskpool.execute((): boolean => {
             return this.restoreSync();
         })
-        p1.then((content: NullishType) => {
+        p1.then((content: Any) => {
             callback(null, content as boolean);
         }, (err: Error): void => {
             callback(err as BusinessError, false);
@@ -390,7 +390,7 @@ export default namespace request {
         return new Promise<boolean>((resolve, reject) => {
             taskpool.execute((): boolean => {
                 return this.restoreSync();
-            }).then((content: NullishType) => {
+            }).then((content: Any) => {
                 resolve(content as boolean);
             }, (err: Error): void => {
                 reject(err as BusinessError);
@@ -404,7 +404,7 @@ export default namespace request {
         let p1 = taskpool.execute((): DownloadInfo => {
             return this.getTaskInfoSync();
         })
-        p1.then((content: NullishType) => {
+        p1.then((content: Any) => {
             callback(null, content as DownloadInfo);
         }, (err: Error): void => {
             callback(err as BusinessError, new DownloadInfoInner);
@@ -415,7 +415,7 @@ export default namespace request {
         return new Promise<DownloadInfo>((resolve, reject) => {
             taskpool.execute((): DownloadInfo => {
                 return this.getTaskInfoSync();
-            }).then((content: NullishType) => {
+            }).then((content: Any) => {
                 resolve(content as DownloadInfo);
             }, (err: Error): void => {
                 reject(err as BusinessError);
@@ -429,7 +429,7 @@ export default namespace request {
         let p1 = taskpool.execute((): string => {
             return this.getTaskMimeTypeSync();
         })
-        p1.then((content: NullishType) => {
+        p1.then((content: Any) => {
             callback(null, content as string);
         }, (err: Error): void => {
             callback(err as BusinessError, "");
@@ -440,7 +440,7 @@ export default namespace request {
         return new Promise<string>((resolve, reject) => {
             taskpool.execute((): string => {
                 return this.getTaskMimeTypeSync();
-            }).then((content: NullishType) => {
+            }).then((content: Any) => {
                 resolve(content as string);
             }, (err: Error): void => {
                 reject(err as BusinessError);
@@ -546,7 +546,7 @@ export default namespace request {
       let p1 = taskpool.execute((): boolean => {
           return this.deleteSync();
       })
-      p1.then((content: NullishType) => {
+      p1.then((content: Any) => {
           callback(null, content as boolean);
       }, (err: Error): void => {
           callback(err as BusinessError, false);
@@ -557,7 +557,7 @@ export default namespace request {
       return new Promise<boolean>((resolve, reject) => {
           taskpool.execute((): boolean => {
               return this.deleteSync();
-          }).then((content: NullishType) => {
+          }).then((content: Any) => {
               resolve(content as boolean);
           }, (err: Error): void => {
               reject(err as BusinessError);
@@ -1133,7 +1133,7 @@ export default namespace request {
         return new Promise<void>((resolve, reject) => {
             taskpool.execute(() => {
                 this.startSync();
-            }).then((content: NullishType) => {
+            }).then((content: Any) => {
                 resolve(undefined);
             }, (err: Error): void => {
                 reject(err as BusinessError);
@@ -1157,7 +1157,7 @@ export default namespace request {
         return new Promise<void>((resolve, reject) => {
             taskpool.execute(() => {
                 this.pauseSync();
-            }).then((content: NullishType) => {
+            }).then((content: Any) => {
                 resolve(undefined);
             }, (err: Error): void => {
                 reject(err as BusinessError);
@@ -1181,7 +1181,7 @@ export default namespace request {
         return new Promise<void>((resolve, reject) => {
             taskpool.execute(() => {
                 this.resumeSync();
-            }).then((content: NullishType) => {
+            }).then((content: Any) => {
                 resolve(undefined);
             }, (err: Error): void => {
                 reject(err as BusinessError);
@@ -1205,7 +1205,7 @@ export default namespace request {
         return new Promise<void>((resolve, reject) => {
             taskpool.execute(() => {
                 this.stopSync();
-            }).then((content: NullishType) => {
+            }).then((content: Any) => {
                 resolve(undefined);
             }, (err: Error): void => {
                 reject(err as BusinessError);
@@ -1222,7 +1222,7 @@ export default namespace request {
         return new Promise<void>((resolve, reject) => {
             taskpool.execute(() => {
                 this.setMaxSpeedSync(speed);
-            }).then((content: NullishType) => {
+            }).then((content: Any) => {
                 resolve(undefined);
             }, (err: Error): void => {
                 reject(err as BusinessError);
@@ -1245,7 +1245,7 @@ export default namespace request {
         };
         return task;
       });
-      p1.then((content: NullishType) => {
+      p1.then((content: Any) => {
         callback(null, content as Task);
       }, (err: Error): void => {
         callback(err as BusinessError,new TaskInner);
@@ -1262,7 +1262,7 @@ export default namespace request {
             config: config
           };
           return task;
-        }).then((content: NullishType) => {
+        }).then((content: Any) => {
           resolve(content as Task);
         }, (err: Error): void => {
           reject(err as BusinessError);
@@ -1284,7 +1284,7 @@ export default namespace request {
       return new Promise<Task>((resolve, reject) => {
         taskpool.execute((): Task => {
           return getTaskSync(context, id, token);
-        }).then((content: NullishType) => {
+        }).then((content: Any) => {
           resolve(content as Task);
         }, (err: Error): void => {
           reject(err as BusinessError);
@@ -1326,7 +1326,7 @@ export default namespace request {
       let p1 = taskpool.execute((): TaskInfo => {
         return showSync(id);
       });
-      p1.then((content: NullishType) => {
+      p1.then((content: Any) => {
         callback(null, content as TaskInfo);
       }, (err: Error): void => {
         callback(err as BusinessError, new TaskInfoInner);
@@ -1338,7 +1338,7 @@ export default namespace request {
       return new Promise<TaskInfo>((resolve, reject) => {
         taskpool.execute((): TaskInfo => {
           return showSync(id);
-        }).then((content: NullishType) => {
+        }).then((content: Any) => {
           resolve(content as TaskInfo);
         }, (err: Error): void => {
           reject(err as BusinessError);
@@ -1354,7 +1354,7 @@ export default namespace request {
       let p1 = taskpool.execute((): TaskInfo => {
         return touchSync(id, token);
       });
-      p1.then((content: NullishType) => {
+      p1.then((content: Any) => {
         callback(null, content as TaskInfo);
       }, (err: Error): void => {
         callback(err as BusinessError, new TaskInfoInner);
@@ -1367,7 +1367,7 @@ export default namespace request {
       return new Promise<TaskInfo>((resolve, reject) => {
         taskpool.execute((): TaskInfo => {
           return touchSync(id, token);
-        }).then((content: NullishType) => {
+        }).then((content: Any) => {
           resolve(content as TaskInfo);
         }, (err: Error): void => {
           reject(err as BusinessError);
@@ -1381,7 +1381,7 @@ export default namespace request {
       let p1 = taskpool.execute((): Array<string> => {
         return searchSync();
       });
-      p1.then((content: NullishType) => {
+      p1.then((content: Any) => {
         callback(null, content as Array<string>);
       }, (err: Error): void => {
         callback(err as BusinessError, undefined);
@@ -1392,7 +1392,7 @@ export default namespace request {
       let p1 = taskpool.execute((): Array<string> => {
         return searchSync(filter);
       });
-      p1.then((content: NullishType) => {
+      p1.then((content: Any) => {
         callback(null, content as Array<string>);
       }, (err: Error): void => {
         callback(err as BusinessError, undefined);
@@ -1403,7 +1403,7 @@ export default namespace request {
       return new Promise<Array<string>>((resolve, reject) => {
         taskpool.execute((): Array<string> => {
           return searchSync(filter)
-        }).then((content: NullishType) => {
+        }).then((content: Any) => {
           resolve(content as Array<string>);
         }, (err: Error): void => {
           reject(err as BusinessError);
@@ -1418,7 +1418,7 @@ export default namespace request {
       let p1 = taskpool.execute((): TaskInfo => {
         return querySync(id);
       });
-      p1.then((content: NullishType) => {
+      p1.then((content: Any) => {
         callback(null, content as TaskInfo);
       }, (err: Error): void => {
         callback(err as BusinessError, new TaskInfoInner);
@@ -1430,7 +1430,7 @@ export default namespace request {
       return new Promise<TaskInfo>((resolve, reject) => {
         taskpool.execute((): TaskInfo => {
           return querySync(id);
-        }).then((content: NullishType) => {
+        }).then((content: Any) => {
           resolve(content as TaskInfo);
         }, (err: Error): void => {
           reject(err as BusinessError);
@@ -1457,7 +1457,7 @@ export default namespace request {
       return new Promise<string>((resolve, reject) => {
         taskpool.execute((): string => {
           return createGroupSync(config);
-        }).then((content: NullishType) => {
+        }).then((content: Any) => {
           resolve(content as string);
         }, (err: Error): void => {
           reject(err as BusinessError);
