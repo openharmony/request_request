@@ -192,7 +192,7 @@ pub fn create(env: &AniEnv, context: AniRef, seq: i64) -> Result<String, Busines
 pub fn get_task(context: AniRef, id: String, token: Option<String>) -> Result<Task, BusinessError> {
     let task_id = id.parse::<i64>().map_err(|_| {
         BusinessError::new(
-            ExceptionErrorCode::E_PARAMETER_CHECK as i32,
+            ExceptionErrorCode::E_TASK_NOT_FOUND as i32,
             "Invalid task ID format".to_string(),
         )
     })?;
