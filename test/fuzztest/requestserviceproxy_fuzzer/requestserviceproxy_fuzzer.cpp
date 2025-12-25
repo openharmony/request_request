@@ -738,13 +738,10 @@ bool SearchFuzzTest(FuzzedDataProvider &provider)
 bool SysEventFuzzTestSendSysEventLog(FuzzedDataProvider &provider)
 {
     std::string eventName = provider.ConsumeRandomLengthString(MAX_LENGTH);
-    std::vector<uint8_t> num = convertToVectorUint8_t(provider);
-    if (num.size() < SIZE_TWO) {
-        num.push_back(num[0]);
-        num.push_back(num[0]);
-        num.push_back(num[0]);
-    }
-    SysEventLog::SendSysEventLog(eventName, num[0], num[1], num[SIZE_TWO]);
+    uint32_t num1 = provider.ConsumeIntegral<uint32_t>();
+    int32_t num2 = provider.ConsumeIntegral<int32_t>();
+    int32_t num3 = provider.ConsumeIntegral<int32_t>();
+    SysEventLog::SendSysEventLog(eventName, num1, num2, num3);
     auto iter = Request::SysEventLog::sysEventMap_.find("EXEC_ERROR");
     if (iter == Request::SysEventLog::sysEventMap_.end()) {
         return true;
