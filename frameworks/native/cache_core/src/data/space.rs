@@ -21,21 +21,21 @@
 ///
 /// This struct tracks total available capacity and currently used capacity,
 /// providing methods to apply for additional resources and release unused ones.
-pub(crate) struct ResourceManager {
+pub(crate) struct SpaceManager {
     /// Total available capacity (in bytes)
     pub(super) total_capacity: u64,
     /// Currently used capacity (in bytes)
     pub(super) used_capacity: u64,
 }
 
-impl ResourceManager {
+impl SpaceManager {
     /// Creates a new resource manager with the specified capacity.
     ///
     /// # Parameters
     /// - `capacity`: Total available capacity in bytes
     ///
     /// # Returns
-    /// A new ResourceManager instance with the specified capacity and zero used capacity
+    /// A new SpaceManager instance with the specified capacity and zero used capacity
     pub(crate) fn new(capacity: u64) -> Self {
         Self {
             total_capacity: capacity,
@@ -67,7 +67,7 @@ impl ResourceManager {
     ///
     /// # Parameters
     /// - `size`: Amount of space to release in bytes
-    pub(super) fn release(&mut self, size: u64) {
+    pub(crate) fn release(&mut self, size: u64) {
         self.used_capacity -= size;
     }
 
@@ -82,6 +82,6 @@ impl ResourceManager {
 
 #[cfg(test)]
 mod ut_space {
-    // Include test module containing unit tests for ResourceManager
+    // Include test module containing unit tests for SpaceManager
     include!("../../tests/ut/data/ut_space.rs");
 }

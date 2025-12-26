@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::ResourceManager;
+use super::SpaceManager;
 const TEST_TOTAL_SIZE: u64 = 1024;
 
 // @tc.name: ut_cache_space_handle_operations
@@ -28,7 +28,7 @@ const TEST_TOTAL_SIZE: u64 = 1024;
 // @tc.level: level1
 #[test]
 fn ut_cache_space() {
-    let mut handle = ResourceManager::new(TEST_TOTAL_SIZE);
+    let mut handle = SpaceManager::new(TEST_TOTAL_SIZE);
     handle.apply_cache_size(TEST_TOTAL_SIZE / 2);
     assert_eq!(handle.used_capacity, TEST_TOTAL_SIZE / 2);
     handle.release(TEST_TOTAL_SIZE / 4);
