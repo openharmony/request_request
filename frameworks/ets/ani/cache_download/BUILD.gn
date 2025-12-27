@@ -14,6 +14,66 @@
 import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 
+rust_cxx("preload_ets_cxx_gen") {
+  sources = [
+    "src/common/permission_check.rs",
+  ]
+}
+
+ohos_static_library("preload_permission_cxx") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "include",
+    "${target_gen_dir}/src",
+  ]
+  sources = [
+    "src/cxx/permission_verification.cpp",
+  ]
+
+  sources += get_target_outputs(":preload_ets_cxx_gen")
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "ipc:ipc_single",
+    "rust_cxx:cxx_cppdeps",
+  ]
+  deps = [ ":preload_ets_cxx_gen" ]
+
+  subsystem_name = "request"
+  part_name = "request"
+}
+
+ohos_rust_static_library("preload_permission_verify") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  deps = [
+    ":preload_permission_cxx"
+  ]
+
+  external_deps = [
+    "rust_cxx:lib",
+  ]
+  sources = [ "src/common/mod.rs" ]
+  subsystem_name = "request"
+  part_name = "request"
+}
+
 ohos_rust_shared_library("cache_download_ani") {
   sanitize = {
     cfi = true
@@ -33,6 +93,7 @@ ohos_rust_shared_library("cache_download_ani") {
   ]
 
   deps = [
+    ":preload_permission_verify",
     "../../../native/cache_download:preload_native_rlib",
     "//third_party/rust/crates/serde/serde:lib",
   ]
