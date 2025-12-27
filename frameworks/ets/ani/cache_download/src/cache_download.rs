@@ -17,9 +17,12 @@
 //! for animation resources. It serves as a bridge between the ETS interface and the native
 //! cache download service.
 
+use std::sync::OnceLock;
+
 use crate::bridge::{CacheDownloadOptions, DownloadInfo, SslType};
 use ani_rs::business_error::BusinessError;
 use preload_native_rlib::{CacheDownloadService, DownloadRequest, Downloader, PreloadCallback};
+use preload_permission_verify::permission_check;
 
 /// Empty callback implementation for preload operations.
 ///
@@ -32,6 +35,18 @@ const MAX_FILE_SIZE: i64 = 4294967296;
 const MAX_MEM_SIZE: i64 = 1073741824;
 const MAX_UTL_LENGTH: usize = 8192;
 const MAX_INFO_LIST_SIZE: u16 = 8192;
+
+static HAS_INTERNET_PERM: OnceLock<bool> = OnceLock::new();
+
+static HAS_GET_NETWORK_INFO_PERM: OnceLock<bool> = OnceLock::new();
+
+fn has_internet_permission() -> bool {
+    *HAS_INTERNET_PERM.get_or_init(|| permission_check::CheckInternetPermission())
+}
+
+fn has_get_network_info_permission() -> bool {
+    *HAS_GET_NETWORK_INFO_PERM.get_or_init(|| permission_check::CheckGetNetworkInfoPermission())
+}
 
 /// Initiates a download of a resource with the specified URL and options.
 ///
@@ -70,6 +85,12 @@ const MAX_INFO_LIST_SIZE: u16 = 8192;
 /// ```
 #[ani_rs::native]
 pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), BusinessError> {
+    if !has_internet_permission() {
+        return Err(BusinessError::new(
+            201,
+            "internet permission denied".to_string(),
+        ));
+    }
     if (url.len() > MAX_UTL_LENGTH as usize) {
         return Err(BusinessError::new(
             401,
@@ -216,6 +237,12 @@ pub fn set_file_cache_size(size: i64) -> Result<(), BusinessError> {
 
 #[ani_rs::native]
 pub fn get_download_info(url: String) -> Result<Option<DownloadInfo>, BusinessError> {
+    if !has_get_network_info_permission() {
+        return Err(BusinessError::new(
+            201,
+            "GET_NETWORK_INFO permission denied".to_string(),
+        ));
+    }
     if (url.len() > MAX_UTL_LENGTH as usize) {
         return Err(BusinessError::new(
             401,
