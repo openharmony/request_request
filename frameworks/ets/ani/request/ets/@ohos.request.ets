@@ -955,6 +955,8 @@ export default namespace request {
       setMaxSpeed(speed: long): Promise<void>;
     }
 
+  let taskMap: Map<string, Task> = new Map<string, Task>();
+
   export class TaskInner implements Task {
     static {
       loadLibrary("request_ani")
@@ -1246,7 +1248,9 @@ export default namespace request {
         return task;
       });
       p1.then((content: Any) => {
-        callback(null, content as Task);
+        const task: Task = content as Task;
+        taskMap.set(task.tid, task);
+        callback(null, task);
       }, (err: Error): void => {
         callback(err as BusinessError,new TaskInner);
       });
@@ -1263,7 +1267,9 @@ export default namespace request {
           };
           return task;
         }).then((content: Any) => {
-          resolve(content as Task);
+          const task: Task = content as Task;
+          taskMap.set(task.tid, task);
+          resolve(task);
         }, (err: Error): void => {
           reject(err as BusinessError);
         });
@@ -1281,11 +1287,19 @@ export default namespace request {
         checkTid(id);
         checkToken(token);
       }
+      
+      const existingTask: Task | undefined = taskMap.get(id);
+      if (existingTask) {
+        return Promise.resolve(existingTask);
+      }
+      
       return new Promise<Task>((resolve, reject) => {
         taskpool.execute((): Task => {
           return getTaskSync(context, id, token);
         }).then((content: Any) => {
-          resolve(content as Task);
+          const task: Task = content as Task;
+          taskMap.set(task.tid, task);
+          resolve(task);
         }, (err: Error): void => {
           reject(err as BusinessError);
         });
@@ -1300,6 +1314,7 @@ export default namespace request {
         return removeSync(id);
       });
       p1.then(() => {
+        taskMap.delete(id);
         callback(null, undefined);
       }, (err: Error): void => {
         callback(err as BusinessError, undefined);
@@ -1312,6 +1327,7 @@ export default namespace request {
         taskpool.execute((): void => {
           return removeSync(id);
         }).then(() => {
+          taskMap.delete(id);
           resolve(undefined);
         }, (err: Error): void => {
           reject(err as BusinessError);
