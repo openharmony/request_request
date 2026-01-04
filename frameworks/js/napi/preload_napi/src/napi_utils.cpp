@@ -65,10 +65,10 @@ size_t GetStringLength(napi_env env, napi_value value)
 
 std::string GetValueString(napi_env env, napi_value value, size_t length)
 {
-    char chars[length + 1];
-    PRELOAD_NAPI_CALL(env, napi_get_value_string_utf8(env, value, chars, sizeof(chars), &length),
+    std::vector<char> chars(length + 1);
+    PRELOAD_NAPI_CALL(env, napi_get_value_string_utf8(env, value, chars.data(), chars.size(), &length),
         "napi_get_value_string_utf8 failed");
-    return std::string(chars);
+    return std::string(chars.data());
 }
 
 int64_t GetValueNum(napi_env env, napi_value value)

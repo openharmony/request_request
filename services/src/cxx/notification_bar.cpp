@@ -93,7 +93,7 @@ int UpdateSystemResourceStringMap(std::string &curLanguage)
     g_resourceStringInfo.curSystemLanguage = curLanguage.c_str();
 
     std::string outValue;
-    for (int i = 0; i < RESOURCE_STRING_KEYS.size(); ++i) {
+    for (size_t i = 0; i < RESOURCE_STRING_KEYS.size(); ++i) {
         auto ret = resourceMgr->GetStringByName(RESOURCE_STRING_KEYS[i].c_str(), outValue);
         if (ret != Resource::RState::SUCCESS) {
             REQUEST_HILOGE("Get system resource string %{public}s failed: %{public}d",
