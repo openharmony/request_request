@@ -54,7 +54,8 @@ public:
     static void UnsubscribeSA();
     static void ReloadListener();
     static bool SetDirsPermission(std::vector<std::string> &dirs);
-    static void ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls);
+    static void ClearTaskThing(const std::string &tid);
+    static void ClearTaskTemp(const std::string &tid);
     static void RemoveDirsPermission(const std::vector<std::string> &dirs);
     static void RemoveTaskContext(const std::string &tid);
 
