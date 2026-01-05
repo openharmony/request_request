@@ -89,10 +89,16 @@ void JSNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData
     }
 
     NapiUtils::ReadBytesFromFile(filePath, notifyData->progress.bodyBytes);
-    // Waiting for "complete" to read and delete.
-    if (!(notifyData->version == Version::API10 && index + 1 == len && notifyData->type == SubscribeType::PROGRESS)) {
-        PathUtils::SubPathsToMap(filePath);
+    if (notifyData->version == Version::API9 && index + 1 != len) {
         NapiUtils::RemoveFile(filePath);
+    }
+    if (notifyData->version == Version::API10) {
+        // Waiting for "complete" to read and delete.
+        if (notifyData->type == SubscribeType::PROGRESS && index + 1 != len) {
+            NapiUtils::RemoveFile(filePath);
+        } else if (notifyData->type == SubscribeType::COMPLETED) {
+            NapiUtils::RemoveFile(filePath);
+        }
     }
 }
 
@@ -201,11 +207,11 @@ void JSNotifyDataListener::DoJSTask(const std::shared_ptr<NotifyData> &notifyDat
     if (checkDo == RemoveTaskChecker::DoNothing) {
         this->OnMessageReceive(values, paramNumber);
     } else if (checkDo == RemoveTaskChecker::ClearFile) {
-        JsTask::ClearTaskTemp(tid, true, false, false);
+        JsTask::ClearTaskTemp(tid);
         REQUEST_HILOGD("jstask %{public}s clear file", tid.c_str());
         this->OnMessageReceive(values, paramNumber);
     } else if (checkDo == RemoveTaskChecker::ClearFileAndRemoveTask) {
-        JsTask::ClearTaskTemp(tid, true, true, true);
+        JsTask::ClearTaskThing(tid);
         REQUEST_HILOGD("jstask %{public}s clear file", tid.c_str());
         this->OnMessageReceive(values, paramNumber);
         JsTask::RemoveTaskContext(tid);
@@ -222,8 +228,7 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
     }
     ptr->listener = shared_from_this();
     ptr->notifyData = notifyData;
-    REQUEST_HILOGI(
-        "cb %{public}s %{public}d", SubscribeTypeToString(notifyData->type).c_str(), notifyData->taskId);
+    REQUEST_HILOGI("cb %{public}s %{public}d", SubscribeTypeToString(notifyData->type).c_str(), notifyData->taskId);
     int32_t ret = napi_send_event(
         this->env_,
         [ptr]() {
@@ -243,8 +248,7 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
             napi_close_handle_scope(ptr->listener->env_, scope);
             delete ptr;
         },
-        napi_eprio_high,
-        "request:download|downloadfile|upload|uploadfile|agent.create");
+        napi_eprio_high, "request:download|downloadfile|upload|uploadfile|agent.create");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete ptr;
@@ -274,13 +278,12 @@ void JSNotifyDataListener::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
                 return;
             }
             napi_value value = NapiUtils::Convert2JSValue(ptr->listener->env_, *(ptr->reason));
-            JsTask::ClearTaskTemp(std::to_string(*(ptr->tid)), true, false, false);
+            JsTask::ClearTaskTemp(std::to_string(*(ptr->tid)));
             this->OnMessageReceive(&value, paramNumber);
             napi_close_handle_scope(ptr->listener->env_, scope);
             delete ptr;
         },
-        napi_eprio_high,
-        "request:task.on");
+        napi_eprio_high, "request:task.on");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete ptr;
@@ -289,8 +292,7 @@ void JSNotifyDataListener::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
 
 void JSNotifyDataListener::OnWaitReceive(std::int32_t taskId, WaitingReason reason)
 {
-    REQUEST_HILOGI(
-        "Notify wait, tid %{public}d, reason: %{public}d", taskId, static_cast<int32_t>(reason));
+    REQUEST_HILOGI("Notify wait, tid %{public}d, reason: %{public}d", taskId, static_cast<int32_t>(reason));
     int32_t ret = napi_send_event(
         this->env_,
         [me = shared_from_this(), taskId, reason]() {
@@ -305,8 +307,7 @@ void JSNotifyDataListener::OnWaitReceive(std::int32_t taskId, WaitingReason reas
             me->OnMessageReceive(&value, paramNumber);
             napi_close_handle_scope(me->env_, scope);
         },
-        napi_eprio_high,
-        "request:task.on");
+        napi_eprio_high, "request:task.on");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
     }

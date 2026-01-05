@@ -166,14 +166,12 @@ bool SubOnePathToMap(const std::string &path, const bool isFile)
     return true;
 }
 
-bool SubPathsVec(const std::vector<std::pair<std::string, bool>> &paths)
+void SubPathsVec(const std::vector<std::pair<std::string, bool>> &paths)
 {
     for (auto &elem : paths) {
-        if (!SubOnePathToMap(elem.first, elem.second)) {
-            return false;
-        }
+        SubOnePathToMap(elem.first, elem.second);
     }
-    return true;
+    return;
 }
 
 bool PathUtils::AddPathsToMap(const std::string &path, const Action action)
@@ -200,7 +198,8 @@ bool PathUtils::SubPathsToMap(const std::string &path)
     if (paths.empty()) {
         return false;
     }
-    return SubPathsVec(paths);
+    SubPathsVec(paths);
+    return true;
 }
 
 // "abcde" -> "**cde"
