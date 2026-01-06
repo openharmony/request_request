@@ -12,10 +12,10 @@
 // limitations under the License.
 
 //! Task information query and dump functionality for the request service.
-//! 
-//! This module implements methods for querying task information from the `TaskManager`,
-//! providing functionality to retrieve details about single tasks or all active tasks
-//! in the system.
+//!
+//! This module implements methods for querying task information from the
+//! `TaskManager`, providing functionality to retrieve details about single
+//! tasks or all active tasks in the system.
 
 use crate::manage::TaskManager;
 use crate::task::info::{DumpAllEachInfo, DumpAllInfo, DumpOneInfo};
@@ -29,7 +29,8 @@ impl TaskManager {
     ///
     /// # Returns
     ///
-    /// * `Some(DumpOneInfo)` - Task information if a task with the given ID exists.
+    /// * `Some(DumpOneInfo)` - Task information if a task with the given ID
+    ///   exists.
     /// * `None` - If no task with the given ID is found.
     ///
     /// # Notes
@@ -61,8 +62,8 @@ impl TaskManager {
     ///
     /// # Notes
     ///
-    /// This method locks each task's status individually to ensure thread-safe access
-    /// to their current state and reason information.
+    /// This method locks each task's status individually to ensure thread-safe
+    /// access to their current state and reason information.
     pub(crate) fn query_all_task(&self) -> DumpAllInfo {
         DumpAllInfo {
             // Map each task to its dump information

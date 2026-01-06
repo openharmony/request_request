@@ -12,16 +12,18 @@
 // limitations under the License.
 
 //! Task mode configuration implementation for the task manager.
-//! 
-//! This module provides the implementation for changing the execution mode of tasks within the
-//! `TaskManager`. It delegates the mode change operation to the scheduler component.
+//!
+//! This module provides the implementation for changing the execution mode of
+//! tasks within the `TaskManager`. It delegates the mode change operation to
+//! the scheduler component.
 
 use crate::config::Mode;
 use crate::error::ErrorCode;
 use crate::manage::TaskManager;
 
 impl TaskManager {
-    /// Sets the execution mode for a task with the specified user ID and task ID.
+    /// Sets the execution mode for a task with the specified user ID and task
+    /// ID.
     ///
     /// # Arguments
     ///
@@ -36,12 +38,13 @@ impl TaskManager {
     ///
     /// # Notes
     ///
-    /// This method delegates the mode change operation to the scheduler component. If the scheduler
-    /// encounters an error, that error is propagated back to the caller.
+    /// This method delegates the mode change operation to the scheduler
+    /// component. If the scheduler encounters an error, that error is
+    /// propagated back to the caller.
     pub(crate) fn set_mode(&mut self, uid: u64, task_id: u32, mode: Mode) -> ErrorCode {
         // Log the mode change operation for debugging purposes
         debug!("TaskManager change_mode, tid{} mode{:?}", task_id, mode);
-        
+
         // Delegate to the scheduler to change the task mode
         match self.scheduler.task_set_mode(uid, task_id, mode) {
             Ok(_) => ErrorCode::ErrOk,

@@ -12,11 +12,11 @@
 // limitations under the License.
 
 //! Application state monitoring and event handling.
-//! 
-//! This module provides functionality to listen for application lifecycle events,
-//! including app state changes (foreground/background), process termination, and
-//! app uninstallation. It ensures proper cleanup and resource management when
-//! applications change state or are removed from the system.
+//!
+//! This module provides functionality to listen for application lifecycle
+//! events, including app state changes (foreground/background), process
+//! termination, and app uninstallation. It ensures proper cleanup and resource
+//! management when applications change state or are removed from the system.
 
 use std::mem::MaybeUninit;
 use std::sync::Once;
@@ -28,7 +28,7 @@ use crate::utils::c_wrapper::CStringWrapper;
 use crate::utils::{call_once, CommonEventSubscriber, CommonEventWant};
 
 /// Listens for application state changes and process termination events.
-/// 
+///
 /// This struct maintains references to the client manager and task manager to
 /// properly handle application state transitions and process lifecycle events.
 pub(crate) struct AppStateListener {
@@ -39,11 +39,12 @@ pub(crate) struct AppStateListener {
 }
 
 /// Global instance of the application state listener.
-/// 
+///
 /// # Safety
-/// 
-/// This static variable is initialized once via `AppStateListener::init()` and should only
-/// be accessed after initialization is complete. Access before initialization is unsafe.
+///
+/// This static variable is initialized once via `AppStateListener::init()` and
+/// should only be accessed after initialization is complete. Access before
+/// initialization is unsafe.
 static mut APP_STATE_LISTENER: MaybeUninit<AppStateListener> = MaybeUninit::uninit();
 
 /// Ensures the app state listener is initialized exactly once.
@@ -51,15 +52,17 @@ static ONCE: Once = Once::new();
 
 impl AppStateListener {
     /// Initializes the application state listener with managers.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `client_manager` - Manager for handling client processes.
-    /// * `task_manager` - Transmitter for sending state events to the task manager.
-    /// 
+    /// * `task_manager` - Transmitter for sending state events to the task
+    ///   manager.
+    ///
     /// # Safety
-    /// 
-    /// This function uses unsafe operations to initialize a global static variable.
+    ///
+    /// This function uses unsafe operations to initialize a global static
+    /// variable.
     pub(crate) fn init(client_manager: ClientManagerEntry, task_manager: TaskManagerTx) {
         unsafe {
             // Initialize the global instance exactly once
@@ -76,10 +79,11 @@ impl AppStateListener {
     }
 
     /// Registers the application state callbacks with the system.
-    /// 
+    ///
     /// # Notes
-    /// 
-    /// This function will fail with an error log if called before `init()` has completed.
+    ///
+    /// This function will fail with an error log if called before `init()` has
+    /// completed.
     pub(crate) fn register() {
         // Only register callbacks if initialization is complete
         if ONCE.is_completed() {
@@ -94,15 +98,16 @@ impl AppStateListener {
 }
 
 /// C callback invoked when an application's state changes.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `uid` - User ID of the application whose state changed.
-/// * `state` - New state code of the application (2 = foreground, 4 = background).
+/// * `state` - New state code of the application (2 = foreground, 4 =
+///   background).
 /// * `_pid` - Process ID of the application (unused).
-/// 
+///
 /// # Safety
-/// 
+///
 /// This function assumes `APP_STATE_LISTENER` has been properly initialized.
 extern "C" fn app_state_change_callback(uid: i32, state: i32, _pid: i32) {
     // State 2 corresponds to application entering foreground
@@ -124,16 +129,17 @@ extern "C" fn app_state_change_callback(uid: i32, state: i32, _pid: i32) {
 }
 
 /// C callback invoked when a process changes state or dies.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `uid` - User ID of the process.
 /// * `state` - New state code of the process (5 = process died).
 /// * `pid` - Process ID of the process.
-/// * `bundle_name` - Bundle name of the application associated with the process.
-/// 
+/// * `bundle_name` - Bundle name of the application associated with the
+///   process.
+///
 /// # Safety
-/// 
+///
 /// This function assumes `APP_STATE_LISTENER` has been properly initialized.
 extern "C" fn process_died_callback(uid: i32, state: i32, pid: i32, bundle_name: CStringWrapper) {
     debug!(
@@ -141,7 +147,7 @@ extern "C" fn process_died_callback(uid: i32, state: i32, pid: i32, bundle_name:
         uid, pid, state
     );
     let name = bundle_name.to_string();
-    
+
     // Special handling for hiviewx system process termination
     if name.starts_with("com.") && name.ends_with(".hmos.hiviewx") {
         unsafe {
@@ -166,7 +172,7 @@ extern "C" fn process_died_callback(uid: i32, state: i32, pid: i32, bundle_name:
 }
 
 /// Subscriber for application uninstallation events.
-/// 
+///
 /// This struct listens for app uninstall events and notifies the task manager
 /// to clean up any resources associated with the uninstalled application.
 pub(crate) struct AppUninstallSubscriber {
@@ -176,10 +182,11 @@ pub(crate) struct AppUninstallSubscriber {
 
 impl AppUninstallSubscriber {
     /// Creates a new application uninstall subscriber.
-    /// 
+    ///
     /// # Arguments
-    /// 
-    /// * `task_manager` - Transmitter for sending uninstallation events to the task manager.
+    ///
+    /// * `task_manager` - Transmitter for sending uninstallation events to the
+    ///   task manager.
     pub(crate) fn new(task_manager: TaskManagerTx) -> Self {
         Self { task_manager }
     }
@@ -187,12 +194,13 @@ impl AppUninstallSubscriber {
 
 impl CommonEventSubscriber for AppUninstallSubscriber {
     /// Handles received application uninstall events.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `_code` - Event code (unused).
     /// * `_data` - Event data (unused).
-    /// * `want` - Event data structure containing the UID of the uninstalled app.
+    /// * `want` - Event data structure containing the UID of the uninstalled
+    ///   app.
     fn on_receive_event(&self, _code: i32, _data: String, want: CommonEventWant) {
         // Extract the UID from the event data if available
         if let Some(uid) = want.get_int_param("uid") {

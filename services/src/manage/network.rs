@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Network interface and monitoring system.
-//! 
+//!
 //! This module provides core network functionality for the request service,
 //! including network state monitoring, connectivity detection, and integration
 //! with the underlying platform's network capabilities.
@@ -33,11 +33,11 @@ cfg_oh! {
 }
 
 /// Main interface for network state management.
-/// 
+///
 /// Provides access to network connectivity information and state monitoring.
-/// 
+///
 /// # Fields
-/// 
+///
 /// * `inner` - Internal implementation managing the network state
 /// * `_registry` - Platform-specific network registry (only on OpenHarmony)
 #[derive(Clone)]
@@ -48,7 +48,7 @@ pub struct Network {
 }
 
 /// Represents the current state of network connectivity.
-/// 
+///
 /// Used to determine whether the device has an active network connection
 /// and provide details about the connection when available.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -61,29 +61,30 @@ pub(crate) enum NetworkState {
 
 impl Network {
     /// Retrieves the current network state.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns a cloned copy of the current `NetworkState`.
-    /// 
+    ///
     /// # Panics
-    /// 
-    /// Panics if the read lock cannot be acquired, which typically indicates a deadlock.
+    ///
+    /// Panics if the read lock cannot be acquired, which typically indicates a
+    /// deadlock.
     pub(crate) fn state(&self) -> NetworkState {
         self.inner.state.read().unwrap().clone()
     }
 }
 
 /// Registers for network connectivity change notifications.
-/// 
-/// Establishes a connection with the platform's network change notification system
-/// to receive updates when the network state changes.
-/// 
+///
+/// Establishes a connection with the platform's network change notification
+/// system to receive updates when the network state changes.
+///
 /// Retries the registration multiple times if initially unsuccessful,
 /// with different retry counts based on whether code is running in test mode.
-/// 
+///
 /// # Errors
-/// 
+///
 /// Logs an error and emits a system event if the network registration fails
 /// after all retry attempts.
 pub(crate) fn register_network_change() {
@@ -92,16 +93,16 @@ pub(crate) fn register_network_change() {
     let mut count: i32 = 0;
     let mut network_manager = NetworkManager::get_instance().lock().unwrap();
     let tx = network_manager.tx.clone();
-    
+
     // Early return if already connected
     if network_manager.network.state() != Offline {
         return;
     }
-    
+
     match tx {
         Some(tx) => {
             let mut registry: UniquePtr<NetworkRegistry> = UniquePtr::null();
-            
+
             // Attempt to register for network changes with retry logic
             while count < RETRY_TIME {
                 registry = ffi::RegisterNetworkChange(
@@ -114,7 +115,7 @@ pub(crate) fn register_network_change() {
                         task_manager.inner.send_event(TaskManagerEvent::network());
                     },
                 );
-                
+
                 if registry.is_null() {
                     std::thread::sleep(std::time::Duration::from_secs(1));
                     count += 1;
@@ -122,7 +123,7 @@ pub(crate) fn register_network_change() {
                 }
                 break;
             }
-            
+
             if registry.is_null() {
                 error!("RegisterNetworkChange failed!");
                 sys_event!(
@@ -132,7 +133,7 @@ pub(crate) fn register_network_change() {
                 );
                 return;
             }
-            
+
             // Store the registry to maintain the connection
             network_manager.network._registry = Some(Arc::new(registry));
         }
@@ -148,15 +149,16 @@ pub(crate) fn register_network_change() {
 }
 
 /// Internal implementation of network state management.
-/// 
-/// Handles the actual state storage and state change notifications for the network interface.
+///
+/// Handles the actual state storage and state change notifications for the
+/// network interface.
 #[derive(Clone)]
 pub struct NetworkInner {
     state: Arc<RwLock<NetworkState>>,
 }
 
 /// Adapter for the task manager to receive network change notifications.
-/// 
+///
 /// Provides a bridge between the network system and the task manager,
 /// allowing network events to trigger task manager actions.
 pub struct NetworkTaskManagerTx {
@@ -173,12 +175,13 @@ impl NetworkInner {
     }
 
     /// Updates the network state to offline and logs the change.
-    /// 
+    ///
     /// Only updates if the current state is not already offline.
-    /// 
+    ///
     /// # Panics
-    /// 
-    /// Panics if the write lock cannot be acquired, which typically indicates a deadlock.
+    ///
+    /// Panics if the write lock cannot be acquired, which typically indicates a
+    /// deadlock.
     pub(crate) fn notify_offline(&self) {
         let mut state = self.state.write().unwrap();
         if *state != Offline {
@@ -187,21 +190,25 @@ impl NetworkInner {
         }
     }
 
-    /// Updates the network state to online with the provided network information.
-    /// 
-    /// Only updates if the network information has changed from the current state.
-    /// 
+    /// Updates the network state to online with the provided network
+    /// information.
+    ///
+    /// Only updates if the network information has changed from the current
+    /// state.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `info` - The new network information to set
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// Returns `true` if the state was updated, `false` if the state was already correct.
-    /// 
+    ///
+    /// Returns `true` if the state was updated, `false` if the state was
+    /// already correct.
+    ///
     /// # Panics
-    /// 
-    /// Panics if the write lock cannot be acquired, which typically indicates a deadlock.
+    ///
+    /// Panics if the write lock cannot be acquired, which typically indicates a
+    /// deadlock.
     pub(crate) fn notify_online(&self, info: NetworkInfo) -> bool {
         let mut state = self.state.write().unwrap();
         if !matches!(&*state, Online(old_info) if old_info == &info  ) {
@@ -214,7 +221,8 @@ impl NetworkInner {
     }
 }
 
-// Safety: NetworkRegistry is thread-safe as it's used via FFI with proper synchronization
+// Safety: NetworkRegistry is thread-safe as it's used via FFI with proper
+// synchronization
 unsafe impl Send for NetworkRegistry {}
 unsafe impl Sync for NetworkRegistry {}
 

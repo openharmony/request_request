@@ -12,9 +12,9 @@
 // limitations under the License.
 
 //! Task start implementation for the task manager.
-//! 
-//! This module provides the implementation for starting tasks within the `TaskManager`. It
-//! delegates the task execution to the scheduler component.
+//!
+//! This module provides the implementation for starting tasks within the
+//! `TaskManager`. It delegates the task execution to the scheduler component.
 
 use crate::error::ErrorCode;
 use crate::manage::TaskManager;
@@ -34,8 +34,9 @@ impl TaskManager {
     ///
     /// # Notes
     ///
-    /// This method delegates the task execution to the scheduler component. If the scheduler
-    /// encounters an error, that error is propagated back to the caller.
+    /// This method delegates the task execution to the scheduler component. If
+    /// the scheduler encounters an error, that error is propagated back to
+    /// the caller.
     pub(crate) fn start(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         // Log the task start operation for debugging purposes
         debug!("TaskManager start, tid{}", task_id);

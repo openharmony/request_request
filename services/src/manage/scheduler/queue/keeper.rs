@@ -12,10 +12,10 @@
 // limitations under the License.
 
 //! Service Ability (SA) unload scheduler for idle state detection.
-//! 
-//! This module implements a countdown-based mechanism that triggers service unloading
-//! when no active tasks are running for a specified period. It tracks task activity
-//! and manages cleanup timing to optimize resource usage.
+//!
+//! This module implements a countdown-based mechanism that triggers service
+//! unloading when no active tasks are running for a specified period. It tracks
+//! task activity and manages cleanup timing to optimize resource usage.
 
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -59,7 +59,8 @@ impl SAKeeper {
     /// # Arguments
     ///
     /// * `tx` - Task manager sender for broadcasting schedule events.
-    /// * `active_counter` - Counter for tracking active tasks across the system.
+    /// * `active_counter` - Counter for tracking active tasks across the
+    ///   system.
     ///
     /// # Returns
     ///
@@ -102,7 +103,8 @@ impl Clone for SAKeeper {
         {
             let mut inner = self.inner.lock().unwrap();
             inner.cnt += 1;
-            // Only cancel countdown and increment active counter when transitioning from 0 to 1 tasks
+            // Only cancel countdown and increment active counter when transitioning from 0
+            // to 1 tasks
             if inner.cnt == 1 {
                 self.active_counter.increment();
                 if let Some(handle) = inner.handle.take() {
@@ -130,7 +132,8 @@ impl Drop for SAKeeper {
     fn drop(&mut self) {
         let mut inner = self.inner.lock().unwrap();
         inner.cnt -= 1;
-        // Only restart countdown and decrement active counter when transitioning from 1 to 0 tasks
+        // Only restart countdown and decrement active counter when transitioning from 1
+        // to 0 tasks
         if inner.cnt == 0 {
             debug!("Countdown 60s future restarted");
             inner.handle = Some(count_down(self.tx.clone()));
@@ -152,10 +155,12 @@ fn count_down(tx: UnboundedSender<TaskManagerEvent>) -> JoinHandle<()> {
     runtime_spawn(unload_sa(tx))
 }
 
-/// Async function that waits for the timeout period and then sends an unload event.
+/// Async function that waits for the timeout period and then sends an unload
+/// event.
 ///
-/// This function runs in an infinite loop, sleeping for the specified timeout period
-/// and then sending an unload event. It continues until the task is canceled.
+/// This function runs in an infinite loop, sleeping for the specified timeout
+/// period and then sending an unload event. It continues until the task is
+/// canceled.
 ///
 /// # Arguments
 ///

@@ -12,10 +12,10 @@
 // limitations under the License.
 
 //! Task creation and initialization functionality for the request service.
-//! 
+//!
 //! This module implements the task construction logic for the `TaskManager`,
-//! handling task creation, validation, and initialization. It enforces task limits
-//! based on task type and manages system configuration integration.
+//! handling task creation, validation, and initialization. It enforces task
+//! limits based on task type and manages system configuration integration.
 
 cfg_oh! {
     use crate::ability::SYSTEM_CONFIG_MANAGER;
@@ -44,14 +44,14 @@ impl TaskManager {
     ///
     /// # Arguments
     ///
-    /// * `config` - Task configuration containing request details, user information,
-    ///   and execution parameters.
+    /// * `config` - Task configuration containing request details, user
+    ///   information, and execution parameters.
     ///
     /// # Returns
     ///
     /// * `Ok(u32)` - The generated task ID if creation is successful.
-    /// * `Err(ErrorCode)` - An error code if task creation fails, such as exceeding task limits
-    ///   or invalid configuration.
+    /// * `Err(ErrorCode)` - An error code if task creation fails, such as
+    ///   exceeding task limits or invalid configuration.
     ///
     /// # Panics
     ///
@@ -59,8 +59,9 @@ impl TaskManager {
     ///
     /// # Notes
     ///
-    /// This method enforces task limits based on mode and user ID, generates a unique task ID,
-    /// validates the configuration, and initializes a new task.
+    /// This method enforces task limits based on mode and user ID, generates a
+    /// unique task ID, validates the configuration, and initializes a new
+    /// task.
     pub(crate) fn create(&mut self, mut config: TaskConfig) -> Result<u32, ErrorCode> {
         // Generate a unique task ID and assign it to the configuration
         let task_id = TaskIdGenerator::generate();

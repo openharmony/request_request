@@ -12,11 +12,12 @@
 // limitations under the License.
 
 //! Task scheduler for network operations.
-//! 
-//! This module implements a comprehensive task scheduling system for managing network tasks
-//! based on QoS (Quality of Service) priorities, system state changes, and resource constraints.
-//! The scheduler coordinates task execution across multiple applications while respecting
-//! network conditions, account states, and application foreground/background transitions.
+//!
+//! This module implements a comprehensive task scheduling system for managing
+//! network tasks based on QoS (Quality of Service) priorities, system state
+//! changes, and resource constraints. The scheduler coordinates task execution
+//! across multiple applications while respecting network conditions, account
+//! states, and application foreground/background transitions.
 
 mod qos;
 mod queue;
@@ -133,7 +134,8 @@ impl Scheduler {
     ///
     /// # Returns
     ///
-    /// A reference to the task if it exists in the running queue, `None` otherwise.
+    /// A reference to the task if it exists in the running queue, `None`
+    /// otherwise.
     pub(crate) fn get_task(&self, uid: u64, task_id: u32) -> Option<&Arc<RequestTask>> {
         self.running_queue.get_task(uid, task_id)
     }
@@ -206,8 +208,8 @@ impl Scheduler {
     ///
     /// # Returns
     ///
-    /// `Ok(())` if the task was successfully started or resumed, or an error if the task
-    /// could not be found or is in an invalid state.
+    /// `Ok(())` if the task was successfully started or resumed, or an error if
+    /// the task could not be found or is in an invalid state.
     fn start_inner(&mut self, uid: u64, task_id: u32, is_resume: bool) -> Result<(), ErrorCode> {
         let database = RequestDb::get_instance();
         let info = RequestDb::get_instance()
@@ -245,7 +247,7 @@ impl Scheduler {
         if !self.check_config_satisfy(task_id)? {
             return Ok(());
         };
-        
+
         // Add task to QoS system and trigger reschedule
         let qos_info = database
             .get_task_qos_info(task_id)
@@ -279,7 +281,7 @@ impl Scheduler {
             self.running_queue.upload_resume.insert(task_id);
             self.schedule_if_not_scheduled();
         }
-        
+
         // Notify client of the pause
         let info = database
             .get_task_info(task_id)
@@ -310,10 +312,10 @@ impl Scheduler {
         if self.running_queue.cancel_task(task_id, uid) {
             self.schedule_if_not_scheduled();
         }
-        
+
         // Clean up user file task association
         database.remove_user_file_task(task_id);
-        
+
         // Notify client of the removal
         let info = database
             .get_task_info(task_id)
@@ -357,7 +359,8 @@ impl Scheduler {
     ///
     /// # Returns
     ///
-    /// `Ok(())` regardless of whether the task was found, as this operation is non-destructive.
+    /// `Ok(())` regardless of whether the task was found, as this operation is
+    /// non-destructive.
     pub(crate) fn set_max_speed(
         &mut self,
         uid: u64,
@@ -365,7 +368,8 @@ impl Scheduler {
         max_speed: i64,
     ) -> Result<(), ErrorCode> {
         if let Some(task) = self.running_queue.get_task(uid, task_id) {
-            // Use SeqCst ordering to ensure speed limit is visible to all threads immediately
+            // Use SeqCst ordering to ensure speed limit is visible to all threads
+            // immediately
             task.max_speed.store(max_speed, Ordering::SeqCst);
         }
         Ok(())
@@ -381,8 +385,8 @@ impl Scheduler {
     ///
     /// # Returns
     ///
-    /// `Ok(())` if the task mode was successfully changed, or an error if the task
-    /// could not be found or is in an invalid state.
+    /// `Ok(())` if the task mode was successfully changed, or an error if the
+    /// task could not be found or is in an invalid state.
     pub(crate) fn task_set_mode(
         &mut self,
         uid: u64,
@@ -397,12 +401,12 @@ impl Scheduler {
         if self.qos.task_set_mode(uid, task_id, mode) {
             self.schedule_if_not_scheduled();
         }
-        
+
         // Update mode for running task
         if let Some(task) = self.running_queue.get_task_clone(uid, task_id) {
             task.mode.store(mode.repr, Ordering::Release);
         }
-        
+
         // Update notification settings based on mode
         if mode == Mode::FrontEnd {
             NotificationDispatcher::get_instance().unregister_task(uid, task_id, false);
@@ -448,7 +452,7 @@ impl Scheduler {
         // Mark as completed and clean up
         database.update_task_state(task_id, State::Completed, Reason::Default);
         database.remove_user_file_task(task_id);
-        
+
         // Send completion notifications
         if let Some(info) = database.get_task_info(task_id) {
             Notifier::complete(&self.client_manager, info.build_notify_data());
@@ -474,7 +478,7 @@ impl Scheduler {
         info!("task {} canceled", task_id);
         // Mark task as finished in the running queue
         self.running_queue.task_finish(uid, task_id);
-        
+
         // Try to restart the task immediately if possible
         if self.running_queue.try_restart(uid, task_id) {
             return;
@@ -486,15 +490,15 @@ impl Scheduler {
             NotificationDispatcher::get_instance().unregister_task(uid, task_id, true);
             return;
         };
-        
+
         // Handle different task states appropriately
         match State::from(info.progress.common_data.state) {
             // If running, move to waiting state due to task limits
             State::Running | State::Retrying => {
                 info!("task {} waiting for task limits", task_id);
                 RequestDb::get_instance().update_task_state(
-                    task_id, 
-                    State::Waiting, 
+                    task_id,
+                    State::Waiting,
                     Reason::RunningTaskMeetLimits,
                 );
                 Notifier::waiting(&self.client_manager, task_id, WaitingCause::TaskQueue);
@@ -576,7 +580,7 @@ impl Scheduler {
 
         // Update task state to failed
         database.update_task_state(task_id, State::Failed, reason);
-        
+
         // Send failure notifications
         if let Some(info) = database.get_task_info(task_id) {
             let reason = info.common_data.reason;
@@ -663,7 +667,8 @@ impl Scheduler {
     ///
     /// # Arguments
     ///
-    /// * `f` - Function that processes the state change and returns SQL statements.
+    /// * `f` - Function that processes the state change and returns SQL
+    ///   statements.
     /// * `t` - State change payload.
     pub(crate) fn on_state_change<T, F>(&mut self, f: F, t: T)
     where
@@ -673,7 +678,7 @@ impl Scheduler {
         let Some(sql_list) = f(&mut self.state_handler, t) else {
             return;
         };
-        
+
         // Execute SQL statements to update database
         let db = RequestDb::get_instance();
         for sql in sql_list {
@@ -681,15 +686,16 @@ impl Scheduler {
                 error!("TaskManager update network failed {:?}", e);
             };
         }
-        
+
         // Reload and reschedule all tasks based on new state
         self.reload_all_tasks();
     }
 
     /// Reloads all tasks and triggers a reschedule.
     ///
-    /// This method reloads all tasks in the QoS system and schedules a reschedule
-    /// operation to re-evaluate all tasks based on updated information.
+    /// This method reloads all tasks in the QoS system and schedules a
+    /// reschedule operation to re-evaluate all tasks based on updated
+    /// information.
     pub(crate) fn reload_all_tasks(&mut self) {
         self.qos.reload_all_tasks();
         self.schedule_if_not_scheduled();
@@ -723,7 +729,8 @@ impl Scheduler {
         task_manager.send_event(TaskManagerEvent::Reschedule);
     }
 
-    /// Performs the reschedule operation to update task priorities and execution.
+    /// Performs the reschedule operation to update task priorities and
+    /// execution.
     ///
     /// This method:
     /// 1. Clears the reschedule flag
@@ -734,20 +741,20 @@ impl Scheduler {
     pub(crate) fn reschedule(&mut self) {
         // Clear the reschedule flag
         self.resort_scheduled = false;
-        
+
         // Get QoS changes based on current system state
         let changes = self.qos.reschedule(&self.state_handler);
-        
+
         // Apply changes to running queue and collect tasks to remove
         let mut qos_remove_queue = vec![];
         self.running_queue
             .reschedule(changes, &mut qos_remove_queue);
-        
+
         // Remove tasks that should no longer be in the QoS system
         for (uid, task_id) in qos_remove_queue.iter() {
             self.qos.apps.remove_task(*uid, *task_id);
         }
-        
+
         // Reload all tasks if any were removed
         if !qos_remove_queue.is_empty() {
             self.reload_all_tasks();
@@ -762,8 +769,9 @@ impl Scheduler {
     ///
     /// # Returns
     ///
-    /// `Ok(true)` if all requirements are satisfied, `Ok(false)` if requirements
-    /// are not met but the task can wait, or an error if the task could not be found.
+    /// `Ok(true)` if all requirements are satisfied, `Ok(false)` if
+    /// requirements are not met but the task can wait, or an error if the
+    /// task could not be found.
     pub(crate) fn check_config_satisfy(&self, task_id: u32) -> Result<bool, ErrorCode> {
         let database = RequestDb::get_instance();
         let config = database
@@ -794,7 +802,7 @@ impl Scheduler {
             Notifier::waiting(&self.client_manager, task_id, WaitingCause::AppState);
             return Ok(false);
         }
-        
+
         // All requirements satisfied
         Ok(true)
     }
@@ -811,11 +819,11 @@ impl Scheduler {
             .filter(|task| current_time - task.ctime > MILLISECONDS_IN_ONE_MONTH)
             .cloned()
             .collect::<Vec<_>>();
-            
+
         if timeout_tasks.is_empty() {
             return;
         }
-        
+
         let database = RequestDb::get_instance();
         for task in timeout_tasks {
             // Try to stop the task and remove from QoS if successful
@@ -826,15 +834,15 @@ impl Scheduler {
                 self.qos.apps.remove_task(task.uid(), task.task_id());
             }
         }
-        
+
         // Schedule reschedule to update task execution
         self.schedule_if_not_scheduled();
     }
 
     /// Attempts to retry all tasks in the running queue.
     ///
-    /// This method delegates to the running queue to retry any tasks that failed
-    /// but are eligible for retry.
+    /// This method delegates to the running queue to retry any tasks that
+    /// failed but are eligible for retry.
     pub(crate) fn retry_all_tasks(&mut self) {
         self.running_queue.retry_all_tasks();
     }
@@ -874,7 +882,7 @@ impl RequestDb {
                 return Err(ErrorCode::TaskStateErr);
             }
         }
-        
+
         // Generate appropriate SQL for the state change
         let sql = match new_state {
             State::Paused => sql::pause_task(task_id),
@@ -926,20 +934,20 @@ impl RequestDb {
             .get_task_info(task_id)
             .ok_or(ErrorCode::TaskNotFound)?;
         let old_mode = info.common_data.mode;
-        
+
         // If already in the requested mode, no change needed
         if old_mode == mode.repr {
             return Ok(());
         }
-        
+
         // Generate SQL for mode change
         let sql = sql::task_set_mode(task_id, mode);
-        
+
         // Execute the SQL statement
         RequestDb::get_instance()
             .execute(&sql)
             .map_err(|_| ErrorCode::SystemApi)?;
-            
+
         // Verify the mode change was successful
         let info = RequestDb::get_instance()
             .get_task_info(task_id)

@@ -12,9 +12,10 @@
 // limitations under the License.
 
 //! Task removal implementation for the task manager.
-//! 
-//! This module provides the implementation for removing tasks within the `TaskManager`. It handles
-//! task count management and delegates the actual removal operation to the scheduler component.
+//!
+//! This module provides the implementation for removing tasks within the
+//! `TaskManager`. It handles task count management and delegates the actual
+//! removal operation to the scheduler component.
 
 use crate::error::ErrorCode;
 use crate::info::State;
@@ -36,16 +37,17 @@ impl TaskManager {
     ///
     /// # Notes
     ///
-    /// This method handles task count management by decrementing the appropriate task count
-    /// if the task is not already in a terminal state (Failed, Completed, Removed). The actual
-    /// task removal is delegated to the scheduler component.
+    /// This method handles task count management by decrementing the
+    /// appropriate task count if the task is not already in a terminal
+    /// state (Failed, Completed, Removed). The actual task removal is
+    /// delegated to the scheduler component.
     pub(crate) fn remove(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         // Log the remove operation for debugging purposes
         debug!("TaskManager remove,uid{} tid{}", uid, task_id);
-        
+
         // Get database instance to check task status
         let db = RequestDb::get_instance();
-        
+
         // Check if task exists and update task count if necessary
         if let Some(info) = db.get_task_qos_info(task_id) {
             // Only update count for non-terminal states

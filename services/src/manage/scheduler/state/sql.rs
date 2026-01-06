@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! SQL statement generation for task state management.
-//! 
+//!
 //! This module provides functionality to generate SQL statements that update
 //! task states in the database based on system state changes, including network
 //! status, account activity, and application foreground/background transitions.
@@ -58,8 +58,8 @@ const API10: u8 = Version::API10 as u8;
 
 /// Collection of SQL statements for database updates.
 ///
-/// This struct provides methods to generate and store SQL statements that update
-/// task states based on system state changes.
+/// This struct provides methods to generate and store SQL statements that
+/// update task states based on system state changes.
 pub(crate) struct SqlList {
     /// Internal storage for SQL statements.
     sqls: Vec<String>,
@@ -109,7 +109,8 @@ impl SqlList {
         self.sqls.push(account_unavailable(active_accounts));
     }
 
-    /// Adds SQL statement for when an application becomes available (foreground).
+    /// Adds SQL statement for when an application becomes available
+    /// (foreground).
     ///
     /// # Arguments
     ///
@@ -118,11 +119,13 @@ impl SqlList {
         self.sqls.push(app_state_available(top_uid));
     }
 
-    /// Adds SQL statement for when an application becomes unavailable (background/timeout).
+    /// Adds SQL statement for when an application becomes unavailable
+    /// (background/timeout).
     ///
     /// # Arguments
     ///
-    /// * `uid` - The UID of the application that moved to background or timed out.
+    /// * `uid` - The UID of the application that moved to background or timed
+    ///   out.
     pub(crate) fn add_app_state_unavailable(&mut self, uid: u64) {
         self.sqls.push(app_state_unavailable(uid));
     }
@@ -135,7 +138,7 @@ impl SqlList {
     pub(crate) fn add_app_uninstall(&mut self, uid: u64) {
         self.sqls.push(app_uninstall(uid));
     }
-    
+
     /// Adds SQL statement for special process termination.
     ///
     /// # Arguments
@@ -184,10 +187,12 @@ pub(crate) fn app_uninstall(uid: u64) -> String {
 ///
 /// # Returns
 ///
-/// SQL statement to update task states and reasons based on application unavailability.
+/// SQL statement to update task states and reasons based on application
+/// unavailability.
 /// - Downloads are set to waiting state
 /// - Uploads are set to failed state
-/// - Existing waiting tasks have their reasons combined with app background reason
+/// - Existing waiting tasks have their reasons combined with app background
+///   reason
 pub(crate) fn app_state_unavailable(uid: u64) -> String {
     format!(
         "UPDATE request_task SET 
@@ -222,7 +227,8 @@ pub(crate) fn app_state_unavailable(uid: u64) -> String {
 ///
 /// # Returns
 ///
-/// SQL statement to restore original task reasons when an application becomes available again.
+/// SQL statement to restore original task reasons when an application becomes
+/// available again.
 pub(crate) fn app_state_available(uid: u64) -> String {
     format!(
         "UPDATE request_task SET 
@@ -246,7 +252,8 @@ pub(crate) fn app_state_available(uid: u64) -> String {
 ///
 /// # Returns
 ///
-/// SQL statement to update task states and reasons for tasks belonging to inactive accounts.
+/// SQL statement to update task states and reasons for tasks belonging to
+/// inactive accounts.
 pub(super) fn account_unavailable(active_accounts: &HashSet<u64>) -> String {
     let mut sql = format!(
         "UPDATE request_task SET 
@@ -292,7 +299,8 @@ pub(super) fn account_unavailable(active_accounts: &HashSet<u64>) -> String {
 ///
 /// # Returns
 ///
-/// SQL statement to restore original task reasons for tasks belonging to active accounts.
+/// SQL statement to restore original task reasons for tasks belonging to active
+/// accounts.
 pub(super) fn account_available(active_accounts: &HashSet<u64>) -> String {
     let mut sql = format!(
         "UPDATE request_task SET 
@@ -323,8 +331,8 @@ pub(super) fn account_available(active_accounts: &HashSet<u64>) -> String {
 ///
 /// # Returns
 ///
-/// SQL statement to update task states and reasons based on network offline status.
-/// Different handling for:
+/// SQL statement to update task states and reasons based on network offline
+/// status. Different handling for:
 /// - API9 downloads (wait)
 /// - API10 background downloads with retry (wait)
 /// - API9 uploads (fail)
@@ -360,27 +368,27 @@ pub(super) fn network_offline() -> String {
 ///
 /// # Returns
 ///
-/// SQL statement to update task states and reasons for tasks that cannot run on the current network,
-/// or `None` if network type is Other.
+/// SQL statement to update task states and reasons for tasks that cannot run on
+/// the current network, or `None` if network type is Other.
 pub(super) fn network_unavailable(info: &NetworkInfo) -> Option<String> {
     // Skip if network type is Other
     if info.network_type == NetworkType::Other {
         return None;
     }
-    
+
     // Build condition for tasks that can't run on this network
     let mut unsupported_condition = format!("network != {}", info.network_type.repr);
-    
+
     // Add metered condition if current network is metered
     if info.is_metered {
         unsupported_condition.push_str(" OR metered = 0");
     }
-    
+
     // Add roaming condition if current network is roaming
     if info.is_roaming {
         unsupported_condition.push_str(" OR roaming = 0");
     }
-    
+
     Some(format!(
         "UPDATE request_task SET 
             state = CASE 
@@ -413,7 +421,8 @@ pub(super) fn network_unavailable(info: &NetworkInfo) -> Option<String> {
 ///
 /// # Returns
 ///
-/// SQL statement to restore original task reasons for tasks that can run on the current network.
+/// SQL statement to restore original task reasons for tasks that can run on the
+/// current network.
 pub(super) fn network_available(info: &NetworkInfo) -> String {
     let mut sql = format!(
         "UPDATE request_task SET 
@@ -439,17 +448,17 @@ pub(super) fn network_available(info: &NetworkInfo) -> String {
         " AND (network = 0 OR network = {}",
         info.network_type.repr
     ));
-    
+
     // Add metered condition if current network is metered
     if info.is_metered {
         sql.push_str(" AND metered = 1");
     }
-    
+
     // Add roaming condition if current network is roaming
     if info.is_roaming {
         sql.push_str(" AND roaming = 1");
     }
-    
+
     sql.push(')');
     sql
 }

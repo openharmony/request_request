@@ -12,10 +12,11 @@
 // limitations under the License.
 
 //! Event system for the task manager.
-//! 
-//! This module defines the event system used for communication with and within the
-//! `TaskManager`. It includes various event types, message structures, and factory methods
-//! for creating events that trigger different task management operations.
+//!
+//! This module defines the event system used for communication with and within
+//! the `TaskManager`. It includes various event types, message structures, and
+//! factory methods for creating events that trigger different task management
+//! operations.
 
 use std::fmt::Debug;
 
@@ -44,7 +45,8 @@ mod stop;
 /// The main event type for the task manager.
 ///
 /// Represents all possible events that can be processed by the `TaskManager`,
-/// including service operations, state changes, scheduling events, and task events.
+/// including service operations, state changes, scheduling events, and task
+/// events.
 #[derive(Debug)]
 pub(crate) enum TaskManagerEvent {
     /// Service-related events for task management operations.

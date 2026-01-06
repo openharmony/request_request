@@ -48,6 +48,8 @@ fn main() {
     data.write_interface_token(SERVICE_TOKEN).unwrap();
     data.write_remote(RemoteObj::from_stub(RunCount).unwrap())
         .unwrap();
-    download_server.send_request(16, &mut data).map_err(|_| 13400003)?;
+    download_server
+        .send_request(16, &mut data)
+        .map_err(|_| 13400003)?;
     std::thread::sleep(std::time::Duration::from_secs(30000));
 }

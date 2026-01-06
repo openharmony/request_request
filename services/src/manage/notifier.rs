@@ -12,29 +12,31 @@
 // limitations under the License.
 
 //! Notification system for task state changes and events.
-//! 
-//! This module provides a central notification system for broadcasting various task-related
-//! events to clients and, on OpenHarmony platforms, to the system event infrastructure.
+//!
+//! This module provides a central notification system for broadcasting various
+//! task-related events to clients and, on OpenHarmony platforms, to the system
+//! event infrastructure.
 
 use crate::info::State;
 use crate::service::client::ClientManagerEntry;
 use crate::task::notify::{NotifyData, SubscribeType, WaitingCause};
 use crate::task::reason::Reason;
 /// Central notification dispatcher for task events.
-/// 
-/// Provides methods for sending various types of task-related notifications to clients
-/// and publishing system events when running on OpenHarmony platforms.
+///
+/// Provides methods for sending various types of task-related notifications to
+/// clients and publishing system events when running on OpenHarmony platforms.
 pub(crate) struct Notifier;
 
 impl Notifier {
     /// Sends a completion notification for a task.
-    /// 
+    ///
     /// Notifies clients that a task has completed successfully.
     /// On OpenHarmony platforms, also publishes a system event.
-    /// 
+    ///
     /// # Arguments
-    /// 
-    /// * `client_manager` - The client manager used to dispatch the notification
+    ///
+    /// * `client_manager` - The client manager used to dispatch the
+    ///   notification
     /// * `notify_data` - The notification data containing task information
     pub(crate) fn complete(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
         #[cfg(feature = "oh")]
@@ -48,13 +50,14 @@ impl Notifier {
     }
 
     /// Sends a failure notification for a task.
-    /// 
+    ///
     /// Notifies clients that a task has failed.
     /// On OpenHarmony platforms, also publishes a system event.
-    /// 
+    ///
     /// # Arguments
-    /// 
-    /// * `client_manager` - The client manager used to dispatch the notification
+    ///
+    /// * `client_manager` - The client manager used to dispatch the
+    ///   notification
     /// * `notify_data` - The notification data containing task information
     pub(crate) fn fail(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
         #[cfg(feature = "oh")]
@@ -68,63 +71,68 @@ impl Notifier {
     }
 
     /// Sends a fault notification for a task.
-    /// 
+    ///
     /// Notifies clients that a fault has occurred with a task.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `tid` - The thread ID associated with the fault
-    /// * `client_manager` - The client manager used to dispatch the notification
+    /// * `client_manager` - The client manager used to dispatch the
+    ///   notification
     /// * `reason` - The reason for the fault
     pub(crate) fn faults(tid: u32, client_manager: &ClientManagerEntry, reason: Reason) {
         client_manager.send_faults(tid, SubscribeType::FaultOccur, reason)
     }
 
     /// Sends a pause notification for a task.
-    /// 
+    ///
     /// Notifies clients that a task has been paused.
-    /// 
+    ///
     /// # Arguments
-    /// 
-    /// * `client_manager` - The client manager used to dispatch the notification
+    ///
+    /// * `client_manager` - The client manager used to dispatch the
+    ///   notification
     /// * `notify_data` - The notification data containing task information
     pub(crate) fn pause(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
         client_manager.send_notify_data(SubscribeType::Pause, notify_data)
     }
 
     /// Sends a resume notification for a task.
-    /// 
+    ///
     /// Notifies clients that a task has been resumed.
-    /// 
+    ///
     /// # Arguments
-    /// 
-    /// * `client_manager` - The client manager used to dispatch the notification
+    ///
+    /// * `client_manager` - The client manager used to dispatch the
+    ///   notification
     /// * `notify_data` - The notification data containing task information
     pub(crate) fn resume(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
         client_manager.send_notify_data(SubscribeType::Resume, notify_data)
     }
 
     /// Sends a header receive notification for a task.
-    /// 
+    ///
     /// Notifies clients that HTTP headers have been received for a task.
-    /// 
+    ///
     /// # Arguments
-    /// 
-    /// * `client_manager` - The client manager used to dispatch the notification
+    ///
+    /// * `client_manager` - The client manager used to dispatch the
+    ///   notification
     /// * `notify_data` - The notification data containing task information
     pub(crate) fn header_receive(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
         client_manager.send_notify_data(SubscribeType::HeaderReceive, notify_data)
     }
 
     /// Sends a progress notification for a task.
-    /// 
+    ///
     /// Notifies clients about the current progress of a task.
-    /// Skips notification if total processed bytes is zero and file size is negative,
-    /// which indicates an invalid state.
-    /// 
+    /// Skips notification if total processed bytes is zero and file size is
+    /// negative, which indicates an invalid state.
+    ///
     /// # Arguments
-    /// 
-    /// * `client_manager` - The client manager used to dispatch the notification
+    ///
+    /// * `client_manager` - The client manager used to dispatch the
+    ///   notification
     /// * `notify_data` - The notification data containing progress information
     pub(crate) fn progress(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
         let total_processed = notify_data.progress.common_data.total_processed;
@@ -137,12 +145,14 @@ impl Notifier {
     }
 
     /// Sends a removal notification for a task.
-    /// 
-    /// Notifies clients that a task has been removed and marks the task as finished.
-    /// 
+    ///
+    /// Notifies clients that a task has been removed and marks the task as
+    /// finished.
+    ///
     /// # Arguments
-    /// 
-    /// * `client_manager` - The client manager used to dispatch the notification
+    ///
+    /// * `client_manager` - The client manager used to dispatch the
+    ///   notification
     /// * `notify_data` - The notification data containing task information
     pub(crate) fn remove(client_manager: &ClientManagerEntry, notify_data: NotifyData) {
         let task_id = notify_data.task_id;
@@ -151,12 +161,13 @@ impl Notifier {
     }
 
     /// Sends a waiting notification for a task.
-    /// 
+    ///
     /// Notifies clients that a task is waiting due to a specific cause.
-    /// 
+    ///
     /// # Arguments
-    /// 
-    /// * `client_manager` - The client manager used to dispatch the notification
+    ///
+    /// * `client_manager` - The client manager used to dispatch the
+    ///   notification
     /// * `task_id` - The ID of the task that is waiting
     /// * `cause` - The reason why the task is waiting
     pub(crate) fn waiting(client_manager: &ClientManagerEntry, task_id: u32, cause: WaitingCause) {
@@ -166,19 +177,22 @@ impl Notifier {
 
 #[cfg(feature = "oh")]
 /// Publishes a task state change event to the system.
-/// 
-/// On OpenHarmony platforms, this function sends a system-wide event about a task's state change.
-/// 
+///
+/// On OpenHarmony platforms, this function sends a system-wide event about a
+/// task's state change.
+///
 /// # Arguments
-/// 
-/// * `bundle_name` - The name of the application bundle associated with the task
+///
+/// * `bundle_name` - The name of the application bundle associated with the
+///   task
 /// * `task_id` - The ID of the task whose state has changed
 /// * `state` - The new state of the task as an integer representation
 /// * `uid` - The user ID associated with the task
-/// 
+///
 /// # Returns
-/// 
-/// Returns `Ok(())` if the event was successfully published, or `Err(())` if it failed.
+///
+/// Returns `Ok(())` if the event was successfully published, or `Err(())` if it
+/// failed.
 pub(crate) fn publish_state_change_event(
     bundle_name: &str,
     task_id: u32,
