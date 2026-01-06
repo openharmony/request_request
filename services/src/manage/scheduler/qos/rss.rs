@@ -12,11 +12,11 @@
 // limitations under the License.
 
 //! RSS memory capacity-based QoS resource allocation.
-//! 
-//! This module defines the `RssCapacity` struct which manages the allocation of network
-//! resources based on system memory pressure. Different RSS levels adjust the number of
-//! tasks that can run at various priority levels, ensuring that network operations
-//! adapt to changing system conditions.
+//!
+//! This module defines the `RssCapacity` struct which manages the allocation of
+//! network resources based on system memory pressure. Different RSS levels
+//! adjust the number of tasks that can run at various priority levels, ensuring
+//! that network operations adapt to changing system conditions.
 
 use super::QosLevel;
 
@@ -24,7 +24,8 @@ use super::QosLevel;
 ///
 /// This struct defines the task allocation limits and associated QoS levels for
 /// different resource pressure scenarios. It implements a three-tiered task
-/// prioritization system with varying capacities based on system memory conditions.
+/// prioritization system with varying capacities based on system memory
+/// conditions.
 ///
 /// # Fields
 ///
@@ -52,18 +53,20 @@ impl RssCapacity {
     pub(crate) const LEVEL5: Self =
         Self(4, 8, 4, QosLevel::High, QosLevel::Middle, QosLevel::Middle);
     pub(crate) const LEVEL6: Self = Self(4, 8, 2, QosLevel::High, QosLevel::Low, QosLevel::Low);
-    
+
     /// Capacity configuration for level 7 memory pressure (highest).
     ///
     /// Most restrictive configuration: 4 high-priority tasks,
     /// 4 medium-priority tasks, and 2 low-priority tasks with reduced QoS.
     pub(crate) const LEVEL7: Self = Self(4, 4, 2, QosLevel::High, QosLevel::Low, QosLevel::Low);
 
-    /// Creates a new `RssCapacity` instance based on the specified memory pressure level.
+    /// Creates a new `RssCapacity` instance based on the specified memory
+    /// pressure level.
     ///
     /// # Arguments
     ///
-    /// * `level` - Memory pressure level (0-7), where 0 is minimal pressure and 7 is highest.
+    /// * `level` - Memory pressure level (0-7), where 0 is minimal pressure and
+    ///   7 is highest.
     ///
     /// # Returns
     ///
@@ -86,17 +89,20 @@ impl RssCapacity {
         }
     }
 
-    /// Returns the maximum number of tasks allowed in the full-speed (highest priority) zone.
+    /// Returns the maximum number of tasks allowed in the full-speed (highest
+    /// priority) zone.
     pub(crate) fn m1(&self) -> usize {
         self.0
     }
 
-    /// Returns the maximum number of tasks allowed in the medium-speed (medium priority) zone.
+    /// Returns the maximum number of tasks allowed in the medium-speed (medium
+    /// priority) zone.
     pub(crate) fn m2(&self) -> usize {
         self.1
     }
 
-    /// Returns the maximum number of tasks allowed in the fair-adjustment (lowest priority) zone.
+    /// Returns the maximum number of tasks allowed in the fair-adjustment
+    /// (lowest priority) zone.
     pub(crate) fn m3(&self) -> usize {
         self.2
     }

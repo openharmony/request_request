@@ -12,10 +12,10 @@
 // limitations under the License.
 
 //! Task stop implementation for the task manager.
-//! 
-//! This module provides the implementation for stopping tasks within the `TaskManager`. It handles
-//! task count decrementation for active tasks and delegates the actual task termination to the
-//! scheduler component.
+//!
+//! This module provides the implementation for stopping tasks within the
+//! `TaskManager`. It handles task count decrementation for active tasks and
+//! delegates the actual task termination to the scheduler component.
 
 use crate::error::ErrorCode;
 use crate::info::State;
@@ -37,16 +37,17 @@ impl TaskManager {
     ///
     /// # Notes
     ///
-    /// This method decrements the task count only for tasks in active states (Running, Retrying,
-    /// or Waiting). The count is decremented from the appropriate slot based on the task's mode.
-    /// After updating the count, it delegates the actual task termination to the scheduler.
+    /// This method decrements the task count only for tasks in active states
+    /// (Running, Retrying, or Waiting). The count is decremented from the
+    /// appropriate slot based on the task's mode. After updating the count,
+    /// it delegates the actual task termination to the scheduler.
     pub(crate) fn stop(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         // Log the task stop operation for debugging purposes
         debug!("TaskManager stop, tid{}", task_id);
-        
+
         // Get database instance to check task status
         let db = RequestDb::get_instance();
-        
+
         // Check if task exists and update task count if in active state
         if let Some(info) = db.get_task_qos_info(task_id) {
             // Only decrement count for tasks in active states
@@ -61,7 +62,7 @@ impl TaskManager {
                         1 => &mut count.0, // Mode 1 uses the first count slot
                         _ => &mut count.1, // All other modes use the second slot
                     };
-                    
+
                     // Ensure count doesn't go negative
                     if *count > 0 {
                         *count -= 1;

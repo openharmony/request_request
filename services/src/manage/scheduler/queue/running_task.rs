@@ -12,10 +12,10 @@
 // limitations under the License.
 
 //! Running task execution and lifecycle management.
-//! 
+//!
 //! This module defines the `RunningTask` struct that handles the execution of
-//! download and upload tasks, manages their lifecycle events, and ensures proper
-//! cleanup and notification when tasks complete or fail.
+//! download and upload tasks, manages their lifecycle events, and ensures
+//! proper cleanup and notification when tasks complete or fail.
 
 use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -74,7 +74,8 @@ impl RunningTask {
     ///
     /// # Arguments
     ///
-    /// * `abort_flag` - Atomic flag that can be set to signal task cancellation.
+    /// * `abort_flag` - Atomic flag that can be set to signal task
+    ///   cancellation.
     ///
     /// # Notes
     ///
@@ -143,7 +144,8 @@ impl RunningTask {
     }
 }
 
-/// Implements deref to allow direct access to the underlying RequestTask methods.
+/// Implements deref to allow direct access to the underlying RequestTask
+/// methods.
 ///
 /// This enables convenient access to the RequestTask methods and properties
 /// without explicitly accessing the task field.
@@ -177,19 +179,19 @@ impl Drop for RunningTask {
         self.task
             .task_time
             .store(task_time as u64, Ordering::SeqCst);
-        
+
         // Save final progress to database
         self.task.update_progress_in_database();
         RequestDb::get_instance().update_task_time(self.task_id(), task_time);
-        
+
         // Notify observers of final progress
         Notifier::progress(&self.client_manager, self.build_notify_data());
-        
+
         // Get task metadata for event reporting
         let task_id = self.task_id();
         let uid = self.uid();
         let mode = Mode::from(self.mode.load(Ordering::Acquire));
-        
+
         // Determine and report the final task state
         match *self.task.running_result.lock().unwrap() {
             Some(res) => match res {

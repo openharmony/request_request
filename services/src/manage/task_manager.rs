@@ -12,10 +12,11 @@
 // limitations under the License.
 
 //! Core task management functionality.
-//! 
-//! This module defines the `TaskManager` and related types that handle task lifecycle management,
-//! scheduling, and event processing for the request service. It coordinates task operations
-//! including creation, starting, pausing, resuming, stopping, and monitoring of tasks.
+//!
+//! This module defines the `TaskManager` and related types that handle task
+//! lifecycle management, scheduling, and event processing for the request
+//! service. It coordinates task operations including creation, starting,
+//! pausing, resuming, stopping, and monitoring of tasks.
 
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
@@ -56,7 +57,8 @@ use crate::utils::{get_current_timestamp, runtime_spawn, subscribe_common_event,
 /// Interval (in seconds) for clearing timeout tasks.
 const CLEAR_INTERVAL: u64 = 30 * 60;
 
-/// Interval (in seconds) before restoring all tasks after service initialization.
+/// Interval (in seconds) before restoring all tasks after service
+/// initialization.
 const RESTORE_ALL_TASKS_INTERVAL: u64 = 10;
 
 // TaskManager 的初始化逻辑：
@@ -84,19 +86,20 @@ pub(crate) struct TaskManager {
 
 impl TaskManager {
     /// Initializes the task manager and starts its event processing loop.
-    /// 
-    /// Sets up subscriptions for system events, network changes, and notifications,
-    /// then initializes and starts the task manager's main processing loop.
-    /// 
+    ///
+    /// Sets up subscriptions for system events, network changes, and
+    /// notifications, then initializes and starts the task manager's main
+    /// processing loop.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `runcount_manager` - Manager for tracking task execution counts
     /// * `client_manager` - Manager for client connections and permissions
     /// * `active_counter` - Counter for tracking active tasks
     /// * `network` - Network state tracker (non-OH feature only)
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns a `TaskManagerTx` for sending events to the task manager
     pub(crate) fn init(
         runcount_manager: RunCountManagerEntry,
@@ -176,17 +179,17 @@ impl TaskManager {
     }
 
     /// Creates a new task manager instance.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `tx` - Channel for sending events to the task manager
     /// * `rx` - Channel for receiving events from the task manager
     /// * `run_count_manager` - Manager for tracking task execution counts
     /// * `client_manager` - Manager for client connections and permissions
     /// * `active_counter` - Counter for tracking active tasks
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns a new `TaskManager` instance
     pub(crate) fn new(
         tx: TaskManagerTx,
@@ -209,7 +212,7 @@ impl TaskManager {
     }
 
     /// Runs the task manager's main event processing loop.
-    /// 
+    ///
     /// Continuously receives and processes events, delegating to specialized
     /// handlers based on event type.
     async fn run(mut self) {
@@ -247,12 +250,12 @@ impl TaskManager {
     }
 
     /// Handles account-related events.
-    /// 
+    ///
     /// Processes account removal and account change events by removing tasks
     /// associated with removed accounts or updating scheduler state.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `event` - The account event to handle
     pub(crate) fn handle_account_event(&mut self, event: AccountEvent) {
         match event {
@@ -262,12 +265,13 @@ impl TaskManager {
     }
 
     /// Handles service-related events.
-    /// 
-    /// Processes various service events like constructing tasks, starting/stopping tasks,
-    /// setting task properties, and querying task information.
-    /// 
+    ///
+    /// Processes various service events like constructing tasks,
+    /// starting/stopping tasks, setting task properties, and querying task
+    /// information.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `event` - The service event to handle
     fn handle_service_event(&mut self, event: ServiceEvent) {
         debug!("TaskManager handles service event {:?}", event);
@@ -310,12 +314,13 @@ impl TaskManager {
     }
 
     /// Handles state-related events.
-    /// 
-    /// Processes system state changes like network changes, app foreground/background transitions,
-    /// app uninstalls, and special process terminations.
-    /// 
+    ///
+    /// Processes system state changes like network changes, app
+    /// foreground/background transitions, app uninstalls, and special
+    /// process terminations.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `event` - The state event to handle
     fn handle_state_event(&mut self, event: StateEvent) {
         debug!("TaskManager handles state event {:?}", event);
@@ -346,12 +351,12 @@ impl TaskManager {
     }
 
     /// Handles task-related events.
-    /// 
-    /// Processes task lifecycle events like task subscription checks, completions,
-    /// cancellations, failures, and offline status changes.
-    /// 
+    ///
+    /// Processes task lifecycle events like task subscription checks,
+    /// completions, cancellations, failures, and offline status changes.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `event` - The task event to handle
     fn handle_task_event(&mut self, event: TaskEvent) {
         debug!("TaskManager handles task event {:?}", event);
@@ -382,17 +387,18 @@ impl TaskManager {
     }
 
     /// Handles scheduled events.
-    /// 
-    /// Processes scheduled operations like clearing timeout tasks, restoring tasks,
-    /// unloading the service, and shutting down.
-    /// 
+    ///
+    /// Processes scheduled operations like clearing timeout tasks, restoring
+    /// tasks, unloading the service, and shutting down.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `message` - The scheduled event to handle
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// Returns `true` if the service was successfully unloaded, otherwise `false`
+    ///
+    /// Returns `true` if the service was successfully unloaded, otherwise
+    /// `false`
     fn handle_schedule_event(&mut self, message: ScheduleEvent) -> bool {
         debug!("TaskManager handle scheduled_message {:?}", message);
 
@@ -406,14 +412,14 @@ impl TaskManager {
     }
 
     /// Checks if a subscriber has permission to access a task.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `task_id` - The ID of the task to check
     /// * `token_id` - The token ID of the subscriber
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns `ErrorCode::ErrOk` if the subscriber has permission, otherwise
     /// an appropriate error code
     fn check_subscriber(&self, task_id: u32, token_id: u64) -> ErrorCode {
@@ -425,35 +431,37 @@ impl TaskManager {
     }
 
     /// Shuts down the scheduler.
-    /// 
+    ///
     /// Terminates all ongoing tasks and prepares for service shutdown.
     fn shutdown(&mut self) {
         self.scheduler.shutdown();
     }
 
     /// Clears tasks that have timed out.
-    /// 
-    /// Delegates to the scheduler to identify and clean up tasks that have exceeded
-    /// their allowed execution time.
+    ///
+    /// Delegates to the scheduler to identify and clean up tasks that have
+    /// exceeded their allowed execution time.
     fn clear_timeout_tasks(&mut self) {
         self.scheduler.clear_timeout_tasks();
     }
 
     /// Restores all tasks from the database.
-    /// 
-    /// Delegates to the scheduler to reload and resume tasks that were saved in the database.
+    ///
+    /// Delegates to the scheduler to reload and resume tasks that were saved in
+    /// the database.
     fn restore_all_tasks(&mut self) {
         self.scheduler.restore_all_tasks();
     }
 
     /// Checks if there are any running tasks or pending events.
-    /// 
-    /// Used before unloading the service to ensure all tasks are completed and no new
-    /// events are pending.
-    /// 
+    ///
+    /// Used before unloading the service to ensure all tasks are completed and
+    /// no new events are pending.
+    ///
     /// # Returns
-    /// 
-    /// Returns `true` if there are any running tasks or pending events, otherwise `false`
+    ///
+    /// Returns `true` if there are any running tasks or pending events,
+    /// otherwise `false`
     fn check_any_tasks(&self) -> bool {
         let running_tasks = self.scheduler.running_tasks();
         if running_tasks != 0 {
@@ -469,13 +477,14 @@ impl TaskManager {
     }
 
     /// Unloads the system ability.
-    /// 
-    /// Cleans up resources, removes old tasks from the database, and unloads the system ability
-    /// if there are no running tasks or pending events.
-    /// 
+    ///
+    /// Cleans up resources, removes old tasks from the database, and unloads
+    /// the system ability if there are no running tasks or pending events.
+    ///
     /// # Returns
-    /// 
-    /// Returns `true` if the system ability was successfully unloaded, otherwise `false`
+    ///
+    /// Returns `true` if the system ability was successfully unloaded,
+    /// otherwise `false`
     fn unload_sa(&mut self) -> bool {
         if self.check_any_tasks() {
             return false;
@@ -549,7 +558,7 @@ mod ffi {
 }
 
 /// Sender for task manager events.
-/// 
+///
 /// Provides methods for sending various types of events to the task manager
 /// and for querying task information.
 #[allow(unreachable_pub)]
@@ -561,26 +570,26 @@ pub struct TaskManagerTx {
 
 impl TaskManagerTx {
     /// Creates a new task manager event sender.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `tx` - The underlying channel sender
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns a new `TaskManagerTx` instance
     pub(crate) fn new(tx: UnboundedSender<TaskManagerEvent>) -> Self {
         Self { tx }
     }
 
     /// Sends an event to the task manager.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `event` - The event to send
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns `true` if the event was successfully sent, otherwise `false`
     pub(crate) fn send_event(&self, event: TaskManagerEvent) -> bool {
         if self.tx.send(event).is_err() {
@@ -597,53 +606,55 @@ impl TaskManagerTx {
         true
     }
 
-    /// Notifies the task manager that an application has moved to the foreground.
-    /// 
+    /// Notifies the task manager that an application has moved to the
+    /// foreground.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `uid` - The user ID of the application
     pub(crate) fn notify_foreground_app_change(&self, uid: u64) {
         let _ = self.send_event(TaskManagerEvent::State(StateEvent::ForegroundApp(uid)));
     }
 
-    /// Notifies the task manager that an application has moved to the background.
-    /// 
+    /// Notifies the task manager that an application has moved to the
+    /// background.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `uid` - The user ID of the application
     pub(crate) fn notify_app_background(&self, uid: u64) {
         let _ = self.send_event(TaskManagerEvent::State(StateEvent::Background(uid)));
     }
 
     /// Triggers a background timeout for an application.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `uid` - The user ID of the application
     pub(crate) fn trigger_background_timeout(&self, uid: u64) {
         let _ = self.send_event(TaskManagerEvent::State(StateEvent::BackgroundTimeout(uid)));
     }
 
     /// Notifies the task manager that a special process has terminated.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `uid` - The user ID of the process
     pub(crate) fn notify_special_process_terminate(&self, uid: u64) {
         let _ = self.send_event(TaskManagerEvent::State(StateEvent::SpecialTerminate(uid)));
     }
 
     /// Retrieves task information for a specific user.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `uid` - The user ID to verify ownership
     /// * `task_id` - The ID of the task to retrieve
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// Returns `Some(TaskInfo)` if the task exists and is owned by the specified user,
-    /// otherwise `None`
+    ///
+    /// Returns `Some(TaskInfo)` if the task exists and is owned by the
+    /// specified user, otherwise `None`
     pub(crate) fn show(&self, uid: u64, task_id: u32) -> Option<TaskInfo> {
         let (tx, rx) = oneshot::channel();
         let event = QueryEvent::Show(task_id, uid, tx);
@@ -658,16 +669,16 @@ impl TaskManagerTx {
     }
 
     /// Queries task information with action permission checking.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `task_id` - The ID of the task to retrieve
     /// * `action` - The action to check permissions against
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// Returns `Some(TaskInfo)` with sensitive data sanitized if the task exists and
-    /// the action has sufficient permissions, otherwise `None`
+    ///
+    /// Returns `Some(TaskInfo)` with sensitive data sanitized if the task
+    /// exists and the action has sufficient permissions, otherwise `None`
     pub(crate) fn query(&self, task_id: u32, action: Action) -> Option<TaskInfo> {
         let (tx, rx) = oneshot::channel();
         let event = QueryEvent::Query(task_id, action, tx);
@@ -682,17 +693,18 @@ impl TaskManagerTx {
     }
 
     /// Retrieves task information with token authentication.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `uid` - The user ID to verify ownership
     /// * `task_id` - The ID of the task to retrieve
     /// * `token` - The authentication token for the task
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// Returns `Some(TaskInfo)` with the bundle name sanitized if the task exists,
-    /// is owned by the specified user, and the token matches, otherwise `None`
+    ///
+    /// Returns `Some(TaskInfo)` with the bundle name sanitized if the task
+    /// exists, is owned by the specified user, and the token matches,
+    /// otherwise `None`
     pub(crate) fn touch(&self, uid: u64, task_id: u32, token: String) -> Option<TaskInfo> {
         let (tx, rx) = oneshot::channel();
         let event = QueryEvent::Touch(task_id, uid, token, tx);
@@ -708,7 +720,7 @@ impl TaskManagerTx {
 }
 
 /// Receiver for task manager events.
-/// 
+///
 /// Provides a wrapper around the unbounded receiver channel that allows
 /// the task manager to receive and process events.
 pub(crate) struct TaskManagerRx {
@@ -717,13 +729,13 @@ pub(crate) struct TaskManagerRx {
 
 impl TaskManagerRx {
     /// Creates a new task manager event receiver.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `rx` - The underlying channel receiver
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns a new `TaskManagerRx` instance
     pub(crate) fn new(rx: UnboundedReceiver<TaskManagerEvent>) -> Self {
         Self { rx }
@@ -745,12 +757,12 @@ impl DerefMut for TaskManagerRx {
 }
 
 /// Restores all tasks from the database after a delay.
-/// 
+///
 /// Waits for a specified interval after service initialization, then triggers
 /// the restoration of all tasks from the database.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `tx` - The task manager event sender to use for triggering the restore
 async fn restore_all_tasks(tx: TaskManagerTx) {
     sleep(Duration::from_secs(RESTORE_ALL_TASKS_INTERVAL)).await;
@@ -758,12 +770,12 @@ async fn restore_all_tasks(tx: TaskManagerTx) {
 }
 
 /// Periodically clears timeout tasks.
-/// 
+///
 /// Continuously runs at a specified interval, triggering the clearing of
 /// timeout tasks each time.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `tx` - The task manager event sender to use for triggering the clear
 async fn clear_timeout_tasks(tx: TaskManagerTx) {
     loop {

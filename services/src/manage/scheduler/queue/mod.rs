@@ -12,9 +12,9 @@
 // limitations under the License.
 
 //! Task queue management for download and upload operations.
-//! 
-//! This module implements a queue system for managing and scheduling network tasks,
-//! with support for QoS-based prioritization, task lifecycle management,
+//!
+//! This module implements a queue system for managing and scheduling network
+//! tasks, with support for QoS-based prioritization, task lifecycle management,
 //! and resource optimization through the service ability keeper.
 
 mod keeper;
@@ -126,7 +126,8 @@ impl RunningQueue {
     ///
     /// # Returns
     ///
-    /// A cloned reference to the task if found in either download or upload queue.
+    /// A cloned reference to the task if found in either download or upload
+    /// queue.
     pub(crate) fn get_task_clone(&self, uid: u64, task_id: u32) -> Option<Arc<RequestTask>> {
         self.download_queue
             .get(&(uid, task_id))
@@ -153,8 +154,8 @@ impl RunningQueue {
     ///
     /// # Returns
     ///
-    /// `true` if the task was successfully restarted, `false` if the task was not found
-    /// or is already running.
+    /// `true` if the task was successfully restarted, `false` if the task was
+    /// not found or is already running.
     pub(crate) fn try_restart(&mut self, uid: u64, task_id: u32) -> bool {
         if let Some(task) = self
             .download_queue
@@ -204,12 +205,14 @@ impl RunningQueue {
         self.download_queue.len() + self.upload_queue.len()
     }
 
-    /// Reschedules tasks based on QoS changes for both download and upload operations.
+    /// Reschedules tasks based on QoS changes for both download and upload
+    /// operations.
     ///
     /// # Arguments
     ///
     /// * `qos` - Contains new QoS directions for download and upload tasks.
-    /// * `qos_remove_queue` - Vector to collect tasks that need to be removed from QoS management.
+    /// * `qos_remove_queue` - Vector to collect tasks that need to be removed
+    ///   from QoS management.
     pub(crate) fn reschedule(&mut self, qos: QosChanges, qos_remove_queue: &mut Vec<(u64, u32)>) {
         if let Some(vec) = qos.download {
             self.reschedule_inner(Action::Download, vec, qos_remove_queue)
@@ -225,7 +228,8 @@ impl RunningQueue {
     ///
     /// * `action` - The type of tasks to reschedule (Download or Upload).
     /// * `qos_vec` - List of QoS directions for specific tasks.
-    /// * `qos_remove_queue` - Vector to collect tasks that need to be removed from QoS management.
+    /// * `qos_remove_queue` - Vector to collect tasks that need to be removed
+    ///   from QoS management.
     pub(crate) fn reschedule_inner(
         &mut self,
         action: Action,
@@ -319,7 +323,8 @@ impl RunningQueue {
                 Some(AbortHandle::new(abort_flag, join_handle)),
             );
         }
-        // Cancel any tasks that weren't included in the new queue (no longer satisfy QoS)
+        // Cancel any tasks that weren't included in the new queue (no longer satisfy
+        // QoS)
         for task in queue.values() {
             if let Some(join_handle) = self.running_tasks.get_mut(&(task.uid(), task.task_id())) {
                 if let Some(join_handle) = join_handle.take() {
@@ -338,7 +343,8 @@ impl RunningQueue {
 
     /// Cancels all currently running tasks.
     ///
-    /// This method cancels all tasks managed by this queue, clearing all abort handles.
+    /// This method cancels all tasks managed by this queue, clearing all abort
+    /// handles.
     pub(crate) fn retry_all_tasks(&mut self) {
         for task in self.running_tasks.iter_mut() {
             if let Some(handle) = task.1.take() {
@@ -356,7 +362,8 @@ impl RunningQueue {
     ///
     /// # Returns
     ///
-    /// `true` if the task was found and successfully canceled, `false` otherwise.
+    /// `true` if the task was found and successfully canceled, `false`
+    /// otherwise.
     ///
     /// # Notes
     ///
@@ -403,7 +410,8 @@ impl RunningQueue {
 
 /// Handle for canceling a running task with both flag and future cancellation.
 struct AbortHandle {
-    /// Atomic flag that can be checked by the running task to detect cancellation.
+    /// Atomic flag that can be checked by the running task to detect
+    /// cancellation.
     abort_flag: Arc<AtomicBool>,
     /// Join handle for the spawned task future, allowing direct cancellation.
     join_handle: JoinHandle<()>,
@@ -414,7 +422,8 @@ impl AbortHandle {
     ///
     /// # Arguments
     ///
-    /// * `abort_flag` - Atomic boolean flag used to signal cancellation to the task.
+    /// * `abort_flag` - Atomic boolean flag used to signal cancellation to the
+    ///   task.
     /// * `join_handle` - Join handle for the spawned task future.
     fn new(abort_flag: Arc<AtomicBool>, join_handle: JoinHandle<()>) -> Self {
         Self {
@@ -422,10 +431,12 @@ impl AbortHandle {
             join_handle,
         }
     }
-    
-    /// Cancels the associated task by setting the abort flag and canceling the future.
+
+    /// Cancels the associated task by setting the abort flag and canceling the
+    /// future.
     ///
-    /// Uses Release ordering to ensure the abort flag is visible to other threads.
+    /// Uses Release ordering to ensure the abort flag is visible to other
+    /// threads.
     fn cancel(self) {
         // Set the abort flag for cooperative cancellation
         self.abort_flag.store(true, Ordering::Release);

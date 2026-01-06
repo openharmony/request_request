@@ -12,10 +12,11 @@
 // limitations under the License.
 
 //! QoS app and task management for the scheduler.
-//! 
-//! This module implements a priority-based scheduling system for tasks across different applications.
-//! It manages sorted collections of applications and their tasks, with sorting based on application
-//! priority (foreground vs background) and user focus. Tasks within applications are further sorted
+//!
+//! This module implements a priority-based scheduling system for tasks across
+//! different applications. It manages sorted collections of applications and
+//! their tasks, with sorting based on application priority (foreground vs
+//! background) and user focus. Tasks within applications are further sorted
 //! by their mode and priority.
 
 use std::cmp;
@@ -27,18 +28,20 @@ use crate::task::config::{Action, Mode};
 
 /// A collection of applications sorted by priority.
 ///
-/// This struct maintains a list of applications that can be dynamically sorted based on
-/// application state (foreground/background) and user focus. It provides methods for managing
-/// tasks within these applications.
+/// This struct maintains a list of applications that can be dynamically sorted
+/// based on application state (foreground/background) and user focus. It
+/// provides methods for managing tasks within these applications.
 pub(crate) struct SortedApps {
     /// The inner list of applications.
     inner: Vec<App>,
 }
 
 impl SortedApps {
-    /// Creates a new `SortedApps` instance and loads all applications from the database.
+    /// Creates a new `SortedApps` instance and loads all applications from the
+    /// database.
     ///
-    /// Returns a `SortedApps` with all applications and their tasks loaded from persistent storage.
+    /// Returns a `SortedApps` with all applications and their tasks loaded from
+    /// persistent storage.
     pub(crate) fn init() -> Self {
         Self {
             inner: reload_all_app_from_database(),
@@ -49,13 +52,15 @@ impl SortedApps {
     ///
     /// # Arguments
     ///
-    /// * `foreground_abilities` - A set of UIDs representing foreground applications.
+    /// * `foreground_abilities` - A set of UIDs representing foreground
+    ///   applications.
     /// * `top_user` - The user ID that currently has focus.
     ///
     /// # Notes
     ///
-    /// Applications are sorted first by whether they belong to the top user (user ID divided by 200000),
-    /// and then by whether they are in the foreground.
+    /// Applications are sorted first by whether they belong to the top user
+    /// (user ID divided by 200000), and then by whether they are in the
+    /// foreground.
     pub(crate) fn sort(&mut self, foreground_abilities: &HashSet<u64>, top_user: u64) {
         self.inner.sort_by(|a, b| {
             // First sort by top user status
@@ -72,7 +77,8 @@ impl SortedApps {
 
     /// Reloads all tasks from the database.
     ///
-    /// This replaces the current application and task data with fresh data from persistent storage.
+    /// This replaces the current application and task data with fresh data from
+    /// persistent storage.
     pub(crate) fn reload_all_tasks(&mut self) {
         self.inner = reload_all_app_from_database();
     }
@@ -86,7 +92,8 @@ impl SortedApps {
     ///
     /// # Notes
     ///
-    /// If the application doesn't exist, a new one is created and added to the list.
+    /// If the application doesn't exist, a new one is created and added to the
+    /// list.
     pub(crate) fn insert_task(&mut self, uid: u64, task: TaskQosInfo) {
         // Convert database task info to internal task representation
         let task = Task {
@@ -117,7 +124,8 @@ impl SortedApps {
     ///
     /// # Returns
     ///
-    /// An `Option` containing a mutable reference to the application if found, otherwise `None`.
+    /// An `Option` containing a mutable reference to the application if found,
+    /// otherwise `None`.
     fn get_app_mut(&mut self, uid: u64) -> Option<&mut App> {
         self.inner.iter_mut().find(|app| app.uid == uid)
     }
@@ -131,7 +139,8 @@ impl SortedApps {
     ///
     /// # Returns
     ///
-    /// `true` if the task was successfully removed, `false` if either the application or task wasn't found.
+    /// `true` if the task was successfully removed, `false` if either the
+    /// application or task wasn't found.
     pub(crate) fn remove_task(&mut self, uid: u64, task_id: u32) -> bool {
         match self.get_app_mut(uid) {
             Some(app) => app.remove(task_id),
@@ -149,7 +158,8 @@ impl SortedApps {
     ///
     /// # Returns
     ///
-    /// `true` if the task's mode was successfully changed, `false` if either the application or task wasn't found.
+    /// `true` if the task's mode was successfully changed, `false` if either
+    /// the application or task wasn't found.
     pub(crate) fn task_set_mode(&mut self, uid: u64, task_id: u32, mode: Mode) -> bool {
         match self.get_app_mut(uid) {
             Some(app) => app.task_set_mode(task_id, mode),
@@ -171,7 +181,8 @@ impl Deref for SortedApps {
 
 /// Represents an application with its associated tasks.
 ///
-/// This struct manages a collection of tasks belonging to a specific application (identified by UID).
+/// This struct manages a collection of tasks belonging to a specific
+/// application (identified by UID).
 pub(crate) struct App {
     /// The application's user ID.
     pub(crate) uid: u64,
@@ -223,7 +234,8 @@ impl App {
     ///
     /// # Returns
     ///
-    /// An `Option` containing the index and a mutable reference to the task if found, otherwise `None`.
+    /// An `Option` containing the index and a mutable reference to the task if
+    /// found, otherwise `None`.
     fn get_task_mut(&mut self, task_id: u32) -> Option<(usize, &mut Task)> {
         self.tasks
             .iter_mut()
@@ -239,12 +251,14 @@ impl App {
     ///
     /// # Returns
     ///
-    /// `true` if the task was successfully removed, `false` if the task wasn't found.
+    /// `true` if the task was successfully removed, `false` if the task wasn't
+    /// found.
     fn remove(&mut self, task_id: u32) -> bool {
         match self.get_task_mut(task_id) {
             Some((index, _task)) => {
                 self.tasks.remove(index);
-                // Sorting isn't needed after removal as the remaining elements are already in order
+                // Sorting isn't needed after removal as the remaining elements are already in
+                // order
                 true
             }
             None => false,
@@ -253,7 +267,8 @@ impl App {
 
     /// Re-sorts the tasks based on their priority.
     ///
-    /// This should be called after modifying a task's properties that affect its sort order.
+    /// This should be called after modifying a task's properties that affect
+    /// its sort order.
     fn resort_tasks(&mut self) {
         self.tasks.sort();
     }
@@ -267,7 +282,8 @@ impl App {
     ///
     /// # Returns
     ///
-    /// `true` if the task's mode was successfully changed, `false` if the task wasn't found.
+    /// `true` if the task's mode was successfully changed, `false` if the task
+    /// wasn't found.
     fn task_set_mode(&mut self, task_id: u32, mode: Mode) -> bool {
         match self.get_task_mut(task_id) {
             Some((_index, task)) => {
@@ -328,8 +344,9 @@ impl Eq for Task {}
 impl Ord for Task {
     /// Compares tasks by mode first, then by priority.
     ///
-    /// This ensures that tasks are sorted by their mode and then by their priority
-    /// within the same mode, allowing for efficient prioritized task scheduling.
+    /// This ensures that tasks are sorted by their mode and then by their
+    /// priority within the same mode, allowing for efficient prioritized
+    /// task scheduling.
     fn cmp(&self, other: &Self) -> cmp::Ordering {
         self.mode
             .cmp(&other.mode)
@@ -353,8 +370,8 @@ impl PartialOrd for Task {
 
 /// A trait for binary insertion into sorted collections.
 ///
-/// This trait provides a method to insert elements into a sorted collection while maintaining
-/// the sorted order using binary search.
+/// This trait provides a method to insert elements into a sorted collection
+/// while maintaining the sorted order using binary search.
 trait Binary<T: Ord> {
     /// Inserts a value into the collection in sorted order.
     ///
@@ -373,8 +390,9 @@ impl<T: Ord> Binary<T> for Vec<T> {
     ///
     /// # Notes
     ///
-    /// Uses binary search to find the correct insertion point, maintaining the sorted order.
-    /// Both equal and not found cases insert at the same position.
+    /// Uses binary search to find the correct insertion point, maintaining the
+    /// sorted order. Both equal and not found cases insert at the same
+    /// position.
     fn binary_insert(&mut self, value: T) {
         match self.binary_search(&value) {
             Ok(n) => self.insert(n, value),
@@ -443,7 +461,8 @@ impl RequestDb {
     ///
     /// # Returns
     ///
-    /// A vector of user IDs representing all applications that have tasks in the database.
+    /// A vector of user IDs representing all applications that have tasks in
+    /// the database.
     fn get_app_infos(&self) -> Vec<u64> {
         // SQL query to get distinct UIDs from the request_task table
         let sql = "SELECT DISTINCT uid FROM request_task";

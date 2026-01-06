@@ -12,14 +12,15 @@
 // limitations under the License.
 
 //! Quality of Service (QoS) scheduling system for network tasks.
-//! 
-//! This module implements a priority-based scheduling system for managing network tasks across
-//! different applications. It provides resource allocation based on application priority,
-//! user focus, and system capacity constraints.
-//! 
-//! The QoS system categorizes tasks into multiple priority levels with different speed limits,
-//! ensuring that foreground applications and high-priority tasks receive appropriate network
-//! resources while maintaining overall system performance.
+//!
+//! This module implements a priority-based scheduling system for managing
+//! network tasks across different applications. It provides resource allocation
+//! based on application priority, user focus, and system capacity constraints.
+//!
+//! The QoS system categorizes tasks into multiple priority levels with
+//! different speed limits, ensuring that foreground applications and
+//! high-priority tasks receive appropriate network resources while maintaining
+//! overall system performance.
 
 mod apps;
 mod direction;
@@ -42,15 +43,16 @@ use crate::task::config::Action;
 pub(crate) struct Qos {
     /// Sorted collection of applications and their tasks.
     pub(crate) apps: SortedApps,
-    /// Current RSS memory capacity level that determines task allocation limits.
+    /// Current RSS memory capacity level that determines task allocation
+    /// limits.
     capacity: RssCapacity,
 }
 
 impl Qos {
     /// Creates a new QoS scheduler with default initial state.
     ///
-    /// Returns a `Qos` instance with an empty application collection and initial
-    /// memory capacity set to `RssCapacity::LEVEL0`.
+    /// Returns a `Qos` instance with an empty application collection and
+    /// initial memory capacity set to `RssCapacity::LEVEL0`.
     pub(crate) fn new() -> Self {
         Self {
             apps: SortedApps::init(),
@@ -67,9 +69,9 @@ impl Qos {
     ///
     /// # Notes
     ///
-    /// Only tasks that can run automatically are added to the QoS queue. Both upload and
-    /// download tasks are managed within the scheduler, with updates determined by checking
-    /// for empty collections.
+    /// Only tasks that can run automatically are added to the QoS queue. Both
+    /// upload and download tasks are managed within the scheduler, with
+    /// updates determined by checking for empty collections.
     pub(crate) fn start_task(&mut self, uid: u64, task: TaskQosInfo) {
         // Only tasks that can run automatically can be added to the qos queue.
         self.apps.insert_task(uid, task);
@@ -91,8 +93,8 @@ impl Qos {
 
     /// Reloads all tasks from the database into the QoS scheduler.
     ///
-    /// This method refreshes the entire task collection, updating the scheduling state
-    /// based on the current database contents.
+    /// This method refreshes the entire task collection, updating the
+    /// scheduling state based on the current database contents.
     pub(crate) fn reload_all_tasks(&mut self) {
         self.apps.reload_all_tasks();
     }
@@ -116,7 +118,8 @@ impl Qos {
     ///
     /// # Returns
     ///
-    /// `true` if the task was found and its mode was changed, `false` otherwise.
+    /// `true` if the task was found and its mode was changed, `false`
+    /// otherwise.
     pub(crate) fn task_set_mode(&mut self, uid: u64, task_id: u32, mode: Mode) -> bool {
         self.apps.task_set_mode(uid, task_id, mode)
     }
@@ -125,11 +128,13 @@ impl Qos {
     ///
     /// # Arguments
     ///
-    /// * `state` - The state handler providing information about foreground abilities and top user.
+    /// * `state` - The state handler providing information about foreground
+    ///   abilities and top user.
     ///
     /// # Returns
     ///
-    /// A `QosChanges` object containing the updated QoS directions for both download and upload tasks.
+    /// A `QosChanges` object containing the updated QoS directions for both
+    /// download and upload tasks.
     pub(crate) fn reschedule(&mut self, state: &state::Handler) -> QosChanges {
         // Only sort apps before assigning priorities
         self.apps
@@ -141,7 +146,8 @@ impl Qos {
         changes
     }
 
-    /// Inner method that handles the core scheduling algorithm for a specific action type.
+    /// Inner method that handles the core scheduling algorithm for a specific
+    /// action type.
     ///
     /// # Arguments
     ///
@@ -149,12 +155,14 @@ impl Qos {
     ///
     /// # Returns
     ///
-    /// A vector of `QosDirection` objects specifying the new QoS levels for tasks.
+    /// A vector of `QosDirection` objects specifying the new QoS levels for
+    /// tasks.
     ///
     /// # Notes
     ///
-    /// This method implements a three-tier priority system (M1, M2, M3) with different speed limits.
-    /// Tasks are assigned to tiers based on their application's priority and position in the sorted list.
+    /// This method implements a three-tier priority system (M1, M2, M3) with
+    /// different speed limits. Tasks are assigned to tiers based on their
+    /// application's priority and position in the sorted list.
     fn reschedule_inner(&mut self, action: Action) -> Vec<QosDirection> {
         // Get capacity limits and corresponding speed levels for each priority tier
         let m1 = self.capacity.m1();
@@ -184,7 +192,7 @@ impl Qos {
             if task.action() != action {
                 continue;
             }
-            
+
             // Assign tasks to M1 (highest priority) or M2 (medium priority) based on count
             if count < m1 {
                 qos_vec.push(QosDirection::new(task.uid(), task.task_id(), m1_speed));
@@ -192,7 +200,7 @@ impl Qos {
                 qos_vec.push(QosDirection::new(task.uid(), task.task_id(), m2_speed));
             }
             count += 1;
-            
+
             // Stop once we've filled all M1 and M2 slots
             if count == m1 + m2 {
                 task_i = i;
@@ -205,8 +213,9 @@ impl Qos {
             return qos_vec;
         }
 
-        // Second pass: Implement fair distribution algorithm for M3 (lowest priority) tasks
-        // Each application gets one task in turn to ensure fair resource distribution
+        // Second pass: Implement fair distribution algorithm for M3 (lowest priority)
+        // tasks Each application gets one task in turn to ensure fair resource
+        // distribution
         let mut i = 0;
 
         loop {
@@ -244,8 +253,8 @@ impl Qos {
             i += 1;
         }
 
-        // Third pass: Fill any remaining M3 slots with tasks from the last non-empty application
-        // This ensures we utilize all available capacity
+        // Third pass: Fill any remaining M3 slots with tasks from the last non-empty
+        // application This ensures we utilize all available capacity
         for task in self
             .apps
             .iter()

@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! System state management for task scheduling.
-//! 
+//!
 //! This module handles the tracking and management of system state information
 //! that affects task scheduling decisions, including network status, account
 //! activity, foreground processes, and resource availability.
@@ -54,7 +54,8 @@ impl Handler {
     ///
     /// # Arguments
     ///
-    /// * `task_manager` - Task manager transmitter for sending state change events.
+    /// * `task_manager` - Task manager transmitter for sending state change
+    ///   events.
     ///
     /// # Returns
     ///
@@ -235,7 +236,8 @@ impl Handler {
     ///
     /// # Returns
     ///
-    /// SQL statements to clean up data associated with the uninstalled application.
+    /// SQL statements to clean up data associated with the uninstalled
+    /// application.
     pub(crate) fn app_uninstall(&mut self, uid: u64) -> Option<SqlList> {
         let mut sql_list = SqlList::new();
         sql_list.add_app_uninstall(uid);
@@ -262,7 +264,8 @@ impl Handler {
     ///
     /// # Returns
     ///
-    /// A reference to the set of UIDs currently considered foreground abilities.
+    /// A reference to the set of UIDs currently considered foreground
+    /// abilities.
     pub(crate) fn foreground_abilities(&self) -> &HashSet<u64> {
         &self.recorder.foreground_abilities
     }

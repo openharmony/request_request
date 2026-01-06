@@ -12,10 +12,10 @@
 // limitations under the License.
 
 //! System state recording and management.
-//! 
+//!
 //! This module provides functionality for recording and tracking system state
-//! information, including foreground applications, user accounts, network status,
-//! and resource levels.
+//! information, including foreground applications, user accounts, network
+//! status, and resource levels.
 use std::collections::HashSet;
 
 use super::sql::SqlList;
@@ -78,7 +78,7 @@ impl StateRecord {
         sql_list.add_network_change(&network);
         // Add account change SQL statement
         sql_list.add_account_change(&active_accounts);
-        
+
         // Process foreground applications if available
         if let Some(foreground_abilities) = foreground_abilities {
             for foreground_ability in foreground_abilities {
@@ -86,12 +86,12 @@ impl StateRecord {
                 self.foreground_abilities.insert(foreground_ability);
             }
         }
-        
+
         // Update internal state
         self.top_user = foreground_account;
         self.active_accounts = active_accounts;
         self.network = network;
-        
+
         sql_list
     }
 
@@ -109,7 +109,7 @@ impl StateRecord {
         if rss_level == self.rss_level {
             return None;
         }
-        
+
         self.rss_level = rss_level;
         Some(RssCapacity::new(rss_level))
     }
@@ -122,13 +122,14 @@ impl StateRecord {
     ///
     /// # Returns
     ///
-    /// SQL statements to update the database if network state changed, or `None` if no change.
+    /// SQL statements to update the database if network state changed, or
+    /// `None` if no change.
     pub(crate) fn update_network(&mut self, info: NetworkState) -> Option<SqlList> {
         // Skip update if network state hasn't changed
         if info == self.network {
             return None;
         }
-        
+
         info!("update network to {:?}", info);
         let mut sql_list = SqlList::new();
         sql_list.add_network_change(&info);
@@ -145,7 +146,8 @@ impl StateRecord {
     ///
     /// # Returns
     ///
-    /// SQL statements to update the database if account state changed, or `None` if no change.
+    /// SQL statements to update the database if account state changed, or
+    /// `None` if no change.
     pub(crate) fn update_accounts(
         &mut self,
         foreground_account: u64,
@@ -155,15 +157,15 @@ impl StateRecord {
         if self.active_accounts == active_accounts {
             return None;
         }
-        
+
         info!("update active accounts {:?}", active_accounts);
         let mut sql_list = SqlList::new();
         sql_list.add_account_change(&active_accounts);
-        
+
         // Update internal account state
         self.active_accounts = active_accounts;
         self.top_user = foreground_account;
-        
+
         Some(sql_list)
     }
 
@@ -175,7 +177,8 @@ impl StateRecord {
     ///
     /// # Returns
     ///
-    /// SQL statements to update the database with the new foreground application state.
+    /// SQL statements to update the database with the new foreground
+    /// application state.
     pub(crate) fn update_top_uid(&mut self, uid: u64) -> Option<SqlList> {
         info!("update top uid {}", uid);
         let mut sql_list = SqlList::new();
@@ -211,7 +214,7 @@ impl StateRecord {
         if self.foreground_abilities.contains(&uid) {
             return None;
         }
-        
+
         info!("{} background timeout", uid);
         let mut sql_list = SqlList::new();
         sql_list.add_app_state_unavailable(uid);

@@ -12,9 +12,10 @@
 // limitations under the License.
 
 //! Task resume implementation for the task manager.
-//! 
-//! This module provides the implementation for resuming paused tasks within the `TaskManager`. It handles
-//! the resume operation by delegating to the scheduler component.
+//!
+//! This module provides the implementation for resuming paused tasks within the
+//! `TaskManager`. It handles the resume operation by delegating to the
+//! scheduler component.
 
 use crate::error::ErrorCode;
 use crate::manage::TaskManager;
@@ -34,12 +35,13 @@ impl TaskManager {
     ///
     /// # Notes
     ///
-    /// This method delegates the resume operation to the scheduler component. If the scheduler
-    /// encounters an error, that error is propagated back to the caller.
+    /// This method delegates the resume operation to the scheduler component.
+    /// If the scheduler encounters an error, that error is propagated back
+    /// to the caller.
     pub(crate) fn resume(&mut self, uid: u64, task_id: u32) -> ErrorCode {
         // Log the resume operation for debugging purposes
         debug!("TaskManager resume, uid{} tid{}", uid, task_id);
-        
+
         // Delegate to the scheduler to resume the task and handle any errors
         match self.scheduler.resume_task(uid, task_id) {
             Ok(_) => ErrorCode::ErrOk,

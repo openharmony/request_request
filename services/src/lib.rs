@@ -53,9 +53,9 @@ mod manage;
 mod service;
 mod task;
 mod utils;
-pub use task::{config, info};
 
 use hilog_rust::{HiLogLabel, LogType};
+pub use task::{config, info};
 
 pub(crate) const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,

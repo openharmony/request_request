@@ -12,8 +12,7 @@
 // limitations under the License.
 
 use std::fs;
-use std::path::Path;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub(crate) fn is_dir_exist(path: &str) -> bool {
     let path = PathBuf::from(path);

@@ -12,9 +12,9 @@
 // limitations under the License.
 
 //! SQL statement generation for task state management.
-//! 
-//! This module provides functions to generate SQL statements that update task states
-//! in the database based on various operations and system events.
+//!
+//! This module provides functions to generate SQL statements that update task
+//! states in the database based on various operations and system events.
 
 use crate::config::{Action, Mode};
 use crate::info::State;
@@ -102,7 +102,8 @@ pub(super) fn pause_task(task_id: u32) -> String {
 /// - `Retrying` state
 /// - `Waiting` state
 ///
-/// Tasks can only be stopped from active or waiting states, similar to pause operations.
+/// Tasks can only be stopped from active or waiting states, similar to pause
+/// operations.
 pub(super) fn stop_task(task_id: u32) -> String {
     format!(
         "UPDATE request_task SET state = {}, reason = {} where task_id = {} AND (state = {} OR state = {} OR state = {})",
@@ -155,7 +156,8 @@ pub(super) fn remove_task(task_id: u32) -> String {
 /// # Notes
 ///
 /// This function is specifically for updating the operational mode of a task,
-/// which controls aspects like whether it runs only on Wi-Fi or can use mobile data.
+/// which controls aspects like whether it runs only on Wi-Fi or can use mobile
+/// data.
 pub(super) fn task_set_mode(task_id: u32, mode: Mode) -> String {
     format!(
         "UPDATE request_task SET mode = {} where task_id = {}\n",

@@ -12,15 +12,16 @@
 // limitations under the License.
 
 //! QoS direction and level definitions for task scheduling.
-//! 
-//! This module defines structures and enums for managing Quality of Service (QoS) changes
-//! for network tasks, distinguishing between download and upload operations and providing
-//! different priority levels with associated speed constraints.
+//!
+//! This module defines structures and enums for managing Quality of Service
+//! (QoS) changes for network tasks, distinguishing between download and upload
+//! operations and providing different priority levels with associated speed
+//! constraints.
 
 /// Container for QoS changes for both download and upload operations.
 ///
-/// This struct holds optional lists of QoS direction changes for download and upload tasks,
-/// allowing for batch processing of QoS updates.
+/// This struct holds optional lists of QoS direction changes for download and
+/// upload tasks, allowing for batch processing of QoS updates.
 pub(crate) struct QosChanges {
     /// QoS direction changes for download tasks, if any.
     pub(crate) download: Option<Vec<QosDirection>>,
@@ -31,7 +32,8 @@ pub(crate) struct QosChanges {
 impl QosChanges {
     /// Creates a new empty `QosChanges` instance.
     ///
-    /// Returns a `QosChanges` with both download and upload fields initialized to `None`.
+    /// Returns a `QosChanges` with both download and upload fields initialized
+    /// to `None`.
     pub(crate) fn new() -> Self {
         Self {
             upload: None,
@@ -41,8 +43,8 @@ impl QosChanges {
 }
 /// Represents a QoS level change for a specific task.
 ///
-/// This struct associates a task with a new QoS level, allowing the scheduler to
-/// adjust the task's priority and resource allocation.
+/// This struct associates a task with a new QoS level, allowing the scheduler
+/// to adjust the task's priority and resource allocation.
 #[derive(Debug)]
 pub(crate) struct QosDirection {
     /// The user ID of the application that owns the task.
