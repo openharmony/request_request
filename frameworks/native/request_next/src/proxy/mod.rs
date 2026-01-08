@@ -12,10 +12,11 @@
 // limitations under the License.
 
 //! Proxy interface for communicating with the download service.
-//! 
-//! This module provides a singleton proxy implementation that handles communication with
-//! the download service through IPC. It manages service state, provides access to remote
-//! objects, and serves as the foundation for all service interactions.
+//!
+//! This module provides a singleton proxy implementation that handles
+//! communication with the download service through IPC. It manages service
+//! state, provides access to remote objects, and serves as the foundation for
+//! all service interactions.
 
 // Submodules
 mod notification; // Handles notification-related functionality
@@ -26,7 +27,8 @@ mod uds; // Handles Unix Domain Socket communication
 
 /// Service token identifier for the download request service.
 ///
-/// Used to identify and connect to the download service through the IPC mechanism.
+/// Used to identify and connect to the download service through the IPC
+/// mechanism.
 const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
 
 // Standard library imports
@@ -35,7 +37,6 @@ use std::sync::{Arc, LazyLock, Mutex};
 // External dependencies
 use ipc::remote::RemoteObj;
 use request_core::error_code::EXCEPTION_SERVICE;
-
 // Local dependencies
 use state::SaState;
 
@@ -52,8 +53,8 @@ pub struct RequestProxy {
 impl RequestProxy {
     /// Returns the singleton instance of `RequestProxy`.
     ///
-    /// Creates the instance on first call using `LazyLock` for thread-safe initialization.
-    /// Subsequent calls return the same instance.
+    /// Creates the instance on first call using `LazyLock` for thread-safe
+    /// initialization. Subsequent calls return the same instance.
     ///
     /// # Returns
     /// A static reference to the singleton `RequestProxy` instance
@@ -79,8 +80,8 @@ impl RequestProxy {
 
     /// Retrieves the remote service object for IPC communication.
     ///
-    /// Checks if the service state is ready. If not, attempts to reconnect if the
-    /// last failure occurred more than 5 seconds ago.
+    /// Checks if the service state is ready. If not, attempts to reconnect if
+    /// the last failure occurred more than 5 seconds ago.
     ///
     /// # Returns
     /// A `Result` containing either:
@@ -88,10 +89,12 @@ impl RequestProxy {
     /// - `Err(i32)`: Error code if the service could not be accessed
     ///
     /// # Errors
-    /// - Returns `EXCEPTION_SERVICE` if the service is not available or cannot be reconnected
+    /// - Returns `EXCEPTION_SERVICE` if the service is not available or cannot
+    ///   be reconnected
     ///
     /// # Safety
-    /// This method is marked as `pub(crate)` to restrict access to the module's internal API.
+    /// This method is marked as `pub(crate)` to restrict access to the module's
+    /// internal API.
     pub(crate) fn remote(&self) -> Result<Arc<RemoteObj>, i32> {
         let mut remote = self.remote.lock().unwrap();
         match *remote {
@@ -99,7 +102,8 @@ impl RequestProxy {
             SaState::Ready(ref obj) => return Ok(obj.clone()),
             // If service is invalid, attempt to reconnect after a delay
             SaState::Invalid(ref time) => {
-                // Only attempt reconnection after 5 seconds to prevent excessive reconnection attempts
+                // Only attempt reconnection after 5 seconds to prevent excessive reconnection
+                // attempts
                 if time.elapsed().as_secs() > 5 {
                     *remote = SaState::update();
                     if let SaState::Ready(ref obj) = *remote {

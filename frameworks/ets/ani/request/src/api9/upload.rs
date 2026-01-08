@@ -23,22 +23,23 @@ use std::path::PathBuf;
 use ani_rs::business_error::BusinessError;
 use ani_rs::objects::{AniObject, AniRef};
 use ani_rs::AniEnv;
-use request_client::RequestClient;
 use request_client::client::error::CreateTaskError;
-use request_core::config::Version;
+use request_client::RequestClient;
+use request_core::config::{TaskConfig, Version};
 use request_core::info::TaskInfo;
 use request_utils::context::{is_stage_context, Context};
-use request_core::config::TaskConfig;
 
 use super::bridge::{DownloadConfig, DownloadTask};
-use crate::api9::bridge::DownloadInfo;
+use crate::api9::bridge::{DownloadInfo, UploadConfig, UploadTask};
+use crate::constant::*;
 use crate::seq::TaskSeq;
 
-use crate::api9::bridge::{UploadConfig, UploadTask};
-use crate::constant::*;
-
 #[ani_rs::native]
-pub fn check_config(env: &AniEnv, context: AniRef, config: UploadConfig) -> Result<i64, BusinessError> {
+pub fn check_config(
+    env: &AniEnv,
+    context: AniRef,
+    config: UploadConfig,
+) -> Result<i64, BusinessError> {
     // Placeholder implementation that returns a task with ID 0
     let context = AniObject::from(context);
     let seq = TaskSeq::next().0.get();
@@ -49,23 +50,16 @@ pub fn check_config(env: &AniEnv, context: AniRef, config: UploadConfig) -> Resu
     config.bundle_type = context.get_bundle_type() as u32;
     config.bundle = context.get_bundle_name();
 
-    match RequestClient::get_instance().check_config(
-        context,
-        seq,
-        config,
-    ) {
+    match RequestClient::get_instance().check_config(context, seq, config) {
         Ok(()) => Ok(seq as i64),
         Err(CreateTaskError::DownloadPath(_)) => {
             return Err(BusinessError::new(
                 13400001,
                 "Invalid file or file system error.".to_string(),
             ))
-        },
+        }
         Err(CreateTaskError::Code(code)) => {
-            return Err(BusinessError::new(
-                code,
-                "Upload failed.".to_string(),
-            ))
+            return Err(BusinessError::new(code, "Upload failed.".to_string()))
         }
     }
 }
@@ -85,8 +79,8 @@ pub fn check_config(env: &AniEnv, context: AniRef, config: UploadConfig) -> Resu
 ///
 /// ```rust
 /// use ani_rs::objects::AniRef;
-/// use request_api9::api9::upload::upload_file;
 /// use request_api9::api9::bridge::UploadConfig;
+/// use request_api9::api9::upload::upload_file;
 ///
 /// // Assuming context is properly initialized
 /// let config = UploadConfig {
@@ -110,22 +104,18 @@ pub fn upload_file(env: &AniEnv, context: AniRef, seq: i64) -> Result<UploadTask
     let context = AniObject::from(context);
     let context = Context::new(env, &context);
 
-    let task = match RequestClient::get_instance().create_task(
-        context,
-        seq as u64,
-    ) {
-        Ok(task_id) => UploadTask { task_id: task_id.to_string() },
+    let task = match RequestClient::get_instance().create_task(context, seq as u64) {
+        Ok(task_id) => UploadTask {
+            task_id: task_id.to_string(),
+        },
         Err(CreateTaskError::DownloadPath(_)) => {
             return Err(BusinessError::new(
                 13400001,
                 "Invalid file or file system error.".to_string(),
             ))
-        },
+        }
         Err(CreateTaskError::Code(code)) => {
-            return Err(BusinessError::new(
-                code,
-                "Upload failed.".to_string(),
-            ))
+            return Err(BusinessError::new(code, "Upload failed.".to_string()))
         }
     };
 
@@ -158,8 +148,8 @@ pub fn upload_file(env: &AniEnv, context: AniRef, seq: i64) -> Result<UploadTask
 /// # Examples
 ///
 /// ```rust
-/// use request_api9::api9::upload::delete;
 /// use request_api9::api9::bridge::UploadTask;
+/// use request_api9::api9::upload::delete;
 ///
 /// let task = UploadTask { task_id: 0 };
 /// match delete(task) {
@@ -179,7 +169,10 @@ pub fn delete(this: UploadTask) -> Result<bool, BusinessError> {
             if e != ExceptionErrorCode::E_PERMISSION as i32 {
                 Ok(true)
             } else {
-                Err(BusinessError::new(e, "Failed to delete download task".to_string()))
+                Err(BusinessError::new(
+                    e,
+                    "Failed to delete download task".to_string(),
+                ))
             }
         });
     Ok(true)

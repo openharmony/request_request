@@ -12,10 +12,10 @@
 // limitations under the License.
 
 //! Task management operations for the RequestProxy.
-//! 
-//! This module implements methods for managing download tasks through the RequestProxy,
-//! including creating, starting, pausing, resuming, removing, stopping, and setting speed limits
-//! for tasks.
+//!
+//! This module implements methods for managing download tasks through the
+//! RequestProxy, including creating, starting, pausing, resuming, removing,
+//! stopping, and setting speed limits for tasks.
 
 // IPC and parcel dependencies
 use ipc::parcel::MsgParcel;
@@ -30,8 +30,8 @@ use crate::client::error::CreateTaskError;
 impl RequestProxy {
     /// Creates a new download task with the provided configuration.
     ///
-    /// Sends a request to the download service to create a new task based on the provided
-    /// `TaskConfig`. Returns the unique task ID if successful.
+    /// Sends a request to the download service to create a new task based on
+    /// the provided `TaskConfig`. Returns the unique task ID if successful.
     ///
     /// # Parameters
     /// - `config`: The task configuration containing download parameters
@@ -49,12 +49,12 @@ impl RequestProxy {
     /// fn example() -> Result<(), Box<dyn std::error::Error>> {
     ///     let proxy = RequestProxy::get_instance();
     ///     let config = TaskConfig::default();
-    ///     
+    ///
     ///     match proxy.create(&config) {
     ///         Ok(task_id) => println!("Task created with ID: {}", task_id),
     ///         Err(e) => eprintln!("Failed to create task: {:?}", e),
     ///     }
-    ///     
+    ///
     ///     Ok(())
     /// }
     /// ```
@@ -109,7 +109,7 @@ impl RequestProxy {
     ///
     /// fn example(task_id: i64) {
     ///     let proxy = RequestProxy::get_instance();
-    ///     
+    ///
     ///     match proxy.start(task_id) {
     ///         Ok(_) => println!("Task {} started successfully", task_id),
     ///         Err(code) => eprintln!("Failed to start task {} with error code: {}", task_id, code),
@@ -129,7 +129,9 @@ impl RequestProxy {
         data.write(&task_id.to_string()).unwrap();
 
         // Send start request
-        let mut reply = remote.send_request(interface::START, &mut data).map_err(|_| 13400003)?;
+        let mut reply = remote
+            .send_request(interface::START, &mut data)
+            .map_err(|_| 13400003)?;
         let code = reply.read::<i32>().unwrap(); // error code
         if code == 0 {
             let code = reply.read::<i32>().unwrap(); // error code
@@ -159,7 +161,7 @@ impl RequestProxy {
     ///
     /// fn example(task_id: i64) {
     ///     let proxy = RequestProxy::get_instance();
-    ///     
+    ///
     ///     match proxy.pause(task_id) {
     ///         Ok(_) => println!("Task {} paused successfully", task_id),
     ///         Err(code) => eprintln!("Failed to pause task {} with error code: {}", task_id, code),
@@ -180,7 +182,9 @@ impl RequestProxy {
         data.write(&task_id.to_string()).unwrap();
 
         // Send pause request
-        let mut reply = remote.send_request(interface::PAUSE, &mut data).map_err(|_| 13400003)?;
+        let mut reply = remote
+            .send_request(interface::PAUSE, &mut data)
+            .map_err(|_| 13400003)?;
 
         // Check first error code
         let code = reply.read::<i32>().unwrap(); // error code
@@ -213,10 +217,13 @@ impl RequestProxy {
     ///
     /// fn example(task_id: i64) {
     ///     let proxy = RequestProxy::get_instance();
-    ///     
+    ///
     ///     match proxy.resume(task_id) {
     ///         Ok(_) => println!("Task {} resumed successfully", task_id),
-    ///         Err(code) => eprintln!("Failed to resume task {} with error code: {}", task_id, code),
+    ///         Err(code) => eprintln!(
+    ///             "Failed to resume task {} with error code: {}",
+    ///             task_id, code
+    ///         ),
     ///     }
     /// }
     /// ```
@@ -233,7 +240,9 @@ impl RequestProxy {
         data.write(&task_id.to_string()).unwrap();
 
         // Send resume request
-        let mut reply = remote.send_request(interface::RESUME, &mut data).map_err(|_| 13400003)?;
+        let mut reply = remote
+            .send_request(interface::RESUME, &mut data)
+            .map_err(|_| 13400003)?;
 
         // Check first error code
         let code = reply.read::<i32>().unwrap(); // error code
@@ -266,10 +275,13 @@ impl RequestProxy {
     ///
     /// fn example(task_id: i64) {
     ///     let proxy = RequestProxy::get_instance();
-    ///     
+    ///
     ///     match proxy.remove(task_id) {
     ///         Ok(_) => println!("Task {} removed successfully", task_id),
-    ///         Err(code) => eprintln!("Failed to remove task {} with error code: {}", task_id, code),
+    ///         Err(code) => eprintln!(
+    ///             "Failed to remove task {} with error code: {}",
+    ///             task_id, code
+    ///         ),
     ///     }
     /// }
     /// ```
@@ -287,7 +299,9 @@ impl RequestProxy {
         data.write(&task_id.to_string()).unwrap();
 
         // Send remove request
-        let mut reply = remote.send_request(interface::REMOVE, &mut data).map_err(|_| 13400003)?;
+        let mut reply = remote
+            .send_request(interface::REMOVE, &mut data)
+            .map_err(|_| 13400003)?;
 
         // Check first error code
         let code = reply.read::<i32>().unwrap(); // error code
@@ -320,7 +334,7 @@ impl RequestProxy {
     ///
     /// fn example(task_id: i64) {
     ///     let proxy = RequestProxy::get_instance();
-    ///     
+    ///
     ///     match proxy.stop(task_id) {
     ///         Ok(_) => println!("Task {} stopped successfully", task_id),
     ///         Err(code) => eprintln!("Failed to stop task {} with error code: {}", task_id, code),
@@ -340,7 +354,9 @@ impl RequestProxy {
         data.write(&task_id.to_string()).unwrap();
 
         // Send stop request
-        let mut reply = remote.send_request(interface::STOP, &mut data).map_err(|_| 13400003)?;
+        let mut reply = remote
+            .send_request(interface::STOP, &mut data)
+            .map_err(|_| 13400003)?;
 
         // Check first error code
         let code = reply.read::<i32>().unwrap(); // error code
@@ -376,7 +392,7 @@ impl RequestProxy {
     ///     let proxy = RequestProxy::get_instance();
     ///     // Set maximum speed to 1024000 bytes per second (1MB/s)
     ///     let max_speed = 1024000i64;
-    ///     
+    ///
     ///     match proxy.set_max_speed(task_id, max_speed) {
     ///         Ok(_) => println!("Speed limit set for task {}", task_id),
     ///         Err(code) => eprintln!("Failed to set speed limit with error code: {}", code),

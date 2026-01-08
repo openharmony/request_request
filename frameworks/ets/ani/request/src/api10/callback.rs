@@ -13,9 +13,9 @@
 
 //! Callback module for API 10.
 //!
-//! This module provides callback registration and management functionality for request tasks
-//! in API 10, allowing clients to receive notifications about task events such as progress,
-//! completion, failure, and more.
+//! This module provides callback registration and management functionality for
+//! request tasks in API 10, allowing clients to receive notifications about
+//! task events such as progress, completion, failure, and more.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -23,7 +23,8 @@ use std::sync::{Arc, Mutex, OnceLock};
 use ani_rs::objects::{AniFnObject, GlobalRefCallback};
 use ani_rs::AniEnv;
 use request_client::RequestClient;
-use request_core::info::{Progress, Response, Faults, WaitingReason};
+use request_core::info::{Faults, Progress, Response, WaitingReason};
+
 use crate::api10::bridge::{self, Task};
 
 /// Registers a callback for a specific task event.
@@ -32,7 +33,8 @@ use crate::api10::bridge::{self, Task};
 ///
 /// * `env` - The animation environment reference
 /// * `this` - The task to register the callback for
-/// * `event` - The event name to listen for ("completed", "pause", "failed", "remove", "progress", "resume")
+/// * `event` - The event name to listen for ("completed", "pause", "failed",
+///   "remove", "progress", "resume")
 /// * `callback` - The callback function to execute when the event occurs
 ///
 /// # Returns
@@ -43,8 +45,8 @@ use crate::api10::bridge::{self, Task};
 /// # Examples
 ///
 /// ```rust
-/// use ani_rs::AniEnv;
 /// use ani_rs::objects::AniFnObject;
+/// use ani_rs::AniEnv;
 /// use request_api10::api10::bridge::Task;
 /// use request_api10::api10::callback::on_event;
 ///
@@ -180,7 +182,7 @@ pub fn on_event(
             }
         }
         // Handle unknown event types
-        _ => unimplemented!()
+        _ => unimplemented!(),
     };
 
     // Register callback with request client and add to manager
@@ -196,7 +198,8 @@ pub fn on_event(
 /// * `env` - The animation environment reference
 /// * `this` - The task to register the callback for
 /// * `event` - The event name to listen for (only "response" is supported)
-/// * `callback` - The callback function to execute when the response is received
+/// * `callback` - The callback function to execute when the response is
+///   received
 ///
 /// # Returns
 ///
@@ -206,8 +209,8 @@ pub fn on_event(
 /// # Examples
 ///
 /// ```rust
-/// use ani_rs::AniEnv;
 /// use ani_rs::objects::AniFnObject;
+/// use ani_rs::AniEnv;
 /// use request_api10::api10::bridge::Task;
 /// use request_api10::api10::callback::on_response_event;
 ///
@@ -253,7 +256,7 @@ pub fn on_response_event(
             }
         }
         // Handle unknown event types
-        _ => unimplemented!()
+        _ => unimplemented!(),
     };
     RequestClient::get_instance().register_callback(task_id, coll.clone());
     callback_mgr.tasks.lock().unwrap().insert(task_id, coll);
@@ -290,7 +293,7 @@ pub fn on_fault_event(
                 })
             }
         }
-        _ => unimplemented!()
+        _ => unimplemented!(),
     };
 
     // Register callback with request client and add to manager
@@ -334,7 +337,7 @@ pub fn on_wait_event(
                 })
             }
         }
-        _ => unimplemented!()
+        _ => unimplemented!(),
     };
     RequestClient::get_instance().register_callback(task_id, coll.clone());
     callback_mgr.tasks.lock().unwrap().insert(task_id, coll);
@@ -351,7 +354,8 @@ pub fn off_event(
     let task_id = this.tid.parse().unwrap();
     info!("off_event called with event: {}", event);
     let callback_mgr = CallbackManager::get_instance();
-    let callback: GlobalRefCallback<(bridge::Progress,)> = callback.into_global_callback(env).unwrap();
+    let callback: GlobalRefCallback<(bridge::Progress,)> =
+        callback.into_global_callback(env).unwrap();
     match event.as_str() {
         "completed" => {
             if let Some(coll) = callback_mgr.tasks.lock().unwrap().get(&task_id) {
@@ -383,7 +387,7 @@ pub fn off_event(
                 coll.on_resume.lock().unwrap().retain(|x| *x != callback);
             }
         }
-        _ => unimplemented!()
+        _ => unimplemented!(),
     };
     Ok(())
 }
@@ -405,7 +409,7 @@ pub fn off_response_event(
                 coll.on_response.lock().unwrap().retain(|x| *x != callback);
             }
         }
-        _ => unimplemented!()
+        _ => unimplemented!(),
     };
     Ok(())
 }
@@ -427,7 +431,7 @@ pub fn off_fault_event(
                 coll.on_fault.lock().unwrap().retain(|x| *x != callback);
             }
         }
-        _ => unimplemented!()
+        _ => unimplemented!(),
     };
     Ok(())
 }
@@ -449,7 +453,7 @@ pub fn off_wait_event(
                 coll.on_wait.lock().unwrap().retain(|x| *x != callback);
             }
         }
-        _ => unimplemented!()
+        _ => unimplemented!(),
     };
     Ok(())
 }
@@ -509,7 +513,7 @@ pub fn off_events(
                 coll.on_wait.lock().unwrap().clear();
             }
         }
-        _ => unimplemented!()
+        _ => unimplemented!(),
     };
     Ok(())
 }
@@ -534,13 +538,15 @@ pub struct CallbackColl {
 }
 
 impl request_client::Callback for CallbackColl {
-    /// Executes all registered progress callbacks with the current progress information.
+    /// Executes all registered progress callbacks with the current progress
+    /// information.
     ///
     /// # Parameters
     ///
     /// * `progress` - The current progress information of the task
     fn on_progress(&self, progress: &Progress) {
-        // Lock the callbacks vector to prevent concurrent modifications during execution
+        // Lock the callbacks vector to prevent concurrent modifications during
+        // execution
         let callbacks = self.on_progress.lock().unwrap();
         for callback in callbacks.iter() {
             // Execute each callback with converted progress data
@@ -596,7 +602,8 @@ impl request_client::Callback for CallbackColl {
         }
     }
 
-    /// Executes all registered response callbacks when an HTTP response is received.
+    /// Executes all registered response callbacks when an HTTP response is
+    /// received.
     ///
     /// # Parameters
     ///
@@ -614,7 +621,8 @@ impl request_client::Callback for CallbackColl {
     /// # Parameters
     ///
     /// * `progress` - The progress information at the time of failure
-    /// * `_error_code` - The error code associated with the failure (currently unused)
+    /// * `_error_code` - The error code associated with the failure (currently
+    ///   unused)
     fn on_failed(&self, progress: &Progress, _error_code: i32) {
         let callbacks = self.on_fail.lock().unwrap();
         for callback in callbacks.iter() {

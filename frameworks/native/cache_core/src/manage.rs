@@ -13,9 +13,10 @@
 
 //! Cache management and coordination.
 //!
-//! This module provides the central `CacheManager` that coordinates different cache storage types
-//! including RAM-based caches and file-based caches. It handles cache allocation, resource
-//! management, and synchronization between different cache types.
+//! This module provides the central `CacheManager` that coordinates different
+//! cache storage types including RAM-based caches and file-based caches. It
+//! handles cache allocation, resource management, and synchronization between
+//! different cache types.
 
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -442,9 +443,10 @@ impl NotifyCondition {
 
 /// Central manager for coordinating different cache types and resources.
 ///
-/// This struct manages RAM-based and file-based caches, handles resource allocation,
-/// and provides methods for cache operations across different storage types.
-/// It uses LRU (Least Recently Used) eviction policy for managing cache entries.
+/// This struct manages RAM-based and file-based caches, handles resource
+/// allocation, and provides methods for cache operations across different
+/// storage types. It uses LRU (Least Recently Used) eviction policy for
+/// managing cache entries.
 ///
 /// # Examples
 ///
@@ -473,7 +475,8 @@ pub struct CacheManager {
 impl CacheManager {
     /// Creates a new cache manager with default cache sizes.
     ///
-    /// Initializes RAM and file caches with default capacities of 20MB and 100MB respectively.
+    /// Initializes RAM and file caches with default capacities of 20MB and
+    /// 100MB respectively.
     ///
     /// # Returns
     /// A new CacheManager instance ready for use
@@ -487,8 +490,8 @@ impl CacheManager {
 
     /// Sets the maximum size for RAM-based caching.
     ///
-    /// Adjusts the total capacity for in-memory caching and triggers cache eviction
-    /// if the new size requires releasing resources.
+    /// Adjusts the total capacity for in-memory caching and triggers cache
+    /// eviction if the new size requires releasing resources.
     ///
     /// # Parameters
     /// - `size`: New maximum RAM cache size in bytes
@@ -499,8 +502,8 @@ impl CacheManager {
 
     /// Sets the maximum size for file-based caching.
     ///
-    /// Adjusts the total capacity for file-based caching and triggers cache eviction
-    /// if the new size requires releasing resources.
+    /// Adjusts the total capacity for file-based caching and triggers cache
+    /// eviction if the new size requires releasing resources.
     ///
     /// # Parameters
     /// - `size`: New maximum file cache size in bytes
@@ -511,7 +514,8 @@ impl CacheManager {
     /// Restores all valid cache files from the given directory.
     ///
     /// Scans the directory for valid cache files, filters out incomplete files,
-    /// sorts them by modification time, and returns an iterator over the task IDs.
+    /// sorts them by modification time, and returns an iterator over the task
+    /// IDs.
     ///
     /// # Parameters
     /// - `path`: Path to the directory to scan
@@ -536,8 +540,9 @@ impl CacheManager {
 
     /// Fetches a cache entry by task ID.
     ///
-    /// Retrieves a RAM cache for the given task ID, checking primary RAM cache, backup RAM cache,
-    /// and falling back to loading from file cache if necessary.
+    /// Retrieves a RAM cache for the given task ID, checking primary RAM cache,
+    /// backup RAM cache, and falling back to loading from file cache if
+    /// necessary.
     ///
     /// # Parameters
     /// - `task_id`: The task ID to fetch
@@ -546,15 +551,17 @@ impl CacheManager {
     /// `Some(Arc<RamCache>)` if found, `None` otherwise
     ///
     /// # Safety
-    /// Must be called with a `'static self` reference as it may load from file cache.
+    /// Must be called with a `'static self` reference as it may load from file
+    /// cache.
     pub fn fetch(&'static self, task_id: &TaskId) -> Option<Arc<RamCache>> {
         self.get_cache(task_id)
     }
 
     /// Removes a cache entry by task ID.
     ///
-    /// Removes the entry from all cache storage types (file, backup RAM, and primary RAM cache),
-    /// and clears any pending file-to-RAM update operations for the task.
+    /// Removes the entry from all cache storage types (file, backup RAM, and
+    /// primary RAM cache), and clears any pending file-to-RAM update
+    /// operations for the task.
     ///
     /// # Parameters
     /// - `task_id`: The task ID to remove
@@ -565,7 +572,8 @@ impl CacheManager {
 
     /// Checks if a cache entry exists for the given task ID.
     ///
-    /// Checks all cache storage types (file, backup RAM, and primary RAM cache).
+    /// Checks all cache storage types (file, backup RAM, and primary RAM
+    /// cache).
     ///
     /// # Parameters
     /// - `task_id`: The task ID to check
@@ -578,14 +586,15 @@ impl CacheManager {
 
     /// Internal method to get a cache entry with fallback logic.
     ///
-    /// First checks the primary RAM cache, then the backup RAM cache, and finally
-    /// attempts to load from file cache if necessary.
+    /// First checks the primary RAM cache, then the backup RAM cache, and
+    /// finally attempts to load from file cache if necessary.
     ///
     /// # Parameters
     /// - `task_id`: The task ID to retrieve
     ///
     /// # Returns
-    /// `Some(Arc<RamCache>)` if found through any cache source, `None` otherwise
+    /// `Some(Arc<RamCache>)` if found through any cache source, `None`
+    /// otherwise
     pub(crate) fn get_cache(&'static self, task_id: &TaskId) -> Option<Arc<RamCache>> {
         let res = self.rams.lock().unwrap().get(task_id).cloned();
         res.or_else(|| {
@@ -613,7 +622,8 @@ impl CacheManager {
             .filter(|task_id| !running_tasks.contains(task_id))
             .collect::<Vec<_>>();
         let mut rams_to_remove = Vec::with_capacity(key_to_remove.len());
-        // Do not delete the data of Arc during the time when the lock is held to reduce the time when the lock is held
+        // Do not delete the data of Arc during the time when the lock is held to reduce
+        // the time when the lock is held
         {
             let mut rams = self.rams.lock().unwrap();
             for key in key_to_remove {
@@ -640,16 +650,17 @@ impl CacheManager {
     /// - `task_id`: ID of the task to update
     ///
     /// # Returns
-    /// `Some(Arc<RamCache>)` if successful, `None` if the file doesn't exist or can't be read
+    /// `Some(Arc<RamCache>)` if successful, `None` if the file doesn't exist or
+    /// can't be read
     pub(crate) fn update_ram_from_file(&'static self, task_id: &TaskId) -> Option<Arc<RamCache>> {
         self.file_manager.update_ram_from_file(task_id, self)
     }
 
     /// Attempts to allocate cache space, evicting entries if necessary.
     ///
-    /// Tries to apply for the requested cache size, and if insufficient space is available,
-    /// evicts the least recently used entries until enough space is freed or all entries
-    /// have been evicted.
+    /// Tries to apply for the requested cache size, and if insufficient space
+    /// is available, evicts the least recently used entries until enough
+    /// space is freed or all entries have been evicted.
     ///
     /// # Type Parameters
     /// - `T`: The cache value type, can be either `RamCache` or `FileCache`
@@ -660,7 +671,8 @@ impl CacheManager {
     /// - `size`: Amount of space to allocate in bytes
     ///
     /// # Returns
-    /// `true` if allocation succeeded, `false` if insufficient space even after eviction
+    /// `true` if allocation succeeded, `false` if insufficient space even after
+    /// eviction
     pub(super) fn apply_cache<T>(
         handle: &Mutex<SpaceManager>,
         caches: &Mutex<LRUCache<TaskId, T>>,

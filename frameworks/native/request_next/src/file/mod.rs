@@ -13,22 +13,19 @@
 
 mod permission;
 
-use cxx::let_cxx_string;
-use request_core::{
-    config::{Action, Mode, TaskConfig, Version},
-    file::FileSpec,
-};
-use request_utils::context::Context;
-use request_utils::storage;
+use std::collections::HashMap;
+use std::fs::{self, File, OpenOptions};
 use std::os::unix::fs::PermissionsExt;
 use std::os::unix::io::AsRawFd;
-use std::{
-    collections::HashMap,
-    fs::{self, File, OpenOptions},
-    path::PathBuf,
-    sync::{Mutex, OnceLock},
-};
+use std::path::PathBuf;
+use std::sync::{Mutex, OnceLock};
+
+use cxx::let_cxx_string;
 pub use permission::{PermissionManager, PermissionToken};
+use request_core::config::{Action, Mode, TaskConfig, Version};
+use request_core::file::FileSpec;
+use request_utils::context::Context;
+use request_utils::storage;
 
 const DOCS_PREFIX: &str = "file://docs/";
 const MEDIA_PREFIX: &str = "file://media/";
@@ -55,7 +52,11 @@ impl FileManager {
         })
     }
 
-    pub fn apply(&self, context: Context, config: &mut TaskConfig) -> Result<Vec<PermissionToken>, i32> {
+    pub fn apply(
+        &self,
+        context: Context,
+        config: &mut TaskConfig,
+    ) -> Result<Vec<PermissionToken>, i32> {
         let mut tokens = if matches!(config.common_data.action, Action::Download) {
             let mut tokens = vec![];
             if let Some(token) = self.apply_download_path(config, &context)? {
@@ -109,12 +110,13 @@ impl FileManager {
             config.saveas = if let Some(path) = config
                 .url
                 .rsplit_once('/')
-                .map(|(_, name)| name.to_string()) {
-                    path
-                } else {
-                    error!("ParseSaveas error");
-                    return Err(401);
-                };
+                .map(|(_, name)| name.to_string())
+            {
+                path
+            } else {
+                error!("ParseSaveas error");
+                return Err(401);
+            };
             return Ok(());
         }
         if config.saveas.ends_with('/') {
@@ -451,10 +453,12 @@ impl FileManager {
         for seg in path.split('/') {
             match seg {
                 "" | "." => {}
-                ".." => if stk.pop().is_none() {
-                    error!("bad path with ..");
-                    return Err(401);
-                },
+                ".." => {
+                    if stk.pop().is_none() {
+                        error!("bad path with ..");
+                        return Err(401);
+                    }
+                }
                 _ => stk.push(seg),
             }
         }
@@ -493,7 +497,10 @@ impl FileManager {
                 return Err(13400001);
             }
             let base_dir = context.get_base_dir();
-            return Ok(PathBuf::from(Self::normalize(&format!("{}/{}", base_dir, path))?));
+            return Ok(PathBuf::from(Self::normalize(&format!(
+                "{}/{}",
+                base_dir, path
+            ))?));
         }
 
         let path = if let Some(0) = path.find(RELATIVE_PREFIX) {
@@ -507,7 +514,10 @@ impl FileManager {
         }
         let cache_dir = context.get_cache_dir();
 
-        Ok(PathBuf::from(Self::normalize(&format!("{}/{}", cache_dir, path))?))
+        Ok(PathBuf::from(Self::normalize(&format!(
+            "{}/{}",
+            cache_dir, path
+        ))?))
     }
 
     fn chmod_download_file(path: &PathBuf, config: &TaskConfig) -> Result<(), i32> {

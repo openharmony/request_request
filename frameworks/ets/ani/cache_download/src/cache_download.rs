@@ -13,20 +13,22 @@
 
 //! Cache download functionality for animation resources.
 //!
-//! This module provides functions for downloading, canceling, and configuring cache settings
-//! for animation resources. It serves as a bridge between the ETS interface and the native
-//! cache download service.
+//! This module provides functions for downloading, canceling, and configuring
+//! cache settings for animation resources. It serves as a bridge between the
+//! ETS interface and the native cache download service.
 
 use std::sync::OnceLock;
 
-use crate::bridge::{CacheDownloadOptions, DownloadInfo, SslType};
 use ani_rs::business_error::BusinessError;
 use preload_native_rlib::{CacheDownloadService, DownloadRequest, Downloader, PreloadCallback};
 use preload_permission_verify::permission_check;
 
+use crate::bridge::{CacheDownloadOptions, DownloadInfo, SslType};
+
 /// Empty callback implementation for preload operations.
 ///
-/// Provides a no-op implementation of the `PreloadCallback` trait for use in download requests.
+/// Provides a no-op implementation of the `PreloadCallback` trait for use in
+/// download requests.
 struct Callback;
 
 impl PreloadCallback for Callback {}
@@ -50,13 +52,14 @@ fn has_get_network_info_permission() -> bool {
 
 /// Initiates a download of a resource with the specified URL and options.
 ///
-/// Creates a new download request, configures it with any provided headers, and submits
-/// it to the cache download service for preloading.
+/// Creates a new download request, configures it with any provided headers, and
+/// submits it to the cache download service for preloading.
 ///
 /// # Parameters
 ///
 /// * `url` - The URL of the resource to download
-/// * `options` - Configuration options for the download, including optional headers
+/// * `options` - Configuration options for the download, including optional
+///   headers
 ///
 /// # Returns
 ///
@@ -72,7 +75,7 @@ fn has_get_network_info_permission() -> bool {
 /// // Basic download
 /// let result: Result<(), BusinessError> = download(
 ///     "https://example.com/resource.mp4".to_string(),
-///     CacheDownloadOptions { header: None }
+///     CacheDownloadOptions { header: None },
 /// );
 ///
 /// // Download with headers
@@ -80,7 +83,9 @@ fn has_get_network_info_permission() -> bool {
 /// headers.insert("Authorization".to_string(), "Bearer token123".to_string());
 /// let result: Result<(), BusinessError> = download(
 ///     "https://example.com/resource.mp4".to_string(),
-///     CacheDownloadOptions { header: Some(headers) }
+///     CacheDownloadOptions {
+///         header: Some(headers),
+///     },
 /// );
 /// ```
 #[ani_rs::native]

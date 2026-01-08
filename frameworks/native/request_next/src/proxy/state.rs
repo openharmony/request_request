@@ -12,10 +12,11 @@
 // limitations under the License.
 
 //! System Ability state management for download service.
-//! 
-//! This module defines the state management for the download service's System Ability (SA).
-//! It provides functionality to track whether the service is ready or invalid, and to
-//! attempt to load the System Ability with automatic retry logic.
+//!
+//! This module defines the state management for the download service's System
+//! Ability (SA). It provides functionality to track whether the service is
+//! ready or invalid, and to attempt to load the System Ability with automatic
+//! retry logic.
 
 // Standard library dependencies
 use std::sync::Arc;
@@ -29,20 +30,24 @@ use samgr::manage::SystemAbilityManager;
 pub(crate) enum SaState {
     /// The System Ability is ready to use with the provided remote object.
     Ready(Arc<RemoteObj>),
-    
-    /// The System Ability is invalid, with the timestamp when it became invalid.
+
+    /// The System Ability is invalid, with the timestamp when it became
+    /// invalid.
     Invalid(time::Instant),
 }
 
 impl SaState {
     /// Attempts to load the download service System Ability with retry logic.
     ///
-    /// Tries to load the System Ability up to 5 times with a 5-second delay between attempts.
-    /// Returns `SaState::Ready` if successful, or `SaState::Invalid` if all attempts fail.
+    /// Tries to load the System Ability up to 5 times with a 5-second delay
+    /// between attempts. Returns `SaState::Ready` if successful, or
+    /// `SaState::Invalid` if all attempts fail.
     ///
     /// # Returns
-    /// - `SaState::Ready` with an `Arc<RemoteObj>` if the System Ability is successfully loaded
-    /// - `SaState::Invalid` with the current time if all 5 attempts to load fail
+    /// - `SaState::Ready` with an `Arc<RemoteObj>` if the System Ability is
+    ///   successfully loaded
+    /// - `SaState::Invalid` with the current time if all 5 attempts to load
+    ///   fail
     ///
     /// # Examples
     ///
@@ -52,7 +57,7 @@ impl SaState {
     /// fn example() {
     ///     // Attempt to load the download service System Ability
     ///     let state = SaState::update();
-    ///     
+    ///
     ///     match state {
     ///         SaState::Ready(remote) => println!("System Ability loaded successfully"),
     ///         SaState::Invalid(timestamp) => println!("Failed to load System Ability"),
@@ -61,8 +66,9 @@ impl SaState {
     /// ```
     ///
     /// # Notes
-    /// This method uses a fixed retry count of 5 and a 5-second delay between retries. If all
-    /// attempts fail, it records the current time as the point when the state became invalid.
+    /// This method uses a fixed retry count of 5 and a 5-second delay between
+    /// retries. If all attempts fail, it records the current time as the
+    /// point when the state became invalid.
     pub(crate) fn update() -> Self {
         // Try to load the System Ability up to 5 times with retries
         for _ in 0..5 {

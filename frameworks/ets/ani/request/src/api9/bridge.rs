@@ -13,19 +13,23 @@
 
 //! Bridge module for API 9 request functionality.
 //!
-//! This module defines data structures and conversion traits to bridge between the ETS interface
-//! and the underlying request core functionality. It provides type definitions for download and
-//! upload configurations, tasks, and information.
+//! This module defines data structures and conversion traits to bridge between
+//! the ETS interface and the underlying request core functionality. It provides
+//! type definitions for download and upload configurations, tasks, and
+//! information.
 
 use std::collections::HashMap;
 
-use request_core::config::{NetworkConfig, TaskConfig, TaskConfigBuilder, Version, FormItem, Action};
-use request_core::info::{self, TaskInfo};
+use request_core::config::{
+    Action, FormItem, NetworkConfig, TaskConfig, TaskConfigBuilder, Version,
+};
 use request_core::file::FileSpec;
+use request_core::info::{self, TaskInfo};
 
 /// Configuration for a download task.
 ///
-/// Represents the parameters needed to configure a download operation through the ETS API.
+/// Represents the parameters needed to configure a download operation through
+/// the ETS API.
 #[ani_rs::ani]
 pub struct DownloadConfig {
     /// The URL to download from.
@@ -50,7 +54,8 @@ pub struct DownloadConfig {
 
 /// Configuration for an upload task.
 ///
-/// Represents the parameters needed to configure an upload operation through the ETS API.
+/// Represents the parameters needed to configure an upload operation through
+/// the ETS API.
 #[ani_rs::ani(path = "@ohos.request.request.UploadConfigInner")]
 pub struct UploadConfig {
     /// The URL to upload to.
@@ -91,7 +96,8 @@ pub struct UploadTask {
 
 /// Information about a download task.
 ///
-/// Contains detailed information about the state and progress of a download operation.
+/// Contains detailed information about the state and progress of a download
+/// operation.
 #[allow(non_snake_case)]
 #[ani_rs::ani(path = "@ohos.request.request.DownloadInfoInner")]
 pub struct DownloadInfo {
@@ -121,7 +127,8 @@ pub struct DownloadInfo {
 
 /// Represents a file to be uploaded.
 ///
-/// Contains information about a file that will be included in an upload request.
+/// Contains information about a file that will be included in an upload
+/// request.
 #[ani_rs::ani(path = "@ohos.request.request.FileInner")]
 pub struct File {
     /// Original filename of the file.
@@ -235,7 +242,8 @@ impl From<DownloadConfig> for TaskConfig {
 
 /// Converts from `TaskInfo` to `DownloadInfo`.
 ///
-/// Transforms the core task information into the format expected by the ETS API.
+/// Transforms the core task information into the format expected by the ETS
+/// API.
 impl From<TaskInfo> for DownloadInfo {
     fn from(info: TaskInfo) -> Self {
         DownloadInfo {
@@ -269,7 +277,7 @@ impl From<UploadConfig> for TaskConfig {
         }
         let method = config.method.to_uppercase();
         if method == "POST" || method == "PUT" {
-            config_builder.method(method); 
+            config_builder.method(method);
         } else {
             config_builder.method("POST".to_string());
         }

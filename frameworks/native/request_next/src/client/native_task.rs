@@ -11,11 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::file::PermissionToken;
-use request_core::config::TaskConfig;
 use std::collections::HashMap;
-use std::sync::Mutex;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+
+use request_core::config::TaskConfig;
+
+use crate::file::PermissionToken;
 
 #[derive(Default)]
 pub struct NativeTaskManager {
@@ -25,7 +26,7 @@ pub struct NativeTaskManager {
 #[derive(Default)]
 pub(crate) struct NativeTaskManagerInner {
     pub(crate) tasks: HashMap<u64, Arc<NativeTask>>,
-    pub(crate) tids: HashMap<i64, u64>
+    pub(crate) tids: HashMap<i64, u64>,
 }
 
 pub struct NativeTask {
@@ -35,7 +36,11 @@ pub struct NativeTask {
 
 impl NativeTaskManager {
     pub fn insert(&self, seq: u64, native_task: NativeTask) {
-        self.inner.lock().unwrap().tasks.insert(seq, Arc::new(native_task));
+        self.inner
+            .lock()
+            .unwrap()
+            .tasks
+            .insert(seq, Arc::new(native_task));
     }
 
     pub fn remove(&self, seq: &u64) {

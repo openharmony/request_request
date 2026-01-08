@@ -13,8 +13,9 @@
 
 //! Validation utilities for request operations.
 //!
-//! This module provides utilities for validating various aspects of download/upload
-//! requests, including file path validation and permission checking.
+//! This module provides utilities for validating various aspects of
+//! download/upload requests, including file path validation and permission
+//! checking.
 
 /// File path validation utilities.
 pub mod file;

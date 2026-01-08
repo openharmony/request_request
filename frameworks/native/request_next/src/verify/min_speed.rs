@@ -11,22 +11,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::verify::ConfigVerifier;
-
 use request_core::config::TaskConfig;
+
+use crate::verify::ConfigVerifier;
 
 pub struct MinSpeedVerifier {}
 
 impl ConfigVerifier for MinSpeedVerifier {
     fn verify(&self, config: &TaskConfig) -> Result<(), i32> {
         if config.min_speed.speed < 0 {
-                error!("Parameter verification failed, minSpeed.speed must be greater than or equal to 0");
-                return Err(401);
+            error!(
+                "Parameter verification failed, minSpeed.speed must be greater than or equal to 0"
+            );
+            return Err(401);
         }
         if config.min_speed.duration < 0 {
             error!("Parameter verification failed, minSpeed.duration must be greater than or equal to 0");
             return Err(401);
-    }
+        }
         Ok(())
     }
 }

@@ -13,9 +13,9 @@
 
 //! Cache download service interfaces and core functionality.
 //!
-//! This module defines the primary service interfaces for the cache download system,
-//! including request structures, callback traits, and the main cache download service
-//! implementation with singleton pattern.
+//! This module defines the primary service interfaces for the cache download
+//! system, including request structures, callback traits, and the main cache
+//! download service implementation with singleton pattern.
 
 // Standard library imports for thread safety and collections
 use std::collections::hash_map::Entry;
@@ -36,8 +36,8 @@ use crate::observe::NetObserver;
 
 /// Trait defining callback methods for preload operations.
 ///
-/// Implementations of this trait receive notifications about various download events
-/// including success, failure, cancellation, and progress updates.
+/// Implementations of this trait receive notifications about various download
+/// events including success, failure, cancellation, and progress updates.
 #[allow(unused_variables)]
 pub trait PreloadCallback: Send {
     /// Called when a download operation completes successfully.
@@ -127,11 +127,10 @@ impl<'a> DownloadRequest<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// let mut request = DownloadRequest::new("https://example.com/file.txt")
-    ///     .headers(vec![
-    ///         ("User-Agent", "CacheDownload/1.0"),
-    ///         ("Accept", "application/json")
-    ///     ]);
+    /// let mut request = DownloadRequest::new("https://example.com/file.txt").headers(vec![
+    ///     ("User-Agent", "CacheDownload/1.0"),
+    ///     ("Accept", "application/json"),
+    /// ]);
     /// ```
     pub fn headers(&mut self, headers: Vec<(&'a str, &'a str)>) -> &mut Self {
         self.headers = Some(headers);
@@ -181,7 +180,8 @@ impl CacheDownloadService {
     ///
     /// Uses lazy initialization with thread safety guarantees to create
     /// the service instance only when first accessed. Also performs one-time
-    /// initialization including panic handler setup and network observer registration.
+    /// initialization including panic handler setup and network observer
+    /// registration.
     ///
     /// # Returns
     /// A static reference to the singleton service instance
@@ -256,8 +256,9 @@ impl CacheDownloadService {
 
     /// Preloads content from a URL into the cache.
     ///
-    /// Initiates a download operation for the specified URL, optionally updating
-    /// existing cached content, and using the provided callback for progress notifications.
+    /// Initiates a download operation for the specified URL, optionally
+    /// updating existing cached content, and using the provided callback
+    /// for progress notifications.
     ///
     /// # Parameters
     /// - `request`: Download request with URL and optional configuration
@@ -266,7 +267,8 @@ impl CacheDownloadService {
     /// - `downloader`: Type of downloader to use for the operation
     ///
     /// # Returns
-    /// An optional task handle for controlling the download if it was successfully started
+    /// An optional task handle for controlling the download if it was
+    /// successfully started
     pub fn preload(
         &'static self,
         request: DownloadRequest,
@@ -374,7 +376,8 @@ impl CacheDownloadService {
 
     /// Handles task completion notification.
     ///
-    /// Removes the task from tracking if the sequence number matches the current task.
+    /// Removes the task from tracking if the sequence number matches the
+    /// current task.
     ///
     /// # Parameters
     /// - `task_id`: ID of the completed task
@@ -461,7 +464,8 @@ impl CacheDownloadService {
     /// - `callback`: Callback to notify on success or return on failure
     ///
     /// # Returns
-    /// Ok(()) if content was found and callback notified, Err(callback) otherwise
+    /// Ok(()) if content was found and callback notified, Err(callback)
+    /// otherwise
     fn fetch_with_callback(
         &'static self,
         task_id: &TaskId,

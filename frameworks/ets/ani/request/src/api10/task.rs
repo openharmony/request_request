@@ -39,8 +39,8 @@ const MIN_SPEED_LIMIT: i64 = 16 * 1024;
 /// # Examples
 ///
 /// ```rust
-/// use request_api10::api10::task::start;
 /// use request_api10::api10::bridge::Task;
+/// use request_api10::api10::task::start;
 ///
 /// // Assuming task is properly initialized
 /// match start(task) {
@@ -71,8 +71,8 @@ pub fn start(this: Task) -> Result<(), BusinessError> {
 /// # Examples
 ///
 /// ```rust
-/// use request_api10::api10::task::pause;
 /// use request_api10::api10::bridge::Task;
+/// use request_api10::api10::task::pause;
 ///
 /// // Assuming task is properly initialized
 /// match pause(task) {
@@ -103,8 +103,8 @@ pub fn pause(this: Task) -> Result<(), BusinessError> {
 /// # Examples
 ///
 /// ```rust
-/// use request_api10::api10::task::resume;
 /// use request_api10::api10::bridge::Task;
+/// use request_api10::api10::task::resume;
 ///
 /// // Assuming task is properly initialized
 /// match resume(task) {
@@ -135,8 +135,8 @@ pub fn resume(this: Task) -> Result<(), BusinessError> {
 /// # Examples
 ///
 /// ```rust
-/// use request_api10::api10::task::stop;
 /// use request_api10::api10::bridge::Task;
+/// use request_api10::api10::task::stop;
 ///
 /// // Assuming task is properly initialized
 /// match stop(task) {
@@ -168,8 +168,8 @@ pub fn stop(this: Task) -> Result<(), BusinessError> {
 /// # Examples
 ///
 /// ```rust
-/// use request_api10::api10::task::set_max_speed;
 /// use request_api10::api10::bridge::Task;
+/// use request_api10::api10::task::set_max_speed;
 ///
 /// // Assuming task is properly initialized
 /// // Set max speed to 1MB per second

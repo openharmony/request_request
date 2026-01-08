@@ -13,15 +13,17 @@
 
 //! Notification group management for download tasks.
 //!
-//! This module extends the `RequestProxy` with functionality for managing notification
-//! groups for download tasks. Notification groups allow multiple related download tasks
-//! to be displayed together in the notification system.
+//! This module extends the `RequestProxy` with functionality for managing
+//! notification groups for download tasks. Notification groups allow multiple
+//! related download tasks to be displayed together in the notification system.
 
 // Local dependencies
-use crate::proxy::{RequestProxy, SERVICE_TOKEN};
 use ipc::parcel::MsgParcel;
 use ipc::remote;
-use request_core::{config::Notification, interface};
+use request_core::config::Notification;
+use request_core::interface;
+
+use crate::proxy::{RequestProxy, SERVICE_TOKEN};
 
 impl RequestProxy {
     /// Creates a new notification group for download tasks.
@@ -31,8 +33,9 @@ impl RequestProxy {
     /// - `Err(i32)` with an error code on failure
     ///
     /// # Notes
-    /// This method is currently not implemented. It will remain as a placeholder until
-    /// the notification grouping functionality is fully developed.
+    /// This method is currently not implemented. It will remain as a
+    /// placeholder until the notification grouping functionality is fully
+    /// developed.
     pub(crate) fn create_group(
         &self,
         gauge: Option<bool>,
@@ -45,7 +48,7 @@ impl RequestProxy {
         let parsed_gauge = gauge.unwrap_or(false);
         data.write(&parsed_gauge).unwrap();
 
-        //Serialize notification fields
+        // Serialize notification fields
         if let Some(title) = &notification.title {
             data.write(&true).unwrap();
             data.write(title).unwrap();
@@ -102,8 +105,9 @@ impl RequestProxy {
     /// - `Err(i32)` with an error code on failure
     ///
     /// # Notes
-    /// This method is currently not implemented. It will remain as a placeholder until
-    /// the notification grouping functionality is fully developed.
+    /// This method is currently not implemented. It will remain as a
+    /// placeholder until the notification grouping functionality is fully
+    /// developed.
     pub(crate) fn delete_group(&self, group_id: String) -> Result<(), i32> {
         let remote = self.remote()?;
         let mut data = MsgParcel::new();
@@ -125,7 +129,8 @@ impl RequestProxy {
     /// Attaches download tasks to a notification group.
     ///
     /// # Parameters
-    /// - `group_id`: Unique identifier of the notification group to attach tasks to
+    /// - `group_id`: Unique identifier of the notification group to attach
+    ///   tasks to
     /// - `task_ids`: List of task IDs to attach to the notification group
     ///
     /// # Returns
@@ -133,8 +138,9 @@ impl RequestProxy {
     /// - `Err(i32)` with an error code on failure
     ///
     /// # Notes
-    /// This method is currently not implemented. It will remain as a placeholder until
-    /// the notification grouping functionality is fully developed.
+    /// This method is currently not implemented. It will remain as a
+    /// placeholder until the notification grouping functionality is fully
+    /// developed.
     pub(crate) fn attach_group(&self, group_id: String, task_ids: Vec<String>) -> Result<(), i32> {
         let remote = self.remote()?;
         let mut data = MsgParcel::new();

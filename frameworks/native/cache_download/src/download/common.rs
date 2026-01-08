@@ -12,13 +12,14 @@
 // limitations under the License.
 
 //! Common traits for download operations.
-//! 
+//!
 //! This module defines common interfaces used across download implementations,
 //! including traits for responses, errors, and operation handles.
 
 /// Common interface for response objects.
 ///
-/// Provides a consistent way to access status codes from different response types.
+/// Provides a consistent way to access status codes from different response
+/// types.
 pub(crate) trait CommonResponse {
     /// Returns the HTTP status code.
     ///
@@ -29,14 +30,15 @@ pub(crate) trait CommonResponse {
 
 /// Common interface for error objects.
 ///
-/// Provides consistent access to error codes and messages across different error types.
+/// Provides consistent access to error codes and messages across different
+/// error types.
 pub(crate) trait CommonError {
     /// Returns the error code.
     ///
     /// # Returns
     /// The error code as a 32-bit signed integer.
     fn code(&self) -> i32;
-    
+
     /// Returns the error message.
     ///
     /// # Returns
@@ -46,20 +48,21 @@ pub(crate) trait CommonError {
 
 /// Common interface for download operation handles.
 ///
-/// Provides operations for controlling and tracking download tasks. Requires implementation
-/// to be thread-safe with `Send + Sync` bounds.
+/// Provides operations for controlling and tracking download tasks. Requires
+/// implementation to be thread-safe with `Send + Sync` bounds.
 pub(crate) trait CommonHandle: Send + Sync {
     /// Cancels the associated download operation.
     ///
     /// # Returns
     /// `true` if cancellation was successful, `false` otherwise.
     fn cancel(&self) -> bool;
-    
+
     /// Increments a reference count or usage counter for the operation.
     ///
-    /// Typically used to track active references to the handle to manage its lifecycle.
+    /// Typically used to track active references to the handle to manage its
+    /// lifecycle.
     fn add_count(&self);
-    
+
     /// Resets the download operation state.
     ///
     /// # Notes

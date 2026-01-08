@@ -12,10 +12,11 @@
 // limitations under the License.
 
 //! Cache update and synchronization operations.
-//! 
-//! This module provides the `Updater` struct for managing cache updates, including
-//! receiving data, finalizing cache entries, and resetting cache state. It handles
-//! the synchronization between incoming data and the caching system.
+//!
+//! This module provides the `Updater` struct for managing cache updates,
+//! including receiving data, finalizing cache entries, and resetting cache
+//! state. It handles the synchronization between incoming data and the caching
+//! system.
 
 use std::io::Write;
 use std::sync::Arc;
@@ -34,9 +35,9 @@ use crate::manage::CacheManager;
 
 /// Manages cache updates for a specific task.
 ///
-/// This struct handles the process of receiving data, storing it in a RAM cache,
-/// and finalizing the cache entry. It provides methods for incremental data
-/// updates and cache lifecycle management.
+/// This struct handles the process of receiving data, storing it in a RAM
+/// cache, and finalizing the cache entry. It provides methods for incremental
+/// data updates and cache lifecycle management.
 ///
 /// # Examples
 ///
@@ -59,10 +60,10 @@ use crate::manage::CacheManager;
 pub struct Updater {
     /// Unique identifier for the task being updated
     task_id: TaskId,
-    
+
     /// Optional RAM cache for storing received data
     cache: Option<RamCache>,
-    
+
     /// Reference to the global cache manager
     cache_manager: &'static CacheManager,
 }
@@ -70,8 +71,8 @@ pub struct Updater {
 impl Updater {
     /// Creates a new updater for the specified task.
     ///
-    /// Initializes an updater with the given task ID and cache manager reference,
-    /// ready to receive data for caching.
+    /// Initializes an updater with the given task ID and cache manager
+    /// reference, ready to receive data for caching.
     ///
     /// # Parameters
     /// - `task_id`: Unique identifier for the task
@@ -89,8 +90,9 @@ impl Updater {
 
     /// Finalizes the cache and returns an Arc-wrapped RamCache.
     ///
-    /// Completes the write operation on the cache and returns it wrapped in an Arc
-    /// for shared ownership. If no cache was created, initializes an empty one.
+    /// Completes the write operation on the cache and returns it wrapped in an
+    /// Arc for shared ownership. If no cache was created, initializes an
+    /// empty one.
     ///
     /// # Returns
     /// An Arc-wrapped RamCache instance containing the cached data
@@ -107,15 +109,17 @@ impl Updater {
 
     /// Receives and caches a chunk of data.
     ///
-    /// Initializes the cache if it doesn't exist yet, using the provided content length
-    /// for allocation. Writes the data to the cache and logs any errors.
+    /// Initializes the cache if it doesn't exist yet, using the provided
+    /// content length for allocation. Writes the data to the cache and logs
+    /// any errors.
     ///
     /// # Type Parameters
     /// - `F`: Function that returns the optional content length
     ///
     /// # Parameters
     /// - `data`: Data chunk to write to the cache
-    /// - `content_length`: Function that provides the total content length (if known)
+    /// - `content_length`: Function that provides the total content length (if
+    ///   known)
     pub fn cache_receive<F>(&mut self, data: &[u8], content_length: F)
     where
         F: FnOnce() -> Option<usize>,
@@ -123,11 +127,11 @@ impl Updater {
         // Initialize cache on first data reception
         if self.cache.is_none() {
             let content_length = content_length();
-            let apply_cache = 
+            let apply_cache =
                 RamCache::new(self.task_id.clone(), self.cache_manager, content_length);
             self.cache = Some(apply_cache)
         }
-        
+
         // Write data to cache and log errors without panicking
         if let Err(e) = self.cache.as_mut().unwrap().write_all(data) {
             error!("{} cache write error: {}", self.task_id.brief(), e);

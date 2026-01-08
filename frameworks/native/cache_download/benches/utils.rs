@@ -12,9 +12,10 @@
 // limitations under the License.
 
 //! Utility functions for benchmarking the cache download service.
-//! 
-//! This module provides helper functions for setting up test environments, including
-//! logging initialization and mock HTTP server creation for performance benchmarking.
+//!
+//! This module provides helper functions for setting up test environments,
+//! including logging initialization and mock HTTP server creation for
+//! performance benchmarking.
 
 use std::io::{BufRead, BufReader, Lines, Write};
 use std::net::{TcpListener, TcpStream};
@@ -22,8 +23,9 @@ use std::{fs, thread};
 
 /// Initializes the logging system for benchmark tests.
 ///
-/// Sets up the environment logger to write to a test log file with millisecond precision
-/// timestamps. Configures the logger in test mode to avoid interference with benchmarking.
+/// Sets up the environment logger to write to a test log file with millisecond
+/// precision timestamps. Configures the logger in test mode to avoid
+/// interference with benchmarking.
 ///
 /// # Panics
 ///
@@ -36,20 +38,21 @@ pub fn init() {
         .create(true)
         .open("test.log")
         .unwrap();
-    
+
     // Configure and initialize the logger
     let _ = env_logger::builder()
-        .is_test(true)  // Set test mode to reduce logging overhead
-        .format_timestamp_millis()  // Use millisecond precision for timestamps
-        .target(env_logger::Target::Pipe(Box::new(file)))  // Redirect logs to file
+        .is_test(true) // Set test mode to reduce logging overhead
+        .format_timestamp_millis() // Use millisecond precision for timestamps
+        .target(env_logger::Target::Pipe(Box::new(file))) // Redirect logs to file
         .try_init();
 }
 
 /// Creates a test HTTP server for benchmarking.
 ///
-/// Starts a new TCP listener on localhost, automatically finding an available port,
-/// and spawns a thread to handle incoming connections. The provided callback function
-/// processes the request lines, and the server responds with a simple 200 OK response.
+/// Starts a new TCP listener on localhost, automatically finding an available
+/// port, and spawns a thread to handle incoming connections. The provided
+/// callback function processes the request lines, and the server responds with
+/// a simple 200 OK response.
 ///
 /// # Type Parameters
 /// - `F`: Function to process the request lines from the client
@@ -69,7 +72,7 @@ where
 {
     let server = "127.0.0.1";
     let mut port = 7878;
-    
+
     // Find an available port by incrementing from 7878
     let listener = loop {
         match TcpListener::bind((server, port)) {
@@ -77,13 +80,13 @@ where
             Err(_) => port += 1,
         }
     };
-    
+
     // Spawn a thread to handle the connection
     thread::spawn(move || {
         let stream = listener.incoming().next().unwrap().unwrap();
         handle_connection(stream, f);
     });
-    
+
     // Return the URL of the test server
     format!("http://{}:{}", server, port)
 }
@@ -111,10 +114,10 @@ where
     // Create a buffered reader for the request
     let buf_reader = BufReader::new(&mut stream);
     let lines = buf_reader.lines();
-    
+
     // Process the request lines with the provided callback
     task_f(lines);
-    
+
     // Send a simple HTTP 200 OK response
     let response = "HTTP/1.1 200 OK\r\n\r\n";
     stream.write_all(response.as_bytes()).unwrap();

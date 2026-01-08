@@ -24,8 +24,7 @@ use ani_rs::AniEnv;
 use request_client::check::file::DownloadPathError;
 use request_client::client::error::CreateTaskError;
 use request_client::RequestClient;
-use request_core::config::TaskConfig;
-use request_core::config::Version;
+use request_core::config::{TaskConfig, Version};
 use request_core::filter::SearchFilter;
 use request_utils::context::Context;
 
@@ -129,8 +128,8 @@ pub fn check_config(env: &AniEnv, context: AniRef, config: Config) -> Result<i64
 /// # Examples
 ///
 /// ```rust
-/// use ani_rs::AniEnv;
 /// use ani_rs::objects::AniRef;
+/// use ani_rs::AniEnv;
 /// use request_api10::api10::agent::create;
 /// use request_api10::api10::bridge::Config;
 ///

@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Network observation functionality for cache download operations.
-//! 
+//!
 //! This module provides observers for monitoring network state changes and
 //! triggering appropriate actions in the cache download system.
 
@@ -24,15 +24,16 @@ use crate::services::CacheDownloadService;
 
 /// Network state observer for cache download operations.
 ///
-/// Implements the `network::Observer` trait to respond to network availability changes
-/// and coordinate task management in the cache download service.
+/// Implements the `network::Observer` trait to respond to network availability
+/// changes and coordinate task management in the cache download service.
 pub(crate) struct NetObserver;
 
 impl network::Observer for NetObserver {
     /// Handles notification when network connectivity becomes available.
     ///
     /// When a network connection is established, this method logs the event
-    /// and triggers a reset of all download tasks in the cache download service.
+    /// and triggers a reset of all download tasks in the cache download
+    /// service.
     ///
     /// # Parameters
     /// - `net_id`: Identifier of the newly available network

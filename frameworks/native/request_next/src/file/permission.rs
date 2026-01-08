@@ -25,7 +25,6 @@ const SA_PERMISSION_RWX: &str = "g:3815:rwx";
 const SA_PERMISSION_X: &str = "g:3815:x";
 const SA_PERMISSION_CLEAN: &str = "g:3815:---";
 
-
 pub struct PermissionManager {
     paths: Mutex<HashMap<String, i32>>,
     granter: Box<dyn Granter>,
@@ -82,10 +81,15 @@ impl PermissionManager {
         }
 
         debug!("Setting ACL access for path: {:?}", path);
-        if let Err(e) =
-            self.granter.grant(&path.to_string_lossy().to_string(), SA_PERMISSION_RWX)
+        if let Err(e) = self
+            .granter
+            .grant(&path.to_string_lossy().to_string(), SA_PERMISSION_RWX)
         {
-            error!("grant file: {}, error: {}", path.to_string_lossy().to_string(), e);
+            error!(
+                "grant file: {}, error: {}",
+                path.to_string_lossy().to_string(),
+                e
+            );
             return Err(13400001);
         }
         match paths.entry(path.to_string_lossy().to_string()) {
@@ -143,6 +147,8 @@ impl PermissionToken {
 
 impl Drop for PermissionToken {
     fn drop(&mut self) {
-        FileManager::get_instance().permission_manager.revoke(&self.path);
+        FileManager::get_instance()
+            .permission_manager
+            .revoke(&self.path);
     }
 }

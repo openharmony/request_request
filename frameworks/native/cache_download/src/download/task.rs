@@ -12,9 +12,10 @@
 // limitations under the License.
 
 //! Task management for cache download operations.
-//! 
-//! This module defines the core task structures and management functionality for download
-//! operations, supporting different download backends and callback handling.
+//!
+//! This module defines the core task structures and management functionality
+//! for download operations, supporting different download backends and callback
+//! handling.
 
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -41,7 +42,8 @@ use crate::services::{DownloadRequest, PreloadCallback};
 
 /// Enum representing available download backends.
 ///
-/// Used to select between different HTTP client implementations for download operations.
+/// Used to select between different HTTP client implementations for download
+/// operations.
 pub enum Downloader {
     /// Netstack-based HTTP client implementation.
     Netstack,
@@ -66,7 +68,8 @@ impl DownloadTask {
     ///
     /// # Parameters
     /// - `task_id`: Unique identifier for the download task.
-    /// - `cache_manager`: Reference to the cache manager for storing downloaded content.
+    /// - `cache_manager`: Reference to the cache manager for storing downloaded
+    ///   content.
     /// - `info_mgr`: Manager for download information.
     /// - `request`: Download request configuration.
     /// - `callback`: Callback for download events.
@@ -141,7 +144,8 @@ impl DownloadTask {
     /// - `callback`: Callback to add to the task.
     ///
     /// # Returns
-    /// `Ok(())` if the callback was successfully added, otherwise returns the callback in `Err`.
+    /// `Ok(())` if the callback was successfully added, otherwise returns the
+    /// callback in `Err`.
     pub(crate) fn try_add_callback(
         &mut self,
         callback: Box<dyn PreloadCallback>,
@@ -181,10 +185,11 @@ impl TaskHandle {
             callbacks: Arc::new(Mutex::new(VecDeque::with_capacity(1))),
         }
     }
-    
+
     /// Cancels the download task if it exists and hasn't already finished.
     ///
-    /// Uses atomic operations to ensure thread safety when checking and updating task state.
+    /// Uses atomic operations to ensure thread safety when checking and
+    /// updating task state.
     pub(crate) fn cancel(&mut self) {
         if let Some(handle) = self.handle.take() {
             info!("cancel task {}", self.task_id.brief());
@@ -250,7 +255,8 @@ impl TaskHandle {
     /// - `callback`: Callback to add to the task.
     ///
     /// # Returns
-    /// `Ok(())` if the callback was successfully added, otherwise returns the callback in `Err`.
+    /// `Ok(())` if the callback was successfully added, otherwise returns the
+    /// callback in `Err`.
     pub(crate) fn try_add_callback(
         &mut self,
         callback: Box<dyn PreloadCallback>,
@@ -305,14 +311,17 @@ impl TaskHandle {
     }
 }
 
-/// Internal function to create and start a download task using the specified downloader.
+/// Internal function to create and start a download task using the specified
+/// downloader.
 ///
 /// # Type Parameters
-/// - `F`: Type of the downloader function that performs the actual download operation.
+/// - `F`: Type of the downloader function that performs the actual download
+///   operation.
 ///
 /// # Parameters
 /// - `task_id`: Unique identifier for the download task.
-/// - `cache_manager`: Reference to the cache manager for storing downloaded content.
+/// - `cache_manager`: Reference to the cache manager for storing downloaded
+///   content.
 /// - `info_mgr`: Manager for download information.
 /// - `request`: Download request configuration.
 /// - `callback`: Optional callback for download events.
@@ -320,7 +329,8 @@ impl TaskHandle {
 /// - `seq`: Sequence number for task ordering.
 ///
 /// # Returns
-/// A new `TaskHandle` if the download operation was successfully started, otherwise `None`.
+/// A new `TaskHandle` if the download operation was successfully started,
+/// otherwise `None`.
 fn download_inner<F>(
     task_id: TaskId,
     cache_manager: &'static CacheManager,

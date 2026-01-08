@@ -14,9 +14,9 @@
 //! Request service ANI (Ark Native Interface) implementation.
 //!
 //! This crate provides the native implementation of the request service API
-//! for the OpenHarmony operating system, supporting both API version 9 and API version 10.
-//! It includes functionality for download and upload tasks, task management,
-//! callbacks, and sequence ID generation.
+//! for the OpenHarmony operating system, supporting both API version 9 and API
+//! version 10. It includes functionality for download and upload tasks, task
+//! management, callbacks, and sequence ID generation.
 
 use ani_rs::ani_constructor;
 
@@ -130,7 +130,8 @@ static A: extern "C" fn() = {
         info!("begin request service init");
 
         // Set up panic hook to log panic information
-        // This ensures that panics are logged rather than silently terminating the process
+        // This ensures that panics are logged rather than silently terminating the
+        // process
         std::panic::set_hook(Box::new(|info| {
             info!("Panic occurred: {:?}", info);
         }));

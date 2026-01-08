@@ -12,16 +12,16 @@
 // limitations under the License.
 
 //! Download information structures and utilities.
-//! 
-//! This module defines structures for accessing detailed download metrics and connection
-//! information from completed download operations.
+//!
+//! This module defines structures for accessing detailed download metrics and
+//! connection information from completed download operations.
 
 use netstack_rs::info::DownloadInfo;
 
 /// Rust wrapper for download information and metrics.
 ///
-/// Provides access to detailed timing and resource information about completed download
-/// operations.
+/// Provides access to detailed timing and resource information about completed
+/// download operations.
 pub struct RustDownloadInfo {
     /// Underlying download information from netstack.
     info: DownloadInfo,
