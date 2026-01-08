@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Module for tracking and reporting task completion statistics.
-//! 
+//!
 //! This module provides utilities to count completed and failed tasks, and
 //! report these statistics when tasks are unloaded. It uses a thread-safe
 //! singleton pattern to maintain the count state across the application.
@@ -48,14 +48,14 @@ impl RequestTaskCount {
     ///
     /// # Returns
     ///
-    /// Returns a reference-counted pointer to a mutex-wrapped `RequestTaskCount`
-    /// instance.
+    /// Returns a reference-counted pointer to a mutex-wrapped
+    /// `RequestTaskCount` instance.
     fn get_instance() -> Arc<Mutex<RequestTaskCount>> {
         // Static storage for the singleton instance
         static mut TASK_COUNT: Option<Arc<Mutex<RequestTaskCount>>> = None;
         // Ensures the initialization happens exactly once
         static ONCE: Once = Once::new();
-        
+
         ONCE.call_once(|| {
             // Initialize the singleton instance with default values
             unsafe {
@@ -133,20 +133,20 @@ pub(crate) fn task_unload() {
     let instance = RequestTaskCount::get_instance();
     // Lock the mutex to ensure thread safety while reading and resetting
     let mut task_count = instance.lock().unwrap();
-    
+
     // Only report and reset if we have new data
     if task_count.load_state {
         // Capture current counts for reporting
         let completed = task_count.completed_task_count;
         let failed = task_count.failed_task_count;
-        
+
         // Report statistics via system event
         sys_event!(
             ExecError,
             DfxCode::TASK_STATISTICS,
             &format!("Task Completed {}, failed {}", completed, failed)
         );
-        
+
         // Reset counters and state flag
         task_count.completed_task_count = 0;
         task_count.failed_task_count = 0;

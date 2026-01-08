@@ -23,13 +23,14 @@ use crate::task::config::{Action, TaskConfig};
 use crate::task::ATOMIC_SERVICE;
 
 /// Container for all files associated with a network task.
-/// 
+///
 /// Manages the main task files (upload/download targets) and their sizes,
 /// as well as any additional body files used for complex requests.
 pub(crate) struct AttachedFiles {
     /// Main files for the task (upload sources or download destinations).
     pub(crate) files: Files,
-    /// Sizes of the main files in bytes (negative values indicate unknown size).
+    /// Sizes of the main files in bytes (negative values indicate unknown
+    /// size).
     pub(crate) sizes: Vec<i64>,
     /// Additional body files for complex request scenarios.
     pub(crate) body_files: Files,
@@ -37,10 +38,11 @@ pub(crate) struct AttachedFiles {
 
 impl AttachedFiles {
     /// Opens all files specified in the task configuration.
-    /// 
-    /// Creates a new `AttachedFiles` instance by opening both the main task files
-    /// and any additional body files according to the provided configuration.
-    /// 
+    ///
+    /// Creates a new `AttachedFiles` instance by opening both the main task
+    /// files and any additional body files according to the provided
+    /// configuration.
+    ///
     /// # Errors
     /// Returns a `ServiceError` if any file fails to open.
     pub(crate) fn open(config: &TaskConfig) -> Result<AttachedFiles, ServiceError> {
@@ -55,10 +57,10 @@ impl AttachedFiles {
 }
 
 /// Opens the main task files based on the provided configuration.
-/// 
-/// Handles both upload and download scenarios, opening files in appropriate modes
-/// and collecting their sizes where applicable.
-/// 
+///
+/// Handles both upload and download scenarios, opening files in appropriate
+/// modes and collecting their sizes where applicable.
+///
 /// # Errors
 /// Returns a `ServiceError` if file opening or metadata retrieval fails.
 fn open_task_files(config: &TaskConfig) -> Result<(Files, Vec<i64>), ServiceError> {
@@ -102,7 +104,8 @@ fn open_task_files(config: &TaskConfig) -> Result<(Files, Vec<i64>), ServiceErro
                         .map(|data| data.len())
                         .map_err(ServiceError::IoError),
                     "Cannot get upload file's size - task_id: {}, idx: {}",
-                    tid, idx
+                    tid,
+                    idx
                 );
                 // Use Arc<Mutex<File>> to ensure thread-safe access
                 files.push(Arc::new(Mutex::new(file)));
@@ -148,10 +151,10 @@ fn open_task_files(config: &TaskConfig) -> Result<(Files, Vec<i64>), ServiceErro
 }
 
 /// Opens additional body files specified in the task configuration.
-/// 
+///
 /// These files are typically used for complex request scenarios requiring
 /// additional data beyond the main task files.
-/// 
+///
 /// # Errors
 /// Returns a `ServiceError` if any body file fails to open.
 fn open_body_files(config: &TaskConfig) -> Result<Files, ServiceError> {
@@ -159,7 +162,7 @@ fn open_body_files(config: &TaskConfig) -> Result<Files, ServiceError> {
     let uid = config.common_data.uid;
     let mut bundle_cache = BundleCache::new(config);
     let mut body_files = Vec::new();
-    
+
     for (idx, path) in config.body_file_paths.iter().enumerate() {
         let bundle_name = bundle_cache.get_value()?;
         let file = open_file_readwrite(uid, &bundle_name, path).map_err(|e| {
@@ -173,15 +176,15 @@ fn open_body_files(config: &TaskConfig) -> Result<Files, ServiceError> {
         })?;
         body_files.push(Arc::new(Mutex::new(file)))
     }
-    
+
     Ok(Files::new(body_files))
 }
 
 /// Opens a file in read-write mode at the specified path.
-/// 
-/// Converts the provided path using the UID and bundle name, then opens the file
-/// with read and append permissions.
-/// 
+///
+/// Converts the provided path using the UID and bundle name, then opens the
+/// file with read and append permissions.
+///
 /// # Errors
 /// Returns an `io::Error` if the file cannot be opened.
 fn open_file_readwrite(uid: u64, bundle_name: &str, path: &str) -> io::Result<File> {
@@ -195,10 +198,10 @@ fn open_file_readwrite(uid: u64, bundle_name: &str, path: &str) -> io::Result<Fi
 }
 
 /// Opens a file in read-only mode at the specified path.
-/// 
-/// Converts the provided path using the UID and bundle name, then opens the file
-/// with read-only permissions.
-/// 
+///
+/// Converts the provided path using the UID and bundle name, then opens the
+/// file with read-only permissions.
+///
 /// # Errors
 /// Returns an `io::Error` if the file cannot be opened.
 fn open_file_readonly(uid: u64, bundle_name: &str, path: &str) -> io::Result<File> {
@@ -211,10 +214,10 @@ fn open_file_readonly(uid: u64, bundle_name: &str, path: &str) -> io::Result<Fil
 }
 
 /// Converts a relative path to an absolute path based on the user and bundle.
-/// 
+///
 /// Transforms paths by replacing "storage" with "app" and "base" with a path
 /// containing the user's UUID and bundle name.
-/// 
+///
 /// # Examples
 /// ```
 /// # use crate::task::files::convert_path;
@@ -229,23 +232,24 @@ pub(crate) fn convert_path(uid: u64, bundle_name: &str, path: &str) -> String {
 }
 
 /// Extracts the UUID from a UID by dividing by 200000.
-/// 
-/// This is a standard way to map user identifiers to unique account identifiers.
+///
+/// This is a standard way to map user identifiers to unique account
+/// identifiers.
 fn get_uuid_from_uid(uid: u64) -> u64 {
     uid / 200000
 }
 
 /// Checks if a task's account matches the current foreground account.
-/// 
+///
 /// Returns `true` if the task's account matches the foreground account or if
 /// the task's account is 0 (indicating it can run under any account).
-/// 
+///
 /// # Examples
 /// ```
 /// # use crate::task::files::check_current_account;
 /// // Assuming foreground account is 1
 /// assert!(check_current_account(200000)); // task_account is 1
-/// assert!(check_current_account(0));     // account 0 can run under any account
+/// assert!(check_current_account(0)); // account 0 can run under any account
 /// assert!(!check_current_account(400000)); // task_account is 2
 /// ```
 pub(crate) fn check_current_account(task_uid: u64) -> bool {
@@ -263,7 +267,7 @@ pub(crate) fn check_current_account(task_uid: u64) -> bool {
 }
 
 /// Caches bundle name resolution for a task configuration.
-/// 
+///
 /// This struct avoids redundant bundle name conversions by caching the result
 /// of the first conversion for subsequent use.
 pub(crate) struct BundleCache<'a> {
@@ -275,7 +279,7 @@ pub(crate) struct BundleCache<'a> {
 
 impl<'a> BundleCache<'a> {
     /// Creates a new bundle cache for the given task configuration.
-    /// 
+    ///
     /// Initializes the cache with no precomputed value.
     pub(crate) fn new(config: &'a TaskConfig) -> Self {
         Self {
@@ -285,10 +289,10 @@ impl<'a> BundleCache<'a> {
     }
 
     /// Gets the resolved bundle name, using the cached value if available.
-    /// 
+    ///
     /// If the bundle name has already been resolved, returns the cached value.
     /// Otherwise, resolves the bundle name and caches the result.
-    /// 
+    ///
     /// # Errors
     /// Returns a `ServiceError` if the bundle name cannot be resolved.
     pub(crate) fn get_value(&mut self) -> Result<String, ServiceError> {
@@ -302,7 +306,7 @@ impl<'a> BundleCache<'a> {
             // If no cache, perform the conversion
             None => convert_bundle_name(self.config),
         };
-        
+
         // Update cache with the new result
         self.value = Some(ret.clone());
         ret
@@ -310,16 +314,16 @@ impl<'a> BundleCache<'a> {
 }
 
 /// Converts a bundle name based on the task configuration.
-/// 
+///
 /// Handles both atomic service bundles and regular application bundles,
 /// applying appropriate formatting for each type.
-/// 
+///
 /// # Errors
 /// Returns a `ServiceError` if the bundle name cannot be converted.
 fn convert_bundle_name(config: &TaskConfig) -> Result<String, ServiceError> {
     let is_account = config.bundle_type == ATOMIC_SERVICE;
     let bundle_name = config.bundle.as_str();
-    
+
     if is_account {
         // Format for atomic service bundles
         let atomic_account = config.atomic_account.as_str();
@@ -332,35 +336,35 @@ fn convert_bundle_name(config: &TaskConfig) -> Result<String, ServiceError> {
 }
 
 /// Checks for app clone bundle names and applies appropriate formatting.
-/// 
+///
 /// If the app is a clone (indicated by an index > 0), formats the bundle name
 /// to include the clone index.
-/// 
+///
 /// # Errors
 /// Returns a `ServiceError` if the bundle name and index cannot be retrieved.
 fn check_app_clone_bundle_name(uid: u64, bundle_name: &str) -> Result<String, ServiceError> {
     let mut ret_name = bundle_name.to_string();
-    
+
     if let Some((index, name)) = get_name_and_index(uid as i32) {
         // Log mismatch between provided and retrieved bundle names
         if bundle_name != name {
             info!("bundle name not matching. {:?}, {:?}", bundle_name, name);
         }
-        
+
         // For clone apps, append the clone index to the bundle name
         if index > 0 {
             ret_name = format!("+clone-{}+{}", index, bundle_name);
         }
-        
+
         return Ok(ret_name);
     }
-    
+
     info!("can not get bundle name and index.");
     Err(ServiceError::ErrorCode(ErrorCode::Other))
 }
 
 /// Thread-safe collection of file handles.
-/// 
+///
 /// Provides a safe interface to access multiple files concurrently,
 /// using `Arc<Mutex<File>>` to ensure thread-safe file operations.
 pub(crate) struct Files(Vec<Arc<Mutex<File>>>);
@@ -377,7 +381,7 @@ impl Files {
     }
 
     /// Gets a file handle at the specified index, if it exists.
-    /// 
+    ///
     /// Returns a clone of the `Arc<Mutex<File>>` if the index is valid,
     /// allowing thread-safe access to the file.
     pub(crate) fn get(&self, index: usize) -> Option<Arc<Mutex<File>>> {

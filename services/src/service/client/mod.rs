@@ -12,10 +12,11 @@
 // limitations under the License.
 
 //! Client communication module for the request service.
-//! 
-//! This module implements client connection management, message routing, and inter-process
-//! communication through Unix domain sockets. It provides components for sending and
-//! receiving various types of events and notifications between the request service and its clients.
+//!
+//! This module implements client connection management, message routing, and
+//! inter-process communication through Unix domain sockets. It provides
+//! components for sending and receiving various types of events and
+//! notifications between the request service and its clients.
 
 mod manager;
 
@@ -45,87 +46,88 @@ const HEADERS_MAX_SIZE: u16 = 8 * 1024;
 /// Position in the message buffer where the length field is stored.
 const POSITION_OF_LENGTH: u32 = 10;
 
-/// Events used for communication between the client manager and client handlers.
+/// Events used for communication between the client manager and client
+/// handlers.
 #[derive(Debug)]
 pub(crate) enum ClientEvent {
     /// Opens a communication channel for a client process.
-    /// 
+    ///
     /// # Fields
-    /// 
+    ///
     /// * `0` - Process ID of the client
     /// * `1` - Sender to return the socket result
     OpenChannel(u64, Sender<Result<Arc<UnixDatagram>, ErrorCode>>),
-    
+
     /// Subscribes a client to notifications for a specific task.
-    /// 
+    ///
     /// # Fields
-    /// 
+    ///
     /// * `0` - Task ID
     /// * `1` - Process ID of the client
     /// * `2` - User ID
     /// * `3` - Token ID
     /// * `4` - Sender to confirm subscription status
     Subscribe(u32, u64, u64, u64, Sender<ErrorCode>),
-    
+
     /// Unsubscribes a client from task notifications.
-    /// 
+    ///
     /// # Fields
-    /// 
+    ///
     /// * `0` - Task ID
     /// * `1` - Sender to confirm unsubscription status
     Unsubscribe(u32, Sender<ErrorCode>),
-    
+
     /// Notifies that a task has finished.
-    /// 
+    ///
     /// # Fields
-    /// 
+    ///
     /// * `0` - Task ID
     TaskFinished(u32),
-    
+
     /// Handles termination of a client process.
-    /// 
+    ///
     /// # Fields
-    /// 
+    ///
     /// * `0` - Process ID
     /// * `1` - Sender to confirm termination handling
     Terminate(u64, Sender<ErrorCode>),
-    
+
     /// Sends an HTTP response to a client.
-    /// 
+    ///
     /// # Fields
-    /// 
+    ///
     /// * `0` - Task ID
     /// * `1` - HTTP version
     /// * `2` - Status code
     /// * `3` - Reason phrase
     /// * `4` - HTTP headers
     SendResponse(u32, String, u32, String, Headers),
-    
+
     /// Sends notification data to a client.
-    /// 
+    ///
     /// # Fields
-    /// 
+    ///
     /// * `0` - Type of subscription
     /// * `1` - Notification data
     SendNotifyData(SubscribeType, NotifyData),
-    
+
     /// Sends fault information to a client.
-    /// 
+    ///
     /// # Fields
-    /// 
+    ///
     /// * `0` - Task ID
     /// * `1` - Type of subscription
     /// * `2` - Reason for the fault
     SendFaults(u32, SubscribeType, Reason),
-    
+
     /// Sends waiting notification to a client.
-    /// 
+    ///
     /// # Fields
-    /// 
+    ///
     /// * `0` - Task ID
     /// * `1` - Cause of waiting
     SendWaitNotify(u32, WaitingCause),
-    
+
     /// Signals to shutdown the client handler.
     Shutdown,
 }
@@ -333,8 +335,8 @@ impl ClientManagerEntry {
 // uid and token_id will be used later
 /// Handles communication with a single client process.
 ///
-/// This struct manages the socket connection to a client process and handles the
-/// serialization and sending of various message types.
+/// This struct manages the socket connection to a client process and handles
+/// the serialization and sending of various message types.
 pub(crate) struct Client {
     /// Process ID of the client.
     pub(crate) pid: u64,
@@ -351,8 +353,9 @@ pub(crate) struct Client {
 impl Client {
     /// Creates a new client handler and returns a sender and socket pair.
     ///
-    /// This function creates a new Unix domain socket pair, initializes a client handler,
-    /// and spawns it in a new task. The client socket is returned to be passed to the client process.
+    /// This function creates a new Unix domain socket pair, initializes a
+    /// client handler, and spawns it in a new task. The client socket is
+    /// returned to be passed to the client process.
     ///
     /// # Arguments
     ///
@@ -360,7 +363,8 @@ impl Client {
     ///
     /// # Returns
     ///
-    /// `Some((UnboundedSender<ClientEvent>, Arc<UnixDatagram>))` if successful, or `None` if socket creation fails
+    /// `Some((UnboundedSender<ClientEvent>, Arc<UnixDatagram>))` if successful,
+    /// or `None` if socket creation fails
     pub(crate) fn constructor(
         pid: u64,
     ) -> Option<(UnboundedSender<ClientEvent>, Arc<UnixDatagram>)> {
@@ -394,8 +398,9 @@ impl Client {
 
     /// Main message processing loop for the client handler.
     ///
-    /// This async method continuously receives events, batches them for processing,
-    /// and sends the appropriate messages to the client through the socket.
+    /// This async method continuously receives events, batches them for
+    /// processing, and sends the appropriate messages to the client through
+    /// the socket.
     async fn run(mut self) {
         loop {
             // for one task, only send last progress message
@@ -463,8 +468,8 @@ impl Client {
 
     /// Handles sending fault information to the client.
     ///
-    /// This method constructs and sends a fault notification message with the given task ID,
-    /// subscription type, and reason.
+    /// This method constructs and sends a fault notification message with the
+    /// given task ID, subscription type, and reason.
     ///
     /// # Arguments
     ///
@@ -508,15 +513,15 @@ impl Client {
         let size = size.to_le_bytes();
         message[POSITION_OF_LENGTH as usize] = size[0];
         message[(POSITION_OF_LENGTH + 1) as usize] = size[1];
-        
+
         // Send the constructed message
         self.send_message(message).await;
     }
 
     /// Handles sending waiting notifications to the client.
     ///
-    /// This method constructs and sends a waiting notification message with the given task ID
-    /// and waiting reason.
+    /// This method constructs and sends a waiting notification message with the
+    /// given task ID and waiting reason.
     ///
     /// # Arguments
     ///
@@ -562,8 +567,8 @@ impl Client {
 
     /// Handles sending HTTP responses to the client.
     ///
-    /// This method constructs and sends an HTTP response message with the given task ID,
-    /// version, status code, reason, and headers.
+    /// This method constructs and sends an HTTP response message with the given
+    /// task ID, version, status code, reason, and headers.
     ///
     /// # Arguments
     ///
@@ -639,7 +644,7 @@ impl Client {
             response.truncate(HEADERS_MAX_SIZE as usize);
             size = HEADERS_MAX_SIZE;
         }
-        
+
         // Update the message size
         debug!("send response size, {:?}", size);
         let size = size.to_le_bytes();
@@ -652,8 +657,9 @@ impl Client {
 
     /// Handles sending notification data to the client.
     ///
-    /// This method constructs and sends a notification message with the given subscription type
-    /// and notification data, including progress information, state, and file statuses.
+    /// This method constructs and sends a notification message with the given
+    /// subscription type and notification data, including progress
+    /// information, state, and file statuses.
     ///
     /// # Arguments
     ///
@@ -756,10 +762,7 @@ impl Client {
                 notify_data.task_id, subscribe_type, size
             );
         } else {
-            info!(
-                "send {} {:?}",
-                notify_data.task_id, subscribe_type
-            );
+            info!("send {} {:?}", notify_data.task_id, subscribe_type);
         }
 
         let size = size.to_le_bytes();
@@ -772,9 +775,9 @@ impl Client {
 
     /// Sends a message to the client through the Unix domain socket.
     ///
-    /// This method sends a message to the client and waits for an acknowledgment
-    /// to ensure delivery. It includes a timeout to prevent hanging if the client
-    /// doesn't respond.
+    /// This method sends a message to the client and waits for an
+    /// acknowledgment to ensure delivery. It includes a timeout to prevent
+    /// hanging if the client doesn't respond.
     ///
     /// # Arguments
     ///

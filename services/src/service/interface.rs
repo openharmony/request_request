@@ -12,10 +12,10 @@
 // limitations under the License.
 
 //! IPC interface codes for request operations.
-//! 
-//! This module defines constants used as IPC command codes for the request service interface.
-//! These codes are used to identify different operations in IPC communication between clients
-//! and the request service.
+//!
+//! This module defines constants used as IPC command codes for the request
+//! service interface. These codes are used to identify different operations in
+//! IPC communication between clients and the request service.
 
 /// Constructs a new request.
 pub const CONSTRUCT: u32 = 0;
@@ -68,7 +68,8 @@ pub const SET_MODE: u32 = 100;
 /// Disables notifications for a specific task.
 pub const DISABLE_TASK_NOTIFICATION: u32 = 101;
 
-/// Function code for the request notification interface to notify run count changes.
+/// Function code for the request notification interface to notify run count
+/// changes.
 pub(crate) const NOTIFY_RUN_COUNT: u32 = 2;
 
 #[cfg(test)]

@@ -83,15 +83,15 @@ pub enum NetworkConfig {
 }
 
 /// Minimum speed requirements for a network task.
-/// 
-/// If the network speed falls below the specified threshold for the given duration,
-/// the task may be paused or rescheduled.
+///
+/// If the network speed falls below the specified threshold for the given
+/// duration, the task may be paused or rescheduled.
 #[derive(Copy, Clone, Debug, Default)]
 pub struct MinSpeed {
     /// Minimum acceptable speed in bytes per second.
     pub(crate) speed: i64,
-    /// Duration in milliseconds that the speed must be sustained below the threshold
-    /// before triggering a response.
+    /// Duration in milliseconds that the speed must be sustained below the
+    /// threshold before triggering a response.
     pub(crate) duration: i64,
 }
 
@@ -153,7 +153,7 @@ pub(crate) struct CommonTaskConfig {
 }
 
 /// Complete configuration for a network task.
-/// 
+///
 /// Contains all necessary parameters to execute a download or upload operation,
 /// including network preferences, file specifications, authentication details,
 /// and execution constraints.
@@ -224,9 +224,10 @@ impl TaskConfig {
     }
 
     /// Determines if a task satisfies foreground execution requirements.
-    /// 
-    /// A task can run in the foreground if it's configured for background execution
-    /// or if its associated UID is in the set of active foreground abilities.
+    ///
+    /// A task can run in the foreground if it's configured for background
+    /// execution or if its associated UID is in the set of active
+    /// foreground abilities.
     pub(crate) fn satisfy_foreground(&self, foreground_abilities: &HashSet<u64>) -> bool {
         self.common_data.mode == Mode::BackGround
             || foreground_abilities.contains(&self.common_data.uid)
@@ -234,7 +235,7 @@ impl TaskConfig {
 }
 
 /// Internal representation of a task configuration optimized for C FFI.
-/// 
+///
 /// Converts high-level Rust types into C-compatible representations
 /// for interoperability with native code.
 pub(crate) struct ConfigSet {
@@ -261,7 +262,7 @@ impl PartialOrd for Mode {
 
 impl Ord for Mode {
     /// Compares two execution modes to determine their relative priority.
-    /// 
+    ///
     /// Ordering is based on execution priority: FrontEnd > Any > BackGround
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.to_usize().cmp(&other.to_usize())
@@ -272,7 +273,7 @@ impl Mode {
     /// Converts a Mode enum to a numeric priority value.
     fn to_usize(self) -> usize {
         match self {
-            Mode::FrontEnd => 0,  // Highest priority
+            Mode::FrontEnd => 0, // Highest priority
             Mode::Any => 1,
             Mode::BackGround => 2, // Lowest priority
             _ => unreachable!(),
@@ -282,7 +283,7 @@ impl Mode {
 
 impl From<u8> for Mode {
     /// Converts a raw u8 value to a Mode enum.
-    /// 
+    ///
     /// Maps numeric identifiers to their corresponding execution modes.
     /// Values outside the defined range default to Mode::Any.
     fn from(value: u8) -> Self {
@@ -296,7 +297,7 @@ impl From<u8> for Mode {
 
 impl From<u8> for Action {
     /// Converts a raw u8 value to an Action enum.
-    /// 
+    ///
     /// Maps numeric identifiers to their corresponding action types.
     /// Values outside the defined range default to Action::Any.
     fn from(value: u8) -> Self {
@@ -310,7 +311,7 @@ impl From<u8> for Action {
 
 impl From<u8> for Version {
     /// Converts a raw u8 value to a Version enum.
-    /// 
+    ///
     /// Maps numeric identifiers to their corresponding API versions.
     /// Defaults to API9 for unsupported values.
     fn from(value: u8) -> Self {
@@ -323,7 +324,7 @@ impl From<u8> for Version {
 
 impl From<u8> for NetworkConfig {
     /// Converts a raw u8 value to a NetworkConfig enum.
-    /// 
+    ///
     /// Maps numeric identifiers to their corresponding network configurations.
     /// Defaults to Wifi for unsupported values.
     fn from(value: u8) -> Self {
@@ -337,7 +338,7 @@ impl From<u8> for NetworkConfig {
 
 impl TaskConfig {
     /// Creates a C-compatible configuration set from the current task config.
-    /// 
+    ///
     /// Transforms Rust-native types into formats suitable for FFI interactions
     /// with C/C++ code, including stringifying hash maps and converting vectors
     /// to C-compatible representations.
@@ -357,7 +358,7 @@ impl TaskConfig {
     }
 
     /// Checks if the task configuration includes any user files.
-    /// 
+    ///
     /// Returns true if any file specification in the configuration
     /// is marked as a user file, false otherwise.
     pub(crate) fn contains_user_file(&self) -> bool {
@@ -372,7 +373,7 @@ impl TaskConfig {
 
 impl Default for TaskConfig {
     /// Creates a default task configuration with sensible initial values.
-    /// 
+    ///
     /// Sets up a basic download task with common defaults that can be
     /// customized through the ConfigBuilder.
     fn default() -> Self {
@@ -423,7 +424,7 @@ impl Default for TaskConfig {
 }
 
 /// Builder pattern for constructing TaskConfig instances.
-/// 
+///
 /// Provides a fluent interface for incrementally configuring network tasks
 /// with method chaining for improved readability and usability.
 pub struct ConfigBuilder {
@@ -585,7 +586,7 @@ impl Serialize for TaskConfig {
             parcel.write(&form_item.name)?;
             parcel.write(&form_item.value)?;
         }
-        
+
         // Write file specifications with special handling for user files
         parcel.write(&(self.file_specs.len() as u32))?;
         for file_spec in &self.file_specs {
@@ -606,7 +607,7 @@ impl Serialize for TaskConfig {
         for body_file_path in self.body_file_paths.iter() {
             parcel.write(body_file_path)?;
         }
-        
+
         // Write headers map
         parcel.write(&(self.headers.len() as u32))?;
         for header in self.headers.iter() {
@@ -708,7 +709,8 @@ impl Deserialize for TaskConfig {
             form_items.push(FormItem { name, value });
         }
 
-        // Read file specifications with size validation and special handling for user files
+        // Read file specifications with size validation and special handling for user
+        // files
         let file_size: u32 = parcel.read()?;
         if file_size > parcel.readable() as u32 {
             error!("deserialize failed: file_specs size too large");

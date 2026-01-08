@@ -210,7 +210,7 @@ pub(crate) struct UpdateInfo {
 
 impl From<u8> for State {
     /// Converts a byte value to a `State` enum variant.
-    /// 
+    ///
     /// # Notes
     /// Values not explicitly mapped default to `State::Any`.
     fn from(value: u8) -> Self {
@@ -231,7 +231,7 @@ impl From<u8> for State {
 
 impl TaskInfo {
     /// Builds an `InfoSet` for FFI communication from this `TaskInfo`.
-    /// 
+    ///
     /// Converts various components to C-compatible formats for interop.
     pub(crate) fn build_info_set(&self) -> InfoSet {
         InfoSet {
@@ -243,7 +243,8 @@ impl TaskInfo {
         }
     }
 
-    /// Creates a list of `EachFileStatus` objects representing the status of each file.
+    /// Creates a list of `EachFileStatus` objects representing the status of
+    /// each file.
     pub(crate) fn build_each_file_status(&self) -> Vec<EachFileStatus> {
         EachFileStatus::create_each_file_status(
             &self.file_specs,

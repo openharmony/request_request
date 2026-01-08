@@ -19,7 +19,7 @@ use super::reason::Reason;
 use crate::FileSpec;
 
 /// Types of events that can be subscribed to for task notifications.
-/// 
+///
 /// Used to specify which events a client wants to receive callbacks for.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum SubscribeType {
@@ -112,11 +112,12 @@ pub(crate) struct EachFileStatus {
 }
 
 impl EachFileStatus {
-    /// Creates a list of `EachFileStatus` objects for a set of file specifications.
-    /// 
-    /// Assigns the provided reason to files at or after the specified index, and
-    /// `Reason::Default` to files before the index.
-    /// 
+    /// Creates a list of `EachFileStatus` objects for a set of file
+    /// specifications.
+    ///
+    /// Assigns the provided reason to files at or after the specified index,
+    /// and `Reason::Default` to files before the index.
+    ///
     /// # Parameters
     /// - `file_specs`: List of file specifications to create statuses for
     /// - `index`: Starting index for applying the provided reason
@@ -143,10 +144,10 @@ impl EachFileStatus {
 
 impl Progress {
     /// Creates a new `Progress` instance with the specified file sizes.
-    /// 
+    ///
     /// Initializes all files to have processed 0 bytes and sets the state to
     /// `State::Initialized`.
-    /// 
+    ///
     /// # Parameters
     /// - `sizes`: List of file sizes in bytes (-1 indicates unknown size)
     pub(crate) fn new(sizes: Vec<i64>) -> Self {
@@ -164,7 +165,7 @@ impl Progress {
     }
 
     /// Checks if the task has finished processing all files.
-    /// 
+    ///
     /// Returns `true` only if:
     /// 1. All files have known sizes (no -1 values)
     /// 2. The sum of processed bytes equals the sum of total sizes

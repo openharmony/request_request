@@ -12,9 +12,10 @@
 // limitations under the License.
 
 //! Speed limiting implementation for network operations.
-//! 
-//! This module provides a `SpeedLimiter` struct that can be used to control the rate
-//! of data transfer operations, ensuring they don't exceed specified speed limits.
+//!
+//! This module provides a `SpeedLimiter` struct that can be used to control the
+//! rate of data transfer operations, ensuring they don't exceed specified speed
+//! limits.
 
 use std::future::Future;
 use std::pin::Pin;
@@ -25,29 +26,31 @@ use ylong_http_client::HttpClientError;
 use ylong_runtime::time::{sleep, Sleep};
 
 /// Controls the rate of data transfer operations.
-/// 
-/// This struct implements a token bucket-like algorithm to limit the speed of data transfers.
+///
+/// This struct implements a token bucket-like algorithm to limit the speed of
+/// data transfers.
 #[derive(Default)]
 pub(crate) struct SpeedLimiter {
     /// Timestamp of the last speed check in milliseconds.
     pub(crate) last_time: u64,
-    
+
     /// Amount of data transferred at the last check in bytes.
     pub(crate) last_size: u64,
-    
+
     /// Maximum allowed transfer rate in bytes per second.
     pub(crate) speed_limit: u64,
-    
+
     /// Optional future for sleep operations when rate limiting is active.
     pub(crate) sleep: Option<Pin<Box<Sleep>>>,
 }
 
 impl SpeedLimiter {
     /// Updates the speed limit and resets internal state if changed.
-    /// 
+    ///
     /// # Arguments
-    /// 
-    /// * `speed_limit` - New speed limit in bytes per second. A value of 0 disables limiting.
+    ///
+    /// * `speed_limit` - New speed limit in bytes per second. A value of 0
+    ///   disables limiting.
     pub(crate) fn update_speed_limit(&mut self, speed_limit: u64) {
         if self.speed_limit != speed_limit {
             // Reset state when limit changes to ensure accurate speed measurement
@@ -58,22 +61,26 @@ impl SpeedLimiter {
         }
     }
 
-    /// Checks if the transfer rate exceeds the limit and applies throttling if needed.
-    /// 
-    /// This method implements a polling interface to integrate with asynchronous operations.
-    /// It calculates the current transfer speed and returns `Poll::Pending` if throttling is
-    /// required, causing the executor to wait until the speed is back within limits.
-    /// 
+    /// Checks if the transfer rate exceeds the limit and applies throttling if
+    /// needed.
+    ///
+    /// This method implements a polling interface to integrate with
+    /// asynchronous operations. It calculates the current transfer speed
+    /// and returns `Poll::Pending` if throttling is required, causing the
+    /// executor to wait until the speed is back within limits.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `cx` - The task context for registering wakeups.
     /// * `current_time` - Current timestamp in milliseconds.
     /// * `current_size` - Total number of bytes transferred so far.
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// * `Poll::Ready(Ok(()))` - When the operation can proceed without throttling.
-    /// * `Poll::Pending` - When the transfer rate exceeds the limit and the operation should wait.
+    ///
+    /// * `Poll::Ready(Ok(()))` - When the operation can proceed without
+    ///   throttling.
+    /// * `Poll::Pending` - When the transfer rate exceeds the limit and the
+    ///   operation should wait.
     pub(crate) fn poll_check_limit(
         &mut self,
         cx: &mut Context<'_>,
@@ -82,7 +89,7 @@ impl SpeedLimiter {
     ) -> Poll<Result<(), HttpClientError>> {
         // Interval for speed measurement in milliseconds
         const SPEED_LIMIT_INTERVAL: u64 = 1000;
-        
+
         self.sleep = None;
         if self.speed_limit != 0 {
             if self.last_time == 0 || current_time - self.last_time >= SPEED_LIMIT_INTERVAL {

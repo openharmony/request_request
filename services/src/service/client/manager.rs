@@ -12,9 +12,10 @@
 // limitations under the License.
 
 //! Client management system for the request service.
-//! 
-//! This module provides components for managing client connections, handling subscriptions,
-//! and sending notifications between the service and its clients through Unix domain sockets.
+//!
+//! This module provides components for managing client connections, handling
+//! subscriptions, and sending notifications between the service and its clients
+//! through Unix domain sockets.
 
 use std::collections::{hash_map, HashMap};
 use std::sync::Arc;
@@ -33,8 +34,8 @@ use crate::utils::runtime_spawn;
 
 /// Lightweight handle for sending events to the `ClientManager`.
 ///
-/// This struct provides a thread-safe, cloneable entry point for sending events to the
-/// client manager without direct access to its internal state.
+/// This struct provides a thread-safe, cloneable entry point for sending events
+/// to the client manager without direct access to its internal state.
 #[derive(Clone)]
 pub(crate) struct ClientManagerEntry {
     /// Channel for sending events to the client manager.
@@ -42,7 +43,8 @@ pub(crate) struct ClientManagerEntry {
 }
 
 impl ClientManagerEntry {
-    /// Creates a new `ClientManagerEntry` with the provided event sender channel.
+    /// Creates a new `ClientManagerEntry` with the provided event sender
+    /// channel.
     ///
     /// # Arguments
     ///
@@ -63,12 +65,13 @@ impl ClientManagerEntry {
     ///
     /// # Returns
     ///
-    /// `true` if the event was successfully sent, `false` if the client manager is no longer available.
+    /// `true` if the event was successfully sent, `false` if the client manager
+    /// is no longer available.
     ///
     /// # Notes
     ///
-    /// On OpenHarmony platforms, failure to send events will log detailed error information
-    /// and trigger a system event for debugging purposes.
+    /// On OpenHarmony platforms, failure to send events will log detailed error
+    /// information and trigger a system event for debugging purposes.
     pub(crate) fn send_event(&self, event: ClientEvent) -> bool {
         if self.tx.send(event).is_err() {
             // Log detailed error information on OpenHarmony platforms
@@ -90,7 +93,8 @@ impl ClientManagerEntry {
         true
     }
 }
-/// Core client management system for tracking connections and handling event routing.
+/// Core client management system for tracking connections and handling event
+/// routing.
 ///
 /// This struct maintains client connections, manages task-to-client mappings,
 /// and routes events between the service and its clients.
@@ -105,14 +109,17 @@ pub(crate) struct ClientManager {
 }
 
 impl ClientManager {
-    /// Initializes a new client manager and returns an entry point for sending events.
+    /// Initializes a new client manager and returns an entry point for sending
+    /// events.
     ///
-    /// This function creates a new client manager instance, spawns it in a new runtime task,
-    /// and returns a lightweight entry point for sending events to it.
+    /// This function creates a new client manager instance, spawns it in a new
+    /// runtime task, and returns a lightweight entry point for sending
+    /// events to it.
     ///
     /// # Returns
     ///
-    /// A new `ClientManagerEntry` that can be used to communicate with the client manager.
+    /// A new `ClientManagerEntry` that can be used to communicate with the
+    /// client manager.
     pub(crate) fn init() -> ClientManagerEntry {
         debug!("ClientManager init");
         let (tx, rx) = unbounded_channel();
@@ -155,7 +162,7 @@ impl ClientManager {
                 ClientEvent::Unsubscribe(tid, tx) => self.handle_unsubscribe(tid, tx),
                 ClientEvent::TaskFinished(tid) => self.handle_task_finished(tid),
                 ClientEvent::Terminate(pid, tx) => self.handle_process_terminated(pid, tx),
-                
+
                 // Response event routing
                 ClientEvent::SendResponse(tid, version, status_code, reason, headers) => {
                     if let Some(&pid) = self.pid_map.get(&tid) {
@@ -181,12 +188,12 @@ impl ClientManager {
                         debug!("response pid not found");
                     }
                 }
-                
+
                 // Notification data routing
                 ClientEvent::SendNotifyData(subscribe_type, notify_data) => {
                     if let Some(&pid) = self.pid_map.get(&(notify_data.task_id)) {
                         if let Some((tx, _fd)) = self.clients.get_mut(&pid) {
-                            if let Err(err) = 
+                            if let Err(err) =
                                 tx.send(ClientEvent::SendNotifyData(subscribe_type, notify_data))
                             {
                                 error!("send notify data error, {}", err);
@@ -203,12 +210,12 @@ impl ClientManager {
                         debug!("notify data pid not found");
                     }
                 }
-                
+
                 // Fault notification routing
                 ClientEvent::SendFaults(tid, subscribe_type, reason) => {
                     if let Some(&pid) = self.pid_map.get(&tid) {
                         if let Some((tx, _fd)) = self.clients.get_mut(&pid) {
-                            if let Err(err) = 
+                            if let Err(err) =
                                 tx.send(ClientEvent::SendFaults(tid, subscribe_type, reason))
                             {
                                 error!("send faults error, {}", err);
@@ -221,7 +228,7 @@ impl ClientManager {
                         }
                     }
                 }
-                
+
                 // Wait notification routing
                 ClientEvent::SendWaitNotify(tid, reason) => {
                     if let Some(&pid) = self.pid_map.get(&tid) {
@@ -237,7 +244,7 @@ impl ClientManager {
                         }
                     }
                 }
-                
+
                 // Ignore unhandled events
                 _ => {}
             }
@@ -248,7 +255,8 @@ impl ClientManager {
 
     /// Handles client channel opening requests.
     ///
-    /// This method either returns an existing channel for a process or creates a new one.
+    /// This method either returns an existing channel for a process or creates
+    /// a new one.
     ///
     /// # Arguments
     ///

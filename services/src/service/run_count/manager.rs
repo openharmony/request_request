@@ -12,11 +12,12 @@
 // limitations under the License.
 
 //! Provides a manager for tracking and notifying about running task counts.
-//! 
+//!
 //! This module implements a system to maintain the number of running tasks and
-//! notify interested clients when this count changes. It uses a manager-worker pattern
-//! where the `RunCountManagerEntry` provides an API for clients to interact with the
-//! background `RunCountManager` that handles event processing.
+//! notify interested clients when this count changes. It uses a manager-worker
+//! pattern where the `RunCountManagerEntry` provides an API for clients to
+//! interact with the background `RunCountManager` that handles event
+//! processing.
 
 use std::collections::HashMap;
 
@@ -32,7 +33,7 @@ use crate::error::ErrorCode;
 use crate::utils::runtime_spawn;
 
 /// Entry point for interacting with the run count manager.
-/// 
+///
 /// This struct provides a client-facing API to send events to the background
 /// `RunCountManager` without blocking the caller.
 #[derive(Clone)]
@@ -43,27 +44,28 @@ pub(crate) struct RunCountManagerEntry {
 
 impl RunCountManagerEntry {
     /// Creates a new entry point for the run count manager.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `tx` - Sender channel for communicating with the RunCountManager
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A new `RunCountManagerEntry` instance
     pub(crate) fn new(tx: UnboundedSender<RunCountEvent>) -> Self {
         Self { tx }
     }
 
     /// Sends an event to the run count manager.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `event` - The event to send
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// `true` if the event was sent successfully, `false` if the manager is down
+    ///
+    /// `true` if the event was sent successfully, `false` if the manager is
+    /// down
     pub(crate) fn send_event(&self, event: RunCountEvent) -> bool {
         if self.tx.send(event).is_err() {
             #[cfg(feature = "oh")]
@@ -85,16 +87,16 @@ impl RunCountManagerEntry {
     }
     #[cfg(feature = "oh")]
     /// Subscribes to run count updates.
-    /// 
+    ///
     /// Registers a client to receive notifications when the run count changes.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `pid` - Process ID of the client
     /// * `obj` - Remote object for IPC communication
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Error code indicating success or failure
     pub(crate) fn subscribe_run_count(&self, pid: u64, obj: RemoteObj) -> ErrorCode {
         let (tx, rx) = oneshot::channel::<ErrorCode>();
@@ -111,15 +113,15 @@ impl RunCountManagerEntry {
     }
 
     /// Unsubscribes from run count updates.
-    /// 
+    ///
     /// Removes a client's registration for run count notifications.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `pid` - Process ID of the client
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Error code indicating success or failure
     pub(crate) fn unsubscribe_run_count(&self, pid: u64) -> ErrorCode {
         let (tx, rx) = oneshot::channel::<ErrorCode>();
@@ -130,11 +132,12 @@ impl RunCountManagerEntry {
 
     #[cfg(feature = "oh")]
     /// Notifies all subscribers of a run count change.
-    /// 
-    /// Triggers an update to broadcast the new run count to all registered clients.
-    /// 
+    ///
+    /// Triggers an update to broadcast the new run count to all registered
+    /// clients.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `new_count` - The new number of running tasks
     pub(crate) fn notify_run_count(&self, new_count: usize) {
         let event = RunCountEvent::Change(new_count);
@@ -143,7 +146,7 @@ impl RunCountManagerEntry {
 }
 
 /// Background manager that processes run count events and notifies subscribers.
-/// 
+///
 /// Maintains the current count of running tasks and manages subscriptions,
 /// running in a dedicated asynchronous task to handle events.
 pub(crate) struct RunCountManager {
@@ -157,12 +160,12 @@ pub(crate) struct RunCountManager {
 
 impl RunCountManager {
     /// Initializes the run count manager and starts its event loop.
-    /// 
+    ///
     /// Spawns a background task to process run count events and returns
     /// an entry point for clients to interact with the manager.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A new `RunCountManagerEntry` instance for client interaction
     pub(crate) fn init() -> RunCountManagerEntry {
         debug!("RunCountManager init");
@@ -177,9 +180,10 @@ impl RunCountManager {
     }
 
     /// Main event processing loop for the run count manager.
-    /// 
-    /// Continuously receives and processes events from the RunCountManagerEntry,
-    /// handling subscription, unsubscription, and run count change operations.
+    ///
+    /// Continuously receives and processes events from the
+    /// RunCountManagerEntry, handling subscription, unsubscription, and run
+    /// count change operations.
     async fn run(mut self) {
         loop {
             let recv = match self.rx.recv().await {
@@ -209,12 +213,12 @@ impl RunCountManager {
 
     #[cfg(feature = "oh")]
     /// Handles a subscription request.
-    /// 
+    ///
     /// Registers a new client for run count notifications and immediately sends
     /// the current run count to the client.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `pid` - Process ID of the client
     /// * `obj` - Remote object for IPC communication
     /// * `tx` - Sender channel to return the result
@@ -228,11 +232,11 @@ impl RunCountManager {
     }
 
     /// Handles an unsubscription request.
-    /// 
+    ///
     /// Removes a client from the subscriber list if they were registered.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `subscribe_pid` - Process ID of the client to unsubscribe
     /// * `tx` - Sender channel to return the result
     fn unsubscribe_run_count(&mut self, subscribe_pid: u64, tx: Sender<ErrorCode>) {
@@ -245,12 +249,12 @@ impl RunCountManager {
 
     #[cfg(feature = "oh")]
     /// Updates the run count and notifies all subscribers.
-    /// 
-    /// Updates the internal count and broadcasts the change to all registered clients.
-    /// Removes any clients that fail to receive the update.
-    /// 
+    ///
+    /// Updates the internal count and broadcasts the change to all registered
+    /// clients. Removes any clients that fail to receive the update.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `new_count` - The new number of running tasks
     fn change_run_count(&mut self, new_count: usize) {
         // Skip update if count hasn't changed to avoid unnecessary notifications
@@ -258,7 +262,8 @@ impl RunCountManager {
             return;
         }
         self.count = new_count;
-        // Notify all clients and automatically remove any that fail to receive the update
+        // Notify all clients and automatically remove any that fail to receive the
+        // update
         self.remotes
             .retain(|_, remote| remote.notify_run_count(self.count as i64).is_ok());
     }

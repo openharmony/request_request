@@ -12,16 +12,14 @@
 // limitations under the License.
 
 //! Task management for HTTP requests.
-//! 
+//!
 //! This module provides core functionality for managing HTTP request tasks,
-//! including download and upload operations, progress tracking, and error handling.
-//! It defines the main `RequestTask` structure and associated components for
-//! controlling the lifecycle of network operations.
+//! including download and upload operations, progress tracking, and error
+//! handling. It defines the main `RequestTask` structure and associated
+//! components for controlling the lifecycle of network operations.
 
 use std::io::{self};
-use std::sync::atomic::{
-    AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, Ordering,
-};
+use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -58,79 +56,79 @@ const RETRY_INTERVAL: u64 = 400;
 
 /// Represents an HTTP request task.
 ///
-/// This struct encapsulates all the information and state needed to execute and manage
-/// an HTTP request task, including configuration, client state, file information,
-/// progress tracking, and notification mechanisms.
+/// This struct encapsulates all the information and state needed to execute and
+/// manage an HTTP request task, including configuration, client state, file
+/// information, progress tracking, and notification mechanisms.
 pub(crate) struct RequestTask {
     /// Task configuration containing request parameters, headers, and metadata.
     pub(crate) conf: TaskConfig,
-    
+
     /// HTTP client used to execute the request.
     pub(crate) client: ylong_runtime::sync::Mutex<Client>,
-    
+
     /// Files associated with the task (for download or upload operations).
     pub(crate) files: Files,
-    
+
     /// Body files for upload operations.
     pub(crate) body_files: Files,
-    
+
     /// Creation timestamp of the task.
     pub(crate) ctime: u64,
-    
+
     /// MIME type of the downloaded file.
     pub(crate) mime_type: Mutex<String>,
-    
+
     /// Progress tracking information.
     pub(crate) progress: Mutex<Progress>,
-    
+
     /// Current status of the task.
     pub(crate) status: Mutex<TaskStatus>,
-    
+
     /// Error codes for each file in the task.
     pub(crate) code: Mutex<Vec<Reason>>,
-    
+
     /// Number of retry attempts made.
     pub(crate) tries: AtomicU32,
-    
+
     /// Last time a background notification was sent.
     pub(crate) background_notify_time: AtomicU64,
-    
+
     /// Flag indicating whether background notification is enabled.
     pub(crate) background_notify: Arc<AtomicBool>,
-    
+
     /// Total size of files being transferred.
     pub(crate) file_total_size: AtomicI64,
-    
+
     /// Rate limiting value in bytes per second.
     pub(crate) rate_limiting: AtomicU64,
-    
+
     /// Maximum speed achieved during the task in bytes per second.
     pub(crate) max_speed: AtomicI64,
-    
+
     /// Last time progress was notified.
     pub(crate) last_notify: AtomicU64,
-    
+
     /// Client manager for handling client-specific operations.
     pub(crate) client_manager: ClientManagerEntry,
-    
+
     /// Running result of the task.
     pub(crate) running_result: Mutex<Option<Result<(), Reason>>>,
-    
+
     /// Number of timeout attempts.
     pub(crate) timeout_tries: AtomicU32,
-    
+
     /// Flag indicating whether upload resume is enabled.
     pub(crate) upload_resume: AtomicBool,
-    
+
     /// Task mode representation.
     pub(crate) mode: AtomicU8,
-    
+
     /// Start time of the task in seconds.
     pub(crate) start_time: AtomicU64,
-    
+
     /// Total time spent on the task in seconds.
     pub(crate) task_time: AtomicU64,
-    
+
     /// Remaining time until task timeout.
     pub(crate) rest_time: AtomicU64,
 }
@@ -152,7 +150,7 @@ impl RequestTask {
     }
 
     /// Returns the MIME type of the downloaded file.
-    /// 
+    ///
     /// This method is primarily used for download tasks.
     pub(crate) fn mime_type(&self) -> String {
         self.mime_type.lock().unwrap().clone()
@@ -164,9 +162,9 @@ impl RequestTask {
     }
 
     /// Sets the speed limit for the task.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `limit` - The speed limit in bytes per second.
     pub(crate) fn speed_limit(&self, limit: u64) {
         let old = self.rate_limiting.swap(limit, Ordering::SeqCst);
@@ -177,12 +175,14 @@ impl RequestTask {
     }
 
     /// Attempts to retry the task after a network error.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(())` if the retry limit has been reached.
-    /// * `Err(TaskError::Waiting(TaskPhase::NetworkOffline))` if the network is offline.
-    /// * `Err(TaskError::Waiting(TaskPhase::NeedRetry))` if a retry should be attempted after a delay.
+    /// * `Err(TaskError::Waiting(TaskPhase::NetworkOffline))` if the network is
+    ///   offline.
+    /// * `Err(TaskError::Waiting(TaskPhase::NeedRetry))` if a retry should be
+    ///   attempted after a delay.
     pub(crate) async fn network_retry(&self) -> Result<(), TaskError> {
         if self.tries.load(Ordering::SeqCst) < RETRY_TIMES {
             self.tries.fetch_add(1, Ordering::SeqCst);
@@ -199,20 +199,21 @@ impl RequestTask {
 }
 
 /// Calculates the effective size of a range for upload operations.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `begins` - The starting position of the range.
 /// * `ends` - The ending position of the range.
 /// * `size` - The total size of the file.
-/// 
+///
 /// # Returns
-/// 
+///
 /// The effective size of the range in bytes.
-/// 
+///
 /// # Notes
-/// 
-/// * If `ends` is negative or exceeds the file size, it is set to the last byte position.
+///
+/// * If `ends` is negative or exceeds the file size, it is set to the last byte
+///   position.
 /// * If `begins` is greater than `ends`, the full file size is returned.
 pub(crate) fn change_upload_size(begins: u64, mut ends: i64, size: i64) -> i64 {
     if ends < 0 || ends >= size {
@@ -226,13 +227,14 @@ pub(crate) fn change_upload_size(begins: u64, mut ends: i64, size: i64) -> i64 {
 
 impl RequestTask {
     /// Creates a new request task with the specified configuration.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `config` - The task configuration.
     /// * `files` - The files to be processed.
     /// * `client` - The HTTP client to use for the request.
-    /// * `client_manager` - The client manager for handling client-specific operations.
+    /// * `client_manager` - The client manager for handling client-specific
+    ///   operations.
     /// * `upload_resume` - Whether to enable upload resume functionality.
     /// * `rest_time` - Remaining time until task timeout.
     pub(crate) fn new(
@@ -303,17 +305,18 @@ impl RequestTask {
     }
 
     /// Creates a new request task from existing task information.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `config` - The task configuration.
     /// * `system` - System configuration (only on OH platform).
     /// * `info` - Existing task information.
-    /// * `client_manager` - The client manager for handling client-specific operations.
+    /// * `client_manager` - The client manager for handling client-specific
+    ///   operations.
     /// * `upload_resume` - Whether to enable upload resume functionality.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(RequestTask)` - The newly created task.
     /// * `Err(ErrorCode)` - If there was an error creating the task.
     pub(crate) fn new_by_info(
@@ -390,10 +393,11 @@ impl RequestTask {
     }
 
     /// Builds notification data for the task.
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// A `NotifyData` struct containing the current state of the task for notification purposes.
+    ///
+    /// A `NotifyData` struct containing the current state of the task for
+    /// notification purposes.
     pub(crate) fn build_notify_data(&self) -> NotifyData {
         let vec = self.get_each_file_status();
         NotifyData {
@@ -409,7 +413,7 @@ impl RequestTask {
     }
 
     /// Updates the task progress in the database.
-    /// 
+    ///
     /// This method saves the current state of the task to persistent storage.
     pub(crate) fn update_progress_in_database(&self) {
         let mtime = self.status.lock().unwrap().mtime;
@@ -426,14 +430,14 @@ impl RequestTask {
     }
 
     /// Builds an HTTP request builder based on the task configuration.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(RequestBuilder)` - The configured request builder.
     /// * `Err(HttpClientError)` - If there was an error building the request.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns an error if the URL percent encoding fails.
     pub(crate) fn build_request_builder(&self) -> Result<RequestBuilder, HttpClientError> {
         use ylong_http_client::async_impl::PercentEncoder;
@@ -476,20 +480,22 @@ impl RequestTask {
     }
 
     /// Builds a download request with proper range handling.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `task` - The task to build the request for.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(Request)` - The configured download request.
     /// * `Err(TaskError)` - If there was an error building the request.
-    /// 
+    ///
     /// # Errors
-    /// 
-    /// * `TaskError::Failed(Reason::OthersError)` - If there are no files in the task.
-    /// * `TaskError::Failed(Reason::UnsupportedRangeRequest)` - If range requests are required but not supported.
+    ///
+    /// * `TaskError::Failed(Reason::OthersError)` - If there are no files in
+    ///   the task.
+    /// * `TaskError::Failed(Reason::UnsupportedRangeRequest)` - If range
+    ///   requests are required but not supported.
     pub(crate) async fn build_download_request(
         task: Arc<RequestTask>,
     ) -> Result<Request, TaskError> {
@@ -547,15 +553,15 @@ impl RequestTask {
     }
 
     /// Configures a request builder to include range headers.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `request_builder` - The request builder to configure.
     /// * `begins` - The starting byte position.
     /// * `ends` - The ending byte position, or -1 for the end of the file.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// The configured request builder with range headers.
     fn range_request(
         &self,
@@ -571,15 +577,17 @@ impl RequestTask {
         request_builder.header("Range", range.as_str())
     }
 
-    /// Checks if the server supports range requests and configures the request builder accordingly.
-    /// 
+    /// Checks if the server supports range requests and configures the request
+    /// builder accordingly.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `request_builder` - The request builder to configure.
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// A tuple containing the configured request builder and a boolean indicating whether range requests are supported.
+    ///
+    /// A tuple containing the configured request builder and a boolean
+    /// indicating whether range requests are supported.
     fn support_range(&self, mut request_builder: RequestBuilder) -> (RequestBuilder, bool) {
         let progress_guard = self.progress.lock().unwrap();
         let mut support_range = false;
@@ -597,17 +605,19 @@ impl RequestTask {
     }
 
     /// Extracts file information from an HTTP response.
-    /// 
-    /// This method updates the task's MIME type and file size based on response headers.
-    /// 
+    ///
+    /// This method updates the task's MIME type and file size based on response
+    /// headers.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `response` - The HTTP response to extract information from.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(())` - If the file information was successfully extracted.
-    /// * `Err(TaskError::Failed(Reason::GetFileSizeFailed))` - If precise mode is enabled and content-length is missing.
+    /// * `Err(TaskError::Failed(Reason::GetFileSizeFailed))` - If precise mode
+    ///   is enabled and content-length is missing.
     pub(crate) fn get_file_info(&self, response: &Response) -> Result<(), TaskError> {
         let content_type = response.headers().get("content-type");
         if let Some(mime_type) = content_type {
@@ -656,14 +666,15 @@ impl RequestTask {
     }
 
     /// Handles errors that occur during download operations.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `err` - The HTTP client error that occurred.
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// * `Err(TaskError)` - Appropriate task error based on the HTTP client error type.
+    ///
+    /// * `Err(TaskError)` - Appropriate task error based on the HTTP client
+    ///   error type.
     pub(crate) async fn handle_download_error(
         &self,
         err: HttpClientError,
@@ -723,9 +734,9 @@ impl RequestTask {
     }
 
     /// Notifies the client of the HTTP response (OH platform only).
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `response` - The HTTP response to notify about.
     #[cfg(feature = "oh")]
     pub(crate) fn notify_response(&self, response: &Response) {
@@ -751,18 +762,19 @@ impl RequestTask {
     }
 
     /// Determines if the task requires range requests.
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// `true` if the task configuration specifies a range (non-zero begin or non-negative end).
+    ///
+    /// `true` if the task configuration specifies a range (non-zero begin or
+    /// non-negative end).
     pub(crate) fn require_range(&self) -> bool {
         self.conf.common_data.begins > 0 || self.conf.common_data.ends >= 0
     }
 
     /// Records the response from an upload request.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `index` - The index of the file being uploaded.
     /// * `response` - The HTTP response from the upload request.
     pub(crate) async fn record_upload_response(
@@ -805,10 +817,11 @@ impl RequestTask {
     }
 
     /// Gets the status of each file in the task.
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// A vector of `EachFileStatus` structs representing the status of each file.
+    ///
+    /// A vector of `EachFileStatus` structs representing the status of each
+    /// file.
     pub(crate) fn get_each_file_status(&self) -> Vec<EachFileStatus> {
         let mut vec = Vec::new();
         // `unwrap` for propagating panics among threads.
@@ -825,9 +838,9 @@ impl RequestTask {
     }
 
     /// Gets the current state of the task as a `TaskInfo` struct.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A `TaskInfo` struct containing all current information about the task.
     pub(crate) fn info(&self) -> TaskInfo {
         let status = self.status.lock().unwrap();
@@ -876,7 +889,8 @@ impl RequestTask {
         }
     }
 
-    /// Notifies that the response headers have been received (for API9 upload tasks only).
+    /// Notifies that the response headers have been received (for API9 upload
+    /// tasks only).
     pub(crate) fn notify_header_receive(&self) {
         if self.conf.version == Version::API9 && self.conf.common_data.action == Action::Upload {
             let notify_data = self.build_notify_data();
@@ -891,23 +905,23 @@ impl RequestTask {
 pub(crate) struct TaskStatus {
     /// Last modification timestamp.
     pub(crate) mtime: u64,
-    
+
     /// Current state of the task.
     pub(crate) state: State,
-    
+
     /// Reason for the current state.
     pub(crate) reason: Reason,
 }
 
 impl TaskStatus {
     /// Creates a new `TaskStatus` with the specified timestamp.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `mtime` - The modification timestamp to use.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A new `TaskStatus` with initialized state and default reason.
     pub(crate) fn new(mtime: u64) -> Self {
         TaskStatus {
@@ -919,13 +933,13 @@ impl TaskStatus {
 }
 
 /// Validates file specifications for security and correctness.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `file_specs` - The file specifications to validate.
-/// 
+///
 /// # Returns
-/// 
+///
 /// `true` if all file specifications are valid, `false` otherwise.
 fn check_file_specs(file_specs: &[FileSpec]) -> bool {
     for spec in file_specs.iter() {
@@ -958,17 +972,18 @@ fn check_path(path: &str) -> bool {
 }
 
 /// Validates a task configuration and prepares attached files and client.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `config` - The task configuration to validate.
 /// * `total_timeout` - Total timeout for the task.
 /// * `system` - System configuration (only on OH platform).
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Ok((AttachedFiles, Client))` - The attached files and configured client.
-/// * `Err(ErrorCode)` - If the configuration is invalid or files cannot be opened.
+/// * `Err(ErrorCode)` - If the configuration is invalid or files cannot be
+///   opened.
 pub(crate) fn check_config(
     config: &TaskConfig,
     total_timeout: u64,
@@ -993,14 +1008,14 @@ pub(crate) fn check_config(
 }
 
 /// Calculates the remaining time until task timeout.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `config` - The task configuration.
 /// * `task_time` - The time already spent on the task in seconds.
-/// 
+///
 /// # Returns
-/// 
+///
 /// The remaining time in seconds until the task should time out.
 pub(crate) fn get_rest_time(config: &TaskConfig, task_time: u64) -> u64 {
     const SECONDS_IN_TEN_MINUTES: u64 = 10 * 60;
@@ -1027,8 +1042,9 @@ pub(crate) fn get_rest_time(config: &TaskConfig, task_time: u64) -> u64 {
 
 impl From<HttpClientError> for TaskError {
     /// Converts an `HttpClientError` to a `TaskError`.
-    /// 
-    /// All HTTP client errors are mapped to `TaskError::Failed(Reason::BuildRequestFailed)`.
+    ///
+    /// All HTTP client errors are mapped to
+    /// `TaskError::Failed(Reason::BuildRequestFailed)`.
     fn from(_value: HttpClientError) -> Self {
         TaskError::Failed(Reason::BuildRequestFailed)
     }
@@ -1036,7 +1052,7 @@ impl From<HttpClientError> for TaskError {
 
 impl From<io::Error> for TaskError {
     /// Converts an `io::Error` to a `TaskError`.
-    /// 
+    ///
     /// All I/O errors are mapped to `TaskError::Failed(Reason::IoError)`.
     fn from(_value: io::Error) -> Self {
         TaskError::Failed(Reason::IoError)
@@ -1048,10 +1064,10 @@ impl From<io::Error> for TaskError {
 pub enum TaskPhase {
     /// The task needs to be retried.
     NeedRetry,
-    
+
     /// The task was aborted by the user.
     UserAbort,
-    
+
     /// The network is offline.
     NetworkOffline,
 }
@@ -1061,7 +1077,7 @@ pub enum TaskPhase {
 pub enum TaskError {
     /// The task has failed with a specific reason.
     Failed(Reason),
-    
+
     /// The task is waiting for a specific condition.
     Waiting(TaskPhase),
 }

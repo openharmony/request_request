@@ -12,10 +12,11 @@
 // limitations under the License.
 
 //! Upload functionality for HTTP request tasks.
-//! 
-//! This module provides the implementation for file upload operations, including stream uploads,
-//! multipart form data uploads, and batch uploads. It handles file reading, progress tracking,
-//! request construction, and error handling for upload tasks.
+//!
+//! This module provides the implementation for file upload operations,
+//! including stream uploads, multipart form data uploads, and batch uploads. It
+//! handles file reading, progress tracking, request construction, and error
+//! handling for upload tasks.
 
 use std::future::Future;
 use std::io::{Read, SeekFrom};
@@ -41,7 +42,7 @@ use crate::trace::Trace;
 use crate::utils::get_current_duration;
 
 /// A reader that reads data from a task's file for upload operations.
-/// 
+///
 /// Implements `AsyncRead` and `ReusableReader` traits to provide streaming data
 /// from files associated with a request task.
 struct TaskReader {
@@ -55,11 +56,12 @@ struct TaskReader {
 
 impl TaskReader {
     /// Creates a new `TaskReader` for the specified task and file index.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `task` - The request task containing the file to read.
-    /// * `index` - The index of the file to read from the task's files collection.
+    /// * `index` - The index of the file to read from the task's files
+    ///   collection.
     pub(crate) fn new(task: Arc<RequestTask>, index: usize) -> Self {
         Self {
             task,
@@ -71,16 +73,16 @@ impl TaskReader {
 
 impl AsyncRead for TaskReader {
     /// Attempts to read data from the task's file into the provided buffer.
-    /// 
+    ///
     /// Handles progress tracking and resume operations for upload tasks.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `cx` - The task context (unused in this implementation).
     /// * `buf` - The buffer to read data into.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A `Poll` indicating whether the read is ready or pending.
     fn poll_read(
         mut self: Pin<&mut Self>,
@@ -95,8 +97,8 @@ impl AsyncRead for TaskReader {
             .ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
 
         // Obtain `file`` first and then `progress` to prevent deadlocks.
-        // This lock ordering is critical to avoid deadlocks when multiple operations access
-        // the same task's resources concurrently.
+        // This lock ordering is critical to avoid deadlocks when multiple operations
+        // access the same task's resources concurrently.
         let mut file = file.lock().unwrap();
         let mut progress_guard = self.task.progress.lock().unwrap();
 
@@ -149,12 +151,12 @@ impl AsyncRead for TaskReader {
 
 impl ReusableReader for TaskReader {
     /// Prepares the reader for reuse in a new request.
-    /// 
+    ///
     /// Resets the file position to the appropriate starting point based on
     /// the task's configuration and index.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A future that resolves when the reader is ready for reuse.
     fn reuse<'a>(
         &'a mut self,
@@ -165,19 +167,21 @@ impl ReusableReader for TaskReader {
         self.reused = Some(0);
         let index = self.index;
         let optional_file = self.task.files.get(index);
-        
+
         // Determine the appropriate file position based on task configuration
         if self.task.conf.common_data.index == index as u32 {
             let begins = self.task.conf.common_data.begins;
             Box::pin(async move {
-                let file = optional_file.ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
+                let file =
+                    optional_file.ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
                 task_control::file_seek(file, SeekFrom::Start(begins))
                     .await
                     .map(|_| ())
             })
         } else {
             Box::pin(async {
-                let file = optional_file.ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
+                let file =
+                    optional_file.ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?;
                 task_control::file_rewind(file).await.map(|_| ())
             })
         }
@@ -186,17 +190,17 @@ impl ReusableReader for TaskReader {
 
 impl UploadOperator for TaskOperator {
     /// Polls for progress updates during upload operations.
-    /// 
+    ///
     /// Delegates to the common progress polling implementation.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `cx` - The task context.
     /// * `_uploaded` - The number of bytes uploaded (unused).
     /// * `_total` - The total number of bytes to upload (unused).
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A `Poll` indicating whether progress reporting is ready or pending.
     fn poll_progress(
         self: Pin<&mut Self>,
@@ -210,17 +214,17 @@ impl UploadOperator for TaskOperator {
 }
 
 /// Builds a streaming upload request for a single file.
-/// 
+///
 /// Constructs an HTTP request with a streaming body for file uploads.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `task` - The request task containing the file to upload.
 /// * `index` - The index of the file to upload.
 /// * `abort_flag` - Atomic flag to signal upload cancellation.
-/// 
+///
 /// # Returns
-/// 
+///
 /// A `Request` if successful, or `None` if construction fails.
 fn build_stream_request(
     task: Arc<RequestTask>,
@@ -238,7 +242,7 @@ fn build_stream_request(
                 request_builder =
                     request_builder.header("Content-Type", "application/octet-stream");
             }
-            
+
             // Calculate the remaining upload length
             let upload_length;
             {
@@ -246,11 +250,11 @@ fn build_stream_request(
                 upload_length = progress.sizes[index] as u64 - progress.processed[index] as u64;
             }
             debug!("upload length is {}", upload_length);
-            
+
             // Set content length header
             request_builder =
                 request_builder.header("Content-Length", upload_length.to_string().as_str());
-            
+
             // Build the uploader with streaming body
             let uploader = Uploader::builder()
                 .reader(task_reader)
@@ -265,18 +269,18 @@ fn build_stream_request(
 }
 
 /// Builds a multipart form-data upload request for a single file.
-/// 
+///
 /// Constructs an HTTP request with multipart form data for file uploads,
 /// including both form fields and file data.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `task` - The request task containing the file to upload.
 /// * `index` - The index of the file to upload.
 /// * `abort_flag` - Atomic flag to signal upload cancellation.
-/// 
+///
 /// # Returns
-/// 
+///
 /// A `Request` if successful, or `None` if construction fails.
 fn build_multipart_request(
     task: Arc<RequestTask>,
@@ -286,10 +290,10 @@ fn build_multipart_request(
     debug!("build multipart request");
     let task_reader = TaskReader::new(task.clone(), index);
     let task_operator = TaskOperator::new(task.clone(), abort_flag);
-    
+
     // Create multipart form data
     let mut multi_part = MultiPart::new();
-    
+
     // Add form fields
     for item in task.conf.form_items.iter() {
         let part = Part::new()
@@ -297,7 +301,7 @@ fn build_multipart_request(
             .body(item.value.as_str());
         multi_part = multi_part.part(part);
     }
-    
+
     // Calculate upload length for the file
     let upload_length;
     {
@@ -305,7 +309,7 @@ fn build_multipart_request(
         upload_length = progress.sizes[index] as u64 - progress.processed[index] as u64;
     }
     debug!("upload length is {}", upload_length);
-    
+
     // Add file part
     let part = Part::new()
         .name(task.conf.file_specs[index].name.as_str())
@@ -315,7 +319,7 @@ fn build_multipart_request(
         .stream(task_reader);
 
     multi_part = multi_part.part(part);
-    
+
     // Build the multipart uploader
     let uploader = Uploader::builder()
         .multipart(multi_part)
@@ -333,18 +337,19 @@ fn build_multipart_request(
 }
 
 /// Builds a multipart form-data upload request for multiple files in a batch.
-/// 
-/// Constructs an HTTP request with multipart form data containing multiple files
-/// for batch upload operations.
-/// 
+///
+/// Constructs an HTTP request with multipart form data containing multiple
+/// files for batch upload operations.
+///
 /// # Arguments
-/// 
+///
 /// * `task` - The request task containing the files to upload.
-/// * `_index` - Unused index parameter (batch uploads start from the progress index).
+/// * `_index` - Unused index parameter (batch uploads start from the progress
+///   index).
 /// * `abort_flag` - Atomic flag to signal upload cancellation.
-/// 
+///
 /// # Returns
-/// 
+///
 /// A `Request` if successful, or `None` if construction fails.
 fn build_batch_multipart_request(
     task: Arc<RequestTask>,
@@ -365,7 +370,7 @@ fn build_batch_multipart_request(
 
         multi_part = multi_part.part(part);
     }
-    
+
     // Add all files from the current progress index
     for index in start..task.conf.file_specs.len() {
         let task_reader = TaskReader::new(task.clone(), index);
@@ -400,17 +405,17 @@ fn build_batch_multipart_request(
 }
 
 /// Common request construction handler.
-/// 
+///
 /// Handles the result of request construction, logging success or error.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `task` - The request task associated with the request.
 /// * `_index` - Unused index parameter.
 /// * `request` - The result of request construction.
-/// 
+///
 /// # Returns
-/// 
+///
 /// A `Request` if successful, or `None` if construction fails.
 fn build_request_common(
     task: &Arc<RequestTask>,
@@ -434,23 +439,23 @@ fn build_request_common(
 
 impl RequestTask {
     /// Prepares a single file for upload.
-    /// 
+    ///
     /// Resets progress tracking if not resuming, sets the current file index,
     /// and positions the file cursor for upload operations.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `index` - The index of the file to prepare.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `true` if preparation succeeded, `false` otherwise.
     async fn prepare_single_upload(&self, index: usize) -> bool {
         let Some(file) = self.files.get(index) else {
             error!("task {} file {} not found", self.task_id(), index);
             return false;
         };
-        
+
         // Initialize or reset progress tracking
         {
             let mut progress = self.progress.lock().unwrap();
@@ -466,7 +471,7 @@ impl RequestTask {
         }
 
         let processed = self.progress.lock().unwrap().processed[index] as u64;
-        
+
         // Position the file cursor appropriately
         if self.conf.common_data.index == index as u32 {
             // Special handling for the current indexed file
@@ -493,22 +498,22 @@ impl RequestTask {
     }
 
     /// Prepares multiple files for batch upload.
-    /// 
+    ///
     /// Determines the current file index based on total processed bytes,
     /// resets progress tracking if not resuming, and positions file cursors
     /// for all files in the batch.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `start` - The starting index for preparation.
     /// * `size` - The number of files to prepare.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `true` if preparation succeeded for all files, `false` otherwise.
     async fn prepare_batch_upload(&self, start: usize, size: usize) -> bool {
         let mut current_index = 0;
-        
+
         // Determine current position and reset progress if needed
         {
             let mut progress = self.progress.lock().unwrap();
@@ -516,7 +521,7 @@ impl RequestTask {
             let total = progress.common_data.total_processed;
             let file_sizes = &progress.sizes;
             let mut current_size = 0;
-            
+
             // Find the file that contains the current progress position
             for (index, &file_size) in file_sizes.iter().enumerate() {
                 current_size += file_size as usize;
@@ -525,7 +530,7 @@ impl RequestTask {
                     break;
                 }
             }
-            
+
             // Handle resume or reset progress
             if self.upload_resume.load(Ordering::SeqCst) {
                 self.upload_resume.store(false, Ordering::SeqCst);
@@ -533,7 +538,8 @@ impl RequestTask {
                 progress.processed[current_index] = 0;
             }
             progress.common_data.index = current_index;
-            progress.common_data.total_processed = progress.processed.iter().take(current_index).sum();
+            progress.common_data.total_processed =
+                progress.processed.iter().take(current_index).sum();
         }
 
         // Prepare each file in the batch
@@ -543,7 +549,7 @@ impl RequestTask {
                 return false;
             };
             let processed = self.progress.lock().unwrap().processed[index] as u64;
-            
+
             // Calculate target seek position
             let target_start = if self.conf.common_data.index == index as u32 {
                 let Ok(metadata) = task_control::file_metadata(file.clone()).await else {
@@ -559,7 +565,7 @@ impl RequestTask {
             } else {
                 processed
             };
-            
+
             // Position file cursor
             if let Err(e) = task_control::file_seek(file, SeekFrom::Start(target_start)).await {
                 error!("file seek err:{:}", e);
@@ -571,23 +577,23 @@ impl RequestTask {
 }
 
 /// Main upload entry point for request tasks.
-/// 
+///
 /// Initializes the task state, executes the upload operation with retry logic,
 /// and handles various error conditions.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `task` - The request task to upload.
 /// * `abort_flag` - Atomic flag to signal upload cancellation.
 pub(crate) async fn upload(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>) {
     // Update task sizes in the database
     RequestDb::get_instance()
         .update_task_sizes(task.task_id(), &task.progress.lock().unwrap().sizes);
-    
+
     // Set task state to running
     task.progress.lock().unwrap().common_data.state = State::Running.repr;
     task.tries.store(0, Ordering::SeqCst);
-    
+
     // Main upload loop with retry logic
     loop {
         if let Err(e) = upload_inner(task.clone(), abort_flag.clone()).await {
@@ -619,17 +625,17 @@ pub(crate) async fn upload(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>) 
 }
 
 /// Internal upload implementation that handles different upload modes.
-/// 
+///
 /// Processes the upload based on task configuration, handling both single file
 /// and batch upload operations with appropriate request types.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `task` - The request task to upload.
 /// * `abort_flag` - Atomic flag to signal upload cancellation.
-/// 
+///
 /// # Returns
-/// 
+///
 /// `Ok(())` if upload succeeds, or a `TaskError` if it fails.
 async fn upload_inner(
     task: Arc<RequestTask>,
@@ -676,7 +682,7 @@ async fn upload_inner(
             Some(s) => s.eq("multipart/form-data"),
             None => task.conf.method.to_uppercase().eq("POST"),
         };
-        
+
         // Upload files one by one
         for index in start..size {
             #[cfg(feature = "oh")]
@@ -702,22 +708,23 @@ async fn upload_inner(
 }
 
 /// Uploads a single file with timeout management.
-/// 
-/// Tracks upload time and adjusts the client timeout for the remaining operation.
-/// 
+///
+/// Tracks upload time and adjusts the client timeout for the remaining
+/// operation.
+///
 /// # Type Parameters
-/// 
+///
 /// * `F` - A function that builds the upload request.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `task` - The request task containing the file to upload.
 /// * `index` - The index of the file to upload.
 /// * `abort_flag` - Atomic flag to signal upload cancellation.
 /// * `build_upload_request` - Function to build the appropriate upload request.
-/// 
+///
 /// # Returns
-/// 
+///
 /// `Ok(())` if upload succeeds, or a `TaskError` if it fails.
 async fn upload_one_file<F>(
     task: Arc<RequestTask>,
@@ -737,38 +744,38 @@ where
         build_upload_request,
     )
     .await;
-    
+
     // Adjust timeout for remaining operations
     let upload_time = begin_time.elapsed().as_secs();
     task.rest_time.fetch_sub(upload_time, Ordering::SeqCst);
     let mut client = task.client.lock().await;
     client.total_timeout(Timeout::from_secs(task.rest_time.load(Ordering::SeqCst)));
-    
+
     result
 }
 
 /// Internal implementation for uploading a single file.
-/// 
-/// Handles request construction, execution, response processing, and error handling
-/// for individual file uploads.
-/// 
+///
+/// Handles request construction, execution, response processing, and error
+/// handling for individual file uploads.
+///
 /// # Type Parameters
-/// 
+///
 /// * `F` - A function that builds the upload request.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `task` - The request task containing the file to upload.
 /// * `index` - The index of the file to upload.
 /// * `abort_flag` - Atomic flag to signal upload cancellation.
 /// * `build_upload_request` - Function to build the appropriate upload request.
-/// 
+///
 /// # Returns
-/// 
+///
 /// `Ok(())` if upload succeeds, or a `TaskError` if it fails.
-/// 
+///
 /// # Errors
-/// 
+///
 /// Returns specific error reasons based on the failure type:
 /// - `BuildRequestFailed`: If request construction fails
 /// - `ProtocolError`: For server errors, most client errors, or redirections
@@ -803,18 +810,15 @@ where
     // Execute the request
     let client = task.client.lock().await;
     let response = client.request(request).await;
-    
+
     // Process the response
     match response.as_ref() {
         Ok(response) => {
             let status_code = response.status();
             #[cfg(feature = "oh")]
             task.notify_response(response);
-            info!(
-                "{} response {}",
-                task.conf.common_data.task_id, status_code,
-            );
-            
+            info!("{} response {}", task.conf.common_data.task_id, status_code,);
+
             // Handle various HTTP status codes
             if status_code.is_server_error()
                 || (status_code.as_u16() != 408 && status_code.is_client_error())
@@ -822,7 +826,7 @@ where
             {
                 return Err(TaskError::Failed(Reason::ProtocolError));
             }
-            
+
             // Special handling for timeout status (408)
             if status_code.as_u16() == 408 {
                 if task.timeout_tries.load(Ordering::SeqCst) < 2 {
@@ -881,15 +885,16 @@ where
             };
         }
     };
-    
+
     // Record the response
     task.record_upload_response(index, response).await;
     Ok(())
 }
 
 /// Unit tests for upload functionality.
-/// 
-/// Contains test cases for verifying upload operations under various conditions.
+///
+/// Contains test cases for verifying upload operations under various
+/// conditions.
 #[cfg(test)]
 mod ut_upload {
     include!("../../tests/ut/task/ut_upload.rs");
