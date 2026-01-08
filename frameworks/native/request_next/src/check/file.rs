@@ -13,9 +13,9 @@
 
 //! File path validation and permission management for downloads.
 //!
-//! This module provides functions for validating download paths, converting between
-//! different path formats, and setting appropriate file permissions for downloaded
-//! content across different API versions.
+//! This module provides functions for validating download paths, converting
+//! between different path formats, and setting appropriate file permissions for
+//! downloaded content across different API versions.
 
 // Standard library imports
 use std::error::Error;
@@ -45,7 +45,7 @@ const AREA5: &str = "/data/storage/el5/base";
 
 // ACL permission strings for service account access
 const SA_PERMISSION_RWX: &str = "g:3815:rwx"; // Read, write, execute permissions
-const SA_PERMISSION_X: &str = "g:3815:x";     // Execute-only permissions
+const SA_PERMISSION_X: &str = "g:3815:x"; // Execute-only permissions
 const SA_PERMISSION_CLEAN: &str = "g:3815:---"; // No permissions
 
 /// Gets a validated download path with appropriate permissions.
@@ -61,13 +61,16 @@ const SA_PERMISSION_CLEAN: &str = "g:3815:---"; // No permissions
 /// - `overwrite`: Whether to allow overwriting existing files
 ///
 /// # Returns
-/// A valid `PathBuf` for the download if successful, or a `DownloadPathError` if validation fails
+/// A valid `PathBuf` for the download if successful, or a `DownloadPathError`
+/// if validation fails
 ///
 /// # Errors
 /// - `DownloadPathError::EmptyPath`: If the path is empty
 /// - `DownloadPathError::TooLongPath`: If the path exceeds the maximum length
-/// - `DownloadPathError::InvalidPath`: If the path is not in an allowed storage area
-/// - `DownloadPathError::AlreadyExists`: If the file already exists and overwrite is false
+/// - `DownloadPathError::InvalidPath`: If the path is not in an allowed storage
+///   area
+/// - `DownloadPathError::AlreadyExists`: If the file already exists and
+///   overwrite is false
 /// - `DownloadPathError::CreateFile`: If file creation fails
 /// - `DownloadPathError::SetPermission`: If setting file permissions fails
 /// - `DownloadPathError::AclAccess`: If setting ACL permissions fails
@@ -102,7 +105,8 @@ pub fn get_download_path(
 /// - `save_as`: Path string to convert
 ///
 /// # Returns
-/// A `PathBuf` representing the converted path, or a `DownloadPathError` on validation failure
+/// A `PathBuf` representing the converted path, or a `DownloadPathError` on
+/// validation failure
 pub fn convert_path(
     version: Version,
     context: &Context,
@@ -217,19 +221,22 @@ fn convert_to_absolute_path(context: &Context, path: &str) -> Result<PathBuf, Do
 
 /// Sets appropriate permissions on a file and its parent directories.
 ///
-/// Creates the file if it doesn't exist, sets standard permissions, and configures
-/// ACL permissions for the service account to access the file and its parent directories.
+/// Creates the file if it doesn't exist, sets standard permissions, and
+/// configures ACL permissions for the service account to access the file and
+/// its parent directories.
 ///
 /// # Parameters
 /// - `path`: Path to the file to configure permissions for
 /// - `context`: Application context
 ///
 /// # Returns
-/// `Ok(())` if permissions are successfully set, or a `DownloadPathError` on failure
+/// `Ok(())` if permissions are successfully set, or a `DownloadPathError` on
+/// failure
 ///
 /// # Errors
 /// - `DownloadPathError::CreateFile`: If file creation fails
-/// - `DownloadPathError::SetPermission`: If setting standard file permissions fails
+/// - `DownloadPathError::SetPermission`: If setting standard file permissions
+///   fails
 /// - `DownloadPathError::AclAccess`: If setting ACL permissions fails
 pub fn set_file_permission(path: &PathBuf, context: &Context) -> Result<(), DownloadPathError> {
     // Create the file if it doesn't exist

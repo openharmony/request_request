@@ -13,10 +13,11 @@
 
 //! Serialization framework for Unix Domain Socket communication.
 //!
-//! This module provides functionality for deserializing binary data received through
-//! Unix Domain Sockets. Despite its name, the `Serialize` trait in this module is actually
-//! responsible for deserialization of primitive types, enums, and complex data structures
-//! used in the download service communication protocol.
+//! This module provides functionality for deserializing binary data received
+//! through Unix Domain Sockets. Despite its name, the `Serialize` trait in this
+//! module is actually responsible for deserialization of primitive types,
+//! enums, and complex data structures used in the download service
+//! communication protocol.
 
 // Standard library imports
 use std::collections::HashMap;
@@ -25,13 +26,15 @@ use std::io::Read;
 // External dependencies
 use request_core::config::{Action, Version};
 use request_core::info::{
-    FaultOccur, Faults, NotifyData, Progress, Reason, Response, State, SubscribeType, TaskState, Wait, WaitingReason
+    FaultOccur, Faults, NotifyData, Progress, Reason, Response, State, SubscribeType, TaskState,
+    Wait, WaitingReason,
 };
 
 /// Binary deserializer for Unix Domain Socket communications.
 ///
-/// Provides methods to read and deserialize various data types from a byte buffer.
-/// This is the main entry point for deserializing messages received from the download service.
+/// Provides methods to read and deserialize various data types from a byte
+/// buffer. This is the main entry point for deserializing messages received
+/// from the download service.
 ///
 /// # Type Parameters
 /// - `'a`: Lifetime of the referenced byte slice
@@ -64,8 +67,9 @@ impl UdsSer<'_> {
 
     /// Deserializes data of the specified type from the buffer.
     ///
-    /// Uses the `Serialize` implementation for the target type to read and deserialize
-    /// the appropriate number of bytes from the internal buffer.
+    /// Uses the `Serialize` implementation for the target type to read and
+    /// deserialize the appropriate number of bytes from the internal
+    /// buffer.
     ///
     /// # Type Parameters
     /// - `S`: Type implementing the `Serialize` trait to deserialize
@@ -94,13 +98,15 @@ impl UdsSer<'_> {
 /// specifying how to read and interpret bytes from a binary stream.
 ///
 /// # Notes
-/// The trait name `Serialize` is somewhat misleading as it actually handles deserialization.
-/// It reads from a binary format and constructs the corresponding Rust types.
+/// The trait name `Serialize` is somewhat misleading as it actually handles
+/// deserialization. It reads from a binary format and constructs the
+/// corresponding Rust types.
 pub trait Serialize {
     /// Reads and deserializes a value from the provided `UdsSer` instance.
     ///
     /// # Parameters
-    /// - `ser`: Mutable reference to the `UdsSer` instance containing the serialized data
+    /// - `ser`: Mutable reference to the `UdsSer` instance containing the
+    ///   serialized data
     ///
     /// # Returns
     /// Deserialized value of the implementing type
@@ -199,7 +205,8 @@ impl Serialize for Version {
 
 /// Deserializes a `SubscribeType` enum from the binary stream.
 ///
-/// Reads a u32 value and converts it to the corresponding `SubscribeType` variant.
+/// Reads a u32 value and converts it to the corresponding `SubscribeType`
+/// variant.
 impl Serialize for SubscribeType {
     fn read(ser: &mut UdsSer) -> Self {
         let subscribe_type: u32 = ser.read();
@@ -248,8 +255,8 @@ impl Serialize for WaitingReason {
 
 /// Deserializes a `String` from the binary stream.
 ///
-/// Reads bytes until a null terminator (\0) is found, then converts to a String.
-/// Handles invalid UTF-8 by replacing with lossy UTF-8 representations.
+/// Reads bytes until a null terminator (\0) is found, then converts to a
+/// String. Handles invalid UTF-8 by replacing with lossy UTF-8 representations.
 impl Serialize for String {
     fn read(ser: &mut UdsSer) -> Self {
         if let Some(s) = ser.inner.split(|a| *a == b'\0').next() {
@@ -263,8 +270,8 @@ impl Serialize for String {
 
 /// Deserializes a header `HashMap<String, Vec<String>>` from the binary stream.
 ///
-/// Reads the entire remaining buffer as text, then parses each line as a header entry.
-/// Headers are expected to be in the format `Key: Value1,Value2,...`.
+/// Reads the entire remaining buffer as text, then parses each line as a header
+/// entry. Headers are expected to be in the format `Key: Value1,Value2,...`.
 impl Serialize for HashMap<String, Vec<String>> {
     fn read(ser: &mut UdsSer) -> Self {
         let mut map = HashMap::new();
@@ -287,7 +294,8 @@ impl Serialize for HashMap<String, Vec<String>> {
 
 /// Deserializes a `HashMap<String, String>` from the binary stream.
 ///
-/// First reads the number of entries (u32), then reads each key-value pair sequentially.
+/// First reads the number of entries (u32), then reads each key-value pair
+/// sequentially.
 impl Serialize for HashMap<String, String> {
     fn read(ser: &mut UdsSer) -> Self {
         let mut map = HashMap::new();
@@ -304,7 +312,8 @@ impl Serialize for HashMap<String, String> {
 
 /// Deserializes a `Vec<i64>` from the binary stream.
 ///
-/// First reads the length of the vector (u32), then reads each i64 value sequentially.
+/// First reads the length of the vector (u32), then reads each i64 value
+/// sequentially.
 impl Serialize for Vec<i64> {
     fn read(ser: &mut UdsSer) -> Self {
         let length: u32 = ser.read();
@@ -319,8 +328,9 @@ impl Serialize for Vec<i64> {
 
 /// Deserializes a `Response` from the binary stream.
 ///
-/// Reads all fields of a Response sequentially: task_id, version, status_code, reason, and headers.
-/// The task_id is converted from i32 to String as part of the deserialization process.
+/// Reads all fields of a Response sequentially: task_id, version, status_code,
+/// reason, and headers. The task_id is converted from i32 to String as part of
+/// the deserialization process.
 impl Serialize for Response {
     fn read(ser: &mut UdsSer) -> Self {
         let task_id = ser.read::<i32>();
@@ -344,7 +354,8 @@ impl Serialize for Response {
 
 /// Deserializes a `Vec<TaskState>` from the binary stream.
 ///
-/// First reads the length of the vector (u32), then reads each TaskState sequentially.
+/// First reads the length of the vector (u32), then reads each TaskState
+/// sequentially.
 impl Serialize for Vec<TaskState> {
     fn read(ser: &mut UdsSer) -> Self {
         let length: u32 = ser.read();
@@ -368,8 +379,8 @@ impl Serialize for Vec<TaskState> {
 
 /// Deserializes a `Progress` from the binary stream.
 ///
-/// Reads all fields of a Progress sequentially: state, index, processed, total_processed,
-/// sizes, and extras.
+/// Reads all fields of a Progress sequentially: state, index, processed,
+/// total_processed, sizes, and extras.
 impl Serialize for Progress {
     fn read(ser: &mut UdsSer) -> Self {
         let state: State = ser.read();
@@ -394,8 +405,8 @@ impl Serialize for Progress {
 
 /// Deserializes a `NotifyData` from the binary stream.
 ///
-/// Reads all fields of a NotifyData sequentially: subscribe_type, task_id, progress,
-/// action, version, and task_states.
+/// Reads all fields of a NotifyData sequentially: subscribe_type, task_id,
+/// progress, action, version, and task_states.
 impl Serialize for NotifyData {
     fn read(ser: &mut UdsSer) -> Self {
         let subscribe_type: SubscribeType = ser.read();

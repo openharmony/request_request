@@ -13,8 +13,8 @@
 
 //! Bridge module for API 10.
 //!
-//! This module provides bridge types and conversion utilities between the ETS interface
-//! and the request core functionality for API 10.
+//! This module provides bridge types and conversion utilities between the ETS
+//! interface and the request core functionality for API 10.
 
 use std::collections::HashMap;
 

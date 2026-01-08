@@ -14,8 +14,9 @@
 //! Core caching functionality for the request system.
 //!
 //! This crate provides core caching mechanisms including RAM-based caching,
-//! file system caching, and cache management utilities. It implements thread-safe
-//! cache operations and efficient memory management for downloaded content.
+//! file system caching, and cache management utilities. It implements
+//! thread-safe cache operations and efficient memory management for downloaded
+//! content.
 
 #![deny(unused_must_use)]
 #![allow(
@@ -38,10 +39,8 @@ pub mod observe;
 
 /// In-memory cache implementation for task data.
 pub use data::{init_curr_store_dir, RamCache};
-
 /// Central manager for cache operations and resources.
 pub use manage::CacheManager;
-
 /// Handles cache updates and synchronization operations.
 pub use update::Updater;
 
@@ -62,7 +61,8 @@ use hilog_rust::{HiLogLabel, LogType};
 
 /// Log label for the cache_core module.
 ///
-/// Used for consistent logging across the caching system with the PreloadNative tag.
+/// Used for consistent logging across the caching system with the PreloadNative
+/// tag.
 pub(crate) const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
     domain: 0xD001C50,

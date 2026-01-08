@@ -12,10 +12,11 @@
 // limitations under the License.
 
 //! Unix Domain Socket communication module.
-//! 
-//! This module provides functionality for receiving messages from the download service
-//! through Unix Domain Sockets. It handles message validation, deserialization, and
-//! provides a structured interface for accessing different types of messages.
+//!
+//! This module provides functionality for receiving messages from the download
+//! service through Unix Domain Sockets. It handles message validation,
+//! deserialization, and provides a structured interface for accessing different
+//! types of messages.
 
 // Standard library imports
 use std::fs::File;
@@ -31,13 +32,14 @@ use crate::listen::ser::UdsSer;
 
 /// Magic number for message validation.
 ///
-/// Used as a header identifier to validate the authenticity of received messages.
-/// Value is "CCFF" in ASCII hexadecimal.
+/// Used as a header identifier to validate the authenticity of received
+/// messages. Value is "CCFF" in ASCII hexadecimal.
 const MAGIC_NUM: i32 = 0x43434646;
 
 /// Message type identifier for HTTP responses.
 ///
-/// Indicates that the message contains an HTTP response from the download service.
+/// Indicates that the message contains an HTTP response from the download
+/// service.
 const HTTP_RESPONSE: i16 = 0;
 
 /// Message type identifier for notification data.
@@ -62,8 +64,9 @@ pub struct UdsListener {
 impl UdsListener {
     /// Creates a new `UdsListener` from a file descriptor.
     ///
-    /// Takes ownership of the provided file and initializes a Unix Domain Socket from it.
-    /// Converts the standard library socket to an asynchronous socket from ylong_runtime.
+    /// Takes ownership of the provided file and initializes a Unix Domain
+    /// Socket from it. Converts the standard library socket to an
+    /// asynchronous socket from ylong_runtime.
     ///
     /// # Parameters
     /// - `file`: File object representing the socket file descriptor
@@ -73,7 +76,8 @@ impl UdsListener {
     ///
     /// # Safety
     /// Uses unsafe code to convert from a raw file descriptor to a socket.
-    /// The caller must ensure the file descriptor is valid and properly initialized.
+    /// The caller must ensure the file descriptor is valid and properly
+    /// initialized.
     pub fn new(file: File) -> Self {
         // Convert file descriptor to Unix datagram socket
         let socket = unsafe { unix::net::UnixDatagram::from_raw_fd(file.into_raw_fd()) };
@@ -89,29 +93,33 @@ impl UdsListener {
 
     /// Receives and processes a message from the socket.
     ///
-    /// Reads data from the socket, sends an acknowledgment with the received size,
-    /// validates the message header, and deserializes the appropriate message type.
+    /// Reads data from the socket, sends an acknowledgment with the received
+    /// size, validates the message header, and deserializes the appropriate
+    /// message type.
     ///
     /// # Returns
     /// A `Result` containing either:
     /// - `Ok(Message)` with the deserialized message
-    /// - `Err(io::Error)` if there was an error receiving or processing the message
+    /// - `Err(io::Error)` if there was an error receiving or processing the
+    ///   message
     ///
     /// # Errors
-    /// - Returns `io::ErrorKind::InvalidData` if message validation fails or if the message type is unknown
+    /// - Returns `io::ErrorKind::InvalidData` if message validation fails or if
+    ///   the message type is unknown
     /// - Returns other `io::Error` variants for socket operation failures
     ///
     /// # Examples
     ///
     /// ```rust,no_run
     /// use std::fs::File;
+    ///
     /// use request_next::listen::uds::UdsListener;
-    /// 
+    ///
     /// async fn example() -> Result<(), std::io::Error> {
     ///     // Assuming socket_file is a valid file descriptor
     ///     let socket_file = File::open("/path/to/socket")?;
     ///     let mut listener = UdsListener::new(socket_file);
-    ///     
+    ///
     ///     // Receive a message
     ///     match listener.recv().await? {
     ///         request_next::listen::uds::Message::HttpResponse(response) => {
@@ -121,7 +129,7 @@ impl UdsListener {
     ///             println!("Received notification for task: {}", notify_data.task_id);
     ///         }
     ///     }
-    ///     
+    ///
     ///     Ok(())
     /// }
     /// ```
@@ -177,7 +185,8 @@ impl UdsListener {
 
 /// Enum representing the types of messages received from the download service.
 ///
-/// Provides a structured way to handle different message types with pattern matching.
+/// Provides a structured way to handle different message types with pattern
+/// matching.
 pub enum Message {
     /// HTTP response message containing response data for a download task
     HttpResponse(Response),
@@ -189,8 +198,8 @@ pub enum Message {
 
 /// Validates the header of a received message.
 ///
-/// Checks the magic number, message ID, and body size to ensure message integrity.
-/// Updates the message type pointer with the extracted value.
+/// Checks the magic number, message ID, and body size to ensure message
+/// integrity. Updates the message type pointer with the extracted value.
 ///
 /// # Parameters
 /// - `uds`: Deserializer to read the message header

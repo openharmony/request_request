@@ -12,10 +12,11 @@
 // limitations under the License.
 
 //! Cache download library for efficient resource preloading and management.
-//! 
-//! This library provides functionality for downloading and caching resources with support
-//! for various HTTP client backends, progress tracking, and callback notification systems.
-//! It is designed to efficiently handle resource preloading scenarios with caching capabilities.
+//!
+//! This library provides functionality for downloading and caching resources
+//! with support for various HTTP client backends, progress tracking, and
+//! callback notification systems. It is designed to efficiently handle resource
+//! preloading scenarios with caching capabilities.
 
 // Allow specific lints as needed for compatibility and development
 #![allow(
@@ -24,7 +25,6 @@
     missing_docs,
     clippy::new_without_default
 )]
-
 // Enable lazy initialization feature
 #![feature(lazy_cell)]
 
@@ -40,14 +40,13 @@ mod macros;
 mod download;
 
 // Public modules exposing API interfaces
-pub mod info;    // Download information and metrics
+pub mod info; // Download information and metrics
 pub mod observe; // Observation and monitoring functionality
 pub mod services; // Service interfaces and types
 
-pub use services::{CacheDownloadService, DownloadRequest, PreloadCallback};
-
 // Re-export downloader enum for public API use
 pub use download::task::Downloader;
+pub use services::{CacheDownloadService, DownloadRequest, PreloadCallback};
 
 // Conditional compilation for OpenHarmony platform
 cfg_ohos! {

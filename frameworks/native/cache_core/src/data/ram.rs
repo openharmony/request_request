@@ -14,9 +14,9 @@
 //! RAM-based caching implementation for task data.
 //!
 //! This module provides functionality for in-memory caching of task data,
-//! including memory allocation management, data storage, and cleanup mechanisms.
-//! The cache implementation manages memory allocation limits and automatically
-//! releases resources when no longer needed.
+//! including memory allocation management, data storage, and cleanup
+//! mechanisms. The cache implementation manages memory allocation limits and
+//! automatically releases resources when no longer needed.
 
 use std::cmp::Ordering;
 use std::io::{Cursor, Write};
@@ -32,8 +32,8 @@ const DEFAULT_TRUNK_CAPACITY: usize = 512;
 
 /// In-memory cache implementation for task data.
 ///
-/// This struct manages RAM-based storage for task data, including memory allocation
-/// tracking and automatic resource cleanup.
+/// This struct manages RAM-based storage for task data, including memory
+/// allocation tracking and automatic resource cleanup.
 pub struct RamCache {
     /// Unique identifier for the task associated with this cache
     pub(super) task_id: TaskId,
@@ -48,8 +48,8 @@ pub struct RamCache {
 impl Drop for RamCache {
     /// Releases allocated memory when the cache is dropped.
     ///
-    /// Ensures that memory resources are properly released back to the cache manager
-    /// when the cache goes out of scope, preventing memory leaks.
+    /// Ensures that memory resources are properly released back to the cache
+    /// manager when the cache goes out of scope, preventing memory leaks.
     fn drop(&mut self) {
         if self.applied != 0 {
             info!("ram {} released {}", self.task_id.brief(), self.applied);
@@ -61,8 +61,9 @@ impl Drop for RamCache {
 impl RamCache {
     /// Creates a new RAM cache for the specified task.
     ///
-    /// Attempts to allocate the requested amount of memory from the cache manager.
-    /// If allocation fails, the cache will be created without reserved memory.
+    /// Attempts to allocate the requested amount of memory from the cache
+    /// manager. If allocation fails, the cache will be created without
+    /// reserved memory.
     ///
     /// # Parameters
     /// - `task_id`: ID of the task associated with this cache
@@ -93,10 +94,12 @@ impl RamCache {
         }
     }
 
-    /// Finalizes the cache after writing and registers it with the cache manager.
+    /// Finalizes the cache after writing and registers it with the cache
+    /// manager.
     ///
-    /// Checks if the cache size is valid and registers it with both RAM and file cache managers.
-    /// Converts the cache to an Arc for shared ownership.
+    /// Checks if the cache size is valid and registers it with both RAM and
+    /// file cache managers. Converts the cache to an Arc for shared
+    /// ownership.
     ///
     /// # Returns
     /// An Arc pointing to the finalized cache
@@ -115,11 +118,14 @@ impl RamCache {
     ///
     /// Handles three cases:
     /// - If data size equals allocated size: returns true
-    /// - If data exceeds allocated size: tries to allocate more memory, returns success status
-    /// - If data is smaller than allocated size: releases excess memory, returns true
+    /// - If data exceeds allocated size: tries to allocate more memory, returns
+    ///   success status
+    /// - If data is smaller than allocated size: releases excess memory,
+    ///   returns true
     ///
     /// # Returns
-    /// `true` if the cache is still valid for memory storage, `false` if it exceeds size limits
+    /// `true` if the cache is still valid for memory storage, `false` if it
+    /// exceeds size limits
     pub(crate) fn check_size(&mut self) -> bool {
         match (self.data.len() as u64).cmp(&self.applied) {
             Ordering::Equal => true,

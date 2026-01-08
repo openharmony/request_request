@@ -12,14 +12,15 @@
 // limitations under the License.
 
 //! Error types and handling for cache download operations.
-//! 
-//! This module defines the primary error type used throughout the cache download system,
-//! along with conversion from common error sources.
+//!
+//! This module defines the primary error type used throughout the cache
+//! download system, along with conversion from common error sources.
 
 use std::io;
 
-use super::common::CommonError;
 use netstack_rs::error::HttpErrorCode;
+
+use super::common::CommonError;
 
 /// DNS error codes using HttpErrorCode enum values
 const DNS_ERROR_CODES: &[i32] = &[
@@ -79,7 +80,8 @@ const OTHERS_ERROR_CODES: &[i32] = &[
 
 /// Primary error type for cache download operations.
 ///
-/// Encapsulates error information including error code, message, and error kind.
+/// Encapsulates error information including error code, message, and error
+/// kind.
 #[derive(Debug)]
 pub struct CacheDownloadError {
     /// Numeric error code, if available
@@ -156,9 +158,11 @@ impl<'a, E> From<&'a E> for CacheDownloadError
 where
     E: CommonError,
 {
-    /// Converts a reference to any type implementing `CommonError` into a cache download error.
+    /// Converts a reference to any type implementing `CommonError` into a cache
+    /// download error.
     ///
-    /// Sets the error kind based on error code ranges and preserves both the error code and message.
+    /// Sets the error kind based on error code ranges and preserves both the
+    /// error code and message.
     ///
     /// # Type Parameters
     /// - `E`: Type implementing `CommonError`

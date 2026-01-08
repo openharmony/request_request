@@ -13,10 +13,10 @@
 
 //! Event observation system for download tasks.
 //!
-//! This module provides the infrastructure for monitoring and responding to download
-//! task events through a callback mechanism. It includes the `Observer` struct that
-//! manages callbacks and dispatches events, and the `Callback` trait that defines the
-//! interface for handling these events.
+//! This module provides the infrastructure for monitoring and responding to
+//! download task events through a callback mechanism. It includes the
+//! `Observer` struct that manages callbacks and dispatches events, and the
+//! `Callback` trait that defines the interface for handling these events.
 
 // Standard library imports
 use std::collections::HashMap;
@@ -25,21 +25,25 @@ use std::sync::{Arc, Mutex};
 
 // External dependencies
 use request_core::config::{Action, Version};
-use request_core::info::{Faults, Progress, Response, SubscribeType, TaskState, NotifyData, WaitingReason};
+use request_core::info::{
+    Faults, NotifyData, Progress, Response, SubscribeType, TaskState, WaitingReason,
+};
 use ylong_runtime::task::JoinHandle;
+
 use crate::client::RequestClient;
 use crate::file::FileManager;
-
 // Internal dependencies
 use crate::listen::uds::{Message, UdsListener};
 
 /// Manages callbacks and dispatches task events to registered observers.
 ///
-/// Maintains a registry of callbacks associated with task IDs and listens for events
-/// from the download service through a Unix domain socket. When events are received,
-/// they are dispatched to the appropriate callback based on the task ID and event type.
+/// Maintains a registry of callbacks associated with task IDs and listens for
+/// events from the download service through a Unix domain socket. When events
+/// are received, they are dispatched to the appropriate callback based on the
+/// task ID and event type.
 pub struct Observer {
-    /// Registry mapping task IDs to their corresponding callback implementations
+    /// Registry mapping task IDs to their corresponding callback
+    /// implementations
     callbacks: Arc<Mutex<HashMap<i64, Arc<dyn Callback + Send + Sync + 'static>>>>,
     /// Handle to the background task listening for events
     listener: Mutex<Option<JoinHandle<()>>>,
@@ -47,34 +51,42 @@ pub struct Observer {
 
 /// Trait defining the interface for handling download task events.
 ///
-/// Implementations of this trait can receive notifications about various download
-/// task events such as progress updates, completion, failure, and state changes.
-/// All methods have empty default implementations to allow implementing only the
-/// methods of interest.
+/// Implementations of this trait can receive notifications about various
+/// download task events such as progress updates, completion, failure, and
+/// state changes. All methods have empty default implementations to allow
+/// implementing only the methods of interest.
 ///
 /// # Examples
 ///
 /// ```rust
+/// use std::sync::Arc;
+///
 /// use request_core::info::{Progress, Response};
 /// use request_next::listen::observe::Callback;
-/// use std::sync::Arc;
 ///
 /// // Custom callback implementation that logs download progress
 /// struct ProgressLogger;
 ///
 /// impl Callback for ProgressLogger {
 ///     fn on_progress(&self, progress: &Progress) {
-///         println!("Download progress: {} bytes downloaded of {} total",
-///                  progress.download_size, progress.total_size);
+///         println!(
+///             "Download progress: {} bytes downloaded of {} total",
+///             progress.download_size, progress.total_size
+///         );
 ///     }
 ///
 ///     fn on_completed(&self, progress: &Progress) {
-///         println!("Download completed: {} bytes downloaded", progress.download_size);
+///         println!(
+///             "Download completed: {} bytes downloaded",
+///             progress.download_size
+///         );
 ///     }
 ///
 ///     fn on_failed(&self, progress: &Progress, error_code: i32) {
-///         println!("Download failed with error code {} after {} bytes",
-///                  error_code, progress.download_size);
+///         println!(
+///             "Download failed with error code {} after {} bytes",
+///             error_code, progress.download_size
+///         );
 ///     }
 /// }
 ///
@@ -86,7 +98,8 @@ pub trait Callback {
     /// Called when download progress is updated.
     ///
     /// # Parameters
-    /// - `progress`: Current progress information including bytes downloaded and total size
+    /// - `progress`: Current progress information including bytes downloaded
+    ///   and total size
     fn on_progress(&self, progress: &Progress) {}
 
     /// Called when a download completes successfully.
@@ -126,7 +139,8 @@ pub trait Callback {
     /// - `response`: HTTP response details including status code, headers, etc.
     fn on_response(&self, response: &Response) {}
 
-    /// Called when HTTP headers are received but before the response body starts downloading.
+    /// Called when HTTP headers are received but before the response body
+    /// starts downloading.
     fn on_header_receive(&self, progress: &Progress) {}
     fn on_fault(&self, faults: Faults) {}
     fn on_complete_upload(&self, task_states: Vec<TaskState>) {}
@@ -155,18 +169,20 @@ impl Observer {
 
     /// Sets up the event listener with the provided file descriptor.
     ///
-    /// Creates a new UDS listener with the given file descriptor and starts a background
-    /// task to listen for and process incoming messages. Cancels any existing listener
-    /// if one is already running.
+    /// Creates a new UDS listener with the given file descriptor and starts a
+    /// background task to listen for and process incoming messages. Cancels
+    /// any existing listener if one is already running.
     ///
     /// # Parameters
-    /// - `file`: File descriptor connected to the download service's event stream
+    /// - `file`: File descriptor connected to the download service's event
+    ///   stream
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use request_next::listen::observe::Observer;
     /// use std::fs::File;
+    ///
+    /// use request_next::listen::observe::Observer;
     ///
     /// // In a real application, this file would be obtained from a service connection
     /// // let file = ...; // File descriptor connected to UDS socket
@@ -176,7 +192,8 @@ impl Observer {
     /// ```
     ///
     /// # Notes
-    /// The function name contains a typo (`set_listenr` instead of `set_listener`).
+    /// The function name contains a typo (`set_listenr` instead of
+    /// `set_listener`).
     pub fn set_listenr(&self, file: File) {
         let mut listener = UdsListener::new(file);
         let callbacks = self.callbacks.clone();
@@ -255,7 +272,8 @@ impl Observer {
                                                 callback.on_progress(&progress);
                                             }
                                             SubscribeType::Completed => {
-                                                callback.on_complete_upload(data.task_states.clone());
+                                                callback
+                                                    .on_complete_upload(data.task_states.clone());
                                             }
                                             SubscribeType::Failed => {
                                                 callback.on_fail_upload(data.task_states.clone());
@@ -269,7 +287,6 @@ impl Observer {
                                         },
                                     },
                                 }
-
                             }
                         }
                         Message::Faults(faultOccur) => {
@@ -298,8 +315,8 @@ impl Observer {
 
     /// Registers a callback for a specific task.
     ///
-    /// Associates a callback implementation with a task ID, allowing the callback to receive
-    /// events for that specific task.
+    /// Associates a callback implementation with a task ID, allowing the
+    /// callback to receive events for that specific task.
     ///
     /// # Parameters
     /// - `task_id`: ID of the task to monitor
@@ -308,15 +325,19 @@ impl Observer {
     /// # Examples
     ///
     /// ```rust
+    /// use std::sync::Arc;
+    ///
     /// use request_core::info::{Progress, Response};
     /// use request_next::listen::observe::{Callback, Observer};
-    /// use std::sync::Arc;
     ///
     /// struct SimpleCallback;
     ///
     /// impl Callback for SimpleCallback {
     ///     fn on_progress(&self, progress: &Progress) {
-    ///         println!("Progress: {}/{} bytes", progress.download_size, progress.total_size);
+    ///         println!(
+    ///             "Progress: {}/{} bytes",
+    ///             progress.download_size, progress.total_size
+    ///         );
     ///     }
     /// }
     ///
@@ -337,8 +358,8 @@ impl Observer {
 
     /// Unregisters a callback for a specific task.
     ///
-    /// Removes the callback association for the given task ID, stopping event notifications
-    /// for that task.
+    /// Removes the callback association for the given task ID, stopping event
+    /// notifications for that task.
     ///
     /// # Parameters
     /// - `task_id`: ID of the task to stop monitoring
@@ -362,7 +383,9 @@ impl Observer {
         let mut index = notify_data.progress.index as usize;
         let mut file_path = String::new();
         let mut len = 0;
-        let item = RequestClient::get_instance().task_manager.get_by_id(&(notify_data.task_id as i64));
+        let item = RequestClient::get_instance()
+            .task_manager
+            .get_by_id(&(notify_data.task_id as i64));
 
         if item.is_none() {
             error!("Task ID not found");
@@ -379,7 +402,8 @@ impl Observer {
         }
         file_path = config.body_file_paths[index].clone();
 
-        notify_data.progress.body_bytes = FileManager::read_bytes_from_file(&file_path).unwrap_or_default();
+        notify_data.progress.body_bytes =
+            FileManager::read_bytes_from_file(&file_path).unwrap_or_default();
         // Waiting for "complete" to read and delete.
     }
 }

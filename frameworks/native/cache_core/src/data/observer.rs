@@ -12,11 +12,13 @@
 // limitations under the License.
 
 //! Directory observation and management for cache system.
-//! 
-//! This module provides functionality for monitoring and managing cache directories,
-//! including cleanup operations and observation control.
+//!
+//! This module provides functionality for monitoring and managing cache
+//! directories, including cleanup operations and observation control.
 
-use std::{fs, path::PathBuf, sync::Arc};
+use std::fs;
+use std::path::PathBuf;
+use std::sync::Arc;
 
 use crate::data::file::HistoryDir;
 
@@ -65,8 +67,8 @@ impl DirRebuilder {
 impl Drop for DirRebuilder {
     /// Stops history directory observation when dropped.
     ///
-    /// Ensures that directory observation is properly stopped when the DirRebuilder
-    /// instance goes out of scope, preventing resource leaks.
+    /// Ensures that directory observation is properly stopped when the
+    /// DirRebuilder instance goes out of scope, preventing resource leaks.
     fn drop(&mut self) {
         self.stop_history_observe();
     }

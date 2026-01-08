@@ -13,19 +13,20 @@
 
 //! Client API for managing download tasks.
 //!
-//! This module provides a high-level interface for creating, controlling, and monitoring
-//! download tasks. It implements a singleton pattern for access to the request service
-//! and handles communication through the request proxy.
+//! This module provides a high-level interface for creating, controlling, and
+//! monitoring download tasks. It implements a singleton pattern for access to
+//! the request service and handles communication through the request proxy.
 //!
 //! # Examples
 //!
 //! ```rust
 //! use std::sync::Arc;
-//! use request_utils::context::Context;
+//!
 //! use request_core::config::{TaskConfig, Version};
 //! use request_core::filter::SearchFilter;
 //! use request_next::client::RequestClient;
 //! use request_next::Callback;
+//! use request_utils::context::Context;
 //!
 //! // Define a callback to receive download notifications
 //! struct MyCallback;
@@ -60,7 +61,7 @@
 //!         Version::Api10,
 //!         config,
 //!         "/data/data/com.example.app/downloads/file.iso",
-//!         false
+//!         false,
 //!     ) {
 //!         Ok(task_id) => {
 //!             println!("Created task with ID: {}", task_id);
@@ -88,7 +89,7 @@
 //!             if let Ok(info) = client.show_task(task_id) {
 //!                 println!("Task info: {:?}", info);
 //!             }
-//!         },
+//!         }
 //!         Err(e) => {
 //!             println!("Failed to create task: {:?}", e);
 //!         }
@@ -106,7 +107,6 @@
 pub mod error;
 mod native_task;
 use std::path::PathBuf;
-
 // Standard library imports
 use std::sync::{Arc, OnceLock};
 
@@ -197,8 +197,9 @@ impl<'a> RequestClient<'a> {
 
     /// Creates a new download task with the specified configuration.
     ///
-    /// Validates the download path, creates a file specification, and sends the task
-    /// creation request to the service. Automatically reopens the channel if needed.
+    /// Validates the download path, creates a file specification, and sends the
+    /// task creation request to the service. Automatically reopens the
+    /// channel if needed.
     ///
     /// # Parameters
     /// - `context`: Application context for path validation
@@ -215,22 +216,27 @@ impl<'a> RequestClient<'a> {
     /// - `CreateTaskError::Code`: If task creation fails for other reasons
     ///
     /// # Notes
-    /// The function name contains a typo (`crate_task` instead of `create_task`).
+    /// The function name contains a typo (`crate_task` instead of
+    /// `create_task`).
     ///
     /// # Examples
     ///
     /// ```rust
     /// use std::sync::Arc;
-    /// use request_utils::context::Context;
+    ///
     /// use request_core::config::{TaskConfig, Version};
     /// use request_next::client::RequestClient;
     /// use request_next::Callback;
+    /// use request_utils::context::Context;
     ///
     /// // Create a simple callback implementation
     /// struct DownloadCallback;
     /// impl Callback for DownloadCallback {
     ///     fn on_progress(&self, task_id: i64, bytes_downloaded: i64, total_bytes: i64) {
-    ///         println!("Task {} progress: {}/{} bytes", task_id, bytes_downloaded, total_bytes);
+    ///         println!(
+    ///             "Task {} progress: {}/{} bytes",
+    ///             task_id, bytes_downloaded, total_bytes
+    ///         );
     ///     }
     ///
     ///     fn on_complete(&self, task_id: i64) {
@@ -258,7 +264,7 @@ impl<'a> RequestClient<'a> {
     ///         Version::Api10,
     ///         config,
     ///         "/data/data/com.example.app/files/download.zip",
-    ///         true
+    ///         true,
     ///     ) {
     ///         Ok(task_id) => {
     ///             println!("Task created with ID: {}", task_id);
@@ -270,7 +276,7 @@ impl<'a> RequestClient<'a> {
     ///             if let Err(err) = client.start(task_id) {
     ///                 println!("Failed to start task: {}", err);
     ///             }
-    ///         },
+    ///         }
     ///         Err(e) => {
     ///             println!("Failed to create task: {:?}", e);
     ///         }

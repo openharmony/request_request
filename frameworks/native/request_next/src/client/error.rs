@@ -12,9 +12,10 @@
 // limitations under the License.
 
 //! Error types for client-side operations.
-//! 
-//! This module defines error types used by the client API when creating download tasks,
-//! providing a unified error interface while maintaining specific error information.
+//!
+//! This module defines error types used by the client API when creating
+//! download tasks, providing a unified error interface while maintaining
+//! specific error information.
 
 // Import the download path error type
 use crate::check::file::DownloadPathError;

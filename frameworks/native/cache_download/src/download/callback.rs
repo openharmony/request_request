@@ -13,27 +13,29 @@
 
 //! Callback handling for download operations.
 //!
-//! This module provides a prime callback implementation that handles download events
-//! and communicates with cache storage, manages download state, and notifies registered
-//! callbacks about download progress, success, failure, and cancellation.
+//! This module provides a prime callback implementation that handles download
+//! events and communicates with cache storage, manages download state, and
+//! notifies registered callbacks about download progress, success, failure, and
+//! cancellation.
 
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
+
+use cache_core::{CacheManager, Updater};
+use netstack_rs::info::DownloadInfo;
+use request_utils::task_id::TaskId;
 
 use super::common::{CommonError, CommonResponse};
 use super::{CacheDownloadError, RUNNING};
 use crate::download::{CANCEL, FAIL, SUCCESS};
 use crate::info::RustDownloadInfo;
 use crate::services::{CacheDownloadService, PreloadCallback};
-use cache_core::{CacheManager, Updater};
-use netstack_rs::info::DownloadInfo;
-use request_utils::task_id::TaskId;
 
 /// Interval for reporting progress updates.
 ///
-/// Progress updates are only reported once every PROGRESS_INTERVAL calls to avoid
-/// excessive callback invocations during rapid data reception.
+/// Progress updates are only reported once every PROGRESS_INTERVAL calls to
+/// avoid excessive callback invocations during rapid data reception.
 const PROGRESS_INTERVAL: usize = 8;
 
 /// Primary callback handler for managing download operations and notifications.
@@ -130,12 +132,13 @@ impl PrimeCallback {
 impl PrimeCallback {
     /// Handles successful download completion.
     ///
-    /// Updates the cache, changes the download state to success, and notifies all
-    /// registered callbacks of the successful completion. Reports 100% progress
-    /// before calling each callback's success method.
+    /// Updates the cache, changes the download state to success, and notifies
+    /// all registered callbacks of the successful completion. Reports 100%
+    /// progress before calling each callback's success method.
     ///
     /// # Type Parameters
-    /// - `R`: Type implementing `CommonResponse` containing the HTTP status code
+    /// - `R`: Type implementing `CommonResponse` containing the HTTP status
+    ///   code
     ///
     /// # Parameters
     /// - `response`: Response object containing the status code
@@ -174,8 +177,8 @@ impl PrimeCallback {
 
     /// Handles download failure.
     ///
-    /// Updates the download state to failed, and notifies all registered callbacks
-    /// of the failure with the appropriate error information.
+    /// Updates the download state to failed, and notifies all registered
+    /// callbacks of the failure with the appropriate error information.
     ///
     /// # Type Parameters
     /// - `E`: Type implementing `CommonError` containing error information
@@ -211,8 +214,8 @@ impl PrimeCallback {
 
     /// Handles download cancellation.
     ///
-    /// Updates the download state to canceled, and notifies all registered callbacks
-    /// of the cancellation.
+    /// Updates the download state to canceled, and notifies all registered
+    /// callbacks of the cancellation.
     pub(crate) fn common_cancel(&mut self) {
         info!("{} is cancel", self.task_id.brief());
         // Update task state to canceled
@@ -236,7 +239,8 @@ impl PrimeCallback {
     /// Reports download progress to registered callbacks.
     ///
     /// Implements throttling to prevent excessive progress notifications, only
-    /// reporting progress when the download has advanced and at a limited frequency.
+    /// reporting progress when the download has advanced and at a limited
+    /// frequency.
     ///
     /// # Parameters
     /// - `dl_total`: Total number of bytes to download
@@ -281,14 +285,16 @@ impl PrimeCallback {
 
     /// Processes received data and updates the cache.
     ///
-    /// Marks that data reception has started and forwards the data to the cache handler.
+    /// Marks that data reception has started and forwards the data to the cache
+    /// handler.
     ///
     /// # Type Parameters
     /// - `F`: Function type that returns the content length when called
     ///
     /// # Parameters
     /// - `data`: Buffer containing the received data
-    /// - `content_length`: Function that returns the total content length if available
+    /// - `content_length`: Function that returns the total content length if
+    ///   available
     pub(crate) fn common_data_receive<F>(&mut self, data: &[u8], content_length: F)
     where
         F: FnOnce() -> Option<usize>,
@@ -310,7 +316,8 @@ impl PrimeCallback {
 
     /// Notifies the cache download service that the task has finished.
     ///
-    /// Used to trigger any necessary cleanup or notification operations in the service.
+    /// Used to trigger any necessary cleanup or notification operations in the
+    /// service.
     fn notify_agent_finish(&self) {
         CacheDownloadService::get_instance().task_finish(&self.task_id, self.seq);
     }

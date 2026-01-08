@@ -16,25 +16,24 @@
 //! Download module for API 9.
 //!
 //! This module provides functions to manage download tasks in API 9, including
-//! creating, starting, pausing, resuming, and deleting download tasks, as well as
-//! retrieving task information.
+//! creating, starting, pausing, resuming, and deleting download tasks, as well
+//! as retrieving task information.
 
 use std::path::PathBuf;
 
 use ani_rs::business_error::BusinessError;
 use ani_rs::objects::{AniObject, AniRef};
 use ani_rs::AniEnv;
-use request_client::RequestClient;
 use request_client::client::error::CreateTaskError;
-use request_core::config::Version;
+use request_client::RequestClient;
+use request_core::config::{TaskConfig, Version};
 use request_core::info::TaskInfo;
 use request_utils::context::{is_stage_context, Context};
-use request_core::config::TaskConfig;
 
 use super::bridge::{DownloadConfig, DownloadTask};
 use crate::api9::bridge::DownloadInfo;
-use crate::seq::TaskSeq;
 use crate::constant::*;
+use crate::seq::TaskSeq;
 
 #[ani_rs::native]
 pub fn check_config(
@@ -55,11 +54,7 @@ pub fn check_config(
     config.bundle = context.get_bundle_name();
 
     // Create the download task
-    match RequestClient::get_instance().check_config(
-        context,
-        seq,
-        config
-    ) {
+    match RequestClient::get_instance().check_config(context, seq, config) {
         Ok(()) => Ok(seq as i64),
         Err(CreateTaskError::DownloadPath(_)) => {
             return Err(BusinessError::new(
@@ -68,10 +63,7 @@ pub fn check_config(
             ))
         }
         Err(CreateTaskError::Code(code)) => {
-            return Err(BusinessError::new(
-                code,
-                "Download failed.".to_string(),
-            ))
+            return Err(BusinessError::new(code, "Download failed.".to_string()))
         }
     }
 }
@@ -98,10 +90,10 @@ pub fn check_config(
 /// # Examples
 ///
 /// ```rust
-/// use ani_rs::AniEnv;
 /// use ani_rs::objects::AniRef;
-/// use request_api9::api9::download::download_file;
+/// use ani_rs::AniEnv;
 /// use request_api9::api9::bridge::DownloadConfig;
+/// use request_api9::api9::download::download_file;
 ///
 /// // Assuming env and context are properly initialized
 /// let config = DownloadConfig {
@@ -119,17 +111,16 @@ pub fn check_config(
 pub fn download_file(
     env: &AniEnv,
     context: AniRef,
-    seq: i64
+    seq: i64,
 ) -> Result<DownloadTask, BusinessError> {
     let context = AniObject::from(context);
     debug!("is {}", is_stage_context(env, &context));
     let context = Context::new(env, &context);
     // Create the download task
-    let task = match RequestClient::get_instance().create_task(
-        context,
-        seq as u64
-    ) {
-        Ok(task_id) => DownloadTask { task_id: task_id.to_string() },
+    let task = match RequestClient::get_instance().create_task(context, seq as u64) {
+        Ok(task_id) => DownloadTask {
+            task_id: task_id.to_string(),
+        },
         Err(CreateTaskError::DownloadPath(_)) => {
             return Err(BusinessError::new(
                 13400001,
@@ -137,10 +128,7 @@ pub fn download_file(
             ))
         }
         Err(CreateTaskError::Code(code)) => {
-            return Err(BusinessError::new(
-                code,
-                "Download failed.".to_string(),
-            ))
+            return Err(BusinessError::new(code, "Download failed.".to_string()))
         }
     };
 
@@ -181,8 +169,8 @@ pub fn download_file(
 /// # Examples
 ///
 /// ```rust
-/// use request_api9::api9::download::delete;
 /// use request_api9::api9::bridge::DownloadTask;
+/// use request_api9::api9::download::delete;
 ///
 /// let task = DownloadTask { task_id: 123 };
 /// match delete(task) {
@@ -198,7 +186,10 @@ pub fn delete(this: DownloadTask) -> Result<bool, BusinessError> {
             if e != ExceptionErrorCode::E_PERMISSION as i32 {
                 Ok(true)
             } else {
-                Err(BusinessError::new(e, "Failed to delete download task".to_string()))
+                Err(BusinessError::new(
+                    e,
+                    "Failed to delete download task".to_string(),
+                ))
             }
         });
     Ok(true)
@@ -224,8 +215,8 @@ pub fn delete(this: DownloadTask) -> Result<bool, BusinessError> {
 /// # Examples
 ///
 /// ```rust
-/// use request_api9::api9::download::suspend;
 /// use request_api9::api9::bridge::DownloadTask;
+/// use request_api9::api9::download::suspend;
 ///
 /// let task = DownloadTask { task_id: 123 };
 /// match suspend(task) {
@@ -241,7 +232,10 @@ pub fn suspend(this: DownloadTask) -> Result<bool, BusinessError> {
             if e != ExceptionErrorCode::E_PERMISSION as i32 {
                 Ok(true)
             } else {
-                Err(BusinessError::new(e, "Failed to delete download task".to_string()))
+                Err(BusinessError::new(
+                    e,
+                    "Failed to delete download task".to_string(),
+                ))
             }
         });
     Ok(true)
@@ -267,8 +261,8 @@ pub fn suspend(this: DownloadTask) -> Result<bool, BusinessError> {
 /// # Examples
 ///
 /// ```rust
-/// use request_api9::api9::download::restore;
 /// use request_api9::api9::bridge::DownloadTask;
+/// use request_api9::api9::download::restore;
 ///
 /// let task = DownloadTask { task_id: 123 };
 /// match restore(task) {
@@ -284,7 +278,10 @@ pub fn restore(this: DownloadTask) -> Result<bool, BusinessError> {
             if e != ExceptionErrorCode::E_PERMISSION as i32 {
                 Ok(true)
             } else {
-                Err(BusinessError::new(e, "Failed to delete download task".to_string()))
+                Err(BusinessError::new(
+                    e,
+                    "Failed to delete download task".to_string(),
+                ))
             }
         });
     Ok(true)
@@ -310,8 +307,8 @@ pub fn restore(this: DownloadTask) -> Result<bool, BusinessError> {
 /// # Examples
 ///
 /// ```rust
-/// use request_api9::api9::download::get_task_info;
 /// use request_api9::api9::bridge::DownloadTask;
+/// use request_api9::api9::download::get_task_info;
 ///
 /// let task = DownloadTask { task_id: 123 };
 /// match get_task_info(task) {
@@ -333,7 +330,8 @@ pub fn get_task_info(this: DownloadTask) -> Result<DownloadInfo, BusinessError> 
 ///
 /// # Notes
 ///
-/// Currently returns a static value of "application/octet-stream" for all tasks.
+/// Currently returns a static value of "application/octet-stream" for all
+/// tasks.
 ///
 /// # Parameters
 ///
@@ -346,8 +344,8 @@ pub fn get_task_info(this: DownloadTask) -> Result<DownloadInfo, BusinessError> 
 /// # Examples
 ///
 /// ```rust
-/// use request_api9::api9::download::get_task_mime_type;
 /// use request_api9::api9::bridge::DownloadTask;
+/// use request_api9::api9::download::get_task_mime_type;
 ///
 /// let task = DownloadTask { task_id: 123 };
 /// let mime_type = get_task_mime_type(task).unwrap();
@@ -364,7 +362,10 @@ pub fn get_task_mime_type(this: DownloadTask) -> Result<String, BusinessError> {
             if e != ExceptionErrorCode::E_PERMISSION as i32 {
                 Ok("".to_string())
             } else {
-                Err(BusinessError::new(e, "Failed to get task mime type".to_string()))
+                Err(BusinessError::new(
+                    e,
+                    "Failed to get task mime type".to_string(),
+                ))
             }
         }
     }

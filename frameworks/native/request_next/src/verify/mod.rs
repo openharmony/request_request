@@ -17,18 +17,19 @@ mod file_spec;
 mod form_item;
 mod index;
 mod method;
+mod min_speed;
 mod notification;
 mod proxy;
+mod timeout;
 mod title;
 mod token;
-mod min_speed;
-mod timeout;
 
-//todo
+// todo
 pub(crate) mod url;
 
-use request_core::config::TaskConfig;
 use std::sync::OnceLock;
+
+use request_core::config::TaskConfig;
 
 pub struct TaskConfigVerifier {
     verifiers: Vec<Box<dyn ConfigVerifier>>,

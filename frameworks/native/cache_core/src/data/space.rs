@@ -13,9 +13,9 @@
 
 //! Resource capacity management for caching system.
 //!
-//! This module provides functionality for tracking and managing resource capacities
-//! within the cache system, including applying for additional resources and releasing
-//! unused resources.
+//! This module provides functionality for tracking and managing resource
+//! capacities within the cache system, including applying for additional
+//! resources and releasing unused resources.
 
 /// Manages resource capacities for the caching system.
 ///
@@ -35,7 +35,8 @@ impl SpaceManager {
     /// - `capacity`: Total available capacity in bytes
     ///
     /// # Returns
-    /// A new SpaceManager instance with the specified capacity and zero used capacity
+    /// A new SpaceManager instance with the specified capacity and zero used
+    /// capacity
     pub(crate) fn new(capacity: u64) -> Self {
         Self {
             total_capacity: capacity,
@@ -45,8 +46,8 @@ impl SpaceManager {
 
     /// Attempts to allocate additional cache space.
     ///
-    /// Checks if the requested size can be allocated without exceeding total capacity.
-    /// If successful, updates the used capacity and returns true.
+    /// Checks if the requested size can be allocated without exceeding total
+    /// capacity. If successful, updates the used capacity and returns true.
     ///
     /// # Parameters
     /// - `apply_size`: Amount of space to allocate in bytes

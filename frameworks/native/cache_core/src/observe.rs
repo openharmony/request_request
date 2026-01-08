@@ -12,22 +12,27 @@
 // limitations under the License.
 
 //! Directory observation and file monitoring.
-//! 
-//! This module provides functionality for observing directory changes, specifically
-//! for monitoring image file deletions and maintaining history directories. It integrates
-//! with the native file system monitoring capabilities through FFI calls.
+//!
+//! This module provides functionality for observing directory changes,
+//! specifically for monitoring image file deletions and maintaining history
+//! directories. It integrates with the native file system monitoring
+//! capabilities through FFI calls.
+
+use std::path::PathBuf;
+use std::sync::Arc;
+
+use cxx::let_cxx_string;
 
 use crate::data::observer::DirRebuilder;
 use crate::data::{init_history_store_dir, is_history_init, HistoryDir};
 use crate::wrapper::ffi::{NewDirectoryMonitor, StartObserve};
-use cxx::let_cxx_string;
-use std::{path::PathBuf, sync::Arc};
 
 /// Observes image file deletion events for the specified path.
 ///
-/// Initializes history directory tracking if not already initialized, creating a history
-/// directory for the provided image path. This function sets up the necessary infrastructure
-/// for monitoring image file deletions to maintain cache consistency.
+/// Initializes history directory tracking if not already initialized, creating
+/// a history directory for the provided image path. This function sets up the
+/// necessary infrastructure for monitoring image file deletions to maintain
+/// cache consistency.
 ///
 /// # Parameters
 /// - `path`: Path to the image directory to monitor for deletion events
@@ -51,17 +56,17 @@ pub fn observe_image_file_delete(path: String) {
 
 /// Starts directory observation for the history directory.
 ///
-/// Spawns a new thread to monitor the history directory for changes using the system's
-/// directory monitoring capabilities. The directory monitor is set up to rebuild the
-/// directory structure when changes are detected.
+/// Spawns a new thread to monitor the history directory for changes using the
+/// system's directory monitoring capabilities. The directory monitor is set up
+/// to rebuild the directory structure when changes are detected.
 ///
 /// # Parameters
 /// - `curr`: Current directory path to monitor
 /// - `history`: History directory manager for handling directory changes
 ///
 /// # Safety
-/// Spawns a background thread that runs indefinitely until the program terminates
-/// or the monitor is stopped externally.
+/// Spawns a background thread that runs indefinitely until the program
+/// terminates or the monitor is stopped externally.
 pub fn start_history_dir_observe(curr: PathBuf, history: Arc<HistoryDir>) {
     // Use ffrt_spawn for thread creation to ensure proper resource management
     ffrt_rs::ffrt_spawn(move || {
