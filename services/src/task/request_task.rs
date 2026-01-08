@@ -723,6 +723,9 @@ pub(crate) fn check_config(
     if !config.body_file_paths.iter().all(|path| check_path(path)) {
         return Err(ErrorCode::Other);
     }
+    if !config.certs_path.iter().all(|path| check_path(path)) {
+        return Err(ErrorCode::Other);
+    }
     let files = AttachedFiles::open(config).map_err(|_| ErrorCode::FileOperationErr)?;
     #[cfg(feature = "oh")]
     let client = build_client(config, total_timeout, system).map_err(|_| ErrorCode::Other)?;

@@ -77,7 +77,8 @@ export default function requestCreateTaskTest() {
      */
     it('testTaskAction001', 0, (done: Function) => {
       let conf: Record<string, string> = {
-        "url": "http://127.0.0.1"
+        "url": "http://127.0.0.1",
+        "saveas": "testTaskAction001"
       };
       try {
         request.agent.create(context, conf as Object as request.agent.Config, (err) => {
@@ -101,7 +102,8 @@ export default function requestCreateTaskTest() {
     it('testTaskAction002', 0, async (done: Function) => {
       let conf: Record<string, string> = {
         "action": "UPLOAD",
-        "url": "http://127.0.0.1"
+        "url": "http://127.0.0.1",
+        "saveas": "testTaskAction002"
       };
       try {
         request.agent.create(context, conf as Object as request.agent.Config, (err) => {
@@ -126,7 +128,8 @@ export default function requestCreateTaskTest() {
     it('testTaskAction003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: 2,
-        url: 'http://127.0.0.1'
+        url: 'http://127.0.0.1',
+        saveas: "testTaskAction003"
       };
       try {
         request.agent.create(context, conf, (err) => {
@@ -176,11 +179,11 @@ export default function requestCreateTaskTest() {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `./`,
+        saveas: `./testTaskAction005`,
         gauge: true
       };
       request.agent.create(context, conf).then(async (data) => {
-        if (fs.accessSync(`${cacheDir}/test.txt`)) {
+        if (fs.accessSync(`${cacheDir}/testTaskAction005`)) {
           expect(true).assertTrue();
           await request.agent.remove(data.tid);
           done();
@@ -204,11 +207,11 @@ export default function requestCreateTaskTest() {
       let conf: request.agent.Config = {
         action: 0,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
-        saveas: `./`,
+        saveas: `./testTaskAction006`,
         gauge: true
       };
       request.agent.create(context, conf).then(async (data) => {
-        if (fs.accessSync(`${cacheDir}/test.txt`)) {
+        if (fs.accessSync(`${cacheDir}/testTaskAction006`)) {
           expect(true).assertTrue();
           await request.agent.remove(data.tid);
           done();
@@ -885,11 +888,12 @@ export default function requestCreateTaskTest() {
      */
 
     it('testTaskOverwrite001', 0, async (done: Function) => {
-      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      let file = fs.openSync(cacheDir + '/testTaskOverwrite001.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskOverwrite001.txt',
         overwrite: true
       };
       let task = await request.agent.create(context, conf);
@@ -916,6 +920,7 @@ export default function requestCreateTaskTest() {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskOverwrite002.txt',
         overwrite: true
       };
       let task = await request.agent.create(context, conf);
@@ -939,11 +944,12 @@ export default function requestCreateTaskTest() {
      */
 
     it('testTaskOverwrite003', 0, async (done: Function) => {
-      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      let file = fs.openSync(cacheDir + '/testTaskOverwrite003.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskOverwrite003.txt',
         overwrite: false
       };
       try {
@@ -970,6 +976,7 @@ export default function requestCreateTaskTest() {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskOverwrite004.txt',
         overwrite: false
       };
       let task = await request.agent.create(context, conf);
@@ -996,6 +1003,7 @@ export default function requestCreateTaskTest() {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
         "url": "https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "saveas": "testTaskOverwrite005",
         "overwrite": "true"
       };
       let task = await request.agent.create(context, conf as Object as request.agent.Config);
@@ -1019,11 +1027,12 @@ export default function requestCreateTaskTest() {
      */
 
     it('testTaskOverwrite006', 0, async (done: Function) => {
-      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      let file = fs.openSync(cacheDir + '/testTaskOverwrite006.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
         "url": "https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "saveas": "testTaskOverwrite006.txt",
         "overwrite": "true"
       };
       try {
@@ -1049,7 +1058,8 @@ export default function requestCreateTaskTest() {
     it('testTaskOverwrite007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt'
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskOverwrite007.txt'
       };
       try {
         let task = await request.agent.create(context, conf);
@@ -1077,11 +1087,12 @@ export default function requestCreateTaskTest() {
      */
 
     it('testTaskOverwrite008', 0, async (done: Function) => {
-      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      let file = fs.openSync(cacheDir + '/testTaskOverwrite008.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt'
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTaskOverwrite008.txt'
       };
       try {
         request.agent.create(context, conf, (err, data) => {
@@ -2376,6 +2387,7 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.DOWNLOAD,
         url: 'http://xxx',
         mode: request.agent.Mode.FOREGROUND,
+        saveas: 'testTaskRetry001.txt',
         retry: true
       };
       let task = await request.agent.create(context, conf);
@@ -2432,6 +2444,7 @@ export default function requestCreateTaskTest() {
         "action": request.agent.Action.DOWNLOAD,
         "url": "http://xxx",
         "mode": request.agent.Mode.BACKGROUND,
+        "saveas": 'testTaskRetry003.txt',
         "retry": "true",
         "overwrite": true
       };
@@ -2457,6 +2470,7 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
         mode: request.agent.Mode.FOREGROUND,
+        saveas: 'testTaskRetry004.txt',
         retry: false
       };
       let task = await request.agent.create(context, conf);
@@ -2481,6 +2495,7 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test1.txt',
         mode: request.agent.Mode.BACKGROUND,
+        saveas: 'testTaskRetry005.txt',
         retry: false,
         overwrite: true
       };
@@ -2556,7 +2571,7 @@ export default function requestCreateTaskTest() {
      */
 
     it('testTaskIndex003', 0, async (done: Function) => {
-      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      let file = fs.openSync(cacheDir + '/testTaskIndex003.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
@@ -2588,7 +2603,7 @@ export default function requestCreateTaskTest() {
      */
 
     it('testTaskIndex005', 0, async (done: Function) => {
-      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      let file = fs.openSync(cacheDir + '/testTaskIndex005.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
@@ -2596,7 +2611,7 @@ export default function requestCreateTaskTest() {
         data: [{
           name: 'file',
           value: {
-            path: `./test.txt`,
+            path: `./testTaskIndex005.txt`,
           }
         }],
         begins: 5,
@@ -2626,6 +2641,7 @@ export default function requestCreateTaskTest() {
         action: request.agent.Action.DOWNLOAD,
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
         mode: request.agent.Mode.BACKGROUND,
+        saveas: 'testTaskIndex006',
         begins: 5,
         gauge: true
       };
@@ -2647,7 +2663,7 @@ export default function requestCreateTaskTest() {
      */
 
     it('testTaskIndex007', 0, async (done: Function) => {
-      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      let file = fs.openSync(cacheDir + '/testTaskIndex007.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
@@ -2655,7 +2671,7 @@ export default function requestCreateTaskTest() {
         data: [{
           name: 'file',
           value: {
-            path: `./test.txt`,
+            path: `./testTaskIndex007.txt`,
           }
         }],
         begins: 5,
@@ -2680,7 +2696,7 @@ export default function requestCreateTaskTest() {
      */
 
     it('testTaskIndex009', 0, async (done: Function) => {
-      let file = fs.openSync(cacheDir + '/test.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      let file = fs.openSync(cacheDir + '/testTaskIndex009.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
@@ -2688,7 +2704,7 @@ export default function requestCreateTaskTest() {
         data: [{
           name: 'file',
           value: {
-            path: `./test.txt`,
+            path: `./testTaskIndex009.txt`,
           }
         }],
         ends: 10

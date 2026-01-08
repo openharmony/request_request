@@ -1048,6 +1048,7 @@ void JsTask::RemoveDirsPermission(const std::vector<std::string> &dirs)
             fs::path path = entry.path();
             std::string filePath = folder.string() + "/" + path.filename().string();
             PathUtils::SubPathsToMap(filePath);
+            PathUtils::InitChmod(filePath);
         }
     }
 }
@@ -1071,6 +1072,7 @@ void JsTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls
             }
             err.clear();
             PathUtils::SubPathsToMap(filePath);
+            PathUtils::InitChmod(filePath);
             NapiUtils::RemoveFile(filePath);
         }
     }
@@ -1078,6 +1080,7 @@ void JsTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls
         // Reset Acl permission
         for (auto &file : context->task->config_.files) {
             PathUtils::SubPathsToMap(file.uri);
+            PathUtils::InitChmod(file.uri);
         }
         context->task->isGetPermission = false;
     }

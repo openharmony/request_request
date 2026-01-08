@@ -113,7 +113,7 @@ export default function requestDownloadFileTest() {
     it('testDownloadUrl003', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/openharmony/request_request',
-        filePath: 'test.txt',
+        filePath: 'testDownloadUrl003.txt',
       };
       request.downloadFile(context, conf).then(async (data) => {
         expect(true).assertTrue();
@@ -137,7 +137,7 @@ export default function requestDownloadFileTest() {
     it('testDownloadUrl004', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
         url: 'admin://127.0.0.1',
-        filePath: 'test.txt',
+        filePath: 'testDownloadUrl004.txt',
       };
       try {
         request.downloadFile(context, conf, (err, data) => {
@@ -161,6 +161,7 @@ export default function requestDownloadFileTest() {
     it('testDownloadUrl005', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
         url: 'http://127.0.0.1/' + 'a'.repeat(8176),
+        filePath: 'testDownloadUrl005.txt',
       };
       try {
         request.downloadFile(context, conf, (err, data) => {
@@ -184,6 +185,7 @@ export default function requestDownloadFileTest() {
     it('testDownloadUrl006', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
         url: '',
+        filePath: 'testDownloadUrl006.txt',
       };
       try {
         request.downloadFile(context, conf, (err, data) => {
@@ -569,12 +571,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOn001', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOn001.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOn001.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -596,12 +599,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOn002', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOn002.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOn002.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -625,6 +629,7 @@ export default function requestDownloadFileTest() {
     it('testDownloadFileOn003', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
         url: 'http://www.ylong_http.client.com/test.txt',
+        filePath: 'testDownloadFileOn003.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -647,12 +652,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOn004', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOn004.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOn004.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -677,12 +683,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOn005', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOn005.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOn005.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -708,12 +715,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOn006', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOn006.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOn006.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -737,12 +745,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOn007', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOn007.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOn007.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -767,12 +776,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOn008', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOn008.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOn008.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -796,12 +806,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOff001', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOff001.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOff001.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -823,12 +834,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOff002', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOff002.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOff002.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -851,12 +863,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOff003', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOff003.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOff003.txt'
       };
       let task = await request.downloadFile(context, conf);
       task.on('complete', () => {
@@ -882,12 +895,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOff0031', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOff0031.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOff0031.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -923,12 +937,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOff004', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOff004.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOff004.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -952,12 +967,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOff005', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOff005.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOff005.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -992,12 +1008,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOff0051', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOff0051.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOff0051.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -1034,12 +1051,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOff006', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOff006.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOff006.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -1071,12 +1089,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOff007', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOff007.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOff007.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -1114,12 +1133,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOff008', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOff008.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOff008.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -1151,12 +1171,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOff009', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOff009.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadFileOff009.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -1196,6 +1217,7 @@ export default function requestDownloadFileTest() {
     it('testDownloadFileOff010', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
         url: 'http://www.ylong_http.client.com/test.txt',
+        filePath: 'testDownloadFileOff010.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -1226,12 +1248,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadFileOff011', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadFileOff011.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'http://www.ylong_http.client.com/test.txt',
+        filePath: 'testDownloadFileOff011.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -1268,12 +1291,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadTaskRestore001', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadTaskRestore001.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadTaskRestore001.txt'
       };
       let task = await request.downloadFile(context, conf);
       task.suspend();
@@ -1300,12 +1324,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadTaskRestore0011', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadTaskRestore0011.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadTaskRestore0011.txt'
       };
       let task = await request.downloadFile(context, conf);
       await task.suspend();
@@ -1348,12 +1373,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadTaskDelete002', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadTaskDelete002.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadTaskDelete002.txt'
       };
       let task = await request.downloadFile(context, conf);
       task.delete().then(() => {
@@ -1374,12 +1400,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadTaskDelete0021', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadTaskDelete0021.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadTaskDelete0021.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -1402,12 +1429,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadGetTaskInfo001', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadGetTaskInfo001.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadGetTaskInfo001.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -1438,12 +1466,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadGetTaskInfo0011', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadGetTaskInfo0011.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadGetTaskInfo0011.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -1471,12 +1500,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadGetTaskInfo002', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadGetTaskInfo002.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadGetTaskInfo002.txt'
       };
       let task = await request.downloadFile(context, conf);
       await task.suspend();
@@ -1504,12 +1534,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadGetTaskInfo0021', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadGetTaskInfo0021.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        filePath: 'testDownloadGetTaskInfo0021.txt'
       };
       let task = await request.downloadFile(context, conf);
       await task.suspend();
@@ -1598,12 +1629,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadGetTaskInfo004', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadGetTaskInfo004.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'http://www.ylong_http.client.com/test.txt',
+        filePath: 'testDownloadGetTaskInfo004.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
@@ -1635,12 +1667,13 @@ export default function requestDownloadFileTest() {
      * @tc.require:
      */
     it('testDownloadGetTaskInfo0041', 0, async (done: Function) => {
-      let filePath = cacheDir + '/test.txt';
+      let filePath = cacheDir + '/testDownloadGetTaskInfo0041.txt';
       if (fs.accessSync(filePath)) {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
         url: 'http://www.ylong_http.client.com/test.txt',
+        filePath: 'testDownloadGetTaskInfo0041.txt'
       };
       let task = await request.downloadFile(context, conf);
       try {
