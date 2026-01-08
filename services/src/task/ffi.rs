@@ -12,9 +12,10 @@
 // limitations under the License.
 
 //! Foreign Function Interface (FFI) types and conversions for task operations.
-//! 
+//!
 //! This module provides C-compatible structs and conversion methods to bridge
-//! between Rust and C code for task configuration, information, and progress updates.
+//! between Rust and C code for task configuration, information, and progress
+//! updates.
 
 use super::config::{
     Action, CommonTaskConfig, ConfigSet, MinSpeed, Mode, NetworkConfig, TaskConfig, Timeout,
@@ -34,9 +35,10 @@ use crate::utils::{build_vec, split_string, string_to_hashmap};
 
 /// C-compatible representation of task configuration.
 ///
-/// This struct provides a C-ABI compatible interface for passing task configuration
-/// between Rust and C code. It contains all necessary fields to configure a download
-/// or upload task, including URLs, headers, form data, and network settings.
+/// This struct provides a C-ABI compatible interface for passing task
+/// configuration between Rust and C code. It contains all necessary fields to
+/// configure a download or upload task, including URLs, headers, form data, and
+/// network settings.
 #[repr(C)]
 pub(crate) struct CTaskConfig {
     /// Bundle identifier of the application owning the task.
@@ -90,7 +92,8 @@ pub(crate) struct CTaskConfig {
 /// C-compatible representation of common task configuration data.
 ///
 /// Contains shared configuration parameters used by all task types, including
-/// identifiers, network preferences, scheduling options, and performance settings.
+/// identifiers, network preferences, scheduling options, and performance
+/// settings.
 #[repr(C)]
 pub(crate) struct CommonCTaskConfig {
     /// Unique identifier for the task.
@@ -140,7 +143,8 @@ pub(crate) struct CommonCTaskConfig {
 /// C-compatible representation of minimum speed requirements.
 ///
 /// Specifies the minimum download/upload speed threshold and the duration that
-/// speed must be maintained before the task is considered to be running too slowly.
+/// speed must be maintained before the task is considered to be running too
+/// slowly.
 #[repr(C)]
 pub(crate) struct CMinSpeed {
     /// Minimum speed threshold in bytes per second.
@@ -164,7 +168,8 @@ pub(crate) struct CTimeout {
 /// C-compatible representation of task progress information.
 ///
 /// This struct provides a way to pass progress updates between Rust and C code,
-/// including common progress data, file sizes, processed bytes, and extra information.
+/// including common progress data, file sizes, processed bytes, and extra
+/// information.
 #[repr(C)]
 pub(crate) struct CProgress {
     /// Common progress information (state, percentages, etc.).
@@ -206,11 +211,13 @@ impl Progress {
     ///
     /// # Returns
     ///
-    /// Returns a Rust `Progress` struct with data parsed from the C representation.
+    /// Returns a Rust `Progress` struct with data parsed from the C
+    /// representation.
     ///
     /// # Notes
     ///
-    /// Parsing errors will result in default values (0 for numbers, empty map for extras).
+    /// Parsing errors will result in default values (0 for numbers, empty map
+    /// for extras).
     pub(crate) fn from_c_struct(c_struct: &CProgress) -> Self {
         Progress {
             common_data: c_struct.common_data.clone(),
@@ -231,8 +238,8 @@ impl Progress {
 /// C-compatible representation of task information.
 ///
 /// This struct provides a way to pass task details between Rust and C code,
-/// including bundle information, URLs, form data, file information, progress updates,
-/// and common task metadata.
+/// including bundle information, URLs, form data, file information, progress
+/// updates, and common task metadata.
 #[repr(C)]
 pub(crate) struct CTaskInfo {
     /// Bundle identifier for the task.
@@ -272,7 +279,8 @@ impl TaskInfo {
     ///
     /// # Arguments
     ///
-    /// * `info` - InfoSet containing additional task information needed for conversion.
+    /// * `info` - InfoSet containing additional task information needed for
+    ///   conversion.
     ///
     /// # Returns
     ///
@@ -307,12 +315,14 @@ impl TaskInfo {
     ///
     /// # Returns
     ///
-    /// Returns a Rust `TaskInfo` struct with data parsed from the C representation.
+    /// Returns a Rust `TaskInfo` struct with data parsed from the C
+    /// representation.
     ///
     /// # Notes
     ///
-    /// Handles special logic for API9 compatibility and for tasks that are not yet completed or failed.
-    /// In these cases, the MIME type is preserved; otherwise, it's set to an empty string.
+    /// Handles special logic for API9 compatibility and for tasks that are not
+    /// yet completed or failed. In these cases, the MIME type is preserved;
+    /// otherwise, it's set to an empty string.
     pub(crate) fn from_c_struct(c_struct: &CTaskInfo) -> Self {
         let progress = Progress::from_c_struct(&c_struct.progress);
         let extras = progress.extras.clone();
@@ -363,8 +373,9 @@ impl TaskInfo {
 
 /// C-compatible representation of task update information.
 ///
-/// This struct provides a way to pass task update details between Rust and C code,
-/// including modification time, update reason, retry attempts, MIME type, and progress.
+/// This struct provides a way to pass task update details between Rust and C
+/// code, including modification time, update reason, retry attempts, MIME type,
+/// and progress.
 #[repr(C)]
 pub(crate) struct CUpdateInfo {
     /// Last modification timestamp (milliseconds since epoch).
@@ -390,7 +401,8 @@ impl UpdateInfo {
     ///
     /// # Returns
     ///
-    /// Returns a `CUpdateInfo` struct ready to be passed across the FFI boundary.
+    /// Returns a `CUpdateInfo` struct ready to be passed across the FFI
+    /// boundary.
     pub(crate) fn to_c_struct(&self, sizes: &str, processed: &str, extras: &str) -> CUpdateInfo {
         CUpdateInfo {
             mtime: self.mtime,
@@ -413,7 +425,8 @@ impl TaskConfig {
     ///
     /// # Returns
     ///
-    /// Returns a `CTaskConfig` struct ready to be passed across the FFI boundary.
+    /// Returns a `CTaskConfig` struct ready to be passed across the FFI
+    /// boundary.
     pub(crate) fn to_c_struct(&self, task_id: u32, uid: u64, set: &ConfigSet) -> CTaskConfig {
         CTaskConfig {
             // Basic task identifiers and metadata
@@ -423,7 +436,7 @@ impl TaskConfig {
             url: CStringWrapper::from(&self.url),
             title: CStringWrapper::from(&self.title),
             description: CStringWrapper::from(&self.description),
-            
+
             // Request configuration
             method: CStringWrapper::from(&self.method),
             headers: CStringWrapper::from(&set.headers), // Headers from ConfigSet
@@ -442,7 +455,8 @@ impl TaskConfig {
             file_specs_ptr: set.file_specs.as_ptr(), // Pointer to file specifications array
             file_specs_len: set.file_specs.len() as u32, // Length of file specifications array
             body_file_names_ptr: set.body_file_names.as_ptr(), // Pointer to body file names array
-            body_file_names_len: set.body_file_names.len() as u32, // Length of body file names array
+            body_file_names_len: set.body_file_names.len() as u32, /* Length of body file names
+                                                      * array */
             certs_path_ptr: set.certs_path.as_ptr(), // Pointer to certificate paths array
             certs_path_len: set.certs_path.len() as u32, // Length of certificate paths array
 
@@ -455,7 +469,7 @@ impl TaskConfig {
 
                 // Action and mode identifiers
                 action: self.common_data.action.repr, // Raw representation of Action enum
-                mode: self.common_data.mode.repr, // Raw representation of Mode enum
+                mode: self.common_data.mode.repr,     // Raw representation of Mode enum
 
                 // Task behavior flags
                 cover: self.common_data.cover,
@@ -500,13 +514,14 @@ impl TaskConfig {
     ///
     /// # Returns
     ///
-    /// Returns a Rust `TaskConfig` struct with data parsed from the C representation.
+    /// Returns a Rust `TaskConfig` struct with data parsed from the C
+    /// representation.
     ///
     /// # Safety
     ///
-    /// Under the `oh` feature flag, this function calls C functions to deallocate
-    /// pointers. Callers must ensure that pointers are only passed once to prevent
-    /// double-free errors.
+    /// Under the `oh` feature flag, this function calls C functions to
+    /// deallocate pointers. Callers must ensure that pointers are only
+    /// passed once to prevent double-free errors.
     pub(crate) fn from_c_struct(c_struct: &CTaskConfig) -> Self {
         let task_config: TaskConfig = TaskConfig {
             // Basic task identifiers and metadata

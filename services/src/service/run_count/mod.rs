@@ -12,9 +12,10 @@
 // limitations under the License.
 
 //! Module for managing and notifying about running task counts.
-//! 
-//! This module provides the core types and functionality for the run count management system,
-//! including event definitions, client communication, and integration with the manager implementation.
+//!
+//! This module provides the core types and functionality for the run count
+//! management system, including event definitions, client communication, and
+//! integration with the manager implementation.
 
 mod manager;
 
@@ -30,7 +31,7 @@ use super::interface;
 use crate::error::ErrorCode;
 
 /// Events for the run count management system.
-/// 
+///
 /// This enum defines the different types of events that can be processed by the
 /// `RunCountManager` to manage subscriptions and update run counts.
 pub(crate) enum RunCountEvent {
@@ -45,7 +46,7 @@ pub(crate) enum RunCountEvent {
 }
 
 /// Client for receiving run count notifications.
-/// 
+///
 /// Handles IPC communication to notify clients when the run count changes.
 struct Client {
     /// Remote object for IPC communication with the client
@@ -55,9 +56,9 @@ struct Client {
 
 impl Client {
     /// Creates a new client instance.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `obj` - Remote object for IPC communication
     fn new(#[cfg(feature = "oh")] obj: RemoteObj) -> Self {
         Self {
@@ -67,13 +68,13 @@ impl Client {
     }
 
     /// Sends a run count notification to the client.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `run_count` - The current number of running tasks
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Result indicating success or failure of the IPC operation
     #[cfg(feature = "oh")]
     fn notify_run_count(&self, run_count: i64) -> IpcResult<()> {
@@ -81,7 +82,7 @@ impl Client {
         #[cfg(feature = "oh")]
         {
             let mut parcel = MsgParcel::new();
-            
+
             // Write interface token and run count to the parcel
             parcel.write_interface_token("OHOS.Download.NotifyInterface")?;
             parcel.write(&(run_count))?;

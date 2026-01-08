@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Utility module providing common functionality for request handling.
-//! 
+//!
 //! This module includes various helper functions and types used throughout the
 //! request processing system, including time utilities, string handling,
 //! memory management, and FFI bridges to C++ components.
@@ -45,7 +45,8 @@ use ylong_runtime::task::JoinHandle;
 /// A wrapper around a oneshot receiver that provides a blocking API.
 ///
 /// This struct provides a simple interface to wait for and retrieve a value
-/// from a oneshot channel, blocking the current thread until the value is ready.
+/// from a oneshot channel, blocking the current thread until the value is
+/// ready.
 pub(crate) struct Recv<T> {
     /// The inner oneshot receiver.
     rx: Receiver<T>,
@@ -57,7 +58,8 @@ impl<T> Recv<T> {
         Self { rx }
     }
 
-    /// Retrieves the value from the oneshot channel, blocking the current thread.
+    /// Retrieves the value from the oneshot channel, blocking the current
+    /// thread.
     ///
     /// # Returns
     ///
@@ -74,29 +76,33 @@ impl<T> Recv<T> {
     }
 }
 
-/// Safely constructs a vector from a raw pointer and length, applying a conversion function.
+/// Safely constructs a vector from a raw pointer and length, applying a
+/// conversion function.
 ///
-/// This function provides a safe way to convert C-style arrays (represented by a
-/// pointer and length) into Rust vectors, with an optional conversion step for each element.
+/// This function provides a safe way to convert C-style arrays (represented by
+/// a pointer and length) into Rust vectors, with an optional conversion step
+/// for each element.
 ///
 /// # Safety
 ///
 /// The caller must ensure:
-/// - If `ptr` is not null, it must point to a valid memory region containing at least `len`
-///   consecutive elements of type `A`.
-/// - The memory pointed to by `ptr` must not be mutated during the execution of this function.
+/// - If `ptr` is not null, it must point to a valid memory region containing at
+///   least `len` consecutive elements of type `A`.
+/// - The memory pointed to by `ptr` must not be mutated during the execution of
+///   this function.
 /// - The memory must remain valid until the function completes.
 ///
 /// # Parameters
 ///
 /// - `ptr`: Pointer to the start of the array
 /// - `len`: Number of elements in the array
-/// - `func`: Conversion function to transform each element from type `A` to type `B`
+/// - `func`: Conversion function to transform each element from type `A` to
+///   type `B`
 ///
 /// # Returns
 ///
-/// Returns a new `Vec<B>` containing all elements converted from the input array.
-/// Returns an empty vector if `ptr` is null or `len` is 0.
+/// Returns a new `Vec<B>` containing all elements converted from the input
+/// array. Returns an empty vector if `ptr` is null or `len` is 0.
 ///
 /// # Examples
 ///
@@ -104,7 +110,7 @@ impl<T> Recv<T> {
 /// let data = [1, 2, 3, 4, 5];
 /// let ptr = data.as_ptr();
 /// let len = data.len();
-/// 
+///
 /// // Convert to a vector of strings
 /// let result = build_vec(ptr, len, |&x| x.to_string());
 /// assert_eq!(result, vec!["1", "2", "3", "4", "5"]);
@@ -116,12 +122,14 @@ where
     if ptr.is_null() || len == 0 {
         return Vec::<B>::new();
     }
-    // Safety: Assuming the caller has ensured the pointer is valid for `len` elements
+    // Safety: Assuming the caller has ensured the pointer is valid for `len`
+    // elements
     let slice = unsafe { std::slice::from_raw_parts(ptr, len) };
     slice.iter().map(func).collect()
 }
 
-/// Retrieves the current system time as a timestamp in milliseconds since UNIX EPOCH.
+/// Retrieves the current system time as a timestamp in milliseconds since UNIX
+/// EPOCH.
 ///
 /// # Returns
 ///
@@ -148,7 +156,8 @@ pub(crate) fn get_current_timestamp() -> u64 {
 ///
 /// # Returns
 ///
-/// Returns a `Duration` representing the time elapsed since January 1, 1970 UTC.
+/// Returns a `Duration` representing the time elapsed since January 1, 1970
+/// UTC.
 ///
 /// # Panics
 ///
@@ -182,18 +191,18 @@ pub(crate) fn get_current_duration() -> Duration {
 ///
 /// # Safety
 ///
-/// This function assumes that all written data is valid UTF-8, which is guaranteed
-/// since we're only writing String values.
+/// This function assumes that all written data is valid UTF-8, which is
+/// guaranteed since we're only writing String values.
 ///
 /// # Examples
 ///
 /// ```rust
 /// use std::collections::HashMap;
-/// 
+///
 /// let mut map = HashMap::new();
 /// map.insert("key1".to_string(), "value1".to_string());
 /// map.insert("key2".to_string(), "value2".to_string());
-/// 
+///
 /// let result = hashmap_to_string(&map);
 /// // The result will be either "key1\tvalue1\r\nkey2\tvalue2" or
 /// // "key2\tvalue2\r\nkey1\tvalue1" (order is not guaranteed for HashMap)
@@ -213,8 +222,8 @@ pub(crate) fn hashmap_to_string(map: &HashMap<String, String>) -> String {
 
 /// Parses a tab-delimited string into a HashMap<String, String>.
 ///
-/// This function deserializes a string where each key-value pair is represented as
-/// "key\tvalue", with pairs separated by "\r\n", into a hash map.
+/// This function deserializes a string where each key-value pair is represented
+/// as "key\tvalue", with pairs separated by "\r\n", into a hash map.
 ///
 /// # Parameters
 ///
@@ -227,14 +236,15 @@ pub(crate) fn hashmap_to_string(map: &HashMap<String, String>) -> String {
 ///
 /// # Panics
 ///
-/// Panics if any line in the input string does not contain exactly one tab character.
+/// Panics if any line in the input string does not contain exactly one tab
+/// character.
 ///
 /// # Examples
 ///
 /// ```rust
 /// let input = "key1\tvalue1\r\nkey2\tvalue2";
 /// let result = string_to_hashmap(&mut input.to_string());
-/// 
+///
 /// assert_eq!(result.get("key1"), Some(&"value1".to_string()));
 /// assert_eq!(result.get("key2"), Some(&"value2".to_string()));
 /// ```
@@ -269,7 +279,7 @@ pub(crate) fn string_to_hashmap(str: &mut str) -> HashMap<String, String> {
 /// ```rust
 /// let input = "[apple, banana, cherry]";
 /// let result: Vec<_> = split_string(&mut input.to_string()).collect();
-/// 
+///
 /// assert_eq!(result, vec!["apple", "banana", "cherry"]);
 /// ```
 pub(crate) fn split_string(str: &mut str) -> std::str::Split<'_, &str> {
@@ -292,14 +302,14 @@ pub(crate) fn split_string(str: &mut str) -> std::str::Split<'_, &str> {
 ///
 /// ```rust
 /// use std::sync::Once;
-/// 
+///
 /// static INIT: Once = Once::new();
 /// let mut initialized = false;
-/// 
+///
 /// call_once(&INIT, || {
 ///     initialized = true;
 /// });
-/// 
+///
 /// assert!(initialized);
 /// ```
 pub(crate) fn call_once<F: FnOnce()>(once: &Once, func: F) {
@@ -326,7 +336,7 @@ pub(crate) fn call_once<F: FnOnce()>(once: &Once, func: F) {
 /// async fn example_task() {
 ///     // Task implementation
 /// }
-/// 
+///
 /// let handle = runtime_spawn(example_task());
 /// // Later, we can await the task
 /// // ylong_runtime::block_on(handle);
@@ -336,14 +346,14 @@ pub(crate) fn runtime_spawn<F: Future<Output = ()> + Send + Sync + 'static>(
 ) -> JoinHandle<()> {
     ylong_runtime::spawn(Box::into_pin(
         // Box the future for dynamic dispatch
-        Box::new(fut) as Box<dyn Future<Output = ()> + Send + Sync>
+        Box::new(fut) as Box<dyn Future<Output = ()> + Send + Sync>,
     ))
 }
 
 /// Queries the bundle name of the calling process using its token ID.
 ///
-/// This function retrieves the bundle name associated with the calling process's
-/// token ID through the FFI bridge to C++ code.
+/// This function retrieves the bundle name associated with the calling
+/// process's token ID through the FFI bridge to C++ code.
 ///
 /// # Returns
 ///
@@ -358,14 +368,16 @@ pub(crate) fn query_calling_bundle() -> String {
     ffi::GetCallingBundle(token_id)
 }
 
-/// Determines if the calling process is using a system API based on its token ID.
+/// Determines if the calling process is using a system API based on its token
+/// ID.
 ///
 /// This function checks whether the calling process has system API privileges
 /// by verifying its token ID through the FFI bridge to C++ code.
 ///
 /// # Returns
 ///
-/// Returns `true` if the calling process has system API privileges, otherwise `false`.
+/// Returns `true` if the calling process has system API privileges, otherwise
+/// `false`.
 ///
 /// # Availability
 ///
@@ -378,9 +390,9 @@ pub(crate) fn is_system_api() -> bool {
 
 /// Checks if the calling process has a specific permission.
 ///
-/// This function verifies whether the calling process has been granted a specific
-/// permission by checking its token ID against the permission system through the
-/// FFI bridge to C++ code.
+/// This function verifies whether the calling process has been granted a
+/// specific permission by checking its token ID against the permission system
+/// through the FFI bridge to C++ code.
 ///
 /// # Parameters
 ///
@@ -423,8 +435,8 @@ pub(crate) fn update_policy(any_tasks: bool) -> i32 {
 
 /// Determines if the calling process is a HarmonyOS Ability Package (HAP).
 ///
-/// This function checks whether the calling process is a HarmonyOS Ability Package
-/// by examining its token ID through the FFI bridge to C++ code.
+/// This function checks whether the calling process is a HarmonyOS Ability
+/// Package by examining its token ID through the FFI bridge to C++ code.
 ///
 /// # Returns
 ///
@@ -447,7 +459,8 @@ pub(crate) fn is_called_by_hap() -> bool {
 /// # Safety
 ///
 /// All functions in this module are marked as `unsafe` because they interface
-/// with C++ code and may have additional safety requirements not enforced by Rust.
+/// with C++ code and may have additional safety requirements not enforced by
+/// Rust.
 #[allow(unused)]
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
@@ -457,28 +470,29 @@ mod ffi {
 
         /// Publishes a state change event for a task.
         fn PublishStateChangeEvent(bundleName: &str, taskId: u32, state: i32, uid: i32) -> bool;
-        
+
         /// Retrieves the list of foreground abilities for a given UID.
         fn GetForegroundAbilities(uid: &mut Vec<i32>) -> i32;
-        
+
         /// Gets the bundle name associated with a token ID.
         fn GetCallingBundle(token_id: u64) -> String;
-        
+
         /// Checks if a token ID has system API privileges.
         fn IsSystemAPI(token_id: u64) -> bool;
-        
+
         /// Checks if a token ID has a specific permission.
         fn CheckPermission(token_id: u64, permission: &str) -> bool;
-        
+
         /// Updates system policy based on task status.
         fn UpdatePolicy(any_tasks: bool) -> i32;
-        
+
         /// Checks if a token ID belongs to a HarmonyOS Ability Package.
         fn IsCalledByHAP(token_id: u32) -> bool;
     }
 }
 
-/// Unit test module included conditionally when `oh` feature and tests are enabled.
+/// Unit test module included conditionally when `oh` feature and tests are
+/// enabled.
 ///
 /// This module includes external test code when running in test mode with the
 /// `oh` feature enabled.

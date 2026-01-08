@@ -12,9 +12,10 @@
 // limitations under the License.
 
 //! Error and state reason codes for request tasks.
-//! 
-//! This module defines the `Reason` enumeration that represents various states and errors
-//! that can occur during task execution, including network issues, user operations, and system conditions.
+//!
+//! This module defines the `Reason` enumeration that represents various states
+//! and errors that can occur during task execution, including network issues,
+//! user operations, and system conditions.
 
 // Re-export the Reason enum from the FFI module
 pub(crate) use ffi::Reason;
@@ -70,13 +71,16 @@ mod ffi {
         Ssl,
         /// Insufficient storage space available.
         InsufficientSpace,
-        /// Combined condition: network offline and app in background/terminated.
+        /// Combined condition: network offline and app in
+        /// background/terminated.
         NetworkApp = 27,
         /// Combined condition: network offline and account stopped.
         NetworkAccount = 28,
-        /// Combined condition: app in background/terminated and account stopped.
+        /// Combined condition: app in background/terminated and account
+        /// stopped.
         AppAccount = 29,
-        /// Combined condition: network offline, app in background/terminated, and account stopped.
+        /// Combined condition: network offline, app in background/terminated,
+        /// and account stopped.
         NetworkAppAccount = 30,
         /// Transfer speed below configured minimum threshold.
         LowSpeed = 31,
@@ -84,14 +88,15 @@ mod ffi {
 }
 
 /// Converts a raw byte value to a Reason enum variant.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `value` - The raw byte value to convert.
-/// 
+///
 /// # Returns
-/// 
-/// The corresponding Reason variant, or `Reason::OthersError` if the value is unrecognized.
+///
+/// The corresponding Reason variant, or `Reason::OthersError` if the value is
+/// unrecognized.
 impl From<u8> for Reason {
     fn from(value: u8) -> Self {
         match value {
@@ -128,9 +133,9 @@ impl From<u8> for Reason {
 
 impl Reason {
     /// Converts the reason to a descriptive string.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A static string describing the reason.
     pub(crate) fn to_str(self) -> &'static str {
         match self {

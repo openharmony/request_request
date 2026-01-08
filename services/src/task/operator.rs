@@ -12,9 +12,9 @@
 // limitations under the License.
 
 //! Task operation utilities for the request service.
-//! 
-//! This module provides core functionality for managing task operations including
-//! progress tracking, notifications, and file writing operations.
+//!
+//! This module provides core functionality for managing task operations
+//! including progress tracking, notifications, and file writing operations.
 
 use std::cmp::min;
 use std::io::Write;
@@ -34,7 +34,7 @@ use crate::utils::get_current_timestamp;
 const FRONT_NOTIFY_INTERVAL: u64 = 1000;
 
 /// Task operator that handles task execution operations.
-/// 
+///
 /// This struct manages the execution of download and upload tasks,
 /// handling progress tracking, speed limiting, and file operations.
 pub(crate) struct TaskOperator {
@@ -48,9 +48,9 @@ pub(crate) struct TaskOperator {
 
 impl TaskOperator {
     /// Creates a new task operator for the given task.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `task` - The task to operate on.
     /// * `abort_flag` - Flag to signal task abortion requests.
     pub(crate) fn new(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>) -> Self {
@@ -62,16 +62,16 @@ impl TaskOperator {
     }
 
     /// Polls for common progress updates and handles notifications.
-    /// 
-    /// This method checks for task abortion, sends progress notifications at appropriate
-    /// intervals, and applies speed limiting.
-    /// 
+    ///
+    /// This method checks for task abortion, sends progress notifications at
+    /// appropriate intervals, and applies speed limiting.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `cx` - The task context for asynchronous operations.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// - `Poll::Ready(Ok(()))` if ready to continue processing.
     /// - `Poll::Pending` if the operation is blocked on speed limiting.
     /// - `Poll::Ready(Err(HttpClientError))` if the task was aborted.
@@ -83,7 +83,7 @@ impl TaskOperator {
         if self.abort_flag.load(Ordering::Acquire) {
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }
-        
+
         let current = get_current_timestamp();
 
         // Check if it's time to send frontend notification
@@ -121,7 +121,7 @@ impl TaskOperator {
 
         // Determine effective speed limit based on configured values
         let speed_limit = match (rate_limiting, max_speed) {
-            (0, max_speed) => max_speed,       // Only max_speed is set
+            (0, max_speed) => max_speed,         // Only max_speed is set
             (rate_limiting, 0) => rate_limiting, // Only rate_limiting is set
             (rate_limiting, max_speed) => min(rate_limiting, max_speed), // Use the lower value
         };
@@ -132,23 +132,25 @@ impl TaskOperator {
     }
 
     /// Polls for file writing operations.
-    /// 
+    ///
     /// This method writes data to the first file associated with the task
     /// and updates progress tracking information.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `_cx` - The task context (currently unused).
     /// * `data` - The data to write to the file.
-    /// * `skip_size` - Size to add to the reported written size (for resume operations).
-    /// 
+    /// * `skip_size` - Size to add to the reported written size (for resume
+    ///   operations).
+    ///
     /// # Returns
-    /// 
-    /// - `Poll::Ready(Ok(usize))` with the total bytes written (including skip_size).
+    ///
+    /// - `Poll::Ready(Ok(usize))` with the total bytes written (including
+    ///   skip_size).
     /// - `Poll::Ready(Err(HttpClientError))` if an error occurs.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// - Returns an error if no files are associated with the task.
     /// - Returns an error if the task was aborted.
     /// - Returns an error if writing to the file fails.
@@ -165,14 +167,14 @@ impl TaskOperator {
             error!("poll_write_file err, no file in the `task`");
             return Poll::Ready(Err(HttpClientError::other("error msg")));
         };
-        
+
         let mut file = file_mutex.lock().unwrap();
 
         // Check for task abortion before writing
         if self.abort_flag.load(Ordering::Acquire) {
             return Poll::Ready(Err(HttpClientError::user_aborted()));
         }
-        
+
         // Perform the write operation
         match file.write(data) {
             Ok(size) => {

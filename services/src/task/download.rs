@@ -12,14 +12,14 @@
 // limitations under the License.
 
 //! Download task implementation for HTTP requests.
-//! 
-//! This module provides functionality for downloading files via HTTP/HTTPS, including:
+//!
+//! This module provides functionality for downloading files via HTTP/HTTPS,
+//! including:
 //! - Implementation of the `DownloadOperator` trait
 //! - Download manager with retry logic
 //! - Error handling and recovery
 //! - Progress tracking and file verification
 //! - Network state management
-
 
 use std::io::SeekFrom;
 use std::pin::Pin;
@@ -48,13 +48,14 @@ const SECONDS_IN_ONE_WEEK: u64 = 7 * 24 * 60 * 60;
 /// Minimum time (in seconds) to consider a connection as low speed.
 const LOW_SPEED_TIME: u64 = 60;
 
-/// Minimum download speed (in bytes per second) before considering connection stalled.
+/// Minimum download speed (in bytes per second) before considering connection
+/// stalled.
 const LOW_SPEED_LIMIT: u64 = 1;
 
 /// Implementation of the `DownloadOperator` trait for `TaskOperator`.
 ///
-/// This implementation enables `TaskOperator` to be used with the HTTP client's downloader
-/// by providing file writing and progress reporting functionality.
+/// This implementation enables `TaskOperator` to be used with the HTTP client's
+/// downloader by providing file writing and progress reporting functionality.
 impl DownloadOperator for TaskOperator {
     fn poll_download(
         self: Pin<&mut Self>,
@@ -76,8 +77,8 @@ impl DownloadOperator for TaskOperator {
 
 /// Creates a downloader with the specified task, response, and abort flag.
 ///
-/// Constructs a downloader configured with appropriate timeouts and speed limits
-/// for the given download task.
+/// Constructs a downloader configured with appropriate timeouts and speed
+/// limits for the given download task.
 ///
 /// # Arguments
 ///
@@ -92,10 +93,13 @@ impl DownloadOperator for TaskOperator {
 /// # Examples
 ///
 /// ```rust
-/// use std::sync::{Arc, atomic::AtomicBool};
+/// use std::sync::atomic::AtomicBool;
+/// use std::sync::Arc;
+///
 /// use ylong_http_client::async_impl::Response;
-/// use crate::task::request_task::RequestTask;
+///
 /// use crate::task::download::build_downloader;
+/// use crate::task::request_task::RequestTask;
 ///
 /// // Assuming we have a request task and response
 /// let task = Arc::new(RequestTask::default());
@@ -118,17 +122,18 @@ pub(crate) fn build_downloader(
 
     // Configure the downloader with appropriate settings
     Downloader::builder()
-        .body(response)  // Set the HTTP response to download from
-        .operator(task_operator)  // Use our task operator for file operations
-        .timeout(Timeout::from_secs(SECONDS_IN_ONE_WEEK))  // Set a long timeout for large downloads
-        .speed_limit(SpeedLimit::new().min_speed(LOW_SPEED_LIMIT, LOW_SPEED_TIME))  // Set minimum speed threshold
+        .body(response) // Set the HTTP response to download from
+        .operator(task_operator) // Use our task operator for file operations
+        .timeout(Timeout::from_secs(SECONDS_IN_ONE_WEEK)) // Set a long timeout for large downloads
+        .speed_limit(SpeedLimit::new().min_speed(LOW_SPEED_LIMIT, LOW_SPEED_TIME)) // Set minimum speed threshold
         .build()
 }
 
 /// Handles the main download process with retry logic.
 ///
-/// Manages the download lifecycle including retries, error handling, and result reporting.
-/// This function coordinates the download_inner function and processes its results.
+/// Manages the download lifecycle including retries, error handling, and result
+/// reporting. This function coordinates the download_inner function and
+/// processes its results.
 ///
 /// # Arguments
 ///
@@ -138,9 +143,11 @@ pub(crate) fn build_downloader(
 /// # Examples
 ///
 /// ```rust
-/// use std::sync::{Arc, atomic::AtomicBool};
-/// use crate::task::request_task::RequestTask;
+/// use std::sync::atomic::AtomicBool;
+/// use std::sync::Arc;
+///
 /// use crate::task::download::download;
+/// use crate::task::request_task::RequestTask;
 ///
 /// // Assuming we have a request task
 /// let task = Arc::new(RequestTask::default());
@@ -152,11 +159,11 @@ pub(crate) fn build_downloader(
 pub(crate) async fn download(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>) {
     // Initialize retry counter
     task.tries.store(0, Ordering::SeqCst);
-    
+
     // Main download loop with retry logic
     loop {
         let begin_time = Instant::now();
-        
+
         // Execute the actual download logic
         if let Err(e) = download_inner(task.clone(), abort_flag.clone()).await {
             match e {
@@ -166,18 +173,18 @@ pub(crate) async fn download(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>
                         // Update the remaining time based on elapsed download time
                         let download_time = begin_time.elapsed().as_secs();
                         task.rest_time.fetch_sub(download_time, Ordering::SeqCst);
-                        
+
                         // Adjust client timeout to match remaining task time
                         let mut client = task.client.lock().await;
                         client.total_timeout(Timeout::from_secs(
                             task.rest_time.load(Ordering::SeqCst),
                         ));
-                        
+
                         // Continue to next iteration for retry
                         continue;
                     }
                     // Handle user abort: break the loop without setting an error
-                    TaskPhase::UserAbort => {},
+                    TaskPhase::UserAbort => {}
                     // Handle network offline: record the error
                     TaskPhase::NetworkOffline => {
                         *task.running_result.lock().unwrap() = Some(Err(Reason::NetworkOffline));
@@ -192,7 +199,7 @@ pub(crate) async fn download(task: Arc<RequestTask>, abort_flag: Arc<AtomicBool>
             // Download completed successfully
             *task.running_result.lock().unwrap() = Some(Ok(()));
         }
-        
+
         // Exit the loop after handling success or non-retryable errors
         break;
     }
@@ -203,16 +210,17 @@ impl RequestTask {
         if let Some(file) = self.files.get(0) {
             // Seek to the end of the file to get the current size (for resuming downloads)
             task_control::file_seek(file.clone(), SeekFrom::End(0)).await?;
-            
+
             // Get the current file size to determine how much has already been downloaded
             let downloaded = task_control::file_metadata(file).await?.len() as usize;
 
             // Update progress tracking information
             let mut progress = self.progress.lock().unwrap();
-            progress.common_data.index = 0;  // Set file index
-            progress.common_data.total_processed = downloaded;  // Set bytes already downloaded
-            progress.common_data.state = State::Running.repr;  // Set task state to running
-            progress.processed = vec![downloaded];  // Track processed bytes for the file
+            progress.common_data.index = 0; // Set file index
+            progress.common_data.total_processed = downloaded; // Set bytes already downloaded
+            progress.common_data.state = State::Running.repr; // Set task state to running
+            progress.processed = vec![downloaded]; // Track processed bytes for
+                                                   // the file
         } else {
             // Log and return error if no file is available
             error!("prepare_download err, no file in the task");
@@ -222,10 +230,11 @@ impl RequestTask {
     }
 }
 
-/// Performs the core download operation including request handling and file writing.
+/// Performs the core download operation including request handling and file
+/// writing.
 ///
-/// Handles the complete download process including preparing the request, sending it,
-/// processing the response, and downloading the file content.
+/// Handles the complete download process including preparing the request,
+/// sending it, processing the response, and downloading the file content.
 ///
 /// # Arguments
 ///
@@ -234,8 +243,8 @@ impl RequestTask {
 ///
 /// # Returns
 ///
-/// Returns `Ok(())` if the download completes successfully, or a `TaskError` if any
-/// part of the download process fails.
+/// Returns `Ok(())` if the download completes successfully, or a `TaskError` if
+/// any part of the download process fails.
 ///
 /// # Errors
 ///
@@ -275,10 +284,7 @@ pub(crate) async fn download_inner(
             let status_code = response.status();
             #[cfg(feature = "oh")]
             task.notify_response(response);
-            info!(
-                "{} response {}",
-                task.conf.common_data.task_id, status_code
-            );
+            info!("{} response {}", task.conf.common_data.task_id, status_code);
 
             // Handle protocol errors (server errors, most client errors, and redirects)
             if status_code.is_server_error()
@@ -498,8 +504,9 @@ pub(crate) async fn download_inner(
 ///
 /// # Errors
 ///
-/// Returns `TaskError::Failed(Reason::OthersError)` if bundle cache operations fail.
-/// Returns `TaskError::Failed(Reason::IoError)` if the file doesn't exist or isn't a file.
+/// Returns `TaskError::Failed(Reason::OthersError)` if bundle cache operations
+/// fail. Returns `TaskError::Failed(Reason::IoError)` if the file doesn't exist
+/// or isn't a file.
 #[cfg(not(test))]
 fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
     use crate::task::files::{convert_path, BundleCache};
@@ -534,7 +541,8 @@ fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
     );
 
     // Check if the file exists and is a regular file
-    // Note: Cannot compare sizes because file_total_size may change when resuming a task
+    // Note: Cannot compare sizes because file_total_size may change when resuming a
+    // task
     match std::fs::metadata(real_path) {
         Ok(metadata) => {
             if !metadata.is_file() {
@@ -566,7 +574,8 @@ fn check_file_exist(task: &Arc<RequestTask>) -> Result<(), TaskError> {
 /// Unit tests for the download module.
 ///
 /// Contains tests for download functionality, error handling, and edge cases.
-/// Tests use mock implementations to simulate various network and file system conditions.
+/// Tests use mock implementations to simulate various network and file system
+/// conditions.
 #[cfg(not(feature = "oh"))]
 #[cfg(test)]
 mod ut_download {

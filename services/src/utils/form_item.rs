@@ -30,7 +30,8 @@ pub struct FileSpec {
     pub mime_type: String,
     /// Flag indicating whether this is a user-provided file.
     pub is_user_file: bool,
-    /// File descriptor for the opened file, only valid when `is_user_file` is true.
+    /// File descriptor for the opened file, only valid when `is_user_file` is
+    /// true.
     pub fd: Option<RawFd>,
 }
 
@@ -41,25 +42,26 @@ impl FileSpec {
     /// - `file`: The user-provided `File` object to be uploaded.
     ///
     /// # Returns
-    /// A new `FileSpec` with `is_user_file` set to `true` and the file descriptor
-    /// extracted from the provided file.
+    /// A new `FileSpec` with `is_user_file` set to `true` and the file
+    /// descriptor extracted from the provided file.
     ///
     /// # Safety
-    /// This function consumes the `File` and converts it to a raw file descriptor.
-    /// It's the caller's responsibility to ensure the file descriptor is properly
-    /// managed and closed when no longer needed.
+    /// This function consumes the `File` and converts it to a raw file
+    /// descriptor. It's the caller's responsibility to ensure the file
+    /// descriptor is properly managed and closed when no longer needed.
     ///
     /// # Examples
     /// ```
     /// use std::fs::File;
+    ///
     /// use request_services::utils::form_item::FileSpec;
-    /// 
+    ///
     /// // Open a file
     /// let file = File::open("example.txt").expect("Failed to open file");
-    /// 
+    ///
     /// // Create a file specification for upload
     /// let mut file_spec = FileSpec::user_file(file);
-    /// 
+    ///
     /// // Set additional metadata
     /// file_spec.name = "upload_file".to_string();
     /// file_spec.file_name = "example.txt".to_string();

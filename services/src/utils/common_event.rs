@@ -17,7 +17,8 @@ use cxx::UniquePtr;
 use ffi::WantWrapper;
 /// Internal handler for converting between C++ and Rust event callbacks.
 ///
-/// Wraps a `CommonEventSubscriber` trait object to handle event reception from C++.
+/// Wraps a `CommonEventSubscriber` trait object to handle event reception from
+/// C++.
 pub struct EventHandler {
     /// The wrapped event subscriber implementation.
     inner: Box<dyn CommonEventSubscriber>,
@@ -27,7 +28,8 @@ impl EventHandler {
     /// Creates a new event handler wrapping the provided subscriber.
     ///
     /// # Parameters
-    /// - `inner`: Boxed `CommonEventSubscriber` implementation to handle events.
+    /// - `inner`: Boxed `CommonEventSubscriber` implementation to handle
+    ///   events.
     ///
     /// # Returns
     /// A new `EventHandler` instance.
@@ -51,7 +53,8 @@ pub trait CommonEventSubscriber {
 }
 
 impl EventHandler {
-    /// Handles events received from C++ by converting to Rust types and delegating.
+    /// Handles events received from C++ by converting to Rust types and
+    /// delegating.
     ///
     /// # Parameters
     /// - `code`: Event code from C++.
@@ -142,10 +145,12 @@ impl Display for Want {
 ///
 /// # Examples
 /// ```
-/// use request_services::utils::common_event::{CommonEventSubscriber, Want, subscribe_common_event};
-/// 
+/// use request_services::utils::common_event::{
+///     subscribe_common_event, CommonEventSubscriber, Want,
+/// };
+///
 /// struct MyEventHandler;
-/// 
+///
 /// impl CommonEventSubscriber for MyEventHandler {
 ///     fn on_receive_event(&self, code: i32, data: String, want: Want) {
 ///         println!("Received event with code: {}, data: {}", code, data);
@@ -154,7 +159,7 @@ impl Display for Want {
 ///         }
 ///     }
 /// }
-/// 
+///
 /// // Subscribe to events
 /// let result = subscribe_common_event(vec!["ohos.event.action.TEST"], MyEventHandler);
 /// match result {
@@ -188,18 +193,18 @@ mod ffi {
         /// Method called by C++ when an event is received.
         fn on_receive_event(&self, code: i32, data: String, want: UniquePtr<WantWrapper>);
     }
-    
+
     unsafe extern "C++" {
         /// Include necessary C++ headers.
         include!("common_event.h");
         include!("common_event_data.h");
-        
+
         /// C++ wrapper for Want objects.
         type WantWrapper;
 
         /// Converts a WantWrapper to a string representation.
         fn ToString(self: &WantWrapper) -> String;
-        
+
         /// Retrieves an integer parameter from a WantWrapper.
         fn GetIntParam(self: &WantWrapper, key: &str) -> i32;
 

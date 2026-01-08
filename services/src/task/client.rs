@@ -12,11 +12,11 @@
 // limitations under the License.
 
 //! HTTP client configuration utilities for request tasks.
-//! 
+//!
 //! This module provides functionality to build and configure HTTP clients
 //! with appropriate settings based on task configurations, including
 //! timeouts, redirect policies, certificates, proxies, and domain policies.
-//! 
+//!
 //! Key features include:
 //! - Secure TLS configuration and certificate management
 //! - Proxy settings support with task-specific and system-wide options
@@ -41,19 +41,22 @@ use super::files::BundleCache;
 use crate::task::config::{Action, TaskConfig};
 use crate::task::files::convert_path;
 
-/// Builds an HTTP client with configuration based on the provided task settings.
+/// Builds an HTTP client with configuration based on the provided task
+/// settings.
 ///
 /// # Arguments
 ///
-/// * `config` - The task configuration containing connection parameters, certificates,
-///             proxy settings, and other client options.
-/// * `total_timeout` - The total timeout in seconds for the entire client operation.
-/// * `system` - [Only in OHOS] System configuration containing system-wide settings.
+/// * `config` - The task configuration containing connection parameters,
+///   certificates, proxy settings, and other client options.
+/// * `total_timeout` - The total timeout in seconds for the entire client
+///   operation.
+/// * `system` - [Only in OHOS] System configuration containing system-wide
+///   settings.
 ///
 /// # Returns
 ///
-/// Returns `Ok(Client)` with the configured client if successful, or an error if any
-/// configuration step fails.
+/// Returns `Ok(Client)` with the configured client if successful, or an error
+/// if any configuration step fails.
 ///
 /// # Examples
 ///
@@ -93,15 +96,16 @@ pub(crate) fn build_client(
     }
 
     // Set up basic client configuration with required timeouts and TLS version
-    // Ensure connections are established within a reasonable time and operations complete promptly
+    // Ensure connections are established within a reasonable time and operations
+    // complete promptly
     let mut client = Client::builder()
-        .connect_timeout(Timeout::from_secs(connection_timeout))  // Time to establish connection
-        .total_timeout(Timeout::from_secs(total_timeout))         // Total time limit for entire request
-        .min_tls_version(TlsVersion::TLS_1_2);                    // Enforce secure TLS version
-    
+        .connect_timeout(Timeout::from_secs(connection_timeout)) // Time to establish connection
+        .total_timeout(Timeout::from_secs(total_timeout)) // Total time limit for entire request
+        .min_tls_version(TlsVersion::TLS_1_2); // Enforce secure TLS version
+
     // Set socket ownership for proper resource management
     client = client.sockets_owner(config.common_data.uid as u32, config.common_data.uid as u32);
-    
+
     // Configure redirect strategy based on task settings
     if config.common_data.redirect {
         // Allow unlimited redirects when explicitly requested
@@ -111,19 +115,22 @@ pub(crate) fn build_client(
         client = client.redirect(Redirect::none());
     }
 
-    // Configure minimum speed requirements if specified to detect stalled connections
+    // Configure minimum speed requirements if specified to detect stalled
+    // connections
     if config.common_data.min_speed.speed > 0 && config.common_data.min_speed.duration > 0 {
         client = client
-            .min_speed_limit(config.common_data.min_speed.speed as u64)    // Minimum bytes per second
+            .min_speed_limit(config.common_data.min_speed.speed as u64) // Minimum bytes per second
             .min_speed_interval(config.common_data.min_speed.duration as u64); // Check interval in seconds
     }
 
-    // Configure proxy settings with task-specific settings taking precedence over system-wide settings
+    // Configure proxy settings with task-specific settings taking precedence over
+    // system-wide settings
     #[cfg(feature = "oh")]
     if let Some(proxy) = build_task_proxy(config)? {
         client = client.proxy(proxy); // Use task-specific proxy when available
     } else if let Some(proxy) = build_system_proxy(&system)? {
-        client = client.proxy(proxy); // Fall back to system proxy if no task proxy
+        client = client.proxy(proxy); // Fall back to system proxy if no task
+                                      // proxy
     }
 
     // HTTP url that contains redirects also require a certificate when
@@ -140,10 +147,12 @@ pub(crate) fn build_client(
 
     // Add task-specific certificates
     // These certificates override or supplement the system certificates
-    // The ? operator automatically converts errors from build_task_certs into the expected error type
+    // The ? operator automatically converts errors from build_task_certs into the
+    // expected error type
     let certificates = build_task_certs(config)?;
     for cert in certificates.into_iter() {
-        client = client.add_root_certificate(cert)  // Trust each provided certificate
+        client = client.add_root_certificate(cert) // Trust each provided
+                                                   // certificate
     }
 
     // Configure public key pinning if specified
@@ -152,7 +161,8 @@ pub(crate) fn build_client(
         client = client.add_public_key_pins(pinned_key);
     }
 
-    // Apply domain policy checks for atomic services (system-specific security check)
+    // Apply domain policy checks for atomic services (system-specific security
+    // check)
     const ATOMIC_SERVICE: u32 = 1;
     if config.bundle_type == ATOMIC_SERVICE {
         let domain_type = action_to_domain_type(config.common_data.action);
@@ -160,7 +170,7 @@ pub(crate) fn build_client(
             "ApiPolicy Domain check, tid {}, bundle {}, domain_type {}, url {}",
             config.common_data.task_id, &config.bundle, &domain_type, &config.url
         );
-        
+
         #[cfg(feature = "oh")]
         if let Some(is_accessed) = check_url_domain(&config.bundle, &domain_type, &config.url) {
             if !is_accessed {
@@ -177,8 +187,9 @@ pub(crate) fn build_client(
                 config.common_data.task_id, &config.bundle, &domain_type, &config.url)
                 );
 
-                // Wrap the HttpClientError in a Box to fit the function's return type requirement
-                // This conversion allows us to return a trait object implementing Error + Send + Sync
+                // Wrap the HttpClientError in a Box to fit the function's return type
+                // requirement This conversion allows us to return a trait
+                // object implementing Error + Send + Sync
                 return Err(Box::new(HttpClientError::other(
                     "Intercept request by domain check",
                 )));
@@ -207,9 +218,10 @@ pub(crate) fn build_client(
 
     // Finalize client construction
     // All configuration steps are complete including timeouts, redirect policy,
-    // proxy settings, certificates, public key pinning, and domain policy enforcement
-    // cvt_res_error! macro handles error conversion and adds context to the error message
-    // map_err(Box::new) converts any build errors to a Box<dyn Error + Send + Sync>
+    // proxy settings, certificates, public key pinning, and domain policy
+    // enforcement cvt_res_error! macro handles error conversion and adds
+    // context to the error message map_err(Box::new) converts any build errors
+    // to a Box<dyn Error + Send + Sync>
     Ok(cvt_res_error!(
         client.build().map_err(Box::new),
         "Build client failed",
@@ -263,8 +275,9 @@ fn build_task_proxy(config: &TaskConfig) -> Result<Option<Proxy>, Box<dyn Error 
 ///
 /// # Returns
 ///
-/// Returns `Ok(Some(PubKeyPins))` with the configured pinning if certificate pins exist,
-/// `Ok(None)` if no pinning is configured, or an error if pinning creation fails.
+/// Returns `Ok(Some(PubKeyPins))` with the configured pinning if certificate
+/// pins exist, `Ok(None)` if no pinning is configured, or an error if pinning
+/// creation fails.
 ///
 /// # Examples
 ///
@@ -309,7 +322,8 @@ fn build_task_certificate_pins(
 /// # Returns
 ///
 /// Returns `Ok(Some(Proxy))` with the configured proxy if system proxy is set,
-/// `Ok(None)` if no system proxy is configured, or an error if proxy creation fails.
+/// `Ok(None)` if no system proxy is configured, or an error if proxy creation
+/// fails.
 ///
 /// # Examples
 ///
@@ -349,10 +363,10 @@ fn build_system_proxy(
         true => proxy_host.clone(),
         false => format!("{}:{}", proxy_host, proxy_port),
     };
-    
+
     // Get proxy exclusions list
     let no_proxy = &system.proxy_exlist;
-    
+
     // Create proxy with exclusions
     Ok(Some(cvt_res_error!(
         Proxy::all(&proxy_url)
@@ -363,7 +377,8 @@ fn build_system_proxy(
     )))
 }
 
-/// Loads and parses certificates from the specified paths in the task configuration.
+/// Loads and parses certificates from the specified paths in the task
+/// configuration.
 ///
 /// # Arguments
 ///
@@ -371,8 +386,8 @@ fn build_system_proxy(
 ///
 /// # Returns
 ///
-/// Returns `Ok(Vec<Certificate>)` with the loaded certificates, or an error if any
-/// certificate fails to load or parse.
+/// Returns `Ok(Vec<Certificate>)` with the loaded certificates, or an error if
+/// any certificate fails to load or parse.
 ///
 /// # Examples
 ///
@@ -391,15 +406,15 @@ fn build_task_certs(config: &TaskConfig) -> Result<Vec<Certificate>, Box<dyn Err
     let mut bundle_cache = BundleCache::new(config);
 
     let mut certs = Vec::new();
-    
+
     // Load each certificate from the configured paths
     for (idx, path) in paths.iter().enumerate() {
         // Get bundle name for path conversion
         let bundle_name = bundle_cache.get_value()?;
-        
+
         // Convert path to appropriate format based on user and bundle
         let path = convert_path(uid, &bundle_name, path);
-        
+
         // Load and parse certificate
         let cert = cvt_res_error!(
             Certificate::from_path(&path).map_err(Box::new),
@@ -411,7 +426,8 @@ fn build_task_certs(config: &TaskConfig) -> Result<Vec<Certificate>, Box<dyn Err
     Ok(certs)
 }
 
-/// Converts an Action enum value to a domain type string used for policy checks.
+/// Converts an Action enum value to a domain type string used for policy
+/// checks.
 ///
 /// # Arguments
 ///
@@ -445,8 +461,8 @@ fn action_to_domain_type(action: Action) -> String {
 
 /// Interceptor that validates redirect URLs against domain policies.
 ///
-/// This interceptor checks if redirect URLs comply with the domain access policies
-/// for the specified application and action type.
+/// This interceptor checks if redirect URLs comply with the domain access
+/// policies for the specified application and action type.
 struct DomainInterceptor {
     /// The application ID to check domain policies against.
     app_id: String,
@@ -455,7 +471,8 @@ struct DomainInterceptor {
 }
 
 impl DomainInterceptor {
-    /// Creates a new DomainInterceptor with the specified application and domain type.
+    /// Creates a new DomainInterceptor with the specified application and
+    /// domain type.
     ///
     /// # Arguments
     ///
@@ -483,8 +500,8 @@ impl Interceptor for DomainInterceptor {
     ///
     /// # Returns
     ///
-    /// Returns `Ok(())` if the redirect is allowed, or an error if the domain is not
-    /// allowed by the policy.
+    /// Returns `Ok(())` if the redirect is allowed, or an error if the domain
+    /// is not allowed by the policy.
     ///
     /// # Errors
     ///
@@ -498,14 +515,15 @@ impl Interceptor for DomainInterceptor {
     fn intercept_redirect_request(&self, request: &Request) -> Result<(), HttpClientError> {
         // Get the redirect URL
         let url = &request.uri().to_string();
-        
+
         // Log the domain check attempt
         info!(
             "ApiPolicy Domain check redirect, bundle {}, domain_type {}, url {}",
             &self.app_id, &self.domain_type, &url
         );
-        
-        // Check if the URL is allowed by domain policy, defaulting to true if check fails
+
+        // Check if the URL is allowed by domain policy, defaulting to true if check
+        // fails
         match check_url_domain(&self.app_id, &self.domain_type, url).unwrap_or(true) {
             true => Ok(()),
             false => Err(HttpClientError::other(

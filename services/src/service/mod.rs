@@ -12,11 +12,11 @@
 // limitations under the License.
 
 //! Core service implementation for the request system.
-//! 
-//! This module provides the main service components for handling request operations,
-//! including task management, permission handling, and communication interfaces.
-//! It serves as the foundation for processing download and upload requests within
-//! the request server.
+//!
+//! This module provides the main service components for handling request
+//! operations, including task management, permission handling, and
+//! communication interfaces. It serves as the foundation for processing
+//! download and upload requests within the request server.
 
 /// Atomic counter implementation for tracking active operations.
 pub(crate) mod active_counter;
@@ -27,7 +27,7 @@ pub(crate) mod client;
 pub mod interface;
 
 // Platform-specific service components for OpenHarmony.
-// 
+//
 // This section includes modules that are only available when targeting the
 // OpenHarmony platform, providing platform-specific implementations for
 // permission management, command handling, and notification services.
