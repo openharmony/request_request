@@ -13,9 +13,9 @@
 
 //! Configuration types for network tasks.
 //!
-//! This module provides structures and enums for configuring network operations,
-//! including download and upload tasks, with various options for controlling
-//! behavior, network preferences, and file handling.
+//! This module provides structures and enums for configuring network
+//! operations, including download and upload tasks, with various options for
+//! controlling behavior, network preferences, and file handling.
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -25,8 +25,9 @@ use crate::file::FileSpec;
 
 /// Complete configuration for a network task.
 ///
-/// This struct contains all configuration parameters needed to execute a network task,
-/// including network settings, file specifications, metadata, and authentication details.
+/// This struct contains all configuration parameters needed to execute a
+/// network task, including network settings, file specifications, metadata, and
+/// authentication details.
 #[derive(Clone, Debug)]
 pub struct TaskConfig {
     /// Bundle identifier associated with the task.
@@ -336,7 +337,8 @@ impl ipc::parcel::Serialize for TaskConfig {
     ///
     /// # Safety
     ///
-    /// Uses `unsafe` block when converting raw file descriptors to `File` instances.
+    /// Uses `unsafe` block when converting raw file descriptors to `File`
+    /// instances.
     fn serialize(&self, parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<()> {
         // Serialize common configuration fields
         parcel.write(&(self.common_data.action.clone() as u32))?;
@@ -423,7 +425,7 @@ impl ipc::parcel::Serialize for TaskConfig {
             parcel.write(extra.1)?;
         }
 
-        //Serialize notification fields
+        // Serialize notification fields
         if let Some(title) = &self.notification.title {
             parcel.write(&true)?;
             parcel.write(title)?;
@@ -561,7 +563,8 @@ impl From<i32> for NetworkConfig {
     ///
     /// # Panics
     ///
-    /// Panics if the provided value does not correspond to a known network configuration.
+    /// Panics if the provided value does not correspond to a known network
+    /// configuration.
     fn from(value: i32) -> Self {
         match value {
             0 => NetworkConfig::Any,
@@ -588,7 +591,8 @@ pub struct Timeout {
 
 /// Common configuration parameters for network tasks.
 ///
-/// Contains general task settings that apply to both download and upload operations.
+/// Contains general task settings that apply to both download and upload
+/// operations.
 #[derive(Clone, Debug)]
 pub struct CommonTaskConfig {
     /// Unique identifier for the task.
@@ -635,7 +639,7 @@ pub struct CommonTaskConfig {
     pub timeout: Timeout,
 }
 
-//deserialize by service file stub.rs function serialize_task_config
+// deserialize by service file stub.rs function serialize_task_config
 impl ipc::parcel::Deserialize for TaskConfig {
     fn deserialize(parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<Self> {
         // deserialize common configuration fields

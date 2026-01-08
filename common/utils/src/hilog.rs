@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Logging utilities using HILog (HarmonyOS Logging).
-//! 
+//!
 //! This module provides macros for logging at different severity levels using
 //! the HarmonyOS logging system. The macros included are deprecated versions
 //! that should be used with caution.

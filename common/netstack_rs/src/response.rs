@@ -12,9 +12,9 @@
 // limitations under the License.
 
 //! Module for handling HTTP responses.
-//! 
-//! This module provides types and functionality for working with HTTP responses,
-//! including status codes, headers, and response data.
+//!
+//! This module provides types and functionality for working with HTTP
+//! responses, including status codes, headers, and response data.
 
 use std::collections::HashMap;
 use std::pin::Pin;
@@ -26,8 +26,8 @@ use crate::wrapper::ffi::{GetHeaders, HttpClientResponse, HttpClientTask};
 
 /// Represents an HTTP response from the client.
 ///
-/// Provides access to response status codes and headers. The lifetime parameter `'a`
-/// ensures the response data remains valid while this object is in use.
+/// Provides access to response status codes and headers. The lifetime parameter
+/// `'a` ensures the response data remains valid while this object is in use.
 ///
 /// # Examples
 ///
@@ -41,12 +41,12 @@ use crate::wrapper::ffi::{GetHeaders, HttpClientResponse, HttpClientTask};
 ///         // Get the status code
 ///         let status = response.status();
 ///         println!("Response status: {:?}", status);
-///         
+///
 ///         // Check if the response was successful
 ///         if status == ResponseCode::Ok {
 ///             println!("Request succeeded!");
 ///         }
-///         
+///
 ///         // Access response headers
 ///         let headers = response.headers();
 ///         if let Some(content_type) = headers.get("content-type") {
@@ -79,7 +79,8 @@ impl<'a> Response<'a> {
     ///
     /// # Returns
     ///
-    /// A HashMap where keys are lowercase header names and values are header values.
+    /// A HashMap where keys are lowercase header names and values are header
+    /// values.
     ///
     /// # Safety
     ///
@@ -120,8 +121,8 @@ impl<'a> Response<'a> {
 
     /// Creates a Response from a shared pointer to HttpClientTask.
     ///
-    /// This version takes ownership of the shared pointer to ensure the response
-    /// data remains valid for the lifetime of the Response object.
+    /// This version takes ownership of the shared pointer to ensure the
+    /// response data remains valid for the lifetime of the Response object.
     pub(crate) fn from_shared(inner: SharedPtr<HttpClientTask>) -> Self {
         Self {
             inner: ResponseInner::Shared(inner),
@@ -131,8 +132,8 @@ impl<'a> Response<'a> {
 
 /// Internal representation of an HTTP response.
 ///
-/// Provides flexibility by supporting both borrowed references and owned shared pointers,
-/// allowing efficient response handling in different contexts.
+/// Provides flexibility by supporting both borrowed references and owned shared
+/// pointers, allowing efficient response handling in different contexts.
 enum ResponseInner<'a> {
     /// Borrowed reference to a response
     Ref(&'a HttpClientResponse),
@@ -208,17 +209,23 @@ pub enum ResponseCode {
     None = 0,
     /// OK (200) - The request has succeeded
     Ok = 200,
-    /// Created (201) - The request has been fulfilled and a new resource has been created
+    /// Created (201) - The request has been fulfilled and a new resource has
+    /// been created
     Created,
-    /// Accepted (202) - The request has been accepted for processing but not completed
+    /// Accepted (202) - The request has been accepted for processing but not
+    /// completed
     Accepted,
-    /// Non-Authoritative Information (203) - The returned metadata is not authoritative
+    /// Non-Authoritative Information (203) - The returned metadata is not
+    /// authoritative
     NotAuthoritative,
-    /// No Content (204) - The server successfully processed the request and has no content to send
+    /// No Content (204) - The server successfully processed the request and has
+    /// no content to send
     NoContent,
-    /// Reset Content (205) - The server successfully processed the request and asks to reset the document view
+    /// Reset Content (205) - The server successfully processed the request and
+    /// asks to reset the document view
     Reset,
-    /// Partial Content (206) - The server is delivering only part of the resource due to a range header
+    /// Partial Content (206) - The server is delivering only part of the
+    /// resource due to a range header
     Partial,
     /// Multiple Choices (300) - The request has multiple possible responses
     MultChoice = 300,
@@ -226,15 +233,20 @@ pub enum ResponseCode {
     MovedPerm,
     /// Found (302) - The resource has been temporarily moved to a different URI
     MovedTemp,
-    /// See Other (303) - The response to the request can be found under a different URI
+    /// See Other (303) - The response to the request can be found under a
+    /// different URI
     SeeOther,
-    /// Not Modified (304) - The resource has not been modified since the last request
+    /// Not Modified (304) - The resource has not been modified since the last
+    /// request
     NotModified,
-    /// Use Proxy (305) - The requested resource must be accessed through the proxy given
+    /// Use Proxy (305) - The requested resource must be accessed through the
+    /// proxy given
     UseProxy,
-    /// Bad Request (400) - The server cannot or will not process the request due to a client error
+    /// Bad Request (400) - The server cannot or will not process the request
+    /// due to a client error
     BadRequest = 400,
-    /// Unauthorized (401) - The client must authenticate itself to get the requested response
+    /// Unauthorized (401) - The client must authenticate itself to get the
+    /// requested response
     Unauthorized,
     /// Payment Required (402) - Reserved for future use
     PaymentRequired,
@@ -242,38 +254,55 @@ pub enum ResponseCode {
     Forbidden,
     /// Not Found (404) - The server cannot find the requested resource
     NotFound,
-    /// Method Not Allowed (405) - The request method is known by the server but not supported
+    /// Method Not Allowed (405) - The request method is known by the server but
+    /// not supported
     BadMethod,
-    /// Not Acceptable (406) - The server cannot produce a response matching the list of acceptable values
+    /// Not Acceptable (406) - The server cannot produce a response matching the
+    /// list of acceptable values
     NotAcceptable,
-    /// Proxy Authentication Required (407) - The client must first authenticate itself with the proxy
+    /// Proxy Authentication Required (407) - The client must first authenticate
+    /// itself with the proxy
     ProxyAuth,
-    /// Request Timeout (408) - The server would like to shut down this unused connection
+    /// Request Timeout (408) - The server would like to shut down this unused
+    /// connection
     ClientTimeout,
-    /// Conflict (409) - The request conflicts with the current state of the server
+    /// Conflict (409) - The request conflicts with the current state of the
+    /// server
     Conflict,
-    /// Gone (410) - The requested resource is no longer available and will not be available again
+    /// Gone (410) - The requested resource is no longer available and will not
+    /// be available again
     Gone,
-    /// Length Required (411) - The server requires the request to be valid before processing
+    /// Length Required (411) - The server requires the request to be valid
+    /// before processing
     LengthRequired,
-    /// Precondition Failed (412) - One or more conditions in the request header fields evaluated to false
+    /// Precondition Failed (412) - One or more conditions in the request header
+    /// fields evaluated to false
     PreconFailed,
-    /// Payload Too Large (413) - The request is larger than the server is willing or able to process
+    /// Payload Too Large (413) - The request is larger than the server is
+    /// willing or able to process
     EntityTooLarge,
-    /// URI Too Long (414) - The URI provided was too long for the server to process
+    /// URI Too Long (414) - The URI provided was too long for the server to
+    /// process
     ReqTooLong,
-    /// Unsupported Media Type (415) - The media format of the requested data is not supported
+    /// Unsupported Media Type (415) - The media format of the requested data is
+    /// not supported
     UnsupportedType,
-    /// Internal Server Error (500) - The server encountered an unexpected condition
+    /// Internal Server Error (500) - The server encountered an unexpected
+    /// condition
     InternalError = 500,
-    /// Not Implemented (501) - The server does not support the functionality required
+    /// Not Implemented (501) - The server does not support the functionality
+    /// required
     NotImplemented,
-    /// Bad Gateway (502) - The server got an invalid response from the upstream server
+    /// Bad Gateway (502) - The server got an invalid response from the upstream
+    /// server
     BadGateway,
-    /// Service Unavailable (503) - The server is not ready to handle the request
+    /// Service Unavailable (503) - The server is not ready to handle the
+    /// request
     Unavailable,
-    /// Gateway Timeout (504) - The server did not get a timely response from an upstream server
+    /// Gateway Timeout (504) - The server did not get a timely response from an
+    /// upstream server
     GatewayTimeout,
-    /// HTTP Version Not Supported (505) - The server does not support the HTTP protocol version
+    /// HTTP Version Not Supported (505) - The server does not support the HTTP
+    /// protocol version
     Version,
 }

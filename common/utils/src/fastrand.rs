@@ -12,11 +12,11 @@
 // limitations under the License.
 
 //! A simple fast pseudorandom implementation.
-//! 
+//!
 //! This module provides a fast thread-local pseudorandom number generator based
 //! on the xorshift* algorithm. It produces random values in the range from 0 to
 //! usize::MAX.
-//! 
+//!
 //! Reference: xorshift* <https://dl.acm.org/doi/10.1145/2845077>
 
 use std::cell::Cell;
@@ -36,7 +36,7 @@ use std::num::Wrapping;
 ///
 /// let random_value = fast_random();
 /// println!("Random value: {}", random_value);
-/// 
+///
 /// // Generate a random value within a specific range
 /// let bounded_value = random_value % 100; // Value in [0, 99]
 /// ```

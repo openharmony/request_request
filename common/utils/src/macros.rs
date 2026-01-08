@@ -12,7 +12,7 @@
 // limitations under the License.
 
 //! Conditional compilation utility macros.
-//! 
+//!
 //! This module provides macros for conditional compilation based on build
 //! configurations, enabling code to be included or excluded depending on
 //! whether the code is being compiled in test mode or with specific features.
@@ -51,8 +51,8 @@ macro_rules! cfg_test {
 
 /// Conditionally includes items only when not compiled in test mode.
 ///
-/// Wraps the provided items with `#[cfg(not(test))]`, causing them to be included
-/// only when the test configuration is not active.
+/// Wraps the provided items with `#[cfg(not(test))]`, causing them to be
+/// included only when the test configuration is not active.
 ///
 /// # Examples
 ///
@@ -65,7 +65,6 @@ macro_rules! cfg_test {
 ///         "Production mode"
 ///     }
 /// }
-///
 /// ```
 #[macro_export]
 macro_rules! cfg_not_test {
@@ -111,8 +110,9 @@ macro_rules! cfg_ohos {
 
 /// Conditionally includes items only when the "ohos" feature is not enabled.
 ///
-/// Wraps the provided items with `#[cfg(not(feature = "ohos"))]`, causing them to be
-/// included only when the "ohos" feature flag is not enabled during compilation.
+/// Wraps the provided items with `#[cfg(not(feature = "ohos"))]`, causing them
+/// to be included only when the "ohos" feature flag is not enabled during
+/// compilation.
 ///
 /// # Examples
 ///
