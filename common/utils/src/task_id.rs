@@ -12,10 +12,10 @@
 // limitations under the License.
 
 //! Task identifier utilities.
-//! 
-//! This module provides types for uniquely identifying tasks within the request system,
-//! with functionality for creating IDs from hash strings or URLs and displaying them
-//! in full or abbreviated form.
+//!
+//! This module provides types for uniquely identifying tasks within the request
+//! system, with functionality for creating IDs from hash strings or URLs and
+//! displaying them in full or abbreviated form.
 
 use std::fmt::Display;
 
@@ -23,8 +23,9 @@ use crate::hash::url_hash;
 
 /// A unique identifier for tasks.
 ///
-/// Wraps a hash string that uniquely identifies a task. Provides methods for creating
-/// IDs from hash strings or URLs, and for displaying them in full or abbreviated form.
+/// Wraps a hash string that uniquely identifies a task. Provides methods for
+/// creating IDs from hash strings or URLs, and for displaying them in full or
+/// abbreviated form.
 ///
 /// # Examples
 ///
@@ -75,7 +76,8 @@ impl TaskId {
 
     /// Creates a new task ID by hashing a URL.
     ///
-    /// Uses the `url_hash` function to generate a hash from the provided URL string.
+    /// Uses the `url_hash` function to generate a hash from the provided URL
+    /// string.
     ///
     /// # Parameters
     ///
@@ -103,8 +105,9 @@ impl TaskId {
 
     /// Returns a shortened version of the task ID.
     ///
-    /// Provides an abbreviated form of the hash, containing the first 1/4 of the characters.
-    /// This can be useful for display purposes when the full hash would be too long.
+    /// Provides an abbreviated form of the hash, containing the first 1/4 of
+    /// the characters. This can be useful for display purposes when the
+    /// full hash would be too long.
     ///
     /// # Returns
     ///

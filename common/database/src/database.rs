@@ -12,12 +12,14 @@
 // limitations under the License.
 
 //! Database interface for relational database operations.
-//! 
-//! This module provides high-level abstractions for working with relational databases,
-//! including opening database connections, executing queries, and handling results.
+//!
+//! This module provides high-level abstractions for working with relational
+//! databases, including opening database connections, executing queries, and
+//! handling results.
+
+use std::pin::Pin;
 
 use cxx::SharedPtr;
-use std::pin::Pin;
 
 use crate::config::OpenConfig;
 use crate::params::{FromSql, Params};
@@ -28,9 +30,9 @@ use crate::wrapper::open_rdb_store;
 const E_OK: i32 = 0;
 
 /// Database connection and operation interface.
-/// 
-/// Provides methods for executing SQL statements and queries on a relational database.
-/// Wraps the underlying FFI implementation with safe, idiomatic Rust.
+///
+/// Provides methods for executing SQL statements and queries on a relational
+/// database. Wraps the underlying FFI implementation with safe, idiomatic Rust.
 pub struct RdbStore<'a> {
     /// Internal representation of the database store
     inner: RdbStoreInner<'a>,
@@ -38,14 +40,15 @@ pub struct RdbStore<'a> {
 
 impl<'a> RdbStore<'a> {
     /// Opens a database connection using the provided configuration.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `config` - Configuration options for opening the database
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// Returns `Ok` with a new `RdbStore` instance on success, or `Err` with an error code on failure
+    ///
+    /// Returns `Ok` with a new `RdbStore` instance on success, or `Err` with an
+    /// error code on failure
     pub fn open(config: OpenConfig) -> Result<Self, i32> {
         let rdb = open_rdb_store(config)?;
         if rdb.is_null() {
@@ -57,11 +60,11 @@ impl<'a> RdbStore<'a> {
     }
 
     /// Creates a `RdbStore` from an FFI reference.
-    /// 
+    ///
     /// Used internally to wrap FFI pointers with a safe Rust interface.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `ffi` - FFI pointer to an existing database store
     pub fn from_ffi(ffi: Pin<&'a mut ffi::RdbStore>) -> Self {
         Self {
@@ -70,16 +73,17 @@ impl<'a> RdbStore<'a> {
     }
 
     /// Executes an SQL statement with optional parameters.
-    /// 
-    /// Use for statements that modify the database like INSERT, UPDATE, DELETE, etc.
-    /// 
+    ///
+    /// Use for statements that modify the database like INSERT, UPDATE, DELETE,
+    /// etc.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `sql` - The SQL statement to execute
     /// * `values` - Parameters to bind to the statement
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns `Ok(())` on success, or `Err` with an error code on failure
     pub fn execute<P: Params>(&self, sql: &str, values: P) -> Result<(), i32> {
         match Execute(self.inner.pin_mut(), sql, values.into_values_object()) {
@@ -89,21 +93,24 @@ impl<'a> RdbStore<'a> {
     }
 
     /// Executes an SQL query and returns results as a typed iterator.
-    /// 
-    /// The return type `T` must implement the `FromSql` trait to convert from database rows.
-    /// 
+    ///
+    /// The return type `T` must implement the `FromSql` trait to convert from
+    /// database rows.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `sql` - The SQL query statement
     /// * `values` - Parameters to bind to the query
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// Returns `Ok` with a `QuerySet` iterator on success, or `Err` with an error code on failure
-    /// 
+    ///
+    /// Returns `Ok` with a `QuerySet` iterator on success, or `Err` with an
+    /// error code on failure
+    ///
     /// # Safety
-    /// 
-    /// This method uses unsafe code to handle FFI pointers to the underlying result set.
+    ///
+    /// This method uses unsafe code to handle FFI pointers to the underlying
+    /// result set.
     pub fn query<T>(&self, sql: &str, values: impl Params) -> Result<QuerySet<T>, i32> {
         let result = Query(self.inner.pin_mut(), sql, values.into_values_object());
         if result.is_null() {
@@ -126,8 +133,9 @@ impl<'a> RdbStore<'a> {
 }
 
 /// Internal representation of a database store.
-/// 
-/// Provides a unified interface for different ownership models of the underlying FFI store.
+///
+/// Provides a unified interface for different ownership models of the
+/// underlying FFI store.
 enum RdbStoreInner<'a> {
     /// Shared ownership model using a reference-counted pointer
     Shared(SharedPtr<ffi::RdbStore>),
@@ -137,10 +145,11 @@ enum RdbStoreInner<'a> {
 
 impl RdbStoreInner<'_> {
     /// Converts the inner store into a pinned mutable reference.
-    /// 
+    ///
     /// # Safety
-    /// 
-    /// This method uses unsafe code to convert between pointer types and create mutable references.
+    ///
+    /// This method uses unsafe code to convert between pointer types and create
+    /// mutable references.
     fn pin_mut(&self) -> Pin<&mut ffi::RdbStore> {
         match self {
             Self::Shared(ffi) => {
@@ -156,11 +165,12 @@ impl RdbStoreInner<'_> {
 }
 
 /// Iterator over database query results.
-/// 
-/// Provides methods to access metadata and iterate over rows, converting each row to type `T`.
-/// 
+///
+/// Provides methods to access metadata and iterate over rows, converting each
+/// row to type `T`.
+///
 /// # Type Parameters
-/// 
+///
 /// * `T` - The target type that each row will be converted to
 pub struct QuerySet<T> {
     /// Internal FFI result set pointer
@@ -173,7 +183,7 @@ pub struct QuerySet<T> {
 
 impl<T> QuerySet<T> {
     /// Gets the number of rows in the query result.
-    /// 
+    ///
     /// Returns 0 if an error occurs while retrieving the row count.
     pub fn row_count(&mut self) -> i32 {
         let mut row_count = 0;
@@ -189,10 +199,11 @@ impl<T> QuerySet<T> {
     }
 
     /// Converts the inner result set into a pinned mutable reference.
-    /// 
+    ///
     /// # Safety
-    /// 
-    /// This method uses unsafe code to convert between pointer types and create mutable references.
+    ///
+    /// This method uses unsafe code to convert between pointer types and create
+    /// mutable references.
     fn pin_mut(&mut self) -> Pin<&mut ffi::ResultSet> {
         let ptr = self.inner.as_ref().unwrap() as *const ffi::ResultSet as *mut ffi::ResultSet;
         unsafe { Pin::new_unchecked(ptr.as_mut().unwrap()) }
@@ -206,7 +217,7 @@ where
     type Item = T;
 
     /// Advances to the next row and converts it to type `T`.
-    /// 
+    ///
     /// Returns `None` when there are no more rows or when an error occurs.
     fn next(&mut self) -> Option<Self::Item> {
         let mut row = NewRowEntity();

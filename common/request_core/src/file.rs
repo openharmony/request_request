@@ -12,16 +12,18 @@
 // limitations under the License.
 
 //! File specifications for network operations.
-//! 
-//! This module defines structures for representing files used in network requests,
-//! including uploads and downloads, with support for both system-managed and user-provided files.
+//!
+//! This module defines structures for representing files used in network
+//! requests, including uploads and downloads, with support for both
+//! system-managed and user-provided files.
 
 use std::os::fd::RawFd;
 
 /// Specification for a file used in network operations.
 ///
-/// Represents a file with metadata for use in upload tasks or file-related operations.
-/// Supports both system-managed files and user-provided file descriptors.
+/// Represents a file with metadata for use in upload tasks or file-related
+/// operations. Supports both system-managed files and user-provided file
+/// descriptors.
 ///
 /// # Examples
 ///
@@ -48,7 +50,8 @@ pub struct FileSpec {
     ///
     /// # Safety
     ///
-    /// The file descriptor must be valid and properly managed to avoid resource leaks.
+    /// The file descriptor must be valid and properly managed to avoid resource
+    /// leaks.
     pub fd: Option<RawFd>,
 }
 
@@ -57,8 +60,9 @@ impl FileSpec {
     ///
     /// # Notes
     ///
-    /// The returned instance has empty string values and is not configured as a user file.
-    /// Fields should be populated before using the specification in actual operations.
+    /// The returned instance has empty string values and is not configured as a
+    /// user file. Fields should be populated before using the specification
+    /// in actual operations.
     pub fn new() -> Self {
         Self {
             name: "".to_owned(),

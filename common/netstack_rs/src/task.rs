@@ -12,9 +12,10 @@
 // limitations under the License.
 
 //! Module for HTTP request task management.
-//! 
-//! This module provides types and functionality for managing asynchronous HTTP request tasks,
-//! including starting, canceling, resetting, and querying their status.
+//!
+//! This module provides types and functionality for managing asynchronous HTTP
+//! request tasks, including starting, canceling, resetting, and querying their
+//! status.
 
 use std::collections::HashMap;
 use std::pin::Pin;
@@ -33,8 +34,9 @@ use crate::wrapper::CallbackWrapper;
 
 /// A handle to an asynchronous HTTP request task.
 ///
-/// Provides control over an ongoing HTTP request, allowing operations like starting,
-/// canceling, and resetting the request, as well as accessing response data.
+/// Provides control over an ongoing HTTP request, allowing operations like
+/// starting, canceling, and resetting the request, as well as accessing
+/// response data.
 ///
 /// # Examples
 ///
@@ -46,15 +48,15 @@ use crate::wrapper::CallbackWrapper;
 ///     .uri("https://example.com")
 ///     .method("GET")
 ///     .build();
-/// 
+///
 /// // Create a task from the request
 /// let mut task = request.task().unwrap();
-/// 
+///
 /// // Start the task
 /// if task.start() {
 ///     println!("Task started successfully");
 /// }
-/// 
+///
 /// // Later, if needed, cancel the task
 /// task.cancel();
 /// ```
@@ -78,18 +80,16 @@ unsafe impl Sync for RequestTask {}
 /// use netstack_rs::{Request, TaskStatus};
 ///
 /// // Create a request and task
-/// let mut request = Request::builder()
-///     .uri("https://example.com")
-///     .build();
+/// let mut request = Request::builder().uri("https://example.com").build();
 /// let mut task = request.task().unwrap();
-/// 
+///
 /// // Check initial status
 /// let status = task.status();
 /// println!("Initial status: {:?}", status);
-/// 
+///
 /// // Start the task
 /// task.start();
-/// 
+///
 /// // Check if task is running
 /// if let TaskStatus::Running = task.status() {
 ///     println!("Task is now running");
@@ -148,7 +148,8 @@ impl RequestTask {
     ///
     /// # Safety
     ///
-    /// Uses unsafe code to convert the shared pointer to a mutable pointer for the FFI API.
+    /// Uses unsafe code to convert the shared pointer to a mutable pointer for
+    /// the FFI API.
     pub fn start(&mut self) -> bool {
         unsafe {
             // Convert from const to mutable pointer for FFI compatibility
@@ -170,8 +171,9 @@ impl RequestTask {
 
     /// Resets the task for potential reuse.
     ///
-    /// Cancels any ongoing operation and prepares the task for restarting with new parameters.
-    /// Uses atomic compare-and-exchange to ensure reset is only performed once.
+    /// Cancels any ongoing operation and prepares the task for restarting with
+    /// new parameters. Uses atomic compare-and-exchange to ensure reset is
+    /// only performed once.
     pub fn reset(&self) {
         // Only perform reset if not already resetting
         if self
@@ -256,7 +258,8 @@ impl RequestTask {
     ///
     /// # Safety
     ///
-    /// Assumes the pointer is non-null and valid for the lifetime of the returned reference.
+    /// Assumes the pointer is non-null and valid for the lifetime of the
+    /// returned reference.
     pub(crate) fn pin_mut(ptr: &SharedPtr<HttpClientTask>) -> Pin<&mut HttpClientTask> {
         // Convert from const to mutable pointer for FFI compatibility
         let ptr = ptr.as_ref().unwrap() as *const HttpClientTask as *mut HttpClientTask;

@@ -112,8 +112,8 @@ impl CallbackWrapper {
 impl CallbackWrapper {
     /// Handles successful HTTP request completion.
     ///
-    /// Collects performance metrics and calls the appropriate user callback based on
-    /// the HTTP response status code.
+    /// Collects performance metrics and calls the appropriate user callback
+    /// based on the HTTP response status code.
     ///
     /// # Arguments
     ///
@@ -153,7 +153,8 @@ impl CallbackWrapper {
 
     /// Handles failed HTTP requests.
     ///
-    /// Collects performance metrics and implements retry logic for failed requests.
+    /// Collects performance metrics and implements retry logic for failed
+    /// requests.
     ///
     /// # Arguments
     ///
@@ -232,7 +233,8 @@ impl CallbackWrapper {
 
     /// Handles task cancellation.
     ///
-    /// Either restarts the task if a reset is requested or calls the cancel callback.
+    /// Either restarts the task if a reset is requested or calls the cancel
+    /// callback.
     ///
     /// # Arguments
     ///
@@ -361,7 +363,8 @@ impl CallbackWrapper {
     }
 }
 
-// SAFETY: HttpClientTask is thread-safe through its shared pointer implementation
+// SAFETY: HttpClientTask is thread-safe through its shared pointer
+// implementation
 unsafe impl Send for HttpClientTask {}
 unsafe impl Sync for HttpClientTask {}
 

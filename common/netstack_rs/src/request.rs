@@ -13,8 +13,9 @@
 
 //! Module for constructing and managing HTTP requests.
 //!
-//! This module provides a builder pattern implementation for creating HTTP requests
-//! with configurable options and callbacks for handling various request events.
+//! This module provides a builder pattern implementation for creating HTTP
+//! requests with configurable options and callbacks for handling various
+//! request events.
 
 use std::sync::Arc;
 
@@ -29,7 +30,8 @@ use crate::wrapper::ffi::{HttpClientRequest, NewHttpClientRequest, SetBody, SetR
 /// Builder for creating HTTP requests with configurable options.
 ///
 /// Provides a fluent interface for configuring and building HTTP requests
-/// with various options including URL, method, headers, timeouts, and event callbacks.
+/// with various options including URL, method, headers, timeouts, and event
+/// callbacks.
 ///
 /// # Examples
 ///
@@ -103,8 +105,8 @@ impl<C: RequestCallback> Request<C> {
 
     /// Adds or sets a header for the request.
     ///
-    /// Multiple calls with the same key will typically overwrite previous values
-    /// depending on the underlying implementation.
+    /// Multiple calls with the same key will typically overwrite previous
+    /// values depending on the underlying implementation.
     ///
     /// # Arguments
     ///
@@ -125,7 +127,8 @@ impl<C: RequestCallback> Request<C> {
     ///
     /// # Arguments
     ///
-    /// * `ssl_type` - The type of SSL/TLS configuration to use (e.g., "tlsv1.2")
+    /// * `ssl_type` - The type of SSL/TLS configuration to use (e.g.,
+    ///   "tlsv1.2")
     ///
     /// # Returns
     ///
@@ -163,9 +166,10 @@ impl<C: RequestCallback> Request<C> {
     ///
     /// # Safety
     ///
-    /// This function uses an unsafe FFI call to transfer the body to the underlying
-    /// C++ implementation. The implementation must handle the pointer correctly
-    /// and not use it after the request is built or the body slice is dropped.
+    /// This function uses an unsafe FFI call to transfer the body to the
+    /// underlying C++ implementation. The implementation must handle the
+    /// pointer correctly and not use it after the request is built or the
+    /// body slice is dropped.
     pub fn body(&mut self, body: &[u8]) -> &mut Self {
         unsafe { SetBody(self.inner.pin_mut(), body.as_ptr(), body.len()) };
         self
@@ -175,7 +179,8 @@ impl<C: RequestCallback> Request<C> {
     ///
     /// # Arguments
     ///
-    /// * `timeout` - Maximum time in milliseconds to wait for the request to complete
+    /// * `timeout` - Maximum time in milliseconds to wait for the request to
+    ///   complete
     ///
     /// # Returns
     ///
@@ -189,7 +194,8 @@ impl<C: RequestCallback> Request<C> {
     ///
     /// # Arguments
     ///
-    /// * `timeout` - Maximum time in milliseconds to wait for connection establishment
+    /// * `timeout` - Maximum time in milliseconds to wait for connection
+    ///   establishment
     ///
     /// # Returns
     ///
@@ -250,11 +256,13 @@ impl<C: RequestCallback> Request<C> {
     ///
     /// # Notes
     ///
-    /// Transfers all configured callbacks and trackers to the new task. If a callback,
-    /// info manager, and task ID are all provided, they are set together on the task.
+    /// Transfers all configured callbacks and trackers to the new task. If a
+    /// callback, info manager, and task ID are all provided, they are set
+    /// together on the task.
     pub fn build(mut self) -> Option<RequestTask> {
         RequestTask::from_http_request(&self.inner).map(|mut task| {
-            // Transfer ownership of callback, info_mgr, and task_id to the task if all are present
+            // Transfer ownership of callback, info_mgr, and task_id to the task if all are
+            // present
             if let (Some(callback), Some(mgr), Some(task_id)) = (
                 self.callback.take(),
                 self.info_mgr.take(),
@@ -276,7 +284,7 @@ impl<C: RequestCallback> Request<C> {
 /// # Examples
 ///
 /// ```
-/// use netstack_rs::{RequestCallback, Response, HttpClientError, DownloadInfo};
+/// use netstack_rs::{DownloadInfo, HttpClientError, RequestCallback, Response};
 ///
 /// struct MyDownloadHandler {
 ///     bytes_received: u64,
@@ -284,13 +292,16 @@ impl<C: RequestCallback> Request<C> {
 ///
 /// impl RequestCallback for MyDownloadHandler {
 ///     fn on_success(&mut self, response: Response) {
-///         println!("Download completed successfully with status: {}", response.status_code());
+///         println!(
+///             "Download completed successfully with status: {}",
+///             response.status_code()
+///         );
 ///     }
-///     
+///
 ///     fn on_fail(&mut self, error: HttpClientError, _info: DownloadInfo) {
 ///         println!("Download failed: {:?}", error);
 ///     }
-///     
+///
 ///     fn on_progress(&mut self, dl_total: u64, dl_now: u64, _ul_total: u64, _ul_now: u64) {
 ///         self.bytes_received = dl_now;
 ///         if dl_total > 0 {
@@ -306,7 +317,8 @@ pub trait RequestCallback {
     ///
     /// # Arguments
     ///
-    /// * `response` - The successful HTTP response containing status code, headers, and body
+    /// * `response` - The successful HTTP response containing status code,
+    ///   headers, and body
     fn on_success(&mut self, response: Response) {}
 
     /// Called when the request fails.
@@ -327,8 +339,8 @@ pub trait RequestCallback {
     /// # Arguments
     ///
     /// * `data` - The received data chunk
-    /// * `task` - Reference to the ongoing request task, which can be used to control
-    ///   the request (e.g., cancel it)
+    /// * `task` - Reference to the ongoing request task, which can be used to
+    ///   control the request (e.g., cancel it)
     fn on_data_receive(&mut self, data: &[u8], task: RequestTask) {}
 
     /// Called to report upload/download progress.
@@ -343,8 +355,8 @@ pub trait RequestCallback {
 
     /// Called when the task is being restarted (e.g., after a redirect).
     ///
-    /// This can be useful for resetting state before a request continues execution
-    /// after being restarted due to a redirect or retry.
+    /// This can be useful for resetting state before a request continues
+    /// execution after being restarted due to a redirect or retry.
     fn on_restart(&mut self) {}
 }
 

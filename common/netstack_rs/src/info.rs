@@ -26,8 +26,8 @@ use request_utils::{debug, info};
 /// Represents performance metrics for network operations.
 ///
 /// This struct tracks various timing metrics during network operations,
-/// including DNS resolution, TCP connection, TLS handshake, and data transfer times.
-/// All timings are stored in milliseconds.
+/// including DNS resolution, TCP connection, TLS handshake, and data transfer
+/// times. All timings are stored in milliseconds.
 #[derive(Clone, Copy, Default)]
 pub struct RustPerformanceInfo {
     /// Time taken from startup to DNS resolution completion, in milliseconds.
@@ -36,13 +36,16 @@ pub struct RustPerformanceInfo {
     connect_timing: f64,
     /// Time taken from startup to TLS connection completion, in milliseconds.
     tls_timing: f64,
-    /// Time taken from startup to start sending the first byte, in milliseconds.
+    /// Time taken from startup to start sending the first byte, in
+    /// milliseconds.
     first_send_timing: f64,
     /// Time taken from startup to receiving the first byte, in milliseconds.
     first_receive_timing: f64,
-    /// Time taken from startup to the completion of the request, in milliseconds.
+    /// Time taken from startup to the completion of the request, in
+    /// milliseconds.
     total_timing: f64,
-    /// Time taken from startup to completion of all redirection steps, in milliseconds.
+    /// Time taken from startup to completion of all redirection steps, in
+    /// milliseconds.
     redirect_timing: f64,
 }
 
@@ -51,7 +54,8 @@ impl RustPerformanceInfo {
     ///
     /// # Arguments
     ///
-    /// * `time` - The time taken in milliseconds from startup to DNS resolution completion.
+    /// * `time` - The time taken in milliseconds from startup to DNS resolution
+    ///   completion.
     pub fn set_dns_timing(&mut self, time: f64) {
         self.dns_timing = time;
     }
@@ -60,7 +64,8 @@ impl RustPerformanceInfo {
     ///
     /// # Arguments
     ///
-    /// * `time` - The time taken in milliseconds from startup to TCP connection completion.
+    /// * `time` - The time taken in milliseconds from startup to TCP connection
+    ///   completion.
     pub fn set_connect_timing(&mut self, time: f64) {
         self.connect_timing = time;
     }
@@ -69,7 +74,8 @@ impl RustPerformanceInfo {
     ///
     /// # Arguments
     ///
-    /// * `time` - The time taken in milliseconds from startup to TLS connection completion.
+    /// * `time` - The time taken in milliseconds from startup to TLS connection
+    ///   completion.
     pub fn set_tls_timing(&mut self, time: f64) {
         self.tls_timing = time;
     }
@@ -78,7 +84,8 @@ impl RustPerformanceInfo {
     ///
     /// # Arguments
     ///
-    /// * `time` - The time taken in milliseconds from startup to sending the first byte.
+    /// * `time` - The time taken in milliseconds from startup to sending the
+    ///   first byte.
     pub fn set_first_send_timing(&mut self, time: f64) {
         self.first_send_timing = time;
     }
@@ -87,7 +94,8 @@ impl RustPerformanceInfo {
     ///
     /// # Arguments
     ///
-    /// * `time` - The time taken in milliseconds from startup to receiving the first byte.
+    /// * `time` - The time taken in milliseconds from startup to receiving the
+    ///   first byte.
     pub fn set_first_receive_timing(&mut self, time: f64) {
         self.first_receive_timing = time;
     }
@@ -96,7 +104,8 @@ impl RustPerformanceInfo {
     ///
     /// # Arguments
     ///
-    /// * `time` - The time taken in milliseconds from startup to request completion.
+    /// * `time` - The time taken in milliseconds from startup to request
+    ///   completion.
     pub fn set_total_timing(&mut self, time: f64) {
         self.total_timing = time;
     }
@@ -105,7 +114,8 @@ impl RustPerformanceInfo {
     ///
     /// # Arguments
     ///
-    /// * `time` - The time taken in milliseconds from startup to completion of all redirects.
+    /// * `time` - The time taken in milliseconds from startup to completion of
+    ///   all redirects.
     pub fn set_redirect_timing(&mut self, time: f64) {
         self.redirect_timing = time;
     }
@@ -158,7 +168,8 @@ struct ResourceInfo {
 impl ResourceInfo {
     /// Creates a new `ResourceInfo` instance with unknown size.
     ///
-    /// Initializes with a default size value of -1, indicating the size is unknown.
+    /// Initializes with a default size value of -1, indicating the size is
+    /// unknown.
     fn new() -> Self {
         ResourceInfo { size: -1 }
     }
@@ -167,7 +178,8 @@ impl ResourceInfo {
     ///
     /// # Arguments
     ///
-    /// * `size` - The size of the resource in bytes. Use -1 to indicate unknown size.
+    /// * `size` - The size of the resource in bytes. Use -1 to indicate unknown
+    ///   size.
     fn set_size(&mut self, size: i64) {
         self.size = size;
     }
@@ -242,10 +254,12 @@ impl NetworkInfo {
     }
 }
 
-/// Combines resource, network, and performance information for a download operation.
+/// Combines resource, network, and performance information for a download
+/// operation.
 ///
-/// Provides a unified view of all relevant information about a download, including
-/// metadata about the resource, network configuration, and performance metrics.
+/// Provides a unified view of all relevant information about a download,
+/// including metadata about the resource, network configuration, and
+/// performance metrics.
 #[derive(Clone)]
 pub struct DownloadInfo {
     /// Resource metadata information.
@@ -272,7 +286,8 @@ impl DownloadInfo {
     ///
     /// # Arguments
     ///
-    /// * `size` - The size of the downloaded resource in bytes. Use -1 for unknown size.
+    /// * `size` - The size of the downloaded resource in bytes. Use -1 for
+    ///   unknown size.
     pub(crate) fn set_size(&mut self, size: i64) {
         self.resource.set_size(size);
     }
@@ -281,7 +296,8 @@ impl DownloadInfo {
     ///
     /// # Arguments
     ///
-    /// * `performance` - The performance timing data to associate with this download.
+    /// * `performance` - The performance timing data to associate with this
+    ///   download.
     pub(crate) fn set_performance(&mut self, performance: RustPerformanceInfo) {
         self.performance = performance;
     }
@@ -303,7 +319,8 @@ impl DownloadInfo {
     ///
     /// # Returns
     ///
-    /// The time taken in milliseconds from operation start to DNS resolution completion.
+    /// The time taken in milliseconds from operation start to DNS resolution
+    /// completion.
     pub fn dns_time(&self) -> f64 {
         self.performance.dns_timing()
     }
@@ -312,7 +329,8 @@ impl DownloadInfo {
     ///
     /// # Returns
     ///
-    /// The time taken in milliseconds from operation start to TCP connection completion.
+    /// The time taken in milliseconds from operation start to TCP connection
+    /// completion.
     pub fn connect_time(&self) -> f64 {
         self.performance.connect_timing()
     }
@@ -321,7 +339,8 @@ impl DownloadInfo {
     ///
     /// # Returns
     ///
-    /// The time taken in milliseconds from operation start to TLS connection completion.
+    /// The time taken in milliseconds from operation start to TLS connection
+    /// completion.
     pub fn tls_time(&self) -> f64 {
         self.performance.tls_timing()
     }
@@ -330,7 +349,8 @@ impl DownloadInfo {
     ///
     /// # Returns
     ///
-    /// The time taken in milliseconds from operation start to sending the first byte.
+    /// The time taken in milliseconds from operation start to sending the first
+    /// byte.
     pub fn first_send_time(&self) -> f64 {
         self.performance.first_send_timing()
     }
@@ -339,7 +359,8 @@ impl DownloadInfo {
     ///
     /// # Returns
     ///
-    /// The time taken in milliseconds from operation start to receiving the first byte.
+    /// The time taken in milliseconds from operation start to receiving the
+    /// first byte.
     pub fn first_recv_time(&self) -> f64 {
         self.performance.first_recv_timing()
     }
@@ -348,7 +369,8 @@ impl DownloadInfo {
     ///
     /// # Returns
     ///
-    /// The time taken in milliseconds from operation start to completion of all redirects.
+    /// The time taken in milliseconds from operation start to completion of all
+    /// redirects.
     pub fn redirect_time(&self) -> f64 {
         self.performance.redirect_timing()
     }
@@ -357,7 +379,8 @@ impl DownloadInfo {
     ///
     /// # Returns
     ///
-    /// The time taken in milliseconds from operation start to request completion.
+    /// The time taken in milliseconds from operation start to request
+    /// completion.
     pub fn total_time(&self) -> f64 {
         self.performance.total_timing()
     }
@@ -384,7 +407,8 @@ impl DownloadInfo {
     ///
     /// # Returns
     ///
-    /// A vector containing the DNS server addresses used during hostname resolution.
+    /// A vector containing the DNS server addresses used during hostname
+    /// resolution.
     pub fn dns_servers(&self) -> Vec<String> {
         self.network.dns()
     }
@@ -465,8 +489,9 @@ impl InfoListSize {
     ///
     /// # Returns
     ///
-    /// * `Some(overflow)` if the current used count exceeds the new total, where
-    ///   `overflow` is the number of excess items that would need to be removed.
+    /// * `Some(overflow)` if the current used count exceeds the new total,
+    ///   where `overflow` is the number of excess items that would need to be
+    ///   removed.
     /// * `None` if the used count does not exceed the new total.
     fn update_total_size(&mut self, total: u16) -> Option<u16> {
         self.total = total;
@@ -481,8 +506,9 @@ impl InfoListSize {
 
 /// Manages a collection of download information with LRU caching behavior.
 ///
-/// Provides methods to store and retrieve download information using task IDs as keys,
-/// with least recently used items being evicted when capacity is reached.
+/// Provides methods to store and retrieve download information using task IDs
+/// as keys, with least recently used items being evicted when capacity is
+/// reached.
 struct InfoCollection {
     /// Size tracking for the collection.
     list_size: InfoListSize,
@@ -503,12 +529,14 @@ impl InfoCollection {
 
     /// Inserts download information for a specific task.
     ///
-    /// Manages capacity constraints by removing the least recently used item if the
-    /// collection is full. If the task ID already exists, updates its information.
+    /// Manages capacity constraints by removing the least recently used item if
+    /// the collection is full. If the task ID already exists, updates its
+    /// information.
     ///
     /// # Arguments
     ///
-    /// * `task_id` - The identifier of the task to associate with the download info.
+    /// * `task_id` - The identifier of the task to associate with the download
+    ///   info.
     /// * `info` - The download information to store.
     fn insert_info(&mut self, task_id: TaskId, info: DownloadInfo) {
         // Early return if no capacity is configured
@@ -535,8 +563,8 @@ impl InfoCollection {
 
     /// Updates the total capacity of the collection.
     ///
-    /// If the new capacity is smaller than the current usage, removes excess items
-    /// from the LRU cache (evicting least recently used items first).
+    /// If the new capacity is smaller than the current usage, removes excess
+    /// items from the LRU cache (evicting least recently used items first).
     ///
     /// # Arguments
     ///
@@ -579,12 +607,13 @@ impl DownloadInfoMgr {
 
     /// Inserts download information for a specific task.
     ///
-    /// This operation is thread-safe and will evict least recently used items if
-    /// the collection reaches capacity.
+    /// This operation is thread-safe and will evict least recently used items
+    /// if the collection reaches capacity.
     ///
     /// # Arguments
     ///
-    /// * `task_id` - The identifier of the task to associate with the download info.
+    /// * `task_id` - The identifier of the task to associate with the download
+    ///   info.
     /// * `info` - The download information to store.
     ///
     /// # Safety
@@ -616,7 +645,8 @@ impl DownloadInfoMgr {
     /// Retrieves download information for a specific task.
     ///
     /// Returns `None` if no information is found for the given task ID.
-    /// This operation is thread-safe and updates the LRU status of the accessed item.
+    /// This operation is thread-safe and updates the LRU status of the accessed
+    /// item.
     ///
     /// # Arguments
     ///

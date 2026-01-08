@@ -12,12 +12,12 @@
 // limitations under the License.
 
 //! Rust interface to the netstack library.
-//! 
-//! This crate provides a safe, idiomatic Rust API for interacting with the 
+//!
+//! This crate provides a safe, idiomatic Rust API for interacting with the
 //! netstack library, handling HTTP requests, responses, and task management.
-//! 
+//!
 //! # Modules
-//! 
+//!
 //! * [`request`] - Types and functionality for creating HTTP requests
 //! * [`task`] - Types and functionality for managing HTTP request tasks
 //! * [`response`] - Types and functionality for handling HTTP responses
@@ -59,13 +59,14 @@ pub mod error;
 
 /// Internal FFI wrapper module.
 ///
-/// Provides bridging between Rust code and the underlying netstack C++ implementation.
+/// Provides bridging between Rust code and the underlying netstack C++
+/// implementation.
 mod wrapper;
 
 /// Types for download and performance information.
 ///
-/// This module provides structures for tracking download progress and collecting
-/// performance metrics during HTTP operations.
+/// This module provides structures for tracking download progress and
+/// collecting performance metrics during HTTP operations.
 pub mod info;
 
 use hilog_rust::{HiLogLabel, LogType};
@@ -74,7 +75,8 @@ use hilog_rust::{HiLogLabel, LogType};
 ///
 /// # Notes
 ///
-/// This label is used with the HiLog logging system for consistent log categorization.
+/// This label is used with the HiLog logging system for consistent log
+/// categorization.
 pub(crate) const LOG_LABEL: HiLogLabel = HiLogLabel {
     log_type: LogType::LogCore,
     domain: 0xD001C50,

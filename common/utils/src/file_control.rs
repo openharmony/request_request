@@ -12,9 +12,10 @@
 // limitations under the License.
 
 //! File path control and validation utilities.
-//! 
+//!
 //! This module provides functions for validating file paths, checking if paths
-//! belong to application base directories, and other file path-related utilities.
+//! belong to application base directories, and other file path-related
+//! utilities.
 
 use std::path::Path;
 
@@ -41,7 +42,8 @@ pub fn path_exists<P: AsRef<Path>>(path: P) -> bool {
     Path::new(path.as_ref()).exists()
 }
 
-/// Determines whether a path belongs to any of the application base directories.
+/// Determines whether a path belongs to any of the application base
+/// directories.
 ///
 /// Returns `true` if the path starts with any of the known application base
 /// directory prefixes (EL1, EL2, or EL5).
@@ -94,13 +96,14 @@ pub fn check_standardized_path(path: &str) -> bool {
     if path.is_empty() || !path.starts_with('/') || path.ends_with('/') || path.contains("//") {
         return false;
     }
-    
+
     // Patterns that indicate relative path traversal
-    // These are not allowed for security reasons to prevent directory traversal attacks
+    // These are not allowed for security reasons to prevent directory traversal
+    // attacks
     static NOT_ALLOWED: [&str; 11] = [
         r".", r".\", r"\.", r"..", r"\..", r"\.\.", r"\.\.\", r"\..\", r".\.", r".\.\", r"..\",
     ];
-    
+
     // Check each path segment for forbidden patterns
     for segment in path.split('/').filter(|s| !s.is_empty()) {
         if NOT_ALLOWED.contains(&segment) {
@@ -110,10 +113,11 @@ pub fn check_standardized_path(path: &str) -> bool {
     true
 }
 
-/// Filters a list of strings to retain only those longer than the length of AREA1.
+/// Filters a list of strings to retain only those longer than the length of
+/// AREA1.
 ///
-/// This is typically used to filter out paths that don't contain sufficient path
-/// information beyond the application base directory.
+/// This is typically used to filter out paths that don't contain sufficient
+/// path information beyond the application base directory.
 ///
 /// # Arguments
 ///
@@ -127,10 +131,10 @@ pub fn check_standardized_path(path: &str) -> bool {
 /// let mut paths = vec![
 ///     "/data/storage/el1/base",
 ///     "/data/storage/el1/base/com.example.app",
-///     "/short"
+///     "/short",
 /// ];
 /// delete_base_for_list(&mut paths);
-/// 
+///
 /// assert_eq!(paths, vec!["/data/storage/el1/base/com.example.app"]);
 /// ```
 pub fn delete_base_for_list(v: &mut Vec<&str>) {

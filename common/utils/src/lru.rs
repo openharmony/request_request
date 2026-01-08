@@ -13,9 +13,9 @@
 
 //! Least Recently Used (LRU) cache implementation.
 //!
-//! This module provides an efficient LRU cache implementation using a combination
-//! of a hash map for O(1) lookups and a doubly linked list for O(1) insertions and
-//! deletions from both ends.
+//! This module provides an efficient LRU cache implementation using a
+//! combination of a hash map for O(1) lookups and a doubly linked list for O(1)
+//! insertions and deletions from both ends.
 
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
@@ -80,7 +80,8 @@ impl<K, V> LinkedList<K, V> {
     ///
     /// # Safety
     ///
-    /// Assumes the provided node pointer is valid, not null, and is part of this list.
+    /// Assumes the provided node pointer is valid, not null, and is part of
+    /// this list.
     fn remove(&mut self, node: *mut Node<K, V>) {
         unsafe {
             // Update previous node's next pointer or head
@@ -99,7 +100,8 @@ impl<K, V> LinkedList<K, V> {
         }
     }
 
-    /// Removes and returns the node at the back of the list (least recently used).
+    /// Removes and returns the node at the back of the list (least recently
+    /// used).
     fn pop_back(&mut self) -> *mut Node<K, V> {
         if self.tail.is_null() {
             return ptr::null_mut();
@@ -133,8 +135,8 @@ impl<K, V> Drop for LinkedList<K, V> {
 /// the access order of elements. When items are accessed or inserted, they are
 /// moved to the front (most recently used position). The cache does not have a
 /// fixed capacity and will grow indefinitely unless items are manually removed
-/// using `pop()` or `remove()`. When items are removed due to being least recently
-/// used, the `pop()` method returns them.
+/// using `pop()` or `remove()`. When items are removed due to being least
+/// recently used, the `pop()` method returns them.
 ///
 /// # Examples
 ///
@@ -161,8 +163,9 @@ impl<K, V> Drop for LinkedList<K, V> {
 ///
 /// # Safety
 ///
-/// This implementation uses unsafe pointer operations to manage the linked list.
-/// The pointers are carefully managed to avoid dangling pointers or memory leaks.
+/// This implementation uses unsafe pointer operations to manage the linked
+/// list. The pointers are carefully managed to avoid dangling pointers or
+/// memory leaks.
 pub struct LRUCache<K, V> {
     /// Map from keys to nodes for O(1) lookups.
     map: HashMap<K, *mut Node<K, V>>,
@@ -206,7 +209,8 @@ impl<K: Hash + Eq + Clone, V> LRUCache<K, V> {
         None
     }
 
-    /// Returns a mutable reference to the value corresponding to the key if it exists.
+    /// Returns a mutable reference to the value corresponding to the key if it
+    /// exists.
     ///
     /// Moves the accessed key to the most recently used position.
     ///
@@ -238,8 +242,9 @@ impl<K: Hash + Eq + Clone, V> LRUCache<K, V> {
 
     /// Inserts a key-value pair into the cache.
     ///
-    /// If the key already exists, updates the value and moves the key to the most
-    /// recently used position. Returns the previous value if the key existed.
+    /// If the key already exists, updates the value and moves the key to the
+    /// most recently used position. Returns the previous value if the key
+    /// existed.
     ///
     /// # Examples
     ///

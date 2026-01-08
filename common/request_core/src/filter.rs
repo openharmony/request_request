@@ -12,23 +12,26 @@
 // limitations under the License.
 
 //! Search filtering for network request tasks.
-//! 
-//! This module provides structures for filtering network tasks based on various criteria,
-//! enabling targeted search and management operations within the request system.
+//!
+//! This module provides structures for filtering network tasks based on various
+//! criteria, enabling targeted search and management operations within the
+//! request system.
 
 use crate::config::{Action, Mode};
 use crate::info::State;
 
 /// Filter criteria for searching network tasks.
 ///
-/// A set of optional filtering parameters used to narrow down task searches based on
-/// bundle ownership, time ranges, state, action type, and mode.
+/// A set of optional filtering parameters used to narrow down task searches
+/// based on bundle ownership, time ranges, state, action type, and mode.
 ///
 /// # Examples
 ///
 /// ```rust
-/// use request_core::{config::Action, filter::SearchFilter, info::State};
-/// 
+/// use request_core::config::Action;
+/// use request_core::filter::SearchFilter;
+/// use request_core::info::State;
+///
 /// // Create a filter to find all download tasks that completed successfully
 /// let mut filter = SearchFilter::new();
 /// filter.action = Some(Action::Download);
@@ -60,8 +63,9 @@ impl SearchFilter {
     ///
     /// # Notes
     ///
-    /// When all fields are `None`, the filter will not restrict the search results.
-    /// Callers should set the desired fields to filter the search appropriately.
+    /// When all fields are `None`, the filter will not restrict the search
+    /// results. Callers should set the desired fields to filter the search
+    /// appropriately.
     pub fn new() -> Self {
         SearchFilter {
             bundle_name: None,

@@ -12,31 +12,33 @@
 // limitations under the License.
 
 //! Internal FFI wrapper implementation for FFRT.
-//! 
-//! This module provides the low-level bindings and wrapper types needed to interface
-//! with the C++ FastFlow Runtime library.
+//!
+//! This module provides the low-level bindings and wrapper types needed to
+//! interface with the C++ FastFlow Runtime library.
 
 // Import FFI functions from the C++ interface
 pub(crate) use ffi::{FfrtSleep, FfrtSpawn};
 
 /// Wrapper for closures to be passed across the FFI boundary.
-/// 
+///
 /// This struct manages the lifetime and execution of closures that need to be
 /// executed by the C++ FFRT library.
 pub struct ClosureWrapper {
-    /// The wrapped closure, stored as an Option to allow take() during execution
+    /// The wrapped closure, stored as an Option to allow take() during
+    /// execution
     inner: Option<Box<dyn FnOnce()>>,
 }
 
 impl ClosureWrapper {
     /// Creates a new boxed ClosureWrapper containing the provided closure.
-    /// 
+    ///
     /// # Arguments
-    /// 
-    /// * `f` - The closure to wrap, which must be 'static as it will be passed to C++
-    /// 
+    ///
+    /// * `f` - The closure to wrap, which must be 'static as it will be passed
+    ///   to C++
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns a boxed ClosureWrapper instance
     pub fn new<F>(f: F) -> Box<Self>
     where
@@ -48,7 +50,7 @@ impl ClosureWrapper {
     }
 
     /// Executes the wrapped closure and consumes it.
-    /// 
+    ///
     /// This method is called by the C++ side to execute the Rust closure.
     /// After execution, the closure is removed from the wrapper to ensure it's
     /// only called once.
@@ -72,7 +74,7 @@ mod ffi {
     unsafe extern "C++" {
         // Include the C++ header defining the FFRT interface
         include!("wrapper.h");
-        
+
         // FFRT API functions
         fn FfrtSpawn(closure: Box<ClosureWrapper>);
         fn FfrtSleep(ms: u64);

@@ -12,9 +12,9 @@
 // limitations under the License.
 
 //! SQL parameter binding and result extraction utilities.
-//! 
-//! This module provides traits and implementations for converting between Rust types
-//! and SQL database types for parameter binding and result extraction.
+//!
+//! This module provides traits and implementations for converting between Rust
+//! types and SQL database types for parameter binding and result extraction.
 
 use std::pin::Pin;
 
@@ -26,25 +26,27 @@ use crate::wrapper::ffi::{
 };
 
 /// Trait for converting Rust types to SQL bind parameters.
-/// 
-/// Implement this trait for types that can be used as parameters in SQL queries.
+///
+/// Implement this trait for types that can be used as parameters in SQL
+/// queries.
 trait ToSql {
     /// Converts the value to an SQL bind parameter.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `values` - The vector of value objects to append to
     fn to_sql(&self, values: Pin<&mut CxxVector<ValueObject>>);
 }
 
 /// Trait for converting SQL results to Rust types.
-/// 
-/// Implement this trait for types that can be constructed from SQL query results.
+///
+/// Implement this trait for types that can be constructed from SQL query
+/// results.
 pub trait FromSql {
     /// Constructs a Rust value from an SQL result row.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `index` - Column index in the result row
     /// * `values` - The row entity containing the result data
     fn from_sql(index: i32, values: Pin<&mut RowEntity>) -> Self;
@@ -114,7 +116,8 @@ impl ToSql for [u8] {
 }
 
 impl<T: ?Sized + ToSql> ToSql for &T {
-    /// Binds a reference to an SQL parameter by delegating to the referenced value.
+    /// Binds a reference to an SQL parameter by delegating to the referenced
+    /// value.
     fn to_sql(&self, values: Pin<&mut CxxVector<ValueObject>>) {
         (*self).to_sql(values);
     }
@@ -206,11 +209,11 @@ impl FromSql for Vec<u8> {
 
 impl<T: FromSql> FromSql for Option<T> {
     /// Extracts an optional value from an SQL result row.
-    /// 
+    ///
     /// Returns `None` if the column value is NULL, otherwise returns `Some(T)`.
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// This method uses unsafe code to work with the underlying FFI interface.
     fn from_sql(index: i32, values: Pin<&mut RowEntity>) -> Self {
         unsafe {
@@ -225,7 +228,7 @@ impl<T: FromSql> FromSql for Option<T> {
 }
 
 /// Internal helper for collecting SQL parameter values.
-/// 
+///
 /// Provides methods to create a new parameter collection and add values to it.
 struct ParamValues {
     /// Internal vector of SQL value objects
@@ -239,9 +242,9 @@ impl ParamValues {
     }
 
     /// Adds a value to the parameter collection.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `value` - The value to add, must implement `ToSql`
     fn push<T: ToSql>(&mut self, value: T) {
         T::to_sql(&value, self.inner.pin_mut())
@@ -249,8 +252,9 @@ impl ParamValues {
 }
 
 /// Trait for types that can be used as SQL query parameters.
-/// 
-/// Implementations are provided for common types and tuples of up to 16 elements.
+///
+/// Implementations are provided for common types and tuples of up to 16
+/// elements.
 pub trait Params {
     /// Converts the value into a vector of SQL value objects for binding.
     fn into_values_object(self) -> UniquePtr<CxxVector<ValueObject>>;

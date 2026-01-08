@@ -13,8 +13,9 @@
 
 //! Task information and state management.
 //!
-//! This module defines structures and enums for representing task states, progress,
-//! notifications, and detailed task information used throughout the request system.
+//! This module defines structures and enums for representing task states,
+//! progress, notifications, and detailed task information used throughout the
+//! request system.
 
 use std::collections::HashMap;
 
@@ -25,8 +26,8 @@ use crate::file::FileSpec;
 
 /// Enumeration of possible task states.
 ///
-/// Represents the lifecycle stages of a network task, from initialization through execution
-/// to completion or failure.
+/// Represents the lifecycle stages of a network task, from initialization
+/// through execution to completion or failure.
 #[derive(Clone, Debug)]
 #[repr(u32)]
 pub enum State {
@@ -57,7 +58,8 @@ impl From<u32> for State {
     ///
     /// # Notes
     ///
-    /// Any value that doesn't match a defined state will be mapped to `State::Any`.
+    /// Any value that doesn't match a defined state will be mapped to
+    /// `State::Any`.
     fn from(value: u32) -> Self {
         match value {
             0x00 => State::Initialized,
@@ -384,7 +386,8 @@ pub struct CommonProgress {
 
 /// Core task information with minimal overhead.
 ///
-/// Contains essential task metadata needed for quick task identification and management.
+/// Contains essential task metadata needed for quick task identification and
+/// management.
 #[derive(Copy, Clone, Debug)]
 pub struct CommonTaskInfo {
     /// Unique identifier of the task.
@@ -421,15 +424,18 @@ pub struct CommonTaskInfo {
 /// # Examples
 ///
 /// ```rust
-/// use request_core::{info::TaskInfo, file::FileSpec};
+/// use request_core::file::FileSpec;
+/// use request_core::info::TaskInfo;
 ///
 /// // Access task details
 /// fn process_task_info(task_info: &TaskInfo) {
 ///     println!("Task ID: {}", task_info.common_data.task_id);
 ///     println!("URL: {}", task_info.url);
-///     println!("Progress: {}/{}",
-///              task_info.progress.common_data.total_processed,
-///              task_info.progress.sizes.iter().sum::<i64>());
+///     println!(
+///         "Progress: {}/{}",
+///         task_info.progress.common_data.total_processed,
+///         task_info.progress.sizes.iter().sum::<i64>()
+///     );
 /// }
 /// ```
 #[derive(Debug, Clone)]
