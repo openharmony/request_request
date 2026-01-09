@@ -109,8 +109,9 @@ CJRequestTask *CJRequestTask::ClearTaskMap(const std::string &key)
     if (it == taskMap_.end()) {
         return nullptr;
     }
+    auto task = it->second;
     taskMap_.erase(it);
-    return it->second;
+    return task;
 }
 
 bool CJRequestTask::SetPathPermission(const std::string &filepath)
