@@ -22,59 +22,59 @@ import { WantAgent } from '@ohos.app.ability.wantAgent';
 export default namespace request {
   loadLibrary("request_ani")
 
-  const EXCEPTION_PERMISSION: int = 201;
-  const EXCEPTION_PARAMCHECK: int = 401;
-  const EXCEPTION_UNSUPPORTED: int = 801;
-  const EXCEPTION_FILEIO: int = 13400001;
-  const EXCEPTION_FILEPATH: int = 13400002;
-  const EXCEPTION_SERVICE: int = 13400003;
-  const EXCEPTION_OTHERS: int = 13499999;
+  export const EXCEPTION_PERMISSION: int = 201;
+  export const EXCEPTION_PARAMCHECK: int = 401;
+  export const EXCEPTION_UNSUPPORTED: int = 801;
+  export const EXCEPTION_FILEIO: int = 13400001;
+  export const EXCEPTION_FILEPATH: int = 13400002;
+  export const EXCEPTION_SERVICE: int = 13400003;
+  export const EXCEPTION_OTHERS: int = 13499999;
 
-  const NETWORK_MOBILE: int = 1;
+  export const NETWORK_MOBILE: int = 1;
 
-  const NETWORK_WIFI: int = 65536;
+  export const NETWORK_WIFI: int = 65536;
 
-  const ERROR_CANNOT_RESUME: int = 0;
+  export const ERROR_CANNOT_RESUME: int = 0;
 
-  const ERROR_DEVICE_NOT_FOUND: int = 1;
+  export const ERROR_DEVICE_NOT_FOUND: int = 1;
 
-  const ERROR_FILE_ALREADY_EXISTS: int = 2;
+  export const ERROR_FILE_ALREADY_EXISTS: int = 2;
 
-  const ERROR_FILE_ERROR: int = 3;
+  export const ERROR_FILE_ERROR: int = 3;
 
-  const ERROR_HTTP_DATA_ERROR: int = 4;
+  export const ERROR_HTTP_DATA_ERROR: int = 4;
 
-  const ERROR_INSUFFICIENT_SPACE: int = 5;
+  export const ERROR_INSUFFICIENT_SPACE: int = 5;
 
-  const ERROR_TOO_MANY_REDIRECTS: int = 6;
+  export const ERROR_TOO_MANY_REDIRECTS: int = 6;
 
-  const ERROR_UNHANDLED_HTTP_CODE: int = 7;
+  export const ERROR_UNHANDLED_HTTP_CODE: int = 7;
 
-  const ERROR_UNKNOWN: int = 8;
+  export const ERROR_UNKNOWN: int = 8;
 
-  const ERROR_OFFLINE: int = 9;
+  export const ERROR_OFFLINE: int = 9;
 
-  const ERROR_UNSUPPORTED_NETWORK_TYPE: int = 10;
+  export const ERROR_UNSUPPORTED_NETWORK_TYPE: int = 10;
 
-  const PAUSED_QUEUED_FOR_WIFI: int = 0;
+  export const PAUSED_QUEUED_FOR_WIFI: int = 0;
 
-  const PAUSED_WAITING_FOR_NETWORK: int = 1;
+  export const PAUSED_WAITING_FOR_NETWORK: int = 1;
 
-  const PAUSED_WAITING_TO_RETRY: int = 2;
+  export const PAUSED_WAITING_TO_RETRY: int = 2;
 
-  const PAUSED_BY_USER: int = 3;
+  export const PAUSED_BY_USER: int = 3;
 
-  const PAUSED_UNKNOWN: int = 4;
+  export const PAUSED_UNKNOWN: int = 4;
 
-  const SESSION_SUCCESSFUL: int = 0;
+  export const SESSION_SUCCESSFUL: int = 0;
 
-  const SESSION_RUNNING: int = 1;
+  export const SESSION_RUNNING: int = 1;
 
-  const SESSION_PENDING: int = 2;
+  export const SESSION_PENDING: int = 2;
 
-  const SESSION_PAUSED: int = 3;
+  export const SESSION_PAUSED: int = 3;
 
-  const SESSION_FAILED: int = 4;
+  export const SESSION_FAILED: int = 4;
 
   native function downloadFileSync(context: BaseContext, seq: long): DownloadTask;
   native function checkDownloadConfig(context: BaseContext, config: DownloadConfig): long;
@@ -132,7 +132,7 @@ export default namespace request {
     });
   }
 
-  interface DownloadConfig {
+  export interface DownloadConfig {
     url: string;
     header?: Record<string, string>;
     enableMetered?: boolean;
@@ -144,7 +144,7 @@ export default namespace request {
     background?: boolean;
   }
 
-  interface DownloadInfo {
+  export interface DownloadInfo {
     description: string;
     downloadedBytes: long;
     downloadId: long;
@@ -178,7 +178,7 @@ export default namespace request {
   export type DownloadRemoveCallback = () => void;
   export type DownloadFailCallback = (err: int) => void;
 
-  interface DownloadTask {
+  export interface DownloadTask {
     readonly taskId: string;
 
     onProgress(callback: DownloadProgressCallback): void;
@@ -449,7 +449,7 @@ export default namespace request {
     }
   }
 
-  interface File {
+  export interface File {
     filename: string;
     name: string;
     uri: string;
@@ -463,7 +463,7 @@ export default namespace request {
     type: string;
   }
 
-  interface RequestData {
+  export interface RequestData {
     name: string;
     value: string;
   }
@@ -473,7 +473,7 @@ export default namespace request {
     value: string;
   }
 
-  interface UploadConfig {
+  export interface UploadConfig {
     url: string;
     header: Record<string, string>;
     method: string;
@@ -495,7 +495,7 @@ export default namespace request {
     data: Array<RequestData>;
   }
 
-  interface TaskState {
+  export interface TaskState {
     path: string;
     responseCode: int;
     message: string;
@@ -510,7 +510,7 @@ export default namespace request {
   export type UploadProgressCallback = (uploadedSize: long, totalSize: long) => void;
   export type UploadHeaderReceiveCallback = (header: Record<string, string>) => void;
 
-  interface UploadTask {
+  export interface UploadTask {
     readonly taskId: string;
 
     onProgress(callback: UploadProgressCallback): void;
@@ -649,31 +649,31 @@ export default namespace request {
   export namespace agent {
     loadLibrary("request_ani")
 
-    const VISIBILITY_COMPLETION: int = 1;
+    export const VISIBILITY_COMPLETION: int = 1;
 
-    const VISIBILITY_PROGRESS:int = 2;
+    export const VISIBILITY_PROGRESS:int = 2;
 
-    enum Action {
+    export enum Action {
       DOWNLOAD,
       UPLOAD
     }
 
-    enum Mode {
+    export enum Mode {
       BACKGROUND,
       FOREGROUND
     }
 
-    enum Network {
+    export enum Network {
       ANY,
       WIFI,
       CELLULAR
     }
 
-    enum BroadcastEvent {
+    export enum BroadcastEvent {
       COMPLETE = 'ohos.request.event.COMPLETE'
     }
 
-    interface FileSpec {
+    export interface FileSpec {
       path: string;
       contentType?: string;
       filename?: string;
@@ -687,7 +687,7 @@ export default namespace request {
       extras?: Record<string, string>;
     }
 
-    interface FormItem {
+    export interface FormItem {
       name: string;
       value: string | FileSpec | Array<FileSpec>;
     }
@@ -697,7 +697,7 @@ export default namespace request {
       value: string | FileSpec | Array<FileSpec>;
     }
 
-    interface Notification {
+    export interface Notification {
       title?: string;
       text?: string;
       disable?: boolean;
@@ -713,17 +713,17 @@ export default namespace request {
       wantAgent?: WantAgent;
     }
 
-    interface MinSpeed {
+    export interface MinSpeed {
       speed: long;
       duration: int;
     }
 
-    interface Timeout {
+    export interface Timeout {
       connectionTimeout?: int;
       totalTimeout?: int;
     }
 
-    interface Config {
+    export interface Config {
       action: Action;
       url: string;
       title?: string;
@@ -787,7 +787,7 @@ export default namespace request {
       timeout?: Timeout;
     }
 
-    enum State {
+    export enum State {
       INITIALIZED = 0x00,
       WAITING = 0x10,
       RUNNING = 0x20,
@@ -799,7 +799,7 @@ export default namespace request {
       REMOVED = 0x50
     }
 
-    interface Progress {
+    export interface Progress {
       readonly state: State;
       readonly index: int;
       readonly processed: long;
@@ -815,7 +815,7 @@ export default namespace request {
       readonly extras?: Record<string, string>;
     }
 
-    enum Faults {
+    export enum Faults {
       OTHERS = 0xFF,
       DISCONNECTED = 0x00,
       TIMEOUT = 0x10,
@@ -829,14 +829,14 @@ export default namespace request {
       LOW_SPEED = 0x90
     }
 
-    enum WaitingReason {
+    export enum WaitingReason {
       TASK_QUEUE_FULL = 0x00,
       NETWORK_NOT_MATCH = 0x01,
       APP_BACKGROUND = 0x02,
       USER_INACTIVATED = 0x03
     }
 
-    interface Filter {
+    export interface Filter {
       bundle?: string;
       before?: long;
       after?: long;
@@ -854,7 +854,7 @@ export default namespace request {
       mode?: Mode;
     }
 
-    interface TaskInfo {
+    export interface TaskInfo {
       readonly uid?: string;
       readonly bundle?: string;
       readonly saveas?: string;
@@ -902,7 +902,7 @@ export default namespace request {
       readonly extras?: Record<string, string>;
     }
 
-    interface HttpResponse {
+    export interface HttpResponse {
       readonly version: string;
       readonly statusCode: int;
       readonly reason: string;
@@ -918,7 +918,7 @@ export default namespace request {
 
     export type ProgressCallback = (progress: Progress) => void;
 
-    interface Task {
+    export interface Task {
       readonly tid: string;
       config: Config;
 
@@ -1454,7 +1454,7 @@ export default namespace request {
       });
     }
 
-    interface GroupConfig {
+    export interface GroupConfig {
       gauge?: boolean;
       notification: Notification;
     }
