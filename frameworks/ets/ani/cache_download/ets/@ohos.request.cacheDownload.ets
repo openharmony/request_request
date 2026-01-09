@@ -54,7 +54,7 @@ export default namespace cacheDownload {
         readonly ip?: string;
     }
 
-    interface PerformanceInfo {
+    export interface PerformanceInfo {
         readonly dnsTime: double;
         readonly connectTime: double;
         readonly tlsTime: double;
@@ -74,7 +74,7 @@ export default namespace cacheDownload {
         readonly redirectTime: double;
     }
 
-    interface DownloadInfo {
+    export interface DownloadInfo {
         readonly resource: ResourceInfo;
         readonly network: NetworkInfo;
         readonly performance: PerformanceInfo;
