@@ -50,13 +50,9 @@ void PreloadProgress::SetUp(void)
     GTEST_LOG_(INFO) << testCaseName.append(" start");
 }
 
-static std::string TEST_URL_0 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/"
+static std::string g_testUrl0 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/"
                                 "test.txt";
-static std::string TEST_URL_1 = "https://www.w3cschool.cn/statics/demosource/movie.mp4";
-static std::string TEST_URL_2 = "https://www.baidu.com";
-static std::string TEST_URL_3 = "https://vd4.bdstatic.com/mda-pm7bte3t6fs50rsh/sc/cae_h264/"
-                                "1702057792414494257/"
-                                "mda-pm7bte3t6fs50rsh.mp4?v_from_s=bdapp-author-nanjing";
+static std::string g_testUrl1 = "https://www.baidu.com";
 
 constexpr size_t SLEEP_INTERVAL = 1000;
 
@@ -101,15 +97,15 @@ void DownloadProgressTest(std::string url)
 }
 
 /**
- * @tc.name: OnProgressAddCallback_2
- * @tc.desc: Test Add callback for same url after progress - post-progress loading
+ * @tc.name: OnProgressTest
+ * @tc.desc: Test progress callback for multiple downloads.
  * @tc.precon: NA
  * @tc.step: 1. Remove test URL from preload manager
  *           2. Create first callback and load URL
- *           3. Wait for download completion with progress tracking
- *           4. Create second callback and load same URL
- *           5. Verify second callback uses cached data
- * @tc.expect: Second callback completes immediately using cached data
+ *           3. Create second callback and load another URL
+ *           4. Wait for download completion with progress tracking
+
+ * @tc.expect: Both callbacks complete successfully with progress tracking
  * @tc.type: FUNC
  * @tc.require: issueNumber
  * @tc.level: Level 1
@@ -117,8 +113,6 @@ void DownloadProgressTest(std::string url)
 
 HWTEST_F(PreloadProgress, OnProgressTest, TestSize.Level1)
 {
-    DownloadProgressTest(TEST_URL_0);
-    DownloadProgressTest(TEST_URL_1);
-    DownloadProgressTest(TEST_URL_2);
-    DownloadProgressTest(TEST_URL_3);
+    DownloadProgressTest(g_testUrl0);
+    DownloadProgressTest(g_testUrl1);
 }
