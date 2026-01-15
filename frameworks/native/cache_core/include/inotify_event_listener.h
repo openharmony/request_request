@@ -32,6 +32,8 @@ template<typename T> class Box;
 
 namespace OHOS::Request {
 
+static constexpr uint64_t REQUEST_FDSAN_TAG = 0xC01C50;
+
 struct DirRebuilder;
 
 class DirectoryMonitor {
