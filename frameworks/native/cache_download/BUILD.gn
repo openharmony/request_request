@@ -182,6 +182,7 @@ ohos_rust_unittest("rust_cache_download_ut_test") {
     "../../../common/ffrt_rs:ffrt_rs",
     "../../../common/netstack_rs:netstack_rs",
     "../../../common/utils:request_utils",
+    "../../../common/utils:request_application",
     "../cache_core:cache_core",
   ]
   external_deps = [

@@ -68,6 +68,7 @@ ohos_rust_static_library("cache_core") {
     "../../../common/ffrt_rs:ffrt_rs",
     "../../../common/utils:request_utils",
     "../../../common/utils:request_data_ability",
+    "../../../common/utils:request_application",
   ]
 
   external_deps = [
@@ -90,6 +91,7 @@ ohos_rust_unittest("rust_cache_core_ut_test") {
     ":cache_core_cxx",
     "../../../common/ffrt_rs:ffrt_rs",
     "../../../common/utils:request_utils",
+    "../../../common/utils:request_application",
   ]
 
   external_deps = [

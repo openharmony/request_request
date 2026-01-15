@@ -29,26 +29,6 @@
 
 namespace OHOS::Request {
 
-rust::string GetCacheDir()
-{
-    auto context = Context::GetApplicationContext();
-    if (context == nullptr) {
-        return "";
-    } else {
-        return context->GetCacheDir();
-    }
-}
-
-rust::string GetBaseDir()
-{
-    auto context = Context::GetApplicationContext();
-    if (context == nullptr) {
-        return "";
-    } else {
-        return context->GetBaseDir();
-    }
-}
-
 rust::string SHA256(rust::str input)
 {
     unsigned char hash[SHA256_DIGEST_LENGTH];

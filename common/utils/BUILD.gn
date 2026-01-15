@@ -14,6 +14,68 @@
 import("//base/request/request/request_aafwk.gni")
 import("//build/test.gni")
 
+rust_cxx("request_application_cxx_gen") {
+  sources = [
+    "src/application/wrapper.rs"
+  ]
+}
+
+ohos_static_library("request_application_cxx") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "include",
+    "${target_gen_dir}/src",
+  ]
+
+  sources = [
+    "src/cxx/request_utils_application.cpp",
+  ]
+
+  sources += get_target_outputs(":request_application_cxx_gen")
+
+  external_deps = [
+    "ability_runtime:ability_manager",
+    "ability_runtime:ani_base_context",
+    "rust_cxx:cxx_cppdeps",
+    "runtime_core:ani"
+  ]
+  deps = [ ":request_application_cxx_gen" ]
+  subsystem_name = "request"
+  part_name = "request"
+}
+
+ohos_rust_static_library("request_application") {
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  features = [ "ohos" ]
+
+  deps = [ 
+    ":request_application_cxx"
+ ]
+
+  external_deps = [
+    "rust_cxx:lib",
+  ]
+  sources = [ "src/applicationlib.rs" ]
+  subsystem_name = "request"
+  part_name = "request"
+}
+
 rust_cxx("request_data_ability_cxx_gen") {
   sources = [
     "src/dataability/wrapper.rs"
