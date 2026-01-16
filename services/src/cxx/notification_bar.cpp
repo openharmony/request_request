@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <dlfcn.h>
 
 #include "cxx.h"
 #include "image_source.h"
@@ -35,6 +36,8 @@
 
 namespace OHOS::Request {
 using namespace Global;
+
+std::mutex g_requestIntlUtilSoMtx;
 
 static constexpr int32_t REQUEST_SERVICE_ID = 3815;
 
@@ -110,13 +113,51 @@ int UpdateSystemResourceStringMap(std::string &curLanguage)
     return 0;
 }
 
+void DynamicGetSystemLanguage(char* buffer, size_t bufferSize)
+{
+    std::lock_guard<std::mutex> lock(g_requestIntlUtilSoMtx);
+    const char *libApiLanguageTransferPath = "/system/lib64/libdownload_language_transfer.z.so";
+    using GetSystemLanguageFunc = void (*)(char *buffer, size_t bufferSize);
+    static GetSystemLanguageFunc getSystemLanguageFunc = nullptr;
+    static bool initialized = false;
+
+    if (!initialized) {
+        void *handle = dlopen(libApiLanguageTransferPath, RTLD_NOW);
+        if (handle == nullptr) {
+            const char *err = dlerror();
+            REQUEST_HILOGE("libdownload_language_transfer.z.so dlopen failed: %{public}s", err ? err : "unknown");
+            return;
+        }
+
+        getSystemLanguageFunc = reinterpret_cast<GetSystemLanguageFunc>(
+            dlsym(handle, "GetSystemLanguageByIntl"));
+        if (getSystemLanguageFunc == nullptr) {
+            const char *err = dlerror();
+            REQUEST_HILOGE("libdownload_language_transfer.z.so dlsym GetSystemLanguageByIntlwl failed: %{public}s",
+                err ? err : "unknown");
+            dlclose(handle);
+            return;
+        }
+
+        initialized = true;
+    }
+
+    if (getSystemLanguageFunc == nullptr) {
+        return;
+    }
+    getSystemLanguageFunc(buffer, bufferSize);
+}
+
 rust::string GetSystemResourceString(const rust::str name)
 {
     std::lock_guard<std::mutex> lock(g_resourceStringInfo.mtx);
-    auto curLanguage = I18n::LocaleConfig::GetSystemLanguage();
-    if (IsSystemLanguageConsistent(curLanguage.c_str()) != true) {
+    char curLanguage[256] = "zh-Hans";
+
+    DynamicGetSystemLanguage(curLanguage, sizeof(curLanguage));
+    if (IsSystemLanguageConsistent(curLanguage) != true) {
         /* Language change or initialization */
-        int ret = UpdateSystemResourceStringMap(curLanguage);
+        std::string strCurLanguage(curLanguage);
+        int ret = UpdateSystemResourceStringMap(strCurLanguage);
         if (ret != 0) {
             return "";
         }
@@ -127,7 +168,9 @@ rust::string GetSystemResourceString(const rust::str name)
 
 rust::string GetSystemLanguage()
 {
-    return rust::string(I18n::LocaleConfig::GetSystemLanguage().c_str());
+    char curLanguage[256] = "zh-Hans";
+    DynamicGetSystemLanguage(curLanguage, sizeof(curLanguage));
+    return rust::string(curLanguage);
 }
 
 std::shared_ptr<Media::PixelMap> CreatePixelMap()

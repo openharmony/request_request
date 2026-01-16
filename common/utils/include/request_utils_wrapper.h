@@ -31,10 +31,6 @@ using namespace OHOS::AbilityRuntime;
 struct AniEnv;
 struct AniObject;
 
-rust::string GetCacheDir();
-
-rust::string GetBaseDir();
-
 rust::string SHA256(rust::str input);
 
 bool IsStageContext(AniEnv *env, AniObject *obj);

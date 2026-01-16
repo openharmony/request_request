@@ -21,21 +21,7 @@ use ani_rs::objects::AniObject;
 use ani_rs::AniEnv;
 use cxx::SharedPtr;
 
-use super::wrapper::GetCacheDir;
 use crate::wrapper::{self, IsStageContext};
-
-/// Retrieves the application's cache directory path.
-///
-/// Returns `None` if the cache directory is not available or empty.
-#[inline]
-pub fn get_cache_dir() -> Option<String> {
-    let res = GetCacheDir();
-    if res.is_empty() {
-        None
-    } else {
-        Some(res)
-    }
-}
 
 /// Determines whether the provided environment and object represent a stage context.
 ///

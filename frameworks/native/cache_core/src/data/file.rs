@@ -127,7 +127,7 @@ pub fn init_curr_store_dir() {
 /// This function creates the directory if it doesn't exist.
 pub fn get_curr_store_dir() -> PathBuf {
     #[cfg(feature = "ohos")]
-    let mut path = match request_utils::context::get_cache_dir() {
+    let mut path = match request_application::application::wrapper::get_cache_dir() {
         Some(dir) => PathBuf::from_str(&dir).unwrap(),
         None => {
             error!("get cache dir failed");

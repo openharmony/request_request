@@ -594,7 +594,7 @@ fn ut_remove_finished_caches() {
 }
 
 pub fn get_curr_store_dir() -> PathBuf {
-    let mut path = match request_utils::context::get_cache_dir() {
+    let mut path = match request_application::application::wrapper::get_cache_dir() {
         Some(dir) => PathBuf::from_str(&dir).unwrap(),
         None => {
             error!("get cache dir failed");

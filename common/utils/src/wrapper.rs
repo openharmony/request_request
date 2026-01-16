@@ -129,13 +129,6 @@ mod ffi {
         #[namespace = "OHOS::AppExecFwk"]
         type BundleType;
 
-        /// Gets the cache directory path.
-        ///
-        /// Returns the system's cache directory path as a string.
-        fn GetCacheDir() -> String;
-
-        fn GetBaseDir() -> String;
-
         /// Computes the SHA-256 hash of an input string.
         ///
         /// # Parameters
