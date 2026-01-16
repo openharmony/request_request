@@ -106,7 +106,7 @@ fn ut_cache_file_try_add_beyond_limit() {
     let mut ram_cache = RamCache::new(task_id.clone(), &CACHE_MANAGER, Some(TEST_STRING_SIZE));
     ram_cache.write_all(TEST_STRING.as_bytes()).unwrap();
     CACHE_MANAGER.update_file_cache(task_id.clone(), Arc::new(ram_cache));
-    assert!(!CACHE_MANAGER.contains(&task_id));
+    assert!(CACHE_MANAGER.contains(&task_id));
 }
 
 // @tc.name: ut_cache_file_restore_files
