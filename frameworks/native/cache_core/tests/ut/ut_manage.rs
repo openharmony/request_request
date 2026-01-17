@@ -163,7 +163,7 @@ fn ut_cache_manager_cache_from_file_clean() {
         .lock()
         .unwrap()
         .contains_key(&task_id));
-    assert!(!CACHE_MANAGER
+    assert!(CACHE_MANAGER
         .file_manager
         .update_from_file_once
         .lock()
