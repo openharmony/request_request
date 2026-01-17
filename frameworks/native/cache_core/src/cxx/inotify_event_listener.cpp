@@ -106,6 +106,7 @@ int DirectoryMonitor::SetupInotify()
         return ret;
     }
     inotify_fd_ = ret;
+    fdsan_exchange_owner_tag(inotify_fd_, 0, REQUEST_FDSAN_TAG);
     // Add watch for directory deletion/move events
     ret = inotify_add_watch(inotify_fd_, directory_.c_str(), IN_DELETE_SELF | IN_MOVE_SELF);
     if (ret == -1) {
@@ -129,6 +130,7 @@ int DirectoryMonitor::SetupEpoll()
         return ret;
     }
     epoll_fd_ = ret;
+    fdsan_exchange_owner_tag(epoll_fd_, 0, REQUEST_FDSAN_TAG);
     // Add inotify fd to epoll for read events
     ret = AddToEpoll(inotify_fd_, EPOLLIN);
     if (ret == -1) {
@@ -234,11 +236,11 @@ void DirectoryMonitor::Cleanup()
     }
     // Close inotify file descriptor if it was opened
     if (inotify_fd_ != -1) {
-        close(inotify_fd_);
+        fdsan_close_with_tag(inotify_fd_, REQUEST_FDSAN_TAG);
     }
     // Close epoll file descriptor if it was opened
     if (epoll_fd_ != -1) {
-        close(epoll_fd_);
+        fdsan_close_with_tag(epoll_fd_, REQUEST_FDSAN_TAG);
     }
     // Reset all descriptors to invalid state
     inotify_fd_ = -1;
