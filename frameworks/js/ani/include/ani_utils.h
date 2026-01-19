@@ -363,7 +363,7 @@ inline expected<double, ani_status> OptionalAccessor::Convert<double>()
     }
 
     ani_double aniValue;
-    auto ret = env_->Object_CallMethodByName_Double(obj_, "doubleValue", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Double(obj_, "toDouble", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return ret;
     }
