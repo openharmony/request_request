@@ -20,6 +20,7 @@
 // Standard library imports for thread safety and collections
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, Once, OnceLock};
 
 // External dependencies
@@ -79,6 +80,7 @@ pub struct CacheDownloadService {
     info_mgr: Arc<DownloadInfoMgr>,
     /// Registrar for network state observation and notifications.
     net_registrar: NetRegistrar,
+    restore_finished: Arc<AtomicBool>,
 }
 
 /// Builder-style request for configuring downloads.
@@ -173,6 +175,7 @@ impl CacheDownloadService {
             cache_manager: CacheManager::new(),
             info_mgr: Arc::new(DownloadInfoMgr::new()),
             net_registrar: NetRegistrar::new(),
+            restore_finished: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -201,6 +204,9 @@ impl CacheDownloadService {
             crate::spawn(|| {
                 // Restore cached files from previous sessions
                 cache_download.cache_manager.build_cached_files_index();
+                cache_download
+                    .restore_finished
+                    .store(true, Ordering::SeqCst);
             });
             // Register network observer to monitor connectivity changes
             cache_download.net_registrar.add_observer(NetObserver);
@@ -282,13 +288,11 @@ impl CacheDownloadService {
 
         // Try to fetch from cache first if not updating
         if !update {
-            if let Err(ret) = self.fetch_with_callback(&task_id, callback) {
-                callback = ret;
-            } else {
-                info!("{} fetch success", task_id.brief());
-                let handle = TaskHandle::new(task_id);
-                handle.set_completed();
-                return Some(handle);
+            match self.callback_from_local_file(&task_id, callback) {
+                CallbackResult::Completed(handle) => return Some(handle),
+                CallbackResult::Failed(cb) => {
+                    callback = cb;
+                }
             }
         }
 
@@ -480,6 +484,69 @@ impl CacheDownloadService {
             Err(callback)
         }
     }
+
+    fn callback_from_local_file(
+        &'static self,
+        task_id: &TaskId,
+        mut callback: Box<dyn PreloadCallback>,
+    ) -> CallbackResult {
+        if !self.restore_finished.load(Ordering::SeqCst) {
+            match self.fetch_with_callback(task_id, callback) {
+                Ok(()) => {
+                    info!("{} fetch success", task_id.brief());
+                    return complete_callback(task_id);
+                }
+                Err(ret) => {
+                    callback = ret;
+                }
+            }
+            match self.read_local_file_with_callback(task_id.clone(), callback) {
+                Ok(()) => {
+                    info!("{} read local success", task_id.brief());
+                    return complete_callback(task_id);
+                }
+                Err(ret) => {
+                    callback = ret;
+                }
+            }
+        } else {
+            match self.fetch_with_callback(task_id, callback) {
+                Ok(()) => {
+                    info!("{} fetch success", task_id.brief());
+                    return complete_callback(task_id);
+                }
+                Err(ret) => {
+                    callback = ret;
+                }
+            }
+        }
+        CallbackResult::Failed(callback)
+    }
+
+    fn read_local_file_with_callback(
+        &'static self,
+        task_id: TaskId,
+        mut callback: Box<dyn PreloadCallback>,
+    ) -> Result<(), Box<dyn PreloadCallback>> {
+        if let Some(cache) = self.cache_manager.read_task_local_file(&task_id) {
+            // Spawn callback in a separate thread to avoid blocking
+            crate::spawn(move || callback.on_success(Arc::new(cache), task_id.brief()));
+            Ok(())
+        } else {
+            Err(callback)
+        }
+    }
+}
+
+fn complete_callback(task_id: &TaskId) -> CallbackResult {
+    let handle = TaskHandle::new(task_id.clone());
+    handle.set_completed();
+    CallbackResult::Completed(handle)
+}
+
+enum CallbackResult {
+    Completed(TaskHandle),
+    Failed(Box<dyn PreloadCallback>),
 }
 
 #[cfg(test)]

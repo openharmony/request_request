@@ -469,17 +469,33 @@ impl FileCache {
 
     pub(crate) fn read(task_id: &TaskId, handle: &'static CacheManager) -> io::Result<RamCache> {
         let mut file = Self::open(task_id).map_err(|e| {
-            error!("task {:?} open file failed {:?}", task_id.brief(), e);
+            error!("{:?} open file failed {:?}", task_id.brief(), e);
             e
         })?;
         let size = file.metadata()?.size();
-        let mut cache = RamCache::new(task_id.clone(), handle, Some(size as usize));
-        io::copy(&mut file, &mut cache).map_err(|e| {
-            error!(
-                "task {:?} copy file to cache failed {:?}",
-                task_id.brief(),
-                e
-            );
+        FileCache::copy_file_to_cache(task_id, handle, &mut file, Some(size as usize))
+    }
+
+    pub(crate) fn read_but_not_cache(
+        task_id: &TaskId,
+        handle: &'static CacheManager,
+    ) -> io::Result<RamCache> {
+        let mut file = Self::open(task_id).map_err(|e| {
+            error!("{:?} file open failed {:?}", task_id.brief(), e);
+            e
+        })?;
+        FileCache::copy_file_to_cache(task_id, handle, &mut file, None)
+    }
+
+    fn copy_file_to_cache(
+        task_id: &TaskId,
+        handle: &'static CacheManager,
+        file: &mut File,
+        size: Option<usize>,
+    ) -> io::Result<RamCache> {
+        let mut cache = RamCache::new(task_id.clone(), handle, size);
+        io::copy(file, &mut cache).map_err(|e| {
+            error!("{:?} copy file failed {:?}", task_id.brief(), e);
             e
         })?;
         Ok(cache)

@@ -637,6 +637,10 @@ impl CacheManager {
         self.file_manager.clear_file_cache(running_tasks);
     }
 
+    pub fn read_task_local_file(&'static self, task_id: &TaskId) -> Option<RamCache> {
+        FileCache::read_but_not_cache(task_id, self).ok()
+    }
+
     pub(super) fn update_file_cache(&'static self, task_id: TaskId, cache: Arc<RamCache>) {
         self.file_manager.update_file_cache(task_id, cache);
     }
