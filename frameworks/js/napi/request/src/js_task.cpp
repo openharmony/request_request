@@ -261,11 +261,10 @@ void JsTask::AddRemoveListener(const std::shared_ptr<ContextInfo> &context)
 {
     std::string tid = context->tid;
     context->task->listenerMutex_.lock();
-    context->task->notifyDataListenerMap_[SubscribeType::REMOVE] =
-        std::make_shared<JSNotifyDataListener>(context->env_, tid, SubscribeType::REMOVE);
+    auto listener = std::make_shared<JSNotifyDataListener>(context->env_, tid, SubscribeType::REMOVE);
+    context->task->notifyDataListenerMap_[SubscribeType::REMOVE] = listener;
     context->task->listenerMutex_.unlock();
-    RequestManager::GetInstance()->AddListener(
-        tid, SubscribeType::REMOVE, context->task->notifyDataListenerMap_[SubscribeType::REMOVE]);
+    RequestManager::GetInstance()->AddListener(tid, SubscribeType::REMOVE, listener);
 }
 
 napi_value JsTask::GetCtor(napi_env env, Version version)
@@ -302,8 +301,8 @@ napi_value JsTask::GetCtorV9(napi_env env)
     std::lock_guard<std::mutex> lock(requestFileMutex_);
     napi_value cons;
     if (requestFileCtor != nullptr) {
-        REQUEST_NAPI_CALL(env, napi_get_reference_value(env, requestFileCtor, &cons),
-            "napi_get_reference_value failed");
+        REQUEST_NAPI_CALL(
+            env, napi_get_reference_value(env, requestFileCtor, &cons), "napi_get_reference_value failed");
         return cons;
     }
     size_t count = sizeof(clzDesV9) / sizeof(napi_property_descriptor);
@@ -364,8 +363,8 @@ napi_value JsTask::GetTaskCtor(napi_env env)
     std::lock_guard<std::mutex> lock(getTaskCreateMutex_);
     napi_value cons;
     if (getTaskCreateCtor != nullptr) {
-        REQUEST_NAPI_CALL(env, napi_get_reference_value(env, getTaskCreateCtor, &cons),
-            "napi_get_reference_value failed");
+        REQUEST_NAPI_CALL(
+            env, napi_get_reference_value(env, getTaskCreateCtor, &cons), "napi_get_reference_value failed");
         return cons;
     }
     size_t count = sizeof(clzDes) / sizeof(napi_property_descriptor);
@@ -1132,11 +1131,14 @@ void JsTask::RemoveTaskContext(const std::string &tid)
     }
     auto context = it->second;
 
-    auto map = context->task->notifyDataListenerMap_;
-    for (auto i = map.begin(); i != map.end(); i++) {
-        i->second->DeleteAllListenerRef();
+    {
+        std::lock_guard<std::mutex> listenerLockGuard(context->task->listenerMutex_);
+        auto map = context->task->notifyDataListenerMap_;
+        for (auto i = map.begin(); i != map.end(); i++) {
+            i->second->DeleteAllListenerRef();
+        }
+        map.clear();
     }
-    map.clear();
     taskContextMap_.erase(it);
     if (taskContextMap_.empty()) {
         JsTask::UnsubscribeSA();

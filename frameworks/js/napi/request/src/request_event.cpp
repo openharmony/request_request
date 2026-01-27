@@ -213,13 +213,16 @@ napi_value RequestEvent::On(napi_env env, napi_callback_info info)
         }
     } else {
         jsParam.task->listenerMutex_.lock();
-        auto listener = jsParam.task->notifyDataListenerMap_.find(jsParam.subscribeType);
-        if (listener == jsParam.task->notifyDataListenerMap_.end()) {
-            jsParam.task->notifyDataListenerMap_[jsParam.subscribeType] =
-                std::make_shared<JSNotifyDataListener>(env, jsParam.task->GetTid(), jsParam.subscribeType);
+        auto it = jsParam.task->notifyDataListenerMap_.find(jsParam.subscribeType);
+        if (it == jsParam.task->notifyDataListenerMap_.end()) {
+            it = jsParam.task->notifyDataListenerMap_
+                     .emplace(jsParam.subscribeType,
+                         std::make_shared<JSNotifyDataListener>(env, jsParam.task->GetTid(), jsParam.subscribeType))
+                     .first;
         }
+        auto listener = it->second;
         jsParam.task->listenerMutex_.unlock();
-        napi_status ret = jsParam.task->notifyDataListenerMap_[jsParam.subscribeType]->AddListener(jsParam.callback);
+        napi_status ret = listener->AddListener(jsParam.callback);
         if (ret != napi_ok) {
             REQUEST_HILOGE("End task on, seq: %{public}d, failed: AddListener fail code %{public}d", seq, ret);
             return nullptr;
@@ -256,13 +259,16 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
         }
     } else {
         jsParam.task->listenerMutex_.lock();
-        auto listener = jsParam.task->notifyDataListenerMap_.find(jsParam.subscribeType);
-        if (listener == jsParam.task->notifyDataListenerMap_.end()) {
-            jsParam.task->notifyDataListenerMap_[jsParam.subscribeType] =
-                std::make_shared<JSNotifyDataListener>(env, jsParam.task->GetTid(), jsParam.subscribeType);
+        auto it = jsParam.task->notifyDataListenerMap_.find(jsParam.subscribeType);
+        if (it == jsParam.task->notifyDataListenerMap_.end()) {
+            it = jsParam.task->notifyDataListenerMap_
+                     .emplace(jsParam.subscribeType,
+                         std::make_shared<JSNotifyDataListener>(env, jsParam.task->GetTid(), jsParam.subscribeType))
+                     .first;
         }
+        auto listener = it->second;
         jsParam.task->listenerMutex_.unlock();
-        napi_status ret = jsParam.task->notifyDataListenerMap_[jsParam.subscribeType]->RemoveListener(jsParam.callback);
+        napi_status ret = listener->RemoveListener(jsParam.callback);
         if (ret != napi_ok) {
             REQUEST_HILOGE("End task off, seq: %{public}d, failed: RemoveListener fail code %{public}d", seq, ret);
             return nullptr;
@@ -433,8 +439,7 @@ napi_status RequestEvent::ParseInputParameters(
     REQUEST_NAPI_ASSERT_BASE(env, self != nullptr, E_OTHER, "self is nullptr", napi_invalid_arg);
     REQUEST_NAPI_CALL_RETURN(env, napi_unwrap(env, self, reinterpret_cast<void **>(&context->task)),
         "napi_unwrap failed", napi_invalid_arg);
-    REQUEST_NAPI_ASSERT_BASE(env, context->task != nullptr,
-        E_OTHER, "there is no native task", napi_invalid_arg);
+    REQUEST_NAPI_ASSERT_BASE(env, context->task != nullptr, E_OTHER, "there is no native task", napi_invalid_arg);
     context->version_ = context->task->config_.version;
     context->withErrCode_ = context->version_ != Version::API8;
     return napi_ok;
