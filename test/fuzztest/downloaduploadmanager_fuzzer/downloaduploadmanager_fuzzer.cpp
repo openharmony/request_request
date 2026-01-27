@@ -391,11 +391,12 @@ void ShowRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void TouchRequestFuzzTest(const uint8_t *data, size_t size)
+void TouchRequestFuzzTest(FuzzedDataProvider &provider)
 {
     TaskInfo info;
-    std::string tid(reinterpret_cast<const char *>(data), size);
-    std::string token(data, data + size);
+
+    std::string tid = provider.ConsumeRandomLengthString();
+    std::string token = provider.ConsumeRandomLengthString();
     GrantNativePermission();
     RequestManager::GetInstance()->Touch(tid, token, info);
 }
@@ -452,10 +453,10 @@ void PauseRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void QueryMimeTypeRequestFuzzTest(const uint8_t *data, size_t size)
+void QueryMimeTypeRequestFuzzTest(FuzzedDataProvider &provider)
 {
-    std::string tid(reinterpret_cast<const char *>(data), size);
-    std::string mimeType(data, data + size);
+    std::string tid = provider.ConsumeRandomLengthString();
+    std::string mimeType = provider.ConsumeRandomLengthString();
     GrantNativePermission();
     RequestManager::GetInstance()->QueryMimeType(tid, mimeType);
 }
@@ -508,11 +509,13 @@ void ResumeRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void GetTaskRequestFuzzTest(const uint8_t *data, size_t size)
+void GetTaskRequestFuzzTest(FuzzedDataProvider &provider)
 {
     Config config;
-    std::string tid(reinterpret_cast<const char *>(data), size);
-    std::string token(reinterpret_cast<const char *>(data), size);
+
+    std::string tid = provider.ConsumeRandomLengthString();
+    std::string token = provider.ConsumeRandomLengthString();
+
     GrantNativePermission();
     RequestManager::GetInstance()->GetTask(tid, token, config);
 }
@@ -1889,13 +1892,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::StartRequestFuzzTest(data, size);
     OHOS::StopRequestFuzzTest(data, size);
     OHOS::ShowRequestFuzzTest(data, size);
-    OHOS::TouchRequestFuzzTest(data, size);
     OHOS::SearchRequestFuzzTest(data, size);
     OHOS::PauseRequestFuzzTest(data, size);
-    OHOS::QueryMimeTypeRequestFuzzTest(data, size);
     OHOS::RemoveRequestFuzzTest(data, size);
     OHOS::ResumeRequestFuzzTest(data, size);
-    OHOS::GetTaskRequestFuzzTest(data, size);
     OHOS::SubscribeRequestFuzzTest(data, size);
     OHOS::UnsubscribeRequestFuzzTest(data, size);
     OHOS::RestoreListenerRequestFuzzTest(data, size);
@@ -1937,5 +1937,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::ResponseMessageFuzzTestNotifyDataFromParcel(data, size);
     FuzzedDataProvider provider(data, size);
     OHOS::RequestManagerFuzzTest(provider);
+    OHOS::GetTaskRequestFuzzTest(provider);
+    OHOS::QueryMimeTypeRequestFuzzTest(provider);
+    OHOS::TouchRequestFuzzTest(provider);
     return 0;
 }
