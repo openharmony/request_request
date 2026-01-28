@@ -72,6 +72,14 @@ private:
     napi_ref fail_ = nullptr;
     napi_ref complete_ = nullptr;
     napi_env env_ = nullptr;
+    static bool CreateNapiScope(napi_env env, napi_handle_scope &scope);
+    static void CloseNapiScope(napi_env env, napi_handle_scope &scope);
+    static bool CallNoParamCallback(napi_env env, napi_ref ref);
+    static bool CallSingleParamCallback(napi_env env, napi_ref ref, napi_value param);
+    static bool CallDoubleParamCallback(napi_env env, napi_ref ref, napi_value param1, napi_value param2);
+    static bool CallCallbackWithParam(napi_env env, napi_ref ref, size_t paramCount, napi_value *params);
+    static bool CreateFailJsParams(
+        napi_env env, const std::string &data, int32_t code, napi_value &jsData, napi_value &jsCode);
 };
 } // namespace OHOS::Request::Upload
 
