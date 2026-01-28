@@ -621,7 +621,12 @@ ExceptionError CJInitialize::UploadBodyFileProc(std::string &fileName, Config &c
     }
 
     chmod(fileName.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-    fclose(filePtr);
+    int32_t retClose = fclose(filePtr);
+    if (retClose != 0) {
+        err.code = ExceptionErrorCode::E_FILE_IO;
+        err.errInfo = "Failed to close file errno " + std::to_string(errno);
+        return err;
+    }
     filePtr = nullptr;
     config.bodyFileNames.push_back(fileName);
 
