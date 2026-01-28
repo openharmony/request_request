@@ -620,11 +620,9 @@ ExceptionError CJInitialize::UploadBodyFileProc(std::string &fileName, Config &c
         }
     }
 
-    if (filePtr != nullptr) {
-        chmod(fileName.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-        fclose(filePtr);
-        filePtr = nullptr;
-    }
+    chmod(fileName.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    fclose(filePtr);
+    filePtr = nullptr;
     config.bodyFileNames.push_back(fileName);
 
     return err;
