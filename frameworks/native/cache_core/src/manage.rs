@@ -313,6 +313,10 @@ impl FileManager {
             drop(cache);
             execute_file_remove(task, &notify);
         }
+        self.update_from_file_once
+            .lock()
+            .unwrap()
+            .remove(info.task_id());
         success
     }
 

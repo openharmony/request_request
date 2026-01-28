@@ -18,8 +18,8 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
-use std::thread;
 use std::time::Duration;
+use std::{fs, thread};
 
 use request_utils;
 use request_utils::test::log::init;
@@ -529,9 +529,11 @@ fn ut_remove_ram_cache() {
     }
     let cache = CacheDownloadService::get_instance().fetch(test_url.as_ref());
     assert!(cache.is_some());
+    drop(cache);
     CacheDownloadService::get_instance().clear_memory_cache();
     let cache = CacheDownloadService::get_instance().fetch(test_url.as_ref());
     assert!(cache.is_some());
+    drop(cache);
     CacheDownloadService::get_instance().clear_memory_cache();
     CacheDownloadService::get_instance().clear_file_cache();
     let cache = CacheDownloadService::get_instance().fetch(test_url.as_ref());
@@ -591,6 +593,48 @@ fn ut_remove_finished_caches() {
     assert!(cache.is_none());
     let cache = CacheDownloadService::get_instance().fetch(TEST_VIDEO_URL);
     assert!(cache.is_some());
+}
+
+// @tc.name: ut_download_fetch_after_init
+// @tc.desc: Test fetching cached data after service initialization
+// @tc.precon: NA
+// @tc.step: 1. Manually create a finished cache file in the store directory
+//           2. Initialize CacheDownloadService
+//           3. Call fetch method with the URL corresponding to the cache file
+// @tc.expect: Cached data is returned successfully after initial fetch attempt
+// @tc.type: FUNC
+// @tc.require: issue#1643
+// @tc.level: level1
+#[test]
+fn ut_download_fetch_after_init() {
+    const SELF_CREATE_URL: &str = "http://www.file.not.exists.com";
+
+    let path = get_curr_store_dir();
+    let res = fs::create_dir_all(&path);
+    assert!(res.is_ok());
+
+    let task_id = TaskId::from_url(SELF_CREATE_URL);
+    let file_name = format!("{}{}", task_id, FINISH_SUFFIX);
+    let file_path = path.join(file_name);
+
+    let res = fs::write(file_path, "hello");
+    assert!(res.is_ok());
+
+    let first_ram = CacheDownloadService::get_instance().fetch(SELF_CREATE_URL);
+    if let Some(ram) = first_ram {
+        let data = ram.cursor().into_inner();
+        assert_eq!(data, b"hello");
+    } else {
+        // Wait for the file cache to be restored.
+        thread::sleep(Duration::from_millis(100));
+        let ram = CacheDownloadService::get_instance().fetch(SELF_CREATE_URL);
+        assert!(ram.is_some());
+
+        let ram = ram.unwrap();
+        let data = ram.cursor().into_inner();
+        assert_eq!(data, b"hello");
+    }
+    CacheDownloadService::get_instance().remove(SELF_CREATE_URL);
 }
 
 pub fn get_curr_store_dir() -> PathBuf {
