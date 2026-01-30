@@ -610,19 +610,22 @@ bool CJInitialize::WholeToNormal(std::string &path, std::vector<std::string> &ou
 ExceptionError CJInitialize::UploadBodyFileProc(std::string &fileName, Config &config)
 {
     ExceptionError err;
-    int32_t bodyFd = open(fileName.c_str(), O_TRUNC | O_RDWR);
-    if (bodyFd < 0) {
-        bodyFd = open(fileName.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
-        if (bodyFd < 0) {
+    FILE* filePtr = fopen(fileName.c_str(), "r+");
+    if (filePtr == nullptr) {
+        filePtr = fopen(fileName.c_str(), "w+");
+        if (filePtr == nullptr) {
             err.code = ExceptionErrorCode::E_FILE_IO;
             err.errInfo = "Failed to open file errno " + std::to_string(errno);
             return err;
         }
     }
 
-    if (bodyFd >= 0) {
-        chmod(fileName.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-        close(bodyFd);
+    chmod(fileName.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    int32_t retClose = fclose(filePtr);
+    if (retClose != 0) {
+        err.code = ExceptionErrorCode::E_FILE_IO;
+        err.errInfo = "Failed to close file errno " + std::to_string(errno);
+        return err;
     }
     config.bodyFileNames.push_back(fileName);
 
