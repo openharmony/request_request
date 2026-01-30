@@ -627,7 +627,6 @@ ExceptionError CJInitialize::UploadBodyFileProc(std::string &fileName, Config &c
         err.errInfo = "Failed to close file errno " + std::to_string(errno);
         return err;
     }
-    filePtr = nullptr;
     config.bodyFileNames.push_back(fileName);
 
     return err;
@@ -720,27 +719,27 @@ bool CJInitialize::InterceptData(const std::string &str, const std::string &in, 
 ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config, int32_t &fd)
 {
     ExceptionError err;
-    FILE* filePtr = config.action == Action::UPLOAD ? fopen(path.c_str(), "r") : fopen(path.c_str(), "w+");
-    if (filePtr != nullptr) {
+    fd = config.action == Action::UPLOAD ? open(path.c_str(), O_RDONLY) : open(path.c_str(), O_TRUNC | O_RDWR);
+    if (fd >= 0) {
         REQUEST_HILOGD("File already exists");
         if (config.action == Action::UPLOAD) {
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-            fclose(filePtr);
+            close(fd);
             return err;
         } else {
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
         }
 
         if (config.overwrite) {
-            fclose(filePtr);
+            close(fd);
             return err;
         }
         if (!config.firstInit) {
             REQUEST_HILOGD("CJRequestTask config is not firstInit");
-            fclose(filePtr);
+            close(fd);
             return err;
         }
-        fclose(filePtr);
+        close(fd);
         err.code = ExceptionErrorCode::E_FILE_IO;
         err.errInfo = "Download File already exists";
         return err;
@@ -751,14 +750,14 @@ ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config
             err.errInfo = "Failed to open file errno " + std::to_string(errno);
             return err;
         }
-        filePtr = fopen(path.c_str(), "w+");
-        if (filePtr == nullptr) {
+        fd = open(path.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
+        if (fd < 0) {
             err.code = ExceptionErrorCode::E_FILE_IO;
             err.errInfo = "Failed to open file errno " + std::to_string(errno);
             return err;
         }
         chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-        fclose(filePtr);
+        close(fd);
     }
     return err;
 }
