@@ -110,8 +110,9 @@ ohos_static_library("download_server_cxx") {
 
   defines = []
 
-  if (target_platform == "watch") {
-    defines += [ "REQUEST_DEVICE_WATCH" ]
+  if (target_platform == "watch" ||
+    target_platform == "glasses") {
+    defines += [ "REQUEST_ENABLE_SETNET" ]
   }
 
   if (request_telephony_core_service && request_telephony_cellular_data) {
