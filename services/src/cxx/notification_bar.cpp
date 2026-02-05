@@ -33,6 +33,12 @@
 #include "task/config.rs.h"
 
 #include "want_agent_helper.h"
+#include "sys_event.h"
+#include "system_ability_definition.h"
+#include "iservice_registry.h"
+#include "app_mgr_interface.h"
+#include "init_param.h"
+#include "parameters.h"
 
 namespace OHOS::Request {
 using namespace Global;
@@ -49,6 +55,9 @@ static constexpr int32_t REQUEST_STYLE_SIMPLE = 8;
 // static constexpr size_t PLACEHOLDER_LENGTH = 2;
 
 static const std::string CLOSE_ICON_PATH = "/etc/request/xmark.svg";
+static const std::string CLOSE_ICON_PATH_DARK = "/etc/request/xmark_dark.svg";
+
+constexpr const char* SYSTEM_COLORMODE = "persist.ace.darkmode";
 
 const std::vector<std::string> RESOURCE_STRING_KEYS = {
     "request_agent_download_file",
@@ -175,26 +184,91 @@ rust::string GetSystemLanguage()
 
 std::shared_ptr<Media::PixelMap> CreatePixelMap()
 {
-    static std::shared_ptr<Media::PixelMap> pixelMap = nullptr;
-    static std::once_flag flag;
+    static std::shared_ptr<Media::PixelMap> cachedPixelMap = nullptr;
+    static std::mutex updateMutex;
+    static std::string cachedColorMode;
+    
+    auto currentColorMode = GetCurrentSystemColorMode();
+    if (cachedPixelMap != nullptr && cachedColorMode == currentColorMode) {
+        return cachedPixelMap;
+    }
+    
+    std::unique_lock<std::mutex> lock(updateMutex);
+    if (cachedPixelMap != nullptr && cachedColorMode == currentColorMode) {
+        return cachedPixelMap;
+    }
+    
+    auto newPixelMap = CreatePixelMapByColorMode(currentColorMode);
+    if (newPixelMap != nullptr) {
+        cachedPixelMap = newPixelMap;
+        cachedColorMode = currentColorMode;
+    }
+    
+    return cachedPixelMap;
+}
 
-    std::call_once(flag, []() {
-        uint32_t errorCode = 0;
-        Media::SourceOptions opts;
-        auto source = Media::ImageSource::CreateImageSource(CLOSE_ICON_PATH, opts, errorCode);
-        if (source == nullptr) {
-            REQUEST_HILOGE("create image source failed");
-            return;
-        }
-        Media::DecodeOptions decodeOpts;
-        std::unique_ptr<Media::PixelMap> pixel = source->CreatePixelMap(decodeOpts, errorCode);
-        if (pixel == nullptr) {
-            REQUEST_HILOGE("create pixel map failed");
-            return;
-        }
-        pixelMap = std::move(pixel);
-    });
-    return pixelMap;
+std::string GetCurrentSystemColorMode()
+{
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityManager == nullptr) {
+        REQUEST_HILOGE("get SystemAbilityManager failed.");
+        SysEventLog::SendSysEventLog(FAULT_EVENT, SAMGR_FAULT_00, "get SAM failed");
+        return "";
+    }
+    
+    auto systemAbility = systemAbilityManager->GetSystemAbility(APP_MGR_SERVICE_ID);
+    if (systemAbility == nullptr) {
+        REQUEST_HILOGE("get SystemAbility failed.");
+        return "";
+    }
+    
+    AppExecFwk::Configuration config;
+    sptr<AppExecFwk::IAppMgr> appObject = iface_cast<AppExecFwk::IAppMgr>(systemAbility);
+    if (appObject == nullptr) {
+        REQUEST_HILOGE("get appObject failed.");
+        return "";
+    }
+    
+    int ret = appObject->GetConfiguration(config);
+    if (ret != ERR_OK) {
+        REQUEST_HILOGE("get configuration failed, ret = %{public}d", ret);
+    }
+    
+    return config.GetItem(OHOS::AAFwk::GlobalConfigurationKey::SYSTEM_COLORMODE);
+}
+
+std::shared_ptr<Media::PixelMap> CreatePixelMapByColorMode(const std::string& colorMode)
+{
+    const char* iconPath = GetIconPathByColorMode(colorMode);
+    if (iconPath == nullptr) {
+        REQUEST_HILOGE("iconPath is null for color mode: %{public}s", colorMode.c_str());
+        return nullptr;
+    }
+    
+    Media::SourceOptions opts;
+    uint32_t errorCode = 0;
+    
+    auto source = Media::ImageSource::CreateImageSource(iconPath, opts, errorCode);
+    if (source == nullptr) {
+        REQUEST_HILOGE("create image source failed for path: %{public}s", iconPath);
+        return nullptr;
+    }
+    
+    Media::DecodeOptions decodeOpts;
+    std::unique_ptr<Media::PixelMap> pixel = source->CreatePixelMap(decodeOpts, errorCode);
+    if (pixel == nullptr) {
+        REQUEST_HILOGE("create pixel map failed, error: %{public}u", errorCode);
+        return nullptr;
+    }
+    
+    return std::move(pixel);
+}
+
+const char* GetIconPathByColorMode(const std::string& colorMode)
+{
+    return (colorMode == AppExecFwk::ConfigurationInner::COLOR_MODE_DARK)
+           ? CLOSE_ICON_PATH_DARK.c_str()
+           : CLOSE_ICON_PATH.c_str();
 }
 
 void BasicRequestSettings(Notification::NotificationRequest &request, int32_t uid)
@@ -269,7 +343,10 @@ int PublishNotification(const NotifyContent &content)
 NotificationSubscriber::NotificationSubscriber(rust::Box<TaskManagerWrapper> taskManager)
     : _taskManager(std::move(taskManager)){};
 
-void NotificationSubscriber::OnConnected(){};
+void NotificationSubscriber::OnConnected()
+{
+    RegisterSystemParameterListener();
+};
 void NotificationSubscriber::OnDisconnected(){};
 void NotificationSubscriber::OnDied(){};
 void NotificationSubscriber::OnResponse(
@@ -289,10 +366,76 @@ void NotificationSubscriber::OnResponse(
     }
 };
 
+void NotificationSubscriber::RegisterSystemParameterListener()
+{
+    REQUEST_HILOGI("register system parameter modify lister");
+    auto colorModeResult = SystemWatchParameter(SYSTEM_COLORMODE, ChangeColorModeCallback, nullptr);
+    if (colorModeResult != ERR_OK) {
+        REQUEST_HILOGE("register color mode listener fail:%{public}d", colorModeResult);
+    }
+};
+
+void NotificationSubscriber::ChangeColorModeCallback(const char *key, const char *value, void *context)
+{
+    REQUEST_HILOGI("Color mode changed");
+    RepublishProgressNotify();
+}
+
 void SubscribeNotification(rust::Box<TaskManagerWrapper> taskManager)
 {
     static auto subscriber = std::make_unique<NotificationSubscriber>(std::move(taskManager));
     Notification::NotificationHelper::SubscribeLocalLiveViewNotification(*subscriber);
+}
+
+void RepublishProgressNotify()
+{
+    std::vector<sptr<Notification::NotificationRequest>> notificationRequests;
+    ErrCode ret = Notification::NotificationHelper::GetActiveNotifications(notificationRequests);
+    if (ret != ERR_OK) {
+        REQUEST_HILOGE("get all active notification fail!");
+        return;
+    }
+    for (const auto& notificationRequest : notificationRequests) {
+        if (notificationRequest == nullptr) {
+            continue;
+        }
+        int32_t notificationId = notificationRequest->GetNotificationId();
+
+        if (notificationRequest->GetCreatorUid() != REQUEST_SERVICE_ID ||
+            notificationRequest->GetSlotType() != Notification::NotificationConstant::SlotType::LIVE_VIEW) {
+            continue;
+        }
+        
+        auto content = notificationRequest->GetContent();
+        if (content == nullptr) {
+            REQUEST_HILOGE("Notification content is null for id: %{public}d", notificationId);
+            continue;
+        }
+
+        auto const &normalContent = content->GetNotificationContent();
+        
+        auto liveViewContent = std::static_pointer_cast<Notification::NotificationLocalLiveViewContent>(normalContent);
+        if (liveViewContent == nullptr) {
+            REQUEST_HILOGE("Failed to cast to LiveViewContent for id: %{public}d", notificationId);
+            continue;
+        }
+        
+        auto icon = CreatePixelMap();
+        if (icon != nullptr) {
+            auto button = liveViewContent->GetButton();
+            if (button.GetAllButtonNames().empty() || button.GetAllButtonIcons().empty()) {
+                continue;
+            }
+            REQUEST_HILOGI("Re-publishing notification for id: %{public}d", notificationId);
+            button.ClearButtonIcons();
+            button.addSingleButtonName("cancel");
+            button.addSingleButtonIcon(icon);
+            liveViewContent->SetButton(button);
+        }
+        
+        notificationRequest->SetContent(std::make_shared<Notification::NotificationContent>(liveViewContent));
+        Notification::NotificationHelper::PublishContinuousTaskNotification(*notificationRequest);
+    }
 }
 
 } // namespace OHOS::Request

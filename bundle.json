@@ -84,7 +84,9 @@
           "//base/request/request/etc/init:downloadservice.cfg",
           "//base/request/request/etc/sa_profile:download_sa_profiles",
           "//base/request/request/services:download_server",
-          "//base/request/request/services:download_language_transfer"
+          "//base/request/request/services:download_language_transfer",
+          "//base/request/request/etc/icon:request.para.dac",
+          "//base/request/request/etc/icon:request.para"
         ]
       },
       "inner_kits": [
