@@ -19,3 +19,24 @@ ohos_prebuilt_etc("request_notificaton_xmark_icon") {
   subsystem_name = "request"
   relative_install_dir = "request"
 }
+
+ohos_prebuilt_etc("request_notificaton_xmark_icon_dark") {
+  source = "svg/xmark_dark.svg"
+  part_name = "request"
+  subsystem_name = "request"
+  relative_install_dir = "request"
+}
+
+ohos_prebuilt_etc("request.para.dac") {
+  source = "request.para.dac"
+  part_name = "request"
+  subsystem_name = "request"
+  module_install_dir = "etc/param"
+}
+
+ohos_prebuilt_etc("request.para") {
+  source = "request.para"
+  part_name = "request"
+  subsystem_name = "request"
+  module_install_dir = "etc/param"
+}

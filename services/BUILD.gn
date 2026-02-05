@@ -100,12 +100,14 @@ ohos_static_library("download_server_cxx") {
     "samgr:samgr_proxy",
     "ylong_runtime:ylong_runtime",
     "ability_runtime:wantagent_innerkits",
+    "init:libbeget_proxy",
   ]
 
   deps = [
     ":download_server_cxx_gen",
     "../common/sys_event:request_sysevent",
     "../etc/icon:request_notificaton_xmark_icon",
+    "../etc/icon:request_notificaton_xmark_icon_dark",
   ]
 
   defines = []
