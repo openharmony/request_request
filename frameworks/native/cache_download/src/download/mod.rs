@@ -30,5 +30,5 @@ cfg_ylong! {
 pub(crate) mod common;
 mod error;
 
-pub(crate) use error::CacheDownloadError;
+pub use error::{CacheDownloadError, ErrorKind};
 pub(crate) mod task;
