@@ -20,3 +20,8 @@ edition = "2021"
 cxx = "1.0.115"
 ffrt_rs = { path = "../ffrt_rs" }
 request_utils = { path = "../utils"}
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1

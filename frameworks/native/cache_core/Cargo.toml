@@ -30,3 +30,8 @@ cxx = { version = "1.0.115", optional = true }
 ffrt_rs = { path = "../../../common/ffrt_rs", optional = true }
 request_utils = { path = "../../../common/utils" }
 ylong_runtime = { git = "https://gitcode.com/openharmony/commonlibrary_rust_ylong_runtime", features = ["full"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1

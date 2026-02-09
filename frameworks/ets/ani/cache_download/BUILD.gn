@@ -65,6 +65,11 @@ ohos_rust_static_library("preload_permission_verify") {
   deps = [
     ":preload_permission_cxx"
   ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Clto=yes",
+    "-Ccodegen-units=1",
+  ]
 
   external_deps = [
     "rust_cxx:lib",
@@ -84,6 +89,10 @@ ohos_rust_shared_library("cache_download_ani") {
   }
 
   sources = [ "src/lib.rs" ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Ccodegen-units=1",
+  ]
 
   external_deps = [
     "netmanager_base:ani_rs",

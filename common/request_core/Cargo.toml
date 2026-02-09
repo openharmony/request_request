@@ -18,3 +18,8 @@ edition = "2021"
 
 [dependencies]
 ipc = { git = "https://gitee.com/openharmony/communication_ipc" }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1

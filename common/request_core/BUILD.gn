@@ -24,6 +24,11 @@ ohos_rust_static_library("request_core") {
   }
 
   sources = [ "src/lib.rs" ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Clto=yes",
+    "-Ccodegen-units=1",
+  ]
 
   external_deps = [
     "ipc:ipc_rust",

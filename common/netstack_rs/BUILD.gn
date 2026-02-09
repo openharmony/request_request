@@ -64,6 +64,11 @@ ohos_rust_static_library("netstack_rs") {
   }
 
   sources = [ "src/lib.rs" ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Clto=yes",
+    "-Ccodegen-units=1",
+  ]
 
   deps = [
     ":netstack_rs_cxx",

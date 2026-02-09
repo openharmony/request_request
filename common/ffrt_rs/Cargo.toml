@@ -18,3 +18,8 @@ edition = "2021"
 
 [dependencies]
 cxx = "1.0.115"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1

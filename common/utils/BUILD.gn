@@ -63,6 +63,11 @@ ohos_rust_static_library("request_application") {
   }
 
   features = [ "ohos" ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Clto=yes",
+    "-Ccodegen-units=1",
+  ]
 
   deps = [ 
     ":request_application_cxx"
@@ -128,6 +133,11 @@ ohos_rust_static_library("request_data_ability") {
   }
 
   features = [ "ohos" ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Clto=yes",
+    "-Ccodegen-units=1",
+  ]
 
   deps = [ 
     ":request_data_ability_cxx",
@@ -211,6 +221,11 @@ ohos_rust_static_library("request_utils") {
   }
 
   features = [ "ohos" ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Clto=yes",
+    "-Ccodegen-units=1",
+  ]
 
   deps = [ ":request_utils_cxx" ]
 
