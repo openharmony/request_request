@@ -482,7 +482,7 @@ export default function cacheDownloadInfo() {
     it('testGetDownloadInfo006', 0, async (done: Function) => {
       let server = new Server();
       try {
-        server.serverStart();
+        await server.serverStart();
         cacheDownload.setDownloadInfoListSize(10);
         cacheDownload.download("http://127.0.0.1:8078", {});
         await sleep(300);
