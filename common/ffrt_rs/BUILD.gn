@@ -57,6 +57,11 @@ ohos_rust_static_library("ffrt_rs") {
   }
 
   sources = [ "src/lib.rs" ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Clto=yes",
+    "-Ccodegen-units=1",
+  ]
 
   external_deps = [
     "ffrt:libffrt",

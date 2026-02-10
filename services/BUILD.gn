@@ -138,6 +138,10 @@ ohos_rust_shared_library("download_server") {
   }
 
   sources = [ "src/lib.rs" ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Ccodegen-units=1",
+  ]
 
   features = [ "oh" ]
 

@@ -60,6 +60,11 @@ ohos_rust_static_library("cache_core") {
     debug = false
   }
   features = [ "ohos" ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Clto=yes",
+    "-Ccodegen-units=1",
+  ]
 
   sources = [ "src/lib.rs" ]
 

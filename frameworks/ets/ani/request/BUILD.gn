@@ -28,6 +28,10 @@ ohos_rust_shared_library("request_ani") {
   }
 
   sources = [ "src/lib.rs" ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Ccodegen-units=1",
+  ]
 
   external_deps = [
     "netmanager_base:ani_rs",

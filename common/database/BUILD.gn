@@ -61,6 +61,11 @@ ohos_rust_static_library("database_rs") {
   }
 
   sources = [ "src/lib.rs" ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Clto=yes",
+    "-Ccodegen-units=1",
+  ]
   deps = [ ":database_rs_cxx" ]
   external_deps = [ "rust_cxx:lib" ]
 

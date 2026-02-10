@@ -31,6 +31,10 @@ ohos_rust_static_library("preload_native_rlib") {
     "ohos",
     "netstack",
   ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Ccodegen-units=1",
+  ]
 
   sources = [ "src/lib.rs" ]
 
@@ -65,6 +69,10 @@ ohos_rust_shared_ffi("preload_native_rust") {
   features = [
     "ohos",
     "netstack",
+  ]
+  rustflags = [
+    "-Copt-level=z",
+    "-Ccodegen-units=1",
   ]
 
   sources = [ "src/lib.rs" ]
