@@ -42,6 +42,8 @@ public:
 
 private:
     rust::Box<TaskManagerWrapper> _taskManager;
+    void RegisterSystemParameterListener();
+    static void ChangeColorModeCallback(const char *key, const char *value, void *context);
 };
 
 void SubscribeNotification(rust::Box<TaskManagerWrapper> taskManager);
@@ -50,6 +52,14 @@ inline int32_t CancelNotification(uint32_t notificationId)
 {
     return Notification::NotificationHelper::CancelNotification(notificationId);
 }
+
+std::string GetCurrentSystemColorMode();
+
+std::shared_ptr<Media::PixelMap> CreatePixelMapByColorMode(const std::string& colorMode);
+
+const char* GetIconPathByColorMode(const std::string& colorMode);
+
+void RepublishProgressNotify();
 
 } // namespace OHOS::Request
 
