@@ -30,7 +30,7 @@ mod seq; // Internal sequence ID generation
 extern crate request_utils;
 
 use hilog_rust::{HiLogLabel, LogType};
-
+ 
 /// Logger configuration for the request service.
 ///
 /// Defines the log label used for all logging operations within the service,

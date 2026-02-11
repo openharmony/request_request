@@ -84,7 +84,6 @@ ohos_shared_library("request") {
     "ability_runtime:data_ability_helper",
     "ability_runtime:extensionkit_native",
     "ability_runtime:napi_base_context",
-    "ability_runtime:napi_common",
     "ability_runtime:wantagent_innerkits",
     "app_file_service:fileuri_native",
     "c_utils:utils",

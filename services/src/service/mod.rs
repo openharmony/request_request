@@ -20,10 +20,11 @@
 
 /// Atomic counter implementation for tracking active operations.
 pub(crate) mod active_counter;
-/// Client interface for interacting with the request service.
+
+/// Client communication and connection management module.
 pub(crate) mod client;
 
-/// IPC interface definitions for the request server service.
+/// IPC command codes and interface definitions for the request server service.
 pub mod interface;
 
 // Platform-specific service components for OpenHarmony.
@@ -32,19 +33,25 @@ pub mod interface;
 // OpenHarmony platform, providing platform-specific implementations for
 // permission management, command handling, and notification services.
 cfg_oh! {
-    /// Permission management for request operations.
+    /// Permission verification and management.
     pub(crate) mod permission;
-    /// Command processing for request operations.
+    
+    /// Command handling and execution module.
     pub(crate) mod command;
-    /// Notification bar integration for request status updates.
+    
+    /// Notification bar integration for user feedback.
     pub(crate) mod notification_bar;
-    /// Internal service stub implementation.
+    
+    // Internal stub implementation for service binding
     mod stub;
+    
     /// Main service interface implementation.
     pub(crate) use stub::RequestServiceStub;
-    /// Utility for serializing task information.
+    
+    /// Utility for serializing task information for IPC.
     pub(crate) use stub::serialize_task_info;
-    /// Utility for serializing task configuration.
+    
+    /// Utility for serializing task configuration for IPC.
     pub(crate) use stub::serialize_task_config;
 }
 
