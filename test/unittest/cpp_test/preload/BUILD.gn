@@ -34,7 +34,7 @@ ohos_unittest("preload_test") {
     "src/clear_cache.cpp",
   ]
 
-  deps = [
+  deps = [ 
     "../../../../frameworks/native/cache_download:preload_native",
     "../../common/set_permission:common_permission",
   ]
@@ -45,6 +45,7 @@ ohos_unittest("preload_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "rust_cxx:cxx_cppdeps",
+    "selinux_adapter:librestorecon",
   ]
 }
 

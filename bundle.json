@@ -32,7 +32,6 @@
     "deps": {
       "components": [
         "rust_cxx",
-        "ylong_http",
         "ylong_runtime",
         "os_account",
         "samgr",

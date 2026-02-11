@@ -1,17 +1,17 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright (C) 2024 Huawei Device Co., Ltd.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 #include "request_preload.h"
 
@@ -173,7 +173,7 @@ std::vector<std::string> CppDownloadInfo::dns_servers() const
     std::vector<std::string> result;
 
     const auto &servers = rust_info_->dns_servers();
-
+    
     for (const auto &server : servers) {
         result.push_back(std::string(server));
     }
@@ -253,7 +253,7 @@ PreloadError::PreloadError(PreloadError &&other) noexcept
     other.error_ = nullptr;
 }
 
-PreloadError &PreloadError::operator=(PreloadError &&other) &noexcept
+PreloadError &PreloadError::operator=(PreloadError &&other) & noexcept
 {
     if (this != &other) {
         if (error_ != nullptr) {
@@ -313,7 +313,7 @@ PreloadHandle::PreloadHandle(PreloadHandle &&other) noexcept : handle_(other.han
     other.handle_ = nullptr;
 }
 
-PreloadHandle &PreloadHandle::operator=(PreloadHandle &&other) &noexcept
+PreloadHandle &PreloadHandle::operator=(PreloadHandle &&other) & noexcept
 {
     if (this != &other) {
         if (handle_) {
@@ -352,10 +352,7 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
     }
 
     // Prepare options for FFI call
-    FfiPredownloadOptions ffiOptions = {
-        .headers = rust::Vec<rust::str>(),
-    };
-
+    FfiPredownloadOptions ffiOptions = { .headers = rust::Vec<rust::str>() };
     if (options != nullptr) {
         // Validate and set headers
         for (const auto &[key, value] : options->headers) {

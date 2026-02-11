@@ -111,8 +111,8 @@ HWTEST_F(PreloadAbnormal, NullptrTest_2, TestSize.Level1)
     std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
     options->headers.push_back(std::make_tuple("Test String Invalid \xFF\xFE", "Test String Invalid \xFF\xFE"));
     auto handle_1 = Preload::GetInstance()->load(invalidUtf8Url,
-                                             std::make_unique<PreloadCallback>(callback),
-                                             std::move(options));
+                                            std::make_unique<PreloadCallback>(callback),
+                                            std::move(options));
     EXPECT_EQ(handle_1, nullptr);
 }
 
