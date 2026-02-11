@@ -41,7 +41,7 @@ public:
     int32_t NetCapabilitiesChange(sptr<NetHandle> &netHandle, const sptr<NetAllCapabilities> &netAllCap) override;
 
 private:
-#ifdef REQUEST_DEVICE_WATCH
+#ifdef REQUEST_ENABLE_SETNET
     void SetNet();
 #endif
     void HandleNetCap(const sptr<NetAllCapabilities> &netAllCap);

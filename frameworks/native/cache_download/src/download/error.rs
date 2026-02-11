@@ -116,6 +116,10 @@ impl CacheDownloadError {
     pub fn ffi_kind(&self) -> i32 {
         self.kind.clone() as i32
     }
+
+    pub fn kind(&self) -> ErrorKind {
+        self.kind.clone()
+    }
 }
 
 /// Categorizes the type of error that occurred.

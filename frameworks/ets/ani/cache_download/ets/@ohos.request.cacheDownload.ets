@@ -14,7 +14,7 @@
  */
 
 
-import { BusinessError } from '@ohos.base';
+import { BusinessError, Callback } from '@ohos.base';
 
 export default namespace cacheDownload {
     loadLibrary("cache_download_ani")
@@ -34,6 +34,14 @@ export default namespace cacheDownload {
     export enum CacheStrategy {
         FORCE = 0,
         LAZY = 1
+    }
+
+    export enum ErrorCode {
+        OTHERS = 0xFF,
+        DNS = 0x00,
+        TCP = 0x10,
+        SSL = 0x20,
+        HTTP = 0x30,
     }
 
     export interface ResourceInfo {
@@ -86,6 +94,16 @@ export default namespace cacheDownload {
         readonly performance: PerformanceInfo;
     }
 
+    export interface DownloadError {
+        readonly errorCode: ErrorCode;
+        readonly message: string;
+    }
+
+    export class DownloadErrorInner implements DownloadError {
+        readonly errorCode: ErrorCode;
+        readonly message: string;
+    }
+
     export native function getDownloadInfo(url: string): DownloadInfo | undefined;
 
     export native function setDownloadInfoListSize(size: long): void;
@@ -97,4 +115,16 @@ export default namespace cacheDownload {
     export native function setMemoryCacheSize(bytes: long): void;
 
     export native function setFileCacheSize(bytes: long): void;
+
+    export native function clearMemoryCache(): void;
+
+    export native function clearFileCache(): void;
+
+    export native function onDownloadSuccess(url: string, callback: Callback<void>): void;
+
+    export native function onDownloadError(url: string, callback: Callback<DownloadError>): void;
+
+    export native function offDownloadSuccess(url: string, callback?: Callback<void>): void;
+
+    export native function offDownloadError(url: string, callback?: Callback<DownloadError>): void;
 }

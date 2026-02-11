@@ -45,7 +45,9 @@ pub mod observe; // Observation and monitoring functionality
 pub mod services; // Service interfaces and types
 
 // Re-export downloader enum for public API use
+pub use cache_core::RamCache;
 pub use download::task::Downloader;
+pub use download::{CacheDownloadError, ErrorKind};
 pub use services::{CacheDownloadService, DownloadRequest, PreloadCallback};
 
 // Conditional compilation for OpenHarmony platform
