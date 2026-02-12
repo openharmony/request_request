@@ -743,10 +743,10 @@ HWTEST_F(RequestManagerTest, VisibilityValuesTest001, TestSize.Level1)
     EXPECT_EQ(static_cast<uint32_t>(Visibility::COMPLETION), 0b01);
     EXPECT_EQ(static_cast<uint32_t>(Visibility::PROGRESS), 0b10);
     EXPECT_EQ(static_cast<uint32_t>(Visibility::ANY), 0b11);
-    
+
     EXPECT_EQ(VISIBILITY_COMPLETION, 0b00000001);
     EXPECT_EQ(VISIBILITY_PROGRESS, 0b00000010);
-    
+
     Notification defaultNotification;
     EXPECT_EQ(defaultNotification.visibility, 0b01);
 }
