@@ -248,7 +248,8 @@ void JSNotifyDataListener::OnNotifyDataReceive(const std::shared_ptr<NotifyData>
             napi_close_handle_scope(ptr->listener->env_, scope);
             delete ptr;
         },
-        napi_eprio_high, "request:download|downloadfile|upload|uploadfile|agent.create");
+        napi_eprio_high,
+        "request:download|downloadfile|upload|uploadfile|agent.create");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete ptr;
@@ -283,7 +284,8 @@ void JSNotifyDataListener::OnFaultsReceive(const std::shared_ptr<int32_t> &tid,
             napi_close_handle_scope(ptr->listener->env_, scope);
             delete ptr;
         },
-        napi_eprio_high, "request:task.on");
+        napi_eprio_high,
+        "request:task.on");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
         delete ptr;
@@ -307,7 +309,8 @@ void JSNotifyDataListener::OnWaitReceive(std::int32_t taskId, WaitingReason reas
             me->OnMessageReceive(&value, paramNumber);
             napi_close_handle_scope(me->env_, scope);
         },
-        napi_eprio_high, "request:task.on");
+        napi_eprio_high,
+        "request:task.on");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
     }
