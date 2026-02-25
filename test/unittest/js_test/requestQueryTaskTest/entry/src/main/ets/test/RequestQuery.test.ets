@@ -1069,5 +1069,360 @@ export default function requestQueryTest() {
         done();
       });
     });
+
+    /**
+     * @tc.name: testCreateDownloadTask001
+     * @tc.desc: Test create download task with valid config
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testCreateDownloadTask001', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testCreateDownloadTask001.txt'
+      };
+      request.agent.create(context, conf).then(async (data) => {
+        expect(true).assertTrue();
+        await request.agent.remove(data.tid);
+        done();
+      }).catch((err: Error) => {
+        expect(false).assertTrue();
+        done();
+      });
+    });
+
+    /**
+     * @tc.name: testCreateDownloadTask002
+     * @tc.desc: Test create download task with token
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testCreateDownloadTask002', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testCreateDownloadTask002.txt',
+        token: '12345678'
+      };
+      request.agent.create(context, conf).then(async (data) => {
+        expect(true).assertTrue();
+        await request.agent.remove(data.tid);
+        done();
+      }).catch((err: Error) => {
+        expect(false).assertTrue();
+        done();
+      });
+    });
+
+    /**
+     * @tc.name: testCreateUploadTask001
+     * @tc.desc: Test create upload task with valid config
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testCreateUploadTask001', 0, async (done: Function) => {
+      let file1 = fs.openSync(cacheDir + '/test_upload.txt', fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
+      fs.closeSync(file1);
+      let conf: request.agent.Config = {
+        action: request.agent.Action.UPLOAD,
+        url: 'http://127.0.0.1',
+        data: [{
+          name: 'file',
+          value: { path: `./test_upload.txt`, filename: 'test_upload.txt' }
+        }]
+      };
+      request.agent.create(context, conf).then(async (data) => {
+        expect(true).assertTrue();
+        await request.agent.remove(data.tid);
+        done();
+      }).catch((err: Error) => {
+        expect(false).assertTrue();
+        done();
+      });
+    });
+
+    /**
+     * @tc.name: testQueryInvalidTid001
+     * @tc.desc: Test query task with invalid tid
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testQueryInvalidTid001', 0, async (done: Function) => {
+      request.agent.query("invalid_tid", (err, info) => {
+        expect(err.code).assertEqual(202);
+        done();
+      });
+    });
+
+    /**
+     * @tc.name: testQueryTaskWithPromise001
+     * @tc.desc: Test query task with promise and invalid tid
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testQueryTaskWithPromise001', 0, async (done: Function) => {
+      await request.agent.query("invalid_tid").then((info) => {
+        expect(false).assertTrue();
+        done();
+      }).catch((err: BusinessError) => {
+        expect(err.code).assertEqual(202);
+        done();
+      });
+    });
+
+    /**
+     * @tc.name: testShowTaskWithInvalidTid001
+     * @tc.desc: Test show task with invalid tid
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testShowTaskWithInvalidTid001', 0, async (done: Function) => {
+      request.agent.show("invalid_tid", (err, info) => {
+        expect(err.code).assertEqual(21900006);
+        done();
+      });
+    });
+
+    /**
+     * @tc.name: testShowTaskWithPromise001
+     * @tc.desc: Test show task with promise and invalid tid
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testShowTaskWithPromise001', 0, async (done: Function) => {
+      await request.agent.show("invalid_tid").then((info) => {
+        expect(false).assertTrue();
+        done();
+      }).catch((err: BusinessError) => {
+        expect(err.code).assertEqual(21900006);
+        done();
+      });
+    });
+
+    /**
+     * @tc.name: testTouchTaskWithInvalidTid001
+     * @tc.desc: Test touch task with invalid tid
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testTouchTaskWithInvalidTid001', 0, async (done: Function) => {
+      request.agent.touch("invalid_tid", "12345678", (err, info) => {
+        expect(err.code).assertEqual(21900006);
+        done();
+      });
+    });
+
+    /**
+     * @tc.name: testSearchTaskWithInvalidFilter001
+     * @tc.desc: Test search task with invalid filter type
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testSearchTaskWithInvalidFilter001', 0, async (done: Function) => {
+      try {
+        await request.agent.search(123 as Object as request.agent.Filter);
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+
+    /**
+     * @tc.name: testSearchTaskWithValidFilter001
+     * @tc.desc: Test search task with valid filter
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testSearchTaskWithValidFilter001', 0, async (done: Function) => {
+      let filter: request.agent.Filter = {
+        offset: 0,
+        size: 10
+      };
+      request.agent.search(filter, (err, info) => {
+        expect(err).assertNull();
+        expect(typeof info).assertEqual("object");
+        done();
+      });
+    });
+
+    /**
+     * @tc.name: testSearchTaskWithPromise001
+     * @tc.desc: Test search task with promise and valid filter
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testSearchTaskWithPromise001', 0, async (done: Function) => {
+      let filter: request.agent.Filter = {
+        offset: 0,
+        size: 10
+      };
+      await request.agent.search(filter).then((info) => {
+        expect(typeof info).assertEqual("object");
+        done();
+      }).catch((err: BusinessError) => {
+        expect(false).assertTrue();
+        done();
+      });
+    });
+
+    /**
+     * @tc.name: testTouchTaskWithValidToken001
+     * @tc.desc: Test touch task with valid token
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testTouchTaskWithValidToken001', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testTouchTaskWithValidToken001.txt',
+        token: '12345678'
+      };
+      let task = await request.agent.create(context, conf);
+      request.agent.touch(task.tid, '12345678', (err, info) => {
+        expect(err).assertNull();
+        expect(info.tid).assertEqual(task.tid);
+        request.agent.remove(task.tid);
+        done();
+      });
+    });
+
+    /**
+     * @tc.name: testRemoveTaskWithValidTid001
+     * @tc.desc: Test remove task with valid tid
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testRemoveTaskWithValidTid001', 0, async (done: Function) => {
+      let conf: request.agent.Config = {
+        action: request.agent.Action.DOWNLOAD,
+        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        saveas: 'testRemoveTaskWithValidTid001.txt',
+        token: '12345678'
+      };
+      let task = await request.agent.create(context, conf);
+      await request.agent.remove(task.tid);
+      try {
+        await request.agent.show(task.tid);
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(21900006);
+        done();
+      }
+    });
+
+    /**
+     * @tc.name: testRemoveTaskWithInvalidTid001
+     * @tc.desc: Test remove task with invalid tid
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testRemoveTaskWithInvalidTid001', 0, async (done: Function) => {
+      try {
+        await request.agent.remove("invalid_tid");
+        expect(false).assertTrue();
+        done();
+      } catch (err) {
+        expect(err.code).assertEqual(21900006);
+        done();
+      }
+    });
+
+    /**
+     * @tc.name: testSearchTaskWithLargeSizeFilter001
+     * @tc.desc: Test search task with large size filter
+     * @tc.type: FUNC
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.require: issues#1721
+     */
+    it('testSearchTaskWithLargeSizeFilter001', 0, async (done: Function) => {
+      let filter: request.agent.Filter = {
+        offset: 0,
+        size: 1000000
+      };
+      request.agent.search(filter, (err, info) => {
+        expect(err).assertNull();
+        expect(info.length).assertLessOrEqual(filter.size);
+        done();
+      });
+    });
   })
 }
