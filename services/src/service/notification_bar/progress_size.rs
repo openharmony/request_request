@@ -19,8 +19,11 @@ const COMMA_SEPARATOR_LIST: &[&str] = &["hi", "bn"];
 // Language codes that use space as thousand separator
 const SPACE_SEPARATOR_LIST: &[&str] = &["fi"];
 
+// Language codes that use dot as thousand separator
+const DOT_SEPARATOR_LIST: &[&str] = &["id"];
+
 // Language codes that use comma as decimal point
-const COMMA_DECIMAL_POINT_LIST: &[&str] = &["sl", "lt", "fi", "nl", "da"];
+const COMMA_DECIMAL_POINT_LIST: &[&str] = &["sl", "lt", "fi", "nl", "da", "id"];
 
 // Language codes that require space between number and unit
 const SPACE_BEFORE_UNIT_LIST: &[&str] = &[
@@ -123,14 +126,14 @@ impl FormattedSize {
     /// 
     /// # Returns
     /// 
-    /// String to use as thousand separator (comma, space, or empty string)
+    /// String to use as thousand separator (comma, space, dot, or empty string)
     fn separator(&self, lang: &str) -> &'static str {
-        if COMMA_SEPARATOR_LIST.contains(&lang) {
-            return ",";
-        } else if SPACE_SEPARATOR_LIST.contains(&lang) {
-            return " ";
+        match true {
+            _ if COMMA_SEPARATOR_LIST.contains(&lang) => ",",
+            _ if SPACE_SEPARATOR_LIST.contains(&lang) => " ",
+            _ if DOT_SEPARATOR_LIST.contains(&lang) => ".",
+            _ => "",
         }
-        ""
     }
 
     /// Determines the decimal point character to use based on the specified language.

@@ -149,6 +149,7 @@ fn ut_progress_size_separator_format() {
     assert_eq!(formatter.separator("zh-Hans"), "");
     assert_eq!(formatter.separator("hi"), ",");
     assert_eq!(formatter.separator("fi"), " ");
+    assert_eq!(formatter.separator("id"), ".");
 }
 
 // @tc.name: ut_progress_size_inner
@@ -180,4 +181,8 @@ fn ut_progress_size_inner() {
     let lang = "fi".to_string();
     let res = progress_size_with_lang(current, &lang);
     assert_eq!(res, "114 978 094,70 GT");
+
+    let lang = "id".to_string();
+    let res = progress_size_with_lang(current, &lang);
+    assert_eq!(res, "114.978.094,70GB");
 }
