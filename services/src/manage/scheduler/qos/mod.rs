@@ -129,7 +129,7 @@ impl Qos {
     /// # Arguments
     ///
     /// * `state` - The state handler providing information about foreground
-    ///   abilities and top user.
+    ///   abilities and foreground users.
     ///
     /// # Returns
     ///
@@ -138,7 +138,7 @@ impl Qos {
     pub(crate) fn reschedule(&mut self, state: &state::Handler) -> QosChanges {
         // Only sort apps before assigning priorities
         self.apps
-            .sort(state.foreground_abilities(), state.top_user());
+            .sort(state.foreground_abilities(), state.foreground_users());
         let mut changes = QosChanges::new();
         // Generate QoS directions for both download and upload tasks separately
         changes.download = Some(self.reschedule_inner(Action::Download));

@@ -29,8 +29,8 @@ use crate::tests::test_init;
 fn ut_account_check_oh() {
     test_init();
 
-    assert_eq!(0, FOREGROUND_ACCOUNT.load(Ordering::SeqCst));
-    assert!(BACKGROUND_ACCOUNTS.lock().unwrap().is_none());
+    assert!(ACTIVE_ACCOUNTS.lock().unwrap().foreground.is_empty());
+    assert!(ACTIVE_ACCOUNTS.lock().unwrap().background.is_empty());
 
     let (tx, mut rx) = mpsc::unbounded_channel();
     let task_manager = TaskManagerTx { tx };
@@ -41,8 +41,8 @@ fn ut_account_check_oh() {
             msg,
             TaskManagerEvent::Account(AccountEvent::Changed)
         ));
-        assert_ne!(FOREGROUND_ACCOUNT.load(Ordering::SeqCst), 0);
-        assert!(BACKGROUND_ACCOUNTS.lock().unwrap().is_some());
+        assert!(!ACTIVE_ACCOUNTS.lock().unwrap().foreground.is_empty());
+        assert!(!ACTIVE_ACCOUNTS.lock().unwrap().background.is_empty());
     })
 }
 
@@ -79,18 +79,34 @@ fn ut_account_update() {
 // @tc.name: ut_account_update_branch
 // @tc.desc: Test account update branch conditions
 // @tc.precon: NA
-// @tc.step: 1. Compare different background account configurations
+// @tc.step: 1. Compare different foreground and background account configurations
 //           2. Verify branch conditions for account updates
 // @tc.expect: Branch conditions correctly identify account changes
 // @tc.type: FUNC
 // @tc.require: issues#ICN16H
 #[test]
 fn ut_account_update_branch() {
-    let old_background = Option::<Vec<i32>>::None;
-    let background_accounts = vec![100];
-    assert!(!old_background.is_some_and(|old_background| old_background == background_accounts));
-    let old_background = Option::<Vec<i32>>::Some(vec![101]);
-    assert!(!old_background.is_some_and(|old_background| old_background == background_accounts));
-    let old_background = Option::<Vec<i32>>::Some(vec![100]);
-    assert!(old_background.is_some_and(|old_background| old_background == background_accounts));
+    use std::collections::HashSet;
+
+    // Test foreground account comparisons
+    let old_foreground: HashSet<i32> = HashSet::new();
+    let foreground_accounts: HashSet<i32> = [100].into_iter().collect();
+    assert_ne!(old_foreground, foreground_accounts);
+
+    let old_foreground: HashSet<i32> = [101].into_iter().collect();
+    assert_ne!(old_foreground, foreground_accounts);
+
+    let old_foreground: HashSet<i32> = [100].into_iter().collect();
+    assert_eq!(old_foreground, foreground_accounts);
+
+    // Test background account comparisons
+    let old_background: HashSet<i32> = HashSet::new();
+    let background_accounts: HashSet<i32> = [200].into_iter().collect();
+    assert_ne!(old_background, background_accounts);
+
+    let old_background: HashSet<i32> = [201].into_iter().collect();
+    assert_ne!(old_background, background_accounts);
+
+    let old_background: HashSet<i32> = [200].into_iter().collect();
+    assert_eq!(old_background, background_accounts);
 }

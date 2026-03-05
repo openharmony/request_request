@@ -19,8 +19,8 @@
 //! account lifecycle events.
 
 use std::collections::HashSet;
-use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
-use std::sync::{Mutex, Once};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{LazyLock, Mutex, Once};
 
 pub(crate) use ffi::*;
 
@@ -38,11 +38,22 @@ pub(crate) enum AccountEvent {
     Changed,
 }
 
-/// Currently active foreground user account ID.
-pub(crate) static FOREGROUND_ACCOUNT: AtomicI32 = AtomicI32::new(0);
+/// Active accounts containing foreground and background user account IDs.
+#[derive(Clone)]
+struct ActiveAccounts {
+    /// Currently active foreground user account IDs (supports multi-foreground).
+    foreground: HashSet<i32>,
+    /// List of background user account IDs that are active but not in foreground.
+    background: HashSet<i32>,
+}
 
-/// List of background user account IDs that are active but not in foreground.
-pub(crate) static BACKGROUND_ACCOUNTS: Mutex<Option<Vec<i32>>> = Mutex::new(None);
+/// Global active accounts protected by a single mutex to avoid deadlock.
+static ACTIVE_ACCOUNTS: LazyLock<Mutex<ActiveAccounts>> = LazyLock::new(|| {
+    Mutex::new(ActiveAccounts {
+        foreground: HashSet::new(),
+        background: HashSet::new(),
+    })
+});
 
 /// Flag indicating if an account update operation is in progress.
 static UPDATE_FLAG: AtomicBool = AtomicBool::new(false);
@@ -100,7 +111,7 @@ pub(crate) fn update_accounts(task_manager: TaskManagerTx) {
 /// # Returns
 ///
 /// A tuple containing:
-/// - The ID of the currently active foreground account as a `u64`
+/// - A `HashSet` of foreground account IDs (supports multi-foreground)
 /// - A `HashSet` of all active account IDs (both foreground and background)
 ///
 /// # Notes
@@ -108,19 +119,16 @@ pub(crate) fn update_accounts(task_manager: TaskManagerTx) {
 /// This function safely accesses the global account state to provide the
 /// current active account information. This is typically used for task
 /// filtering and permission checks based on user identity.
-pub(crate) fn query_active_accounts() -> (u64, HashSet<u64>) {
-    let mut active_accounts = HashSet::new();
-    let foreground_account = FOREGROUND_ACCOUNT.load(Ordering::SeqCst) as u64;
-    active_accounts.insert(foreground_account);
+pub(crate) fn query_active_accounts() -> (HashSet<u64>, HashSet<u64>) {
+    let accounts = ACTIVE_ACCOUNTS.lock().unwrap();
 
-    // Add background accounts to the active set if they exist
-    if let Some(background_accounts) = BACKGROUND_ACCOUNTS.lock().unwrap().as_ref() {
-        for account in background_accounts.iter() {
-            active_accounts.insert(*account as u64);
-        }
-    }
+    let foreground_accounts_u64: HashSet<u64> =
+        accounts.foreground.iter().map(|&id| id as u64).collect();
 
-    (foreground_account, active_accounts)
+    let mut active_accounts = foreground_accounts_u64.clone();
+    active_accounts.extend(accounts.background.iter().map(|&id| id as u64));
+
+    (foreground_accounts_u64, active_accounts)
 }
 
 /// Internal utility for updating account information asynchronously.
@@ -152,25 +160,30 @@ impl AccountUpdater {
     #[cfg_attr(not(feature = "oh"), allow(unused))]
     async fn update(mut self) {
         info!("AccountUpdate Start");
-        // Store previous account state for comparison
-        let old_foreground = FOREGROUND_ACCOUNT.load(Ordering::SeqCst);
-        let old_background = BACKGROUND_ACCOUNTS.lock().unwrap().clone();
 
-        // Update foreground account if changed
-        #[cfg(feature = "oh")]
-        if let Some(foreground_account) = get_foreground_account().await {
-            if old_foreground != foreground_account {
-                self.change_flag = true;
-                FOREGROUND_ACCOUNT.store(foreground_account, Ordering::SeqCst);
-            }
-        }
+        // Get previous account state for comparison (lock is released after clone)
+        let old_state = {
+            let state = ACTIVE_ACCOUNTS.lock().unwrap();
+            (state.foreground.clone(), state.background.clone())
+        };
 
-        // Update background accounts if changed
+        // Get new account information from system
         #[cfg(feature = "oh")]
-        if let Some(background_accounts) = get_background_accounts().await {
-            if !old_background.is_some_and(|old_background| old_background == background_accounts) {
+        let new_foreground = get_foreground_accounts().await;
+
+        #[cfg(feature = "oh")]
+        let new_background = get_background_accounts().await;
+
+        // Update global state if accounts changed
+        #[cfg(feature = "oh")]
+        if let (Some(foreground_accounts), Some(background_accounts)) =
+            (new_foreground, new_background)
+        {
+            if old_state.0 != foreground_accounts || old_state.1 != background_accounts {
                 self.change_flag = true;
-                *BACKGROUND_ACCOUNTS.lock().unwrap() = Some(background_accounts);
+                let mut state = ACTIVE_ACCOUNTS.lock().unwrap();
+                state.foreground = foreground_accounts;
+                state.background = background_accounts;
             }
         }
 
@@ -200,31 +213,31 @@ impl Drop for AccountUpdater {
 }
 
 #[cfg(feature = "oh")]
-/// Retrieves the currently active foreground OS account.
+/// Retrieves the currently active foreground OS accounts (supports multi-foreground).
 ///
 /// # Returns
 ///
-/// `Some(account_id)` if the foreground account was successfully retrieved,
+/// `Some(HashSet<account_ids>)` if foreground accounts were successfully retrieved,
 /// `None` if the operation failed after multiple retries.
 ///
 /// # Notes
 ///
-/// This function attempts to retrieve the foreground account up to 10 times
+/// This function attempts to retrieve foreground accounts up to 10 times
 /// with a 500ms delay between retries. It logs errors and reports system events
 /// when retrieval fails.
-async fn get_foreground_account() -> Option<i32> {
-    let mut foreground_account = 0;
+async fn get_foreground_accounts() -> Option<HashSet<i32>> {
     // Retry up to 10 times with 500ms delay
     for i in 0..10 {
-        let res = GetForegroundOsAccount(&mut foreground_account);
+        let mut accounts = Vec::with_capacity(10);
+        let res = GetForegroundOsAccounts(&mut accounts);
         if res == 0 {
-            return Some(foreground_account);
+            return Some(accounts.into_iter().collect());
         } else {
-            error!("GetForegroundOsAccount failed: {} retry {} times", res, i);
+            error!("GetForegroundOsAccounts failed: {} retry {} times", res, i);
             sys_event!(
                 ExecFault,
                 DfxCode::OS_ACCOUNT_FAULT_01,
-                &format!("GetForegroundOsAccount failed: {} retry {} times", res, i)
+                &format!("GetForegroundOsAccounts failed: {} retry {} times", res, i)
             );
             ylong_runtime::time::sleep(std::time::Duration::from_millis(500)).await;
         }
@@ -237,7 +250,7 @@ async fn get_foreground_account() -> Option<i32> {
 ///
 /// # Returns
 ///
-/// `Some(Vec<account_ids>)` if background accounts were successfully retrieved,
+/// `Some(HashSet<account_ids>)` if background accounts were successfully retrieved,
 /// `None` if the operation failed after multiple retries.
 ///
 /// # Notes
@@ -245,13 +258,13 @@ async fn get_foreground_account() -> Option<i32> {
 /// This function attempts to retrieve background accounts up to 10 times
 /// with a 500ms delay between retries. It logs errors and reports system events
 /// when retrieval fails.
-async fn get_background_accounts() -> Option<Vec<i32>> {
+async fn get_background_accounts() -> Option<HashSet<i32>> {
     // Retry up to 10 times with 500ms delay
     for i in 0..10 {
-        let mut accounts = vec![];
+        let mut accounts = Vec::with_capacity(10);
         let res = GetBackgroundOsAccounts(&mut accounts);
         if res == 0 {
-            return Some(accounts);
+            return Some(accounts.into_iter().collect());
         } else {
             error!("GetBackgroundOsAccounts failed: {} retry {} times", res, i);
             sys_event!(
@@ -472,7 +485,7 @@ mod ffi {
         include!("c_request_database.h");
 
         type OS_ACCOUNT_SUBSCRIBE_TYPE;
-        fn GetForegroundOsAccount(account: &mut i32) -> i32;
+        fn GetForegroundOsAccounts(accounts: &mut Vec<i32>) -> i32;
         fn GetBackgroundOsAccounts(accounts: &mut Vec<i32>) -> i32;
 
         fn RegistryAccountSubscriber(

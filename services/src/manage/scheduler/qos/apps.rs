@@ -54,20 +54,25 @@ impl SortedApps {
     ///
     /// * `foreground_abilities` - A set of UIDs representing foreground
     ///   applications.
-    /// * `top_user` - The user ID that currently has focus.
+    /// * `foreground_users` - A set of user IDs that currently have focus (supports multi-foreground).
     ///
     /// # Notes
     ///
-    /// Applications are sorted first by whether they belong to the top user
+    /// Applications are sorted first by whether they belong to foreground users
     /// (user ID divided by 200000), and then by whether they are in the
     /// foreground.
-    pub(crate) fn sort(&mut self, foreground_abilities: &HashSet<u64>, top_user: u64) {
+    pub(crate) fn sort(
+        &mut self,
+        foreground_abilities: &HashSet<u64>,
+        foreground_users: &HashSet<u64>,
+    ) {
         self.inner.sort_by(|a, b| {
-            // First sort by top user status
-            (a.uid / 200000 == top_user)
-                .cmp(&(b.uid / 200000 == top_user))
+            let a_user_id = a.uid / 200000;
+            let b_user_id = b.uid / 200000;
+            foreground_users
+                .contains(&a_user_id)
+                .cmp(&foreground_users.contains(&b_user_id))
                 .then(
-                    // Then sort by foreground status
                     foreground_abilities
                         .contains(&a.uid)
                         .cmp(&(foreground_abilities.contains(&b.uid))),

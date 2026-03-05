@@ -35,22 +35,22 @@ pub mod interface;
 cfg_oh! {
     /// Permission verification and management.
     pub(crate) mod permission;
-    
+
     /// Command handling and execution module.
     pub(crate) mod command;
-    
+
     /// Notification bar integration for user feedback.
     pub(crate) mod notification_bar;
-    
+
     // Internal stub implementation for service binding
     mod stub;
-    
+
     /// Main service interface implementation.
     pub(crate) use stub::RequestServiceStub;
-    
+
     /// Utility for serializing task information for IPC.
     pub(crate) use stub::serialize_task_info;
-    
+
     /// Utility for serializing task configuration for IPC.
     pub(crate) use stub::serialize_task_config;
 }

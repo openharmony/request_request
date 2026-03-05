@@ -65,13 +65,24 @@ inline ErrCode GetBackgroundOsAccounts(rust::vec<int> &accounts)
         for (auto &account : v) {
             accounts.push_back(account);
         };
+    } else {
+        accounts.clear();
     }
     return ret;
 }
 
-inline ErrCode GetOsAccountLocalIdFromUid(const int uid, int &id)
+inline ErrCode GetForegroundOsAccounts(rust::vec<int> &accounts)
 {
-    return OsAccountManager::GetOsAccountLocalIdFromUid(uid, id);
+    auto v = std::vector<ForegroundOsAccount>();
+    auto ret = OsAccountManager::GetForegroundOsAccounts(v);
+    if (ret == 0) {
+        for (auto &account : v) {
+            accounts.push_back(account.localId);
+        };
+    } else {
+        accounts.clear();
+    }
+    return ret;
 }
 
 rust::String GetOhosAccountUid();
