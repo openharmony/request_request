@@ -22,11 +22,14 @@ import Server from '../common/iTcpServer'
 export default function requestBasicConfigTest() {
   describe('requestBasicConfigTest', () => {
     let server: Server | null = null;
+    let baseUrl: string = "";
 
     beforeAll(async () => {
       console.info('beforeAll called');
       server = new Server();
-      await server.serverStart();
+      let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info("server started on " + baseUrl);
     });
     afterAll(async () => {
       console.info('afterAll called');
@@ -115,7 +118,7 @@ export default function requestBasicConfigTest() {
      */
     it('testTaskAction001', 0, (done: Function) => {
       let conf: Record<string, string> = {
-        "url": "http://127.0.0.1:8078",
+        "url": baseUrl,
         "saveas": "testTaskAction001"
       };
       try {
@@ -149,7 +152,7 @@ export default function requestBasicConfigTest() {
     it('testTaskAction002', 0, async (done: Function) => {
       let conf: Record<string, string> = {
         "action": "UPLOAD",
-        "url": "http://127.0.0.1:8078",
+        "url": baseUrl,
         "saveas": "testTaskAction002"
       };
       try {
@@ -184,7 +187,7 @@ export default function requestBasicConfigTest() {
     it('testTaskAction003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: 2,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         saveas: "testTaskAction003"
       };
       try {
@@ -221,7 +224,7 @@ export default function requestBasicConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [formItem]
       };
       request.agent.create(context, conf, async (err, data) => {
@@ -253,7 +256,7 @@ export default function requestBasicConfigTest() {
     it('testTaskAction005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: `./testTaskAction005`,
         gauge: true
       };
@@ -291,7 +294,7 @@ export default function requestBasicConfigTest() {
     it('testTaskAction006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: 0,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: `./testTaskAction006`,
         gauge: true
       };
@@ -331,7 +334,7 @@ export default function requestBasicConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: 1,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [formItem]
       };
       request.agent.create(context, conf, async (err, data) => {
@@ -363,7 +366,7 @@ export default function requestBasicConfigTest() {
     it('testTaskMode001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskMode001.txt',
         mode: request.agent.Mode.FOREGROUND
       };
@@ -399,7 +402,7 @@ export default function requestBasicConfigTest() {
     it('testTaskMode002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskMode002.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -434,7 +437,7 @@ export default function requestBasicConfigTest() {
     it('testTaskMode003', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "saveas": "testTaskMode003.txt",
         "mode": "BACKGROUND"
       };
@@ -470,7 +473,7 @@ export default function requestBasicConfigTest() {
     it('testTaskMode004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskMode004.txt',
         mode: 0
       };
@@ -505,7 +508,7 @@ export default function requestBasicConfigTest() {
     it('testTaskMode005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskMode005.txt',
         mode: 1
       };
@@ -540,7 +543,7 @@ export default function requestBasicConfigTest() {
     it('testTaskMode006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskMode006.txt',
         mode: 3
       };
@@ -576,7 +579,7 @@ export default function requestBasicConfigTest() {
     it('testTaskMode007', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": 'http://127.0.0.1:8078/test.txt',
+        "url": baseUrl + '/test.txt',
         "saveas": 'testTaskMode007.txt',
         "mode": request.agent.Action.DOWNLOAD
       };
@@ -612,7 +615,7 @@ export default function requestBasicConfigTest() {
     it('testTaskMode008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskMode008.txt'
       };
       request.agent.create(context, conf).then(async (data) => {
@@ -649,7 +652,7 @@ export default function requestBasicConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -688,7 +691,7 @@ export default function requestBasicConfigTest() {
     it('testTaskNetwork002', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "saveas": "testTaskNetwork002.txt",
         "network": "ANY"
       };
@@ -722,7 +725,7 @@ export default function requestBasicConfigTest() {
     it('testTaskNetwork003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNetwork003.txt',
         network: request.agent.Network.WIFI
       };
@@ -759,7 +762,7 @@ export default function requestBasicConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -798,7 +801,7 @@ export default function requestBasicConfigTest() {
     it('testTaskNetwork005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNetwork005.txt',
         network: request.agent.Network.ANY
       };
@@ -832,7 +835,7 @@ export default function requestBasicConfigTest() {
     it('testTaskNetwork006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNetwork006.txt',
         network: 0
       };
@@ -866,7 +869,7 @@ export default function requestBasicConfigTest() {
     it('testTaskNetwork007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNetwork007.txt',
         network: 1
       };
@@ -900,7 +903,7 @@ export default function requestBasicConfigTest() {
     it('testTaskNetwork008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNetwork008.txt',
         network: request.agent.Network.CELLULAR
       };
@@ -934,7 +937,7 @@ export default function requestBasicConfigTest() {
     it('testTaskNetwork009', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNetwork009.txt',
         network: 2
       };
@@ -968,7 +971,7 @@ export default function requestBasicConfigTest() {
     it('testTaskNetwork010', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNetwork010.txt'
       };
       request.agent.create(context, conf).then(async (data) => {
@@ -1039,7 +1042,7 @@ export default function requestBasicConfigTest() {
     it('testTaskRetry002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         mode: request.agent.Mode.BACKGROUND,
         saveas: 'testTaskRetry002.txt',
         retry: true,
@@ -1112,7 +1115,7 @@ export default function requestBasicConfigTest() {
     it('testTaskRetry004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test1.txt',
+        url: baseUrl + '/test1.txt',
         mode: request.agent.Mode.FOREGROUND,
         saveas: 'testTaskRetry004.txt',
         retry: false
@@ -1146,7 +1149,7 @@ export default function requestBasicConfigTest() {
     it('testTaskRetry005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test1.txt',
+        url: baseUrl + '/test1.txt',
         mode: request.agent.Mode.BACKGROUND,
         saveas: 'testTaskRetry005.txt',
         retry: false,
@@ -1181,7 +1184,7 @@ export default function requestBasicConfigTest() {
     it('testTaskTitle001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         title: 'download test.txt',
         saveas: 'testTaskTitle001.txt',
       };
@@ -1212,7 +1215,7 @@ export default function requestBasicConfigTest() {
     it('testTaskTitle002', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": 123,
         "saveas": "testTaskTitle002.txt",
       };
@@ -1243,7 +1246,7 @@ export default function requestBasicConfigTest() {
     it('testTaskTitle003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         title: 'a'.repeat(257),
         saveas: 'testTaskTitle003.txt',
       };
@@ -1278,7 +1281,7 @@ export default function requestBasicConfigTest() {
     it('testTaskTitle004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         title: 'a'.repeat(256),
         saveas: 'testTaskTitle004.txt',
       };
@@ -1315,7 +1318,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -1349,7 +1352,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -1409,7 +1412,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: "title",
         description: undefined,
         mode: undefined,
@@ -1443,7 +1446,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -1503,7 +1506,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: "",
         description: undefined,
         mode: undefined,
@@ -1537,7 +1540,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -1597,7 +1600,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: 'a'.repeat(256),
         description: undefined,
         mode: undefined,
@@ -1631,7 +1634,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -1690,7 +1693,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: 'a'.repeat(257),
         description: undefined,
         mode: undefined,
@@ -1757,7 +1760,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": 1,
         "description": undefined,
         "mode": undefined,
@@ -1792,7 +1795,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -1852,7 +1855,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: "desc",
         mode: undefined,
@@ -1886,7 +1889,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -1946,7 +1949,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: "",
         mode: undefined,
@@ -1980,7 +1983,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -2040,7 +2043,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: 'a'.repeat(1024),
         mode: undefined,
@@ -2074,7 +2077,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -2133,7 +2136,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: 'a'.repeat(1025),
         mode: undefined,
@@ -2200,7 +2203,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": 1,
         "mode": undefined,
@@ -2235,7 +2238,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -2295,7 +2298,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: request.agent.Mode.BACKGROUND,
@@ -2329,7 +2332,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -2389,7 +2392,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: request.agent.Mode.FOREGROUND,
@@ -2423,7 +2426,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -2483,7 +2486,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": 1,
@@ -2518,7 +2521,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -2578,7 +2581,7 @@ export default function requestBasicConfigTest() {
       
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2612,7 +2615,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -2672,7 +2675,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2706,7 +2709,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -2766,7 +2769,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2800,7 +2803,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -2860,7 +2863,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2894,7 +2897,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -2954,7 +2957,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2988,7 +2991,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -3048,7 +3051,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -3083,7 +3086,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -3143,7 +3146,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -3179,7 +3182,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -3240,7 +3243,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -3276,7 +3279,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -3336,7 +3339,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -3398,7 +3401,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -3432,7 +3435,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -3487,7 +3490,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -3522,7 +3525,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -3576,7 +3579,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -3610,7 +3613,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -3665,7 +3668,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -3699,7 +3702,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test004.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -3765,7 +3768,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -3801,7 +3804,7 @@ export default function requestBasicConfigTest() {
             if (completed) return;
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/a/b/test005');
             expect(info.tid).assertEqual(task.tid);
@@ -3861,7 +3864,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -3895,7 +3898,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test006');
             expect(info.tid).assertEqual(task.tid);
@@ -3950,7 +3953,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -4011,7 +4014,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -4045,7 +4048,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/test008');
             expect(info.tid).assertEqual(task.tid);
@@ -4100,7 +4103,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -4161,7 +4164,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -4195,7 +4198,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -4250,7 +4253,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -4285,7 +4288,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -4339,7 +4342,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -4373,7 +4376,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -4428,7 +4431,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -4463,7 +4466,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -4517,7 +4520,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -4551,7 +4554,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -4606,7 +4609,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -4641,7 +4644,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -4698,7 +4701,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -4732,7 +4735,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -4788,7 +4791,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -4823,7 +4826,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -4877,7 +4880,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -4939,7 +4942,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -4974,7 +4977,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -5028,7 +5031,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -5063,7 +5066,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);
@@ -5118,7 +5121,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -5153,7 +5156,7 @@ export default function requestBasicConfigTest() {
           request.agent.show(task.tid).then(async (info) => {
             expect(info.uid).assertEqual(undefined);
             expect(info.bundle).assertEqual(undefined);
-            expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+            expect(info.url).assertEqual(baseUrl + '/test.txt');
             expect(info.data).assertEqual("");
             expect(info.saveas).assertEqual('/data/storage/el2/base/haps/testModule/cache/test.txt');
             expect(info.tid).assertEqual(task.tid);

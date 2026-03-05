@@ -55,7 +55,7 @@ export default function requestNewUploadTest() {
       uri: 'internal://cache/test.txt',
       type: 'txt'
     };
-    
+
     /**
      * @tc.number: testUploadUrl001
      * @tc.name: testUploadUrl001

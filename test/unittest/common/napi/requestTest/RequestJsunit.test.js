@@ -39,7 +39,7 @@ describe('RequestTest', function () {
 
     let downloadConfig;
     let globalDownloadConf = {
-        url: 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png',
+        url: 'http://127.0.0.1:8078/baidu_img.png',
         header: {
             headers: 'http'
         },
@@ -135,7 +135,7 @@ describe('RequestTest', function () {
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003', 0, async function (done) {
         downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
-        downloadConfig.url = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip';
+        downloadConfig.url = 'http://127.0.0.1:8078/large_test.zip';
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0003.txt'
         request.download(downloadConfig, (err, data) => {
@@ -213,7 +213,7 @@ describe('RequestTest', function () {
      */
     it('SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005', 0, async function (done) {
         downloadConfig = JSON.parse(JSON.stringify(globalDownloadConf));
-        downloadConfig.url = 'https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.pngkfkew';
+        downloadConfig.url = 'http://127.0.0.1:8078/baidu_img.png';
         console.info("====>-----------------------SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005 is starting-----------------------");
         downloadConfig.filePath += 'SUB_REQUEST_DOWNLOAD_API_DOWNLOADTASK_ON_0005.txt'
         downloadConfig.url += '123456'

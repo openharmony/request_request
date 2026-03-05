@@ -144,80 +144,63 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// 单例实例
-let globalServer: socket.TCPSocketServer | null = null;
-let globalPort: number = 0;
-let globalIsRunning: boolean = false;
-let connectionCount: number = 0;
-
-let handleClient = (client: socket.TCPSocketConnection) => {
-  connectionCount++;
-  console.log('===>client connected, total connections: ' + connectionCount);
-  let socketInfo = async (value: socket.SocketMessageInfo) => {
-    let messageRecv = '';
-    for (let i: number = 0; i < value.message.byteLength; i++) {
-      let uint8Array = new Uint8Array(value.message)
-      let messages = uint8Array[i]
-      let message = String.fromCharCode(messages);
-      messageRecv += message;
-    }
-    console.log('===>on message request: ' + messageRecv.substring(0, 200));
-
-    const request = parseHttpRequest(messageRecv);
-    
-    // Check if this is testTimeout006 (large_test.zip for timeout testing)
-    // It uses totalTimeout: 2, so we need to delay > 2 seconds
-    const isTimeout006 = request.path.indexOf('large_test.zip') >= 0 && 
-                         !request.headers.get('range');
-    
-    if (isTimeout006) {
-      // Delay 3 seconds for testTimeout006 to trigger totalTimeout fault
-      console.log('===>delaying response 3s for testTimeout006');
-      await sleep(3000);
-    }
-    
-    // Check if this is testTimeout007 (testTimeout007.txt for total timeout testing)
-    // It uses totalTimeout: 10, so we need to delay > 10 seconds
-    const isTimeout007 = request.path.indexOf('testTimeout007.txt') >= 0;
-    
-    if (isTimeout007) {
-      // Delay 12 seconds for testTimeout007 to trigger totalTimeout fault
-      console.log('===>delaying response 12s for testTimeout007');
-      await sleep(12000);
-    }
-    
-    const response = handleRequest(request);
-
-    let option: socket.TCPSendOptions = {
-      data: response
-    }
-    await client.send(option);
-    client.close();
-  };
-  client.on('message', socketInfo);
-}
-
 export default class Server {
-  private myPort: number = 0;
+  private iServer: socket.TCPSocketServer | null = null;
+  private isRunning: boolean = false;
+  private serverPort: number = 0;
+  
+  private handleClient = (client: socket.TCPSocketConnection) => {
+    console.log('===>client connected');
+    let socketInfo = async (value: socket.SocketMessageInfo) => {
+      let messageRecv = '';
+      for (let i: number = 0; i < value.message.byteLength; i++) {
+        let uint8Array = new Uint8Array(value.message)
+        let messages = uint8Array[i]
+        let message = String.fromCharCode(messages);
+        messageRecv += message;
+      }
+      console.log('===>on message request: ' + messageRecv.substring(0, 200));
+
+      const request = parseHttpRequest(messageRecv);
+      
+      // Check if this is testTimeout006 (large_test.zip for timeout testing)
+      // It uses totalTimeout: 2, so we need to delay > 2 seconds
+      const isTimeout006 = request.path.includes('large_test.zip') && 
+                           !request.headers.get('range');
+      
+      if (isTimeout006) {
+        // Delay 3 seconds for testTimeout006 to trigger totalTimeout fault
+        console.log('===>delaying response 3s for testTimeout006');
+        await sleep(3000);
+      }
+      
+      const response = handleRequest(request);
+
+      let option: socket.TCPSendOptions = {
+        data: response
+      }
+      await client.send(option);
+      client.close();
+    };
+    client.on('message', socketInfo);
+  }
   
   /**
-   * 启动服务器（单例模式）
-   * 如果全局服务器已运行，复用；否则尝试启动新的
+   * 启动服务器，尝试使用指定的起始端口，如果失败则自动递增端口号
    * @param startPort 起始端口号（默认 8078）
    * @returns 实际监听的端口号
    */
   async serverStart(startPort: number = 8078): Promise<number> {
-    // 如果全局服务器已经在运行，复用
-    if (globalIsRunning && globalServer) {
-      console.log('===>using existing global server on port ' + globalPort);
-      this.myPort = globalPort;
-      return globalPort;
+    // 如果服务器已经在运行，返回当前端口
+    if (this.isRunning && this.iServer) {
+      console.log('===>server already running on port ' + this.serverPort);
+      return this.serverPort;
     }
     
     // 尝试端口范围：从 startPort 到 startPort + 100
     for (let port = startPort; port < startPort + 100; port++) {
       // 每次尝试都创建新的服务器实例
-      globalServer = socket.constructTCPSocketServerInstance();
+      this.iServer = socket.constructTCPSocketServerInstance();
       
       let addr: socket.NetAddress = {
         address: '127.0.0.1', 
@@ -226,27 +209,27 @@ export default class Server {
       
       try {
         console.log('===>trying to start server on 127.0.0.1:' + port);
-        await globalServer.listen(addr);
+        await this.iServer.listen(addr);
         console.log('===>server listening on port ' + port);
-        globalServer.on('connect', handleClient);
-        globalIsRunning = true;
-        globalPort = port;
-        this.myPort = port;
+        this.iServer.on('connect', this.handleClient);
+        this.isRunning = true;
+        this.serverPort = port;
         return port;
       } catch (err) {
         console.log('===>port ' + port + ' failed: ' + JSON.stringify(err));
         // 端口失败，清理实例并继续尝试下一个
-        globalServer = null;
+        this.iServer = null;
         continue;
       }
     }
     
-    // 所有端口都失败了，清理并抛出错误
+    // 所有端口都失败了，清理并返回0（让测试用例决定如何处理）
     console.log('===>all ports from ' + startPort + ' to ' + (startPort + 99) + ' failed');
-    globalServer = null;
-    globalIsRunning = false;
-    globalPort = 0;
-    throw new Error('Failed to start server on any port');
+    this.iServer = null;
+    this.isRunning = false;
+    this.serverPort = 0;
+    // 不抛出异常，返回0让调用者处理
+    return 0;
   }
   
   /**
@@ -254,7 +237,7 @@ export default class Server {
    * @returns 端口号，如果服务器未运行返回 0
    */
   getPort(): number {
-    return globalPort || this.myPort;
+    return this.serverPort;
   }
   
   /**
@@ -262,37 +245,23 @@ export default class Server {
    * @returns 如 "http://127.0.0.1:8080"，如果服务器未运行返回空字符串
    */
   getBaseUrl(): string {
-    const port = globalPort || this.myPort;
-    if (port === 0) {
+    if (!this.isRunning || this.serverPort === 0) {
       return '';
     }
-    return `http://127.0.0.1:${port}`;
+    return `http://127.0.0.1:${this.serverPort}`;
   }
 
-  /**
-   * 关闭服务器（仅当引用计数为0时才真正关闭）
-   */
   async serverClose() {
-    // 单例模式下不真正关闭，让最后一个测试套关闭或进程结束时自动清理
-    console.log('===>serverClose called (singleton mode, keeping server running)');
-    this.myPort = 0;
-  }
-  
-  /**
-   * 强制关闭服务器（所有测试完成后调用）
-   */
-  async serverForceClose() {
-    if (globalIsRunning && globalServer) {
-      console.log('===>force close server on port ' + globalPort);
+    if (this.isRunning && this.iServer) {
+      console.log('===>close server on port ' + this.serverPort);
       try {
-        await globalServer.close();
+        await this.iServer.close();
       } catch (e) {
         console.log('===>close server error (ignored)');
       }
-      globalIsRunning = false;
-      globalServer = null;
-      globalPort = 0;
-      this.myPort = 0;
+      this.isRunning = false;
+      this.iServer = null;
+      this.serverPort = 0;
     }
   }
 }

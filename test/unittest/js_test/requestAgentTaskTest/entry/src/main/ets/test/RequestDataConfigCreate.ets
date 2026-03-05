@@ -19,29 +19,18 @@ import common from '@ohos.app.ability.common';
 import wantAgent, { WantAgent } from '@ohos.app.ability.wantAgent';
 import Server from '../common/iTcpServer'
 
-/*
- * 注意：此测试套中的所有测试用例都已注释掉
- * 原因：这些测试用例用于验证 request.agent.create() 在无效配置下的错误处理行为。
- * 它们期望在 catch 块中捕获特定错误码（如 401），但实际执行时会进入回调而非 catch 块，
- * 导致测试逻辑不匹配而超时。这些测试需要特定的错误注入机制才能正常工作。
- */
 export default function requestDataConfigCreateTest() {
   describe('requestDataConfigCreateTest', () => {
-    /* 测试用例已注释 - 原 24 个测试用例全部超时
-    // 原测试代码...
-    */
-    it('placeholder', 0, () => {
-      expect(true).assertTrue();
-    });
-    return; // 跳过所有后续测试
 
-    // 以下是原始测试代码（已禁用）：
     let server: Server | null = null;
+    let baseUrl: string = "";
 
     beforeAll(async () => {
       console.info('beforeAll called');
       server = new Server();
-      await server.serverStart();
+      let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info("server started on " + baseUrl);
     });
     afterAll(async () => {
       console.info('afterAll called');
@@ -115,9 +104,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1,
      *             and data (lacks 'name' field in the data item).
-     *           3. Try to call request.agent.create() with type-cast config; in the success callback 
+     *           3. Try to call request.agent.create() with type-cast config; in the success callback
      *             (unexpected), assert false and call done().
      *           4. Catch the thrown exception, assert err.code equals 401 (data lacks name error), then call done().
      * @tc.require: issues#1573
@@ -127,7 +116,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: Record<string, string | number | Array<Record<string, Record<string, string>>>> = {
         "action": request.agent.Action.UPLOAD,
-        "url": "http://127.0.0.1:8078",
+        "url": baseUrl,
         "data": [{
           "value": {
             "path": "./test.txt"
@@ -158,9 +147,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1,
      *             and data (name is number 123 in the data item).
-     *           3. Try to call request.agent.create() with type-cast config; in the success callback 
+     *           3. Try to call request.agent.create() with type-cast config; in the success callback
      *             (unexpected), assert false and call done().
      *           4. Catch the thrown exception, assert err.code equals 401 (invalid data name type error), then call done().
      * @tc.require: issues#1573
@@ -170,7 +159,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: Record<string, string | number | Array<Record<string, number | Record<string, string>>>> = {
         "action": request.agent.Action.UPLOAD,
-        "url": "http://127.0.0.1:8078",
+        "url": baseUrl,
         "data": [{
           "name": 123,
           "value": {
@@ -202,9 +191,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1,
      *             and data (lacks 'value' field in the data item).
-     *           3. Try to call request.agent.create() with type-cast config; in the success callback 
+     *           3. Try to call request.agent.create() with type-cast config; in the success callback
      *             (unexpected), assert false and call done().
      *           4. Catch the thrown exception, assert err.code equals 401 (data lacks value error), then call done().
      * @tc.require: issues#1573
@@ -214,7 +203,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: Record<string, string | number | Array<Record<string, string>>> = {
         "action": request.agent.Action.UPLOAD,
-        "url": "http://127.0.0.1:8078",
+        "url": baseUrl,
         "data": [{
           "name": "test"
         }]
@@ -243,9 +232,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1,
      *             and data (value is number 123 in the data item).
-     *           3. Try to call request.agent.create() with type-cast config; in the success callback 
+     *           3. Try to call request.agent.create() with type-cast config; in the success callback
      *             (unexpected), assert false and call done().
      *           4. Catch the thrown exception, assert err.code equals 401 (invalid data value type error), then call done().
      * @tc.require: issues#1573
@@ -255,7 +244,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: Record<string, string | number | Array<Record<string, string | number>>> = {
         "action": request.agent.Action.UPLOAD,
-        "url": "http://127.0.0.1:8078",
+        "url": baseUrl,
         "data": [{
           "name": "file",
           "value": 123
@@ -285,9 +274,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1,
      *             and data (path is empty string '' in the value).
-     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *           3. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
      *           4. Catch the thrown exception, assert err.code equals 401 (invalid empty path error), then call done().
      * @tc.require: issues#1573
@@ -297,7 +286,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -329,9 +318,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1,
      *             and data (path is number 123 in the value).
-     *           3. Try to call request.agent.create() with type-cast config; in the success callback 
+     *           3. Try to call request.agent.create() with type-cast config; in the success callback
      *             (unexpected), assert false and call done().
      *           4. Catch the thrown exception, assert err.code equals 401 (invalid path type error), then call done().
      * @tc.require: issues#1573
@@ -341,7 +330,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: Record<string, string | number | Array<Record<string, string | Record<string, number>>>> = {
         "action": request.agent.Action.UPLOAD,
-        "url": "http://127.0.0.1:8078",
+        "url": baseUrl,
         "data": [{
           "name": "file",
           "value": {
@@ -373,9 +362,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1,
      *             and data (path is cacheDir + '/test.txt', non-absolute path).
-     *           3. Try to call request.agent.create() to create a task; in the success callback, 
+     *           3. Try to call request.agent.create() to create a task; in the success callback,
      *             assert true and call done().
      *           4. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
@@ -385,7 +374,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -417,9 +406,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1,
      *             and data (filename is number 123 in the value).
-     *           3. Call request.agent.create() with type-cast config; in the callback, assert err is null 
+     *           3. Call request.agent.create() with type-cast config; in the callback, assert err is null
      *             (task created successfully).
      *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
@@ -429,7 +418,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: Record<string, string | number | Array<Record<string, string | Record<string, string | number>>>> = {
         "action": request.agent.Action.UPLOAD,
-        "url": "http://127.0.0.1:8078",
+        "url": baseUrl,
         "data": [{
           "name": "file",
           "value": {
@@ -458,9 +447,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1,
      *             and data (mimeType is number 123 in the value).
-     *           3. Call request.agent.create() with type-cast config; in the callback, assert err is null 
+     *           3. Call request.agent.create() with type-cast config; in the callback, assert err is null
      *             (task created successfully).
      *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
@@ -470,7 +459,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: Record<string, string | number | Array<Record<string, string | Record<string, number | string>>>> = {
         "action": request.agent.Action.UPLOAD,
-        "url": "http://127.0.0.1:8078",
+        "url": baseUrl,
         "data": [{
           "name": "file",
           "value": {
@@ -499,9 +488,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1,
      *             and data (path: ./test.txt, filename: a.txt, different values).
-     *           3. Call request.agent.create() to create a task; in the callback, assert err is null 
+     *           3. Call request.agent.create() to create a task; in the callback, assert err is null
      *             (task created successfully).
      *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
@@ -511,7 +500,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -540,9 +529,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1,
      *             and data (value contains two file objects with path: ./test.txt).
-     *           3. Call request.agent.create() to create a task; in the callback, assert err is null 
+     *           3. Call request.agent.create() to create a task; in the callback, assert err is null
      *             (task created successfully).
      *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
@@ -552,7 +541,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: [
@@ -585,9 +574,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1,
      *             and data (value is string 'test' in the data item).
-     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *           3. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
      *           4. Catch the thrown exception, assert err.code equals 401 (invalid data value type error), then call done().
      * @tc.require: issues#1573
@@ -597,7 +586,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'test',
           value: 'test'
@@ -627,9 +616,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1,
      *             and data (path: ./test.txt, filename: test.txt, same values).
-     *           3. Call request.agent.create() to create a task; in the callback, assert err is null 
+     *           3. Call request.agent.create() to create a task; in the callback, assert err is null
      *             (task created successfully).
      *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
@@ -639,7 +628,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -667,9 +656,9 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskData014.txt, 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskData014.txt,
      *             mode: FOREGROUND, and data: 'aaaaa' (string type).
-     *           2. Call request.agent.create() to create a task; in the callback, assert err is null 
+     *           2. Call request.agent.create() to create a task; in the callback, assert err is null
      *             (task created successfully).
      *           3. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
@@ -677,7 +666,7 @@ export default function requestDataConfigCreateTest() {
     it('testTaskData014', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskData014.txt',
         mode: request.agent.Mode.FOREGROUND,
         data: 'aaaaa',
@@ -703,7 +692,7 @@ export default function requestDataConfigCreateTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
      *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, and data: 'aaaaa' (string type).
-     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *           3. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
      *           4. Catch the thrown exception, assert err.code equals 401 (invalid data type for upload error), then call done().
      * @tc.require: issues#1573
@@ -713,7 +702,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: 'aaaaa',
       };
       try {
@@ -739,9 +728,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1,
      *             and data (path: `zcszczvxdvvadZ`, non-existent path, filename: test.txt).
-     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *           3. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
      *           4. Catch the thrown exception, assert err.code equals 13400001 (file not exists error), then call done().
      * @tc.require: issues#1573
@@ -751,7 +740,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -783,9 +772,9 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskData017.txt, 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskData017.txt,
      *             mode: FOREGROUND, and data (file object with path and filename).
-     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *           2. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
      *           3. Catch the thrown exception, assert err.code equals 401 (invalid data type for download error), then call done().
      * @tc.require: issues#1573
@@ -793,7 +782,7 @@ export default function requestDataConfigCreateTest() {
     it('testTaskData017', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskData017.txt',
         mode: request.agent.Mode.FOREGROUND,
         data: [{
@@ -829,9 +818,9 @@ export default function requestDataConfigCreateTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
      *           2. Create an array of 100 file objects (path: ./test.txt, filename: td${i}.txt) and wrap into formItemD18.
-     *           3. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *           3. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1,
      *             and data: formItemD18 (100 files).
-     *           4. Try to call request.agent.create() with type-cast config; in the success callback, 
+     *           4. Try to call request.agent.create() with type-cast config; in the success callback,
      *             assert true and call done().
      *           5. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
@@ -853,7 +842,7 @@ export default function requestDataConfigCreateTest() {
       });
       let conf: Record<string, string | number | Array<Record<string, string | Array<Record<string, string>>>>> = {
         "action": request.agent.Action.UPLOAD,
-        "url": "http://127.0.0.1:8078",
+        "url": baseUrl,
         "data": formItemD18,
       };
       try {
@@ -881,9 +870,9 @@ export default function requestDataConfigCreateTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
      *           2. Create an array of 101 file objects (path: ./test.txt, filename: td${i}.txt) and wrap into formItemD19.
-     *           3. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1, 
+     *           3. Create a Record object (for type conversion) with action: UPLOAD, url: http://127.0.0.1,
      *             and data: formItemD19 (101 files, exceeds limit).
-     *           4. Try to call request.agent.create() with type-cast config; in the success callback 
+     *           4. Try to call request.agent.create() with type-cast config; in the success callback
      *             (unexpected), assert true and call done().
      *           5. Catch the thrown exception, assert err.code equals 401 (too many files error), then call done().
      * @tc.require: issues#1573
@@ -905,7 +894,7 @@ export default function requestDataConfigCreateTest() {
       });
       let conf: Record<string, string | number | Array<Record<string, string | Array<Record<string, string>>>>> = {
         "action": request.agent.Action.UPLOAD,
-        "url": "http://127.0.0.1:8078",
+        "url": baseUrl,
         "data": formItemD19,
       };
       try {
@@ -932,9 +921,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1,
      *             and data (path: `internal://cache/test.txt`, internal pattern path).
-     *           3. Try to call request.agent.create() to create a task; in the success callback, 
+     *           3. Try to call request.agent.create() to create a task; in the success callback,
      *             assert true and call done().
      *           4. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
@@ -944,7 +933,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -977,9 +966,9 @@ export default function requestDataConfigCreateTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. Get the application's cache directory via UIAbilityContext.
      *           2. In the cache directory, create a test file (data_021) with read-write permissions and close it.
-     *           3. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *           3. Create a Config object with action: UPLOAD, url: http://127.0.0.1,
      *             and data (path: application pattern path pointing to data_021).
-     *           4. Call request.agent.create() to create a task; in the success callback, delete the test file, 
+     *           4. Call request.agent.create() to create a task; in the success callback, delete the test file,
      *             assert true and call done().
      *           5. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
@@ -991,7 +980,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -1030,9 +1019,9 @@ export default function requestDataConfigCreateTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. Get the application's cache directory via UIAbilityContext.
      *           2. In the cache directory, create a test file (data_022) with read-write permissions and close it.
-     *           3. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *           3. Create a Config object with action: UPLOAD, url: http://127.0.0.1,
      *             and data (path: `file://com.acts.request/.../data_022`, file pattern path).
-     *           4. Call request.agent.create() to create a task; in the success callback, delete the test file, 
+     *           4. Call request.agent.create() to create a task; in the success callback, delete the test file,
      *             assert true and call done().
      *           5. In the catch callback, assert false (task creation failed) and call done().
      * @tc.require: issues#1573
@@ -1044,7 +1033,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -1081,9 +1070,9 @@ export default function requestDataConfigCreateTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: UPLOAD, url: http://127.0.0.1, mode: FOREGROUND, 
+     * @tc.step: 1. Create a Config object with action: UPLOAD, url: http://127.0.0.1, mode: FOREGROUND,
      *             and data (path: `file://media/Photo/1/test.txt`, public directory path).
-     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *           2. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
      *           3. Catch the thrown exception, assert err.code equals 13400001 (file not exists error), then call done().
      * @tc.require: issues#1573
@@ -1091,7 +1080,7 @@ export default function requestDataConfigCreateTest() {
     it('testTaskData023', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         mode: request.agent.Mode.FOREGROUND,
         data: [{
           name: 'file',
@@ -1124,9 +1113,9 @@ export default function requestDataConfigCreateTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1,
      *             and data (path: cacheDir + '/test.txt', contentType: 'test' string).
-     *           3. Try to call request.agent.create() to create a task; in the success callback, 
+     *           3. Try to call request.agent.create() to create a task; in the success callback,
      *             assert true and call done().
      *           4. Catch the thrown exception, assert false (unexpected error) and call done().
      * @tc.require: issues#1573
@@ -1136,7 +1125,7 @@ export default function requestDataConfigCreateTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {

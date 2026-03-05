@@ -24,11 +24,14 @@ import Server from '../common/iTcpServer'
 export default function requestOperateTaskTest() {
   describe('requestOperateTaskTest', () => {
     let server: Server | null = null;
+    let baseUrl: string = "";
 
     beforeAll(async () => {
       console.info('beforeAll called');
       server = new Server();
-      await server.serverStart();
+      let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info("server started on " + baseUrl);
     });
     afterAll(async () => {
       console.info('afterAll called');
@@ -115,7 +118,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testStartTask001.txt',
           mode: request.agent.Mode.FOREGROUND
         };
@@ -168,7 +171,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testStartTask002.txt',
           mode: request.agent.Mode.FOREGROUND
         };
@@ -222,7 +225,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testStartTask003.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -280,7 +283,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testStartTask004.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -336,7 +339,7 @@ export default function requestOperateTaskTest() {
     it('testStartTask005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testStartTask005.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -372,7 +375,7 @@ export default function requestOperateTaskTest() {
     it('testStartTask006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testStartTask006.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -407,7 +410,7 @@ export default function requestOperateTaskTest() {
     it('testStartTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testStartTask007.txt',
         mode: request.agent.Mode.FOREGROUND
       };
@@ -443,7 +446,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/large_test.zip',
+          url: baseUrl + '/large_test.zip',
           saveas: `test.txt`,
           mode: request.agent.Mode.FOREGROUND
         };
@@ -451,7 +454,7 @@ export default function requestOperateTaskTest() {
         await task.start();
         let conf1: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: `README.md`,
           mode: request.agent.Mode.FOREGROUND
         };
@@ -484,7 +487,7 @@ export default function requestOperateTaskTest() {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
         mode: request.agent.Mode.BACKGROUND,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: `testStartTask009.txt`,
       };
       try {
@@ -517,7 +520,7 @@ export default function requestOperateTaskTest() {
     it('testStartTask0010', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testStartTask0010.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -549,7 +552,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/large_test.zip',
+          url: baseUrl + '/large_test.zip',
           saveas: `test.txt`,
           mode: request.agent.Mode.BACKGROUND
         };
@@ -557,7 +560,7 @@ export default function requestOperateTaskTest() {
         await task.start();
         let conf1: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: `README.md`,
           mode: request.agent.Mode.BACKGROUND
         };
@@ -590,7 +593,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testPauseTask001.txt',
           mode: request.agent.Mode.FOREGROUND
         };
@@ -623,7 +626,7 @@ export default function requestOperateTaskTest() {
     it('testPauseTask002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testPauseTask002.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -660,7 +663,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testPauseTask003.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -694,7 +697,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testPauseTask004.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -728,7 +731,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/large_test.zip',
+          url: baseUrl + '/large_test.zip',
           saveas: 'testPauseTask005.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -761,7 +764,7 @@ export default function requestOperateTaskTest() {
     it('testPauseTask006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testPauseTask006.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -795,7 +798,7 @@ export default function requestOperateTaskTest() {
     it('testPauseTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testPauseTask007.txt',
         mode: request.agent.Mode.FOREGROUND
       };
@@ -831,7 +834,7 @@ export default function requestOperateTaskTest() {
     it('testPauseTask008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testPauseTask008.txt',
         mode: request.agent.Mode.FOREGROUND
       };
@@ -866,7 +869,7 @@ export default function requestOperateTaskTest() {
     it('testResumeTask001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testResumeTask001.txt',
         mode: request.agent.Mode.FOREGROUND
       };
@@ -901,7 +904,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testResumeTask002.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -935,7 +938,7 @@ export default function requestOperateTaskTest() {
     it('testResumeTask003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testResumeTask003.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -970,7 +973,7 @@ export default function requestOperateTaskTest() {
     it('testResumeTask004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testResumeTask004.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -1006,7 +1009,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/large_test.zip',
+          url: baseUrl + '/large_test.zip',
           saveas: 'testResumeTask005.txt',
           mode: request.agent.Mode.FOREGROUND
         };
@@ -1040,7 +1043,7 @@ export default function requestOperateTaskTest() {
     it('testResumeTask006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/large_test.zip',
+        url: baseUrl + '/large_test.zip',
         saveas: 'testResumeTask006.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -1076,7 +1079,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/large_test.zip',
+          url: baseUrl + '/large_test.zip',
           saveas: 'testResumeTask007.txt',
           mode: request.agent.Mode.FOREGROUND
         };
@@ -1109,7 +1112,7 @@ export default function requestOperateTaskTest() {
     it('testResumeTask008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/large_test.zip',
+        url: baseUrl + '/large_test.zip',
         saveas: 'testResumeTask008.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -1143,7 +1146,7 @@ export default function requestOperateTaskTest() {
     it('testResumeTask009', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/large_test.zip',
+        url: baseUrl + '/large_test.zip',
         saveas: 'testResumeTask009.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -1177,7 +1180,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testStopTask001.txt',
           mode: request.agent.Mode.FOREGROUND
         };
@@ -1210,7 +1213,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testStopTask002.txt',
           mode: request.agent.Mode.FOREGROUND
         };
@@ -1243,7 +1246,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testStopTask003.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -1276,7 +1279,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testStopTask004.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -1309,7 +1312,7 @@ export default function requestOperateTaskTest() {
       await sleep(300);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testStopTask005.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -1345,7 +1348,7 @@ export default function requestOperateTaskTest() {
       await sleep(300);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/large_test.zip',
+        url: baseUrl + '/large_test.zip',
         saveas: 'testStopTask006.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -1381,7 +1384,7 @@ export default function requestOperateTaskTest() {
       await sleep(300);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/large_test.zip',
+        url: baseUrl + '/large_test.zip',
         saveas: 'testStopTask007.txt',
         mode: request.agent.Mode.FOREGROUND
       };
@@ -1415,7 +1418,7 @@ export default function requestOperateTaskTest() {
       await sleep(300);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/large_test.zip',
+        url: baseUrl + '/large_test.zip',
         saveas: 'testStopTask008.txt',
         mode: request.agent.Mode.FOREGROUND
       };
@@ -1496,7 +1499,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testRemove003.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -1528,7 +1531,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testRemove004.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -1559,7 +1562,7 @@ export default function requestOperateTaskTest() {
     it('testRemove005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testRemove005.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -1594,7 +1597,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testRemove006.txt',
           mode: request.agent.Mode.FOREGROUND
         };
@@ -1626,7 +1629,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testRemove007.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -1659,7 +1662,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testRemove008.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -1693,7 +1696,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testRemove009.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -1727,7 +1730,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testRedirect001.txt',
           mode: request.agent.Mode.BACKGROUND,
           redirect: true
@@ -1766,7 +1769,7 @@ export default function requestOperateTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testRedirect002.txt',
           mode: request.agent.Mode.BACKGROUND,
           redirect: false
@@ -1804,7 +1807,7 @@ export default function requestOperateTaskTest() {
     it('testGetTaskId001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: `test_get_task_id_001`,
       };
       try {
@@ -1832,7 +1835,7 @@ export default function requestOperateTaskTest() {
     it('testGetTaskId002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: `test_get_task_id_002`,
       };
       try {
@@ -1860,7 +1863,7 @@ export default function requestOperateTaskTest() {
     it('testGetTaskId003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: `test_get_task_id_003`,
       };
       let task = await request.agent.create(context, conf);
@@ -1890,7 +1893,7 @@ export default function requestOperateTaskTest() {
     it('testGetTaskId004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: `test_get_task_id_003`,
       };
       try {
@@ -1940,7 +1943,7 @@ export default function requestOperateTaskTest() {
     it('testGetTaskId006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: `test_get_task_id_004`,
       };
       try {
@@ -1967,7 +1970,7 @@ export default function requestOperateTaskTest() {
     it('testGetTaskId007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: `test_get_task_id_007`,
       };
       let task = await request.agent.create(context, conf);

@@ -18,6 +18,7 @@ import common from '@ohos.app.ability.common';
 import wifiManager from '@ohos.wifiManager';
 import commonEvent from '@ohos.commonEventManager';
 import { BusinessError, request } from '@kit.BasicServicesKit';
+import Server from '../../common/iTcpServer';
 PersistentStorage.persistProp('testId', '')
 
 
@@ -39,13 +40,15 @@ struct download {
   private context = getContext(this) as common.UIAbilityContext;
   private task: undefined | request.agent.Task;
   @State tid: string = '';
-  @State URL_30M: string = 'weekly.tar.gz';
-  @State URL_411M: string = 'dayu200_img.tar.gz';
-  @State Url_400k: string = 'test400K.txt';
-  @State Url_1G: string = '1815-L2-SDK-MAC-M1-PUBLIC.tar.gz';
+  @State URL_30M: string = 'http://127.0.0.1:8078/weekly.tar.gz';
+  @State URL_411M: string = 'http://127.0.0.1:8078/dayu200_img.tar.gz';
+  @State Url_400k: string = 'http://127.0.0.1:8078/test400K.txt';
+  @State Url_1G: string = 'http://127.0.0.1:8078/1815-L2-SDK-MAC-M1-PUBLIC.tar.gz';
+  private server: Server | null = null;
+
   @State config: request.agent.Config = {
     action: request.agent.Action.DOWNLOAD,
-    url: 'weekly.tar.gz',
+    url: 'http://127.0.0.1:8078/test.txt',
     title: 'intake_test',
     description: 'intake_test',
     saveas: './',
@@ -59,6 +62,17 @@ struct download {
   };
   @State taskLists: Array<request.agent.Task> = [];
   @StorageLink('testId') testId: string = ''
+
+  aboutToAppear() {
+    this.server = new Server();
+    this.server.serverStart();
+  }
+
+  aboutToDisappear() {
+    if (this.server) {
+      this.server.serverClose();
+    }
+  }
 
   build() {
     Row() {
@@ -1324,7 +1338,7 @@ struct download {
     try {
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         title: 'intake_test',
         description: 'intake_test',
         saveas: '/data',

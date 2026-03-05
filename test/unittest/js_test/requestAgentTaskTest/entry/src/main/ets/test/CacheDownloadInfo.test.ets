@@ -20,12 +20,15 @@ import Server from '../common/iTcpServer'
 export default function cacheDownloadInfo() {
   describe('cacheDownloadInfo', () => {
     let server: Server | null = null;
+    let baseUrl: string = "";
     
     beforeAll(async () => {
       console.info('beforeAll called');
       // 启动共享服务器
       server = new Server();
-      await server.serverStart();
+      let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info("server started on " + baseUrl);
       // 等待服务器完全就绪
       await sleep(500);
     });
@@ -52,12 +55,12 @@ export default function cacheDownloadInfo() {
 
     let cbSuccess1 = () => {
       console.info("cbSuccess1");
-      cacheDownload.offDownloadSuccess("http://127.0.0.1:8078/test.txt", cbSuccess1);
+      cacheDownload.offDownloadSuccess(baseUrl + "/test.txt", cbSuccess1);
     }
 
     let cbError1 = () => {
       console.info("cbError1");
-      cacheDownload.offDownloadError("http://127.0.0.1:8078/test123.txt", cbError1);
+      cacheDownload.offDownloadError(baseUrl + "/test123.txt", cbError1);
     }
 
     /**
@@ -161,11 +164,11 @@ export default function cacheDownloadInfo() {
       try {
         let options: cacheDownload.CacheDownloadOptions = {};
         cacheDownload.setDownloadInfoListSize(1);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         let total_time = 0;
         if (downloadInfo == undefined) {
           console.error('testGetDownloadInfo001 downloadInfo undefined.');
@@ -174,11 +177,11 @@ export default function cacheDownloadInfo() {
         } else {
           total_time = downloadInfo.performance.totalTime;
         }
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo2 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo2 == undefined) {
           console.error('testGetDownloadInfo001 downloadInfo2 undefined.');
           expect(false).assertTrue();
@@ -215,28 +218,28 @@ export default function cacheDownloadInfo() {
       try {
         let options: cacheDownload.CacheDownloadOptions = {};
         cacheDownload.setDownloadInfoListSize(1);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo == undefined) {
           console.error('testGetDownloadInfo002 downloadInfo undefined.');
           expect(false).assertTrue();
           done();
         }
-        cacheDownload.download("http://127.0.0.1:8078/edge_picture.jpg",
+        cacheDownload.download(baseUrl + "/edge_picture.jpg",
           options);
         await sleep(500);
         let downloadInfo2 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/edge_picture.jpg");
+          cacheDownload.getDownloadInfo(baseUrl + "/edge_picture.jpg");
         if (downloadInfo2 == undefined) {
           console.error('testGetDownloadInfo002 downloadInfo2 undefined.');
           expect(false).assertTrue();
           done();
         }
         let downloadInfo_1 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo_1 == undefined) {
           done();
         } else {
@@ -272,38 +275,38 @@ export default function cacheDownloadInfo() {
       try {
         let options: cacheDownload.CacheDownloadOptions = {};
         cacheDownload.setDownloadInfoListSize(2);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo == undefined) {
           console.error('testGetDownloadInfo003 downloadInfo undefined.');
           expect(false).assertTrue();
           done();
         }
-        cacheDownload.download("http://127.0.0.1:8078/edge_picture.jpg",
+        cacheDownload.download(baseUrl + "/edge_picture.jpg",
           options);
         await sleep(500);
         let downloadInfo2 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/edge_picture.jpg");
+          cacheDownload.getDownloadInfo(baseUrl + "/edge_picture.jpg");
         if (downloadInfo2 == undefined) {
           console.error('testGetDownloadInfo003 downloadInfo2 undefined.');
           expect(false).assertTrue();
           done();
         }
-        cacheDownload.download("http://127.0.0.1:8078/audio_test.mp3",
+        cacheDownload.download(baseUrl + "/audio_test.mp3",
           options);
         await sleep(500);
         let downloadInfo3 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/audio_test.mp3");
+          cacheDownload.getDownloadInfo(baseUrl + "/audio_test.mp3");
         if (downloadInfo3 == undefined) {
           console.error('testGetDownloadInfo003 downloadInfo3 undefined.');
           expect(false).assertTrue();
           done();
         }
         let downloadInfo_1 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo_1 == undefined) {
           done();
         } else {
@@ -352,45 +355,45 @@ export default function cacheDownloadInfo() {
       try {
         let options: cacheDownload.CacheDownloadOptions = {};
         cacheDownload.setDownloadInfoListSize(2);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo == undefined) {
           console.error('testGetDownloadInfo004 downloadInfo undefined.');
           expect(false).assertTrue();
           done();
         }
-        cacheDownload.download("http://127.0.0.1:8078/edge_picture.jpg",
+        cacheDownload.download(baseUrl + "/edge_picture.jpg",
           options);
         await sleep(500);
         let downloadInfo2 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/edge_picture.jpg");
+          cacheDownload.getDownloadInfo(baseUrl + "/edge_picture.jpg");
         if (downloadInfo2 == undefined) {
           console.error('testGetDownloadInfo004 downloadInfo2 undefined.');
           expect(false).assertTrue();
           done();
         }
         let downloadInfo_1 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo_1 == undefined) {
           console.error('testGetDownloadInfo004 downloadInfo2 undefined.');
           expect(false).assertTrue();
           done();
         }
-        cacheDownload.download("http://127.0.0.1:8078/audio_test.mp3",
+        cacheDownload.download(baseUrl + "/audio_test.mp3",
           options);
         await sleep(500);
         let downloadInfo3 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/audio_test.mp3");
+          cacheDownload.getDownloadInfo(baseUrl + "/audio_test.mp3");
         if (downloadInfo3 == undefined) {
           console.error('testGetDownloadInfo004 downloadInfo3 undefined.');
           expect(false).assertTrue();
           done();
         }
         let downloadInfo_2 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/edge_picture.jpg");
+          cacheDownload.getDownloadInfo(baseUrl + "/edge_picture.jpg");
         if (downloadInfo_2 == undefined) {
           done();
         } else {
@@ -439,11 +442,11 @@ export default function cacheDownloadInfo() {
           }
         };
         cacheDownload.setDownloadInfoListSize(1);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo: cacheDownload.DownloadInfo | undefined =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         let total_time = 0;
         if (downloadInfo == undefined) {
           console.error('testGetDownloadInfo005 downloadInfo undefined.');
@@ -452,11 +455,11 @@ export default function cacheDownloadInfo() {
         } else {
           total_time = downloadInfo.performance.totalTime;
         }
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo2: cacheDownload.DownloadInfo | undefined =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo2 == undefined) {
           console.error('testGetDownloadInfo005 downloadInfo2 undefined.');
           expect(false).assertTrue();
@@ -493,10 +496,10 @@ export default function cacheDownloadInfo() {
     it('testGetDownloadInfo006', 0, async (done: Function) => {
       try {
         cacheDownload.setDownloadInfoListSize(10);
-        cacheDownload.download("http://127.0.0.1:8078", {});
+        cacheDownload.download(baseUrl + "", {});
         await sleep(500);
         let downloadInfo: cacheDownload.DownloadInfo | undefined =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078");
+          cacheDownload.getDownloadInfo(baseUrl + "");
         if (downloadInfo == undefined) {
           console.error('testGetDownloadInfo006 downloadInfo undefined.');
           expect(false).assertTrue();
@@ -542,11 +545,11 @@ export default function cacheDownloadInfo() {
             cacheStrategy : cacheDownload.CacheStrategy.FORCE
         };
         cacheDownload.setDownloadInfoListSize(1);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           forceOptions);
         await sleep(500);
         let downloadInfo =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         let totalTime = 0;
         let dnsTime = 0;
         let connectTime = 0;
@@ -571,11 +574,11 @@ export default function cacheDownloadInfo() {
         let lazyOptions: cacheDownload.CacheDownloadOptions = {
             cacheStrategy : cacheDownload.CacheStrategy.LAZY
         };
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           lazyOptions);
         await sleep(500);
         let downloadInfo2 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo2 == undefined) {
           console.error('testCacheStrategy001 downloadInfo2 undefined.');
           expect(false).assertTrue();
@@ -626,11 +629,11 @@ export default function cacheDownloadInfo() {
         cacheDownload.setFileCacheSize(0);
         cacheDownload.setDownloadInfoListSize(0);
         cacheDownload.setDownloadInfoListSize(1);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           lazyOptions);
         await sleep(500);
         let downloadInfo =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo == undefined) {
           console.error('testCacheStrategy002 downloadInfo undefined.');
            expect(false).assertTrue();
@@ -675,11 +678,11 @@ export default function cacheDownloadInfo() {
             cacheStrategy : cacheDownload.CacheStrategy.FORCE
         };
         cacheDownload.setDownloadInfoListSize(1);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           forceOptions);
         await sleep(500);
         let downloadInfo =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         let totalTime = 0;
         if (downloadInfo == undefined) {
           console.error('testCacheStrategy003 downloadInfo undefined.');
@@ -689,11 +692,11 @@ export default function cacheDownloadInfo() {
           totalTime = downloadInfo.performance.totalTime;
         }
 
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           forceOptions);
         await sleep(500);
         let downloadInfo2 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo2 == undefined) {
           console.error('testCacheStrategy003 downloadInfo2 undefined.');
           expect(false).assertTrue();
@@ -734,11 +737,11 @@ export default function cacheDownloadInfo() {
         };
         cacheDownload.setDownloadInfoListSize(0);
         cacheDownload.setDownloadInfoListSize(1);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           forceOptions);
         await sleep(500);
         let downloadInfo =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo == undefined) {
           console.error('testCacheStrategy004 downloadInfo undefined.');
           expect(false).assertTrue();
@@ -807,11 +810,11 @@ export default function cacheDownloadInfo() {
       try {
         let options: cacheDownload.CacheDownloadOptions = {};
         cacheDownload.setDownloadInfoListSize(1);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         let totalTime = 0;
         if (downloadInfo == undefined) {
           console.error('testCacheStrategy006 downloadInfo undefined.');
@@ -821,11 +824,11 @@ export default function cacheDownloadInfo() {
           totalTime = downloadInfo.performance.totalTime;
         }
 
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo2 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo2 == undefined) {
           console.error('testCacheStrategy006 downloadInfo2 undefined.');
           expect(false).assertTrue();
@@ -872,11 +875,11 @@ export default function cacheDownloadInfo() {
             cacheStrategy : undefined
         };
         cacheDownload.setDownloadInfoListSize(1);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         let totalTime = 0;
         if (downloadInfo == undefined) {
           console.error('testCacheStrategy007 downloadInfo undefined.');
@@ -886,11 +889,11 @@ export default function cacheDownloadInfo() {
           totalTime = downloadInfo.performance.totalTime;
         }
 
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo2 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo2 == undefined) {
           console.error('testCacheStrategy007 downloadInfo2 undefined.');
           expect(false).assertTrue();
@@ -937,11 +940,11 @@ export default function cacheDownloadInfo() {
             cacheStrategy : "test"
         };
         cacheDownload.setDownloadInfoListSize(1);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         let totalTime = 0;
         if (downloadInfo == undefined) {
           console.error('testCacheStrategy008 downloadInfo undefined.');
@@ -951,11 +954,11 @@ export default function cacheDownloadInfo() {
           totalTime = downloadInfo.performance.totalTime;
         }
 
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo2 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo2 == undefined) {
           console.error('testCacheStrategy008 downloadInfo2 undefined.');
           expect(false).assertTrue();
@@ -1002,11 +1005,11 @@ export default function cacheDownloadInfo() {
             cacheStrategy : 3
         };
         cacheDownload.setDownloadInfoListSize(1);
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         let totalTime = 0;
         if (downloadInfo == undefined) {
           console.error('testCacheStrategy009 downloadInfo undefined.');
@@ -1016,11 +1019,11 @@ export default function cacheDownloadInfo() {
           totalTime = downloadInfo.performance.totalTime;
         }
 
-        cacheDownload.download("http://127.0.0.1:8078/test400K.txt",
+        cacheDownload.download(baseUrl + "/test400K.txt",
           options);
         await sleep(500);
         let downloadInfo2 =
-          cacheDownload.getDownloadInfo("http://127.0.0.1:8078/test400K.txt");
+          cacheDownload.getDownloadInfo(baseUrl + "/test400K.txt");
         if (downloadInfo2 == undefined) {
           console.error('testCacheStrategy009 downloadInfo2 undefined.');
           expect(false).assertTrue();
@@ -1051,7 +1054,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess001', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test.txt";
+      const url = baseUrl + "/test.txt";
 
       // 创建Promise包装回调，显式指定类型
       const successPromise: Promise<void> = new Promise<void>((resolve: () => void) => {
@@ -1098,7 +1101,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess002', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test.txt";
+      const url = baseUrl + "/test.txt";
       let callbackCount = 0;
       
       // 创建Promise包装回调
@@ -1146,7 +1149,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess003', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test.txt";
+      const url = baseUrl + "/test.txt";
       
       // 创建Promise包装嵌套回调
       const successPromise = new Promise<void>((resolve) => {
@@ -1191,7 +1194,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess004', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test.txt";
+      const url = baseUrl + "/test.txt";
       let callbackCalled = false;
       
       // 创建Promise包装回调
@@ -1240,7 +1243,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess005', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test.txt";
+      const url = baseUrl + "/test.txt";
       let callbackCalled = false;
       
       const successPromise = new Promise<void>((resolve) => {
@@ -1284,7 +1287,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess006', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test.txt";
+      const url = baseUrl + "/test.txt";
       let cbString = "";
       
       // 创建Promise等待两个回调执行
@@ -1338,7 +1341,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess007', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test.txt";
+      const url = baseUrl + "/test.txt";
       let cbString = "";
       
       const successPromise = new Promise<void>((resolve) => {
@@ -1385,7 +1388,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess008', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test.txt";
+      const url = baseUrl + "/test.txt";
       let cbString = "";
       
       const successPromise = new Promise<void>((resolve) => {
@@ -1436,7 +1439,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess009', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test.txt";
+      const url = baseUrl + "/test.txt";
       let cbString = "";
       
       const successPromise = new Promise<void>((resolve) => {
@@ -1483,7 +1486,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess010', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test.txt";
+      const url = baseUrl + "/test.txt";
       let cbString = "";
       
       const successPromise = new Promise<void>((resolve) => {
@@ -1524,7 +1527,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess011', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test.txt";
+      const url = baseUrl + "/test.txt";
       let cbString = "";
       
       const successPromise = new Promise<void>((resolve) => {
@@ -1576,7 +1579,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess012', 15000, async () => {
-      const url = "http://127.0.0.1:8078/bird.png";
+      const url = baseUrl + "/bird.png";
       let cbString = "";
       let downloadCounter = 0;
       
@@ -1648,7 +1651,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadSuccess013', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test.txt";
+      const url = baseUrl + "/test.txt";
       let cbString = "";
       let downloadCounter = 0;
       
@@ -1718,7 +1721,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError001', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       
       const errorPromise = new Promise<void>((resolve) => {
         cacheDownload.onDownloadError(url, (error: cacheDownload.DownloadError) => {
@@ -1757,7 +1760,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError002', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       let errorCount = 0;
       
       const errorPromise = new Promise<void>((resolve) => {
@@ -1800,7 +1803,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError003', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       
       const errorPromise = new Promise<void>((resolve) => {
         cacheDownload.onDownloadError(url, (error: cacheDownload.DownloadError) => {
@@ -1844,7 +1847,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError004', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       let callbackCalled = false;
       
       const errorPromise = new Promise<void>((resolve) => {
@@ -1889,7 +1892,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError005', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       let callbackCalled = false;
       
       const errorPromise = new Promise<void>((resolve) => {
@@ -1933,7 +1936,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError006', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       let cbString = "";
       
       const errorPromise = new Promise<void>((resolve) => {
@@ -1987,7 +1990,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError007', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       let cbString = "";
       
       const errorPromise = new Promise<void>((resolve) => {
@@ -2038,7 +2041,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError008', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       let cbString = "";
       
       const errorPromise = new Promise<void>((resolve) => {
@@ -2089,7 +2092,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError009', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       let cbString = "";
       
       const errorPromise = new Promise<void>((resolve) => {
@@ -2133,7 +2136,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError010', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       let cbString = "";
       
       const errorPromise = new Promise<void>((resolve) => {
@@ -2174,7 +2177,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError011', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       let cbString = "";
       
       const errorPromise = new Promise<void>((resolve) => {
@@ -2226,7 +2229,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError012', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       let cbString = "";
       let downloadCounter = 0;
       
@@ -2303,7 +2306,7 @@ export default function cacheDownloadInfo() {
      * @tc.require: issues#1650
      */
     it('testDownloadError013', 15000, async () => {
-      const url = "http://127.0.0.1:8078/test123.txt";
+      const url = baseUrl + "/test123.txt";
       let cbString = "";
       let downloadCounter = 0;
       

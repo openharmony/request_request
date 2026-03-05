@@ -115,13 +115,42 @@
 ```bash
 # cd 到 ../../../ 目录下运行， 依赖 build.sh 文件
 ./build.sh --product-name rk3568 --build-target out/rk3568/build_configs/request/request:request --no-indep
+
+# 快速构建（不修改BUILD.gn等构建文件时使用）
+./build.sh --product-name rk3568 --build-target out/rk3568/build_configs/request/request:request --no-indep --fast-build
 ```
 
 ### 构建测试
 ```bash
 # cd 到 ../../../ 目录下运行， 依赖 build.sh 文件
 ./build.sh --product-name rk3568 --build-target out/rk3568/build_configs/request/request:request_test --no-indep
+
+# 快速构建测试（不修改BUILD.gn等构建文件时使用）
+./build.sh --product-name rk3568 --build-target out/rk3568/build_configs/request/request:request_test --no-indep --fast-build
 ```
 
 ### 产物位置
-../../../out/rk3568/request/request
+
+#### 二进制产物（库文件）
+位置：`../../../out/rk3568/request/request/`
+
+包含：
+- `librequest.z.so` - 主请求库
+- `librequest_action.z.so` - 请求动作库
+- `libdownload_server.dylib.so` - 下载服务动态库
+- `libpreload_native.z.so` / `libpreload_native_rust.z.so` - 预加载库
+- `libcachedownload.z.so` / `libcache_download_ani.so` - 缓存下载库
+- `libcj_request_ffi.z.so` - Cangjie FFI 绑定库
+- `*.rlib` - Rust 静态库文件
+
+#### 测试产物（可执行文件）
+位置：`../../../out/rk3568/tests/unittest/request/request/request/`
+
+包含：
+- `preload_test` - Preload 模块 C++ 单元测试
+- `fwkTest` - 框架测试
+- `innerTest` - 内部接口测试
+- `saTest` - SA (System Ability) 测试
+- `common_netstack_test` - 网络栈测试
+- `preload_napi_test` - Preload NAPI 测试
+- `inotify_image_test` - 文件监控测试

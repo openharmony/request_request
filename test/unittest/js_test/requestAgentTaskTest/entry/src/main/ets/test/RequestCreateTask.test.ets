@@ -22,11 +22,14 @@ import Server from '../common/iTcpServer'
 export default function requestCreateTaskTest() {
   describe('requestCreateTaskTest', () => {
     let server: Server | null = null;
+    let baseUrl: string = "";
 
     beforeAll(async () => {
       console.info('beforeAll called');
       server = new Server();
-      await server.serverStart();
+      let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info("server started on " + baseUrl);
     });
     afterAll(async () => {
       console.info('afterAll called');
@@ -144,7 +147,7 @@ export default function requestCreateTaskTest() {
     it('testTaskToken001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskToken001.txt',
         token: 'abcdef'
       };
@@ -183,7 +186,7 @@ export default function requestCreateTaskTest() {
     it('testTaskToken002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskToken002.txt',
         token: 'a'.padStart(2049, 'a')
       };
@@ -222,7 +225,7 @@ export default function requestCreateTaskTest() {
     it('testTaskToken003', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "saveas": "testTaskToken003.txt",
         "token": 666
       };
@@ -259,7 +262,7 @@ export default function requestCreateTaskTest() {
     it('testTaskToken004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskToken004.txt',
         token: 'a'.padStart(2048, 'a')
       };
@@ -296,7 +299,7 @@ export default function requestCreateTaskTest() {
     it('testTaskToken005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskToken005.txt',
         token: '11111111'
       };
@@ -411,7 +414,7 @@ export default function requestCreateTaskTest() {
     it('testTaskVisibility001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskVisibility001.txt',
         notification: {
           visibility: request.agent.VISIBILITY_COMPLETION,
@@ -450,7 +453,7 @@ export default function requestCreateTaskTest() {
     it('testTaskVisibility002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskVisibility002.txt',
         notification: {
           visibility: request.agent.VISIBILITY_PROGRESS,
@@ -489,7 +492,7 @@ export default function requestCreateTaskTest() {
     it('testTaskVisibility003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskVisibility003.txt',
         notification: {
           visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
@@ -529,7 +532,7 @@ export default function requestCreateTaskTest() {
     it('testTaskVisibility004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskVisibility004.txt',
         notification: {
           visibility: 0b00, // Invalid value
@@ -569,7 +572,7 @@ export default function requestCreateTaskTest() {
     it('testTaskVisibility005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskVisibility005.txt',
         notification: {
           visibility: 0b100, // Invalid value
@@ -609,7 +612,7 @@ export default function requestCreateTaskTest() {
     it('testTaskVisibility006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskVisibility006.txt',
         notification: {
           visibility: 'invalid' as Object as number, // Invalid type
@@ -648,7 +651,7 @@ export default function requestCreateTaskTest() {
     it('testTaskVisibility007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskVisibility007.txt',
         gauge: true,
         notification: {
@@ -688,7 +691,7 @@ export default function requestCreateTaskTest() {
     it('testTaskVisibility008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskVisibility008.txt',
         gauge: false,
         notification: {
@@ -729,7 +732,7 @@ export default function requestCreateTaskTest() {
     it('testTaskWantAgent001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskWantAgent001.txt',
         gauge: false,
         notification: {
@@ -771,7 +774,7 @@ export default function requestCreateTaskTest() {
     it('testTaskWantAgent002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskWantAgent002.txt',
         gauge: false,
         notification: {
@@ -812,7 +815,7 @@ export default function requestCreateTaskTest() {
     it('testTaskWantAgent003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskWantAgent003.txt',
         gauge: false,
         notification: {
@@ -853,7 +856,7 @@ export default function requestCreateTaskTest() {
     it('testTaskWantAgent004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskWantAgent004.txt',
         gauge: false,
         notification: {
@@ -893,7 +896,7 @@ export default function requestCreateTaskTest() {
     it('testTaskNotiTitle001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNotiTitle001.txt',
         gauge: false,
         notification: {}
@@ -931,7 +934,7 @@ export default function requestCreateTaskTest() {
     it('testTaskNotiTitle002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNotiTitle002.txt',
         gauge: false,
         notification: {
@@ -971,7 +974,7 @@ export default function requestCreateTaskTest() {
     it('testTaskNotiTitle003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNotiTitle003.txt',
         gauge: false,
         notification: {
@@ -1012,7 +1015,7 @@ export default function requestCreateTaskTest() {
     it('testTaskNotiTitle004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNotiTitle004.txt',
         gauge: false,
         notification: {
@@ -1052,7 +1055,7 @@ export default function requestCreateTaskTest() {
     it('testTaskNotiText001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNotiText001.txt',
         gauge: false,
         notification: {}
@@ -1090,7 +1093,7 @@ export default function requestCreateTaskTest() {
     it('testTaskNotiText002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNotiText002.txt',
         gauge: false,
         notification: {
@@ -1130,7 +1133,7 @@ export default function requestCreateTaskTest() {
     it('testTaskNotiText003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNotiText003.txt',
         gauge: false,
         notification: {
@@ -1171,7 +1174,7 @@ export default function requestCreateTaskTest() {
     it('testTaskNotiText004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskNotiText004.txt',
         gauge: false,
         notification: {

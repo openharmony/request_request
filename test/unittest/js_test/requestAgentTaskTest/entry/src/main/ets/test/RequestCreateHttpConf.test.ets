@@ -22,11 +22,14 @@ import Server from '../common/iTcpServer'
 export default function requestHttpConfigTest() {
   describe('requestHttpConfigTest', () => {
     let server: Server | null = null;
+    let baseUrl: string = "";
 
     beforeAll(async () => {
       console.info('beforeAll called');
       server = new Server();
-      await server.serverStart();
+      let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info("server started on " + baseUrl);
     });
     afterAll(async () => {
       console.info('afterAll called');
@@ -183,7 +186,7 @@ export default function requestHttpConfigTest() {
     it('testTaskUrl003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/unsupported',
+        url: baseUrl + '/unsupported',
       };
       request.agent.create(context, conf, async (err, data) => {
         expect(err === null).assertTrue();
@@ -218,7 +221,7 @@ export default function requestHttpConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078/unsupported',
+        url: baseUrl + '/unsupported',
         data: [formItem]
       };
       request.agent.create(context, conf, async (err, data) => {
@@ -276,7 +279,7 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url composed of 'http://127.0.0.1:8078/'
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url composed of baseUrl + '/'
      *             plus 8176 'a's (total length 8193), and saveas: testTaskUrl006.
      *           2. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
@@ -313,7 +316,7 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url composed of 'http://127.0.0.1:8078/'
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url composed of baseUrl + '/'
      *             plus 8175 'a's (total length 8192), and saveas: testTaskUrl007.
      *           2. Call request.agent.create() with a callback; in the callback, assert true
      *             (task created successfully).
@@ -353,7 +356,7 @@ export default function requestHttpConfigTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions
      *             and close it.
-     *           2. Create a Config object with action: UPLOAD, url composed of 'http://127.0.0.1:8078/'
+     *           2. Create a Config object with action: UPLOAD, url composed of baseUrl + '/'
      *             plus 8175 'a's (total length 8192), data containing the test file, and saveas:
      *             testTaskUrl008.
      *           3. Call request.agent.create() with a callback; in the callback, assert true
@@ -395,7 +398,7 @@ export default function requestHttpConfigTest() {
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions
      *             and close it.
-     *           2. Create a Config object with action: UPLOAD, url composed of 'http://127.0.0.1:8078/'
+     *           2. Create a Config object with action: UPLOAD, url composed of baseUrl + '/'
      *             plus 8176 'a's (total length 8193), data containing the test file, and saveas:
      *             testTaskUrl009.
      *           3. Try to call request.agent.create() to create a task; in the success callback
@@ -451,7 +454,7 @@ export default function requestHttpConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -494,7 +497,7 @@ export default function requestHttpConfigTest() {
     it('testTaskMethod002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskMethod002.txt',
         method: 'POST'
       };
@@ -533,7 +536,7 @@ export default function requestHttpConfigTest() {
     it('testTaskMethod003', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "saveas": "testTaskMethod003.txt",
         "method": 123
       };
@@ -572,7 +575,7 @@ export default function requestHttpConfigTest() {
     it('testTaskMethod004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskMethod004.txt',
         method: ''
       };
@@ -615,7 +618,7 @@ export default function requestHttpConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -661,7 +664,7 @@ export default function requestHttpConfigTest() {
       await sleep(300);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskMethod006.txt',
         method: 'PUT'
       };
@@ -703,7 +706,7 @@ export default function requestHttpConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -751,7 +754,7 @@ export default function requestHttpConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         data: [{
           name: 'file',
           value: {
@@ -793,7 +796,7 @@ export default function requestHttpConfigTest() {
     it('testTaskHeaders003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskHeaders003.txt',
       };
       let task = await request.agent.create(context, conf);
@@ -830,7 +833,7 @@ export default function requestHttpConfigTest() {
     it('testTaskHeaders004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: `README.md`,
         mode: request.agent.Mode.BACKGROUND,
         headers: {
@@ -870,7 +873,7 @@ export default function requestHttpConfigTest() {
     it('testTaskProxy001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         proxy: 'https://127.0.0.1:8080'
       };
       try {
@@ -907,7 +910,7 @@ export default function requestHttpConfigTest() {
     it('testTaskProxy002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         proxy: 'http://127.0.0.1:8080/proxy'
       };
       try {
@@ -944,7 +947,7 @@ export default function requestHttpConfigTest() {
     it('testTaskProxy003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         proxy: 'http://127.0.0.1:111111'
       };
       try {
@@ -980,7 +983,7 @@ export default function requestHttpConfigTest() {
     it('testTaskDescription001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         description: 'test upload',
         saveas: 'testTaskDescription001.txt',
       };
@@ -1012,7 +1015,7 @@ export default function requestHttpConfigTest() {
     it('testTaskDescription002', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "description": 123,
         "saveas": "testTaskDescription002.txt",
       };
@@ -1046,7 +1049,7 @@ export default function requestHttpConfigTest() {
     it('testTaskDescription003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskDescription003.txt',
         description: 'a'.repeat(1025)
       };
@@ -1083,7 +1086,7 @@ export default function requestHttpConfigTest() {
     it('testTaskDescription004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         description: 'a'.repeat(1024),
         saveas: 'testTaskDescription004.txt',
       };

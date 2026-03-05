@@ -24,11 +24,14 @@ import Server from '../common/iTcpServer'
 export default function requestCallbackTaskTest() {
   describe('requestCallbackTaskTest', () => {
     let server: Server | null = null;
+    let baseUrl: string = "";
 
     beforeAll(async () => {
       console.info('beforeAll called');
       server = new Server();
-      await server.serverStart();
+      let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info("server started on " + baseUrl);
     });
     afterAll(async () => {
       console.info('afterAll called');
@@ -80,7 +83,7 @@ export default function requestCallbackTaskTest() {
     it('testOnTask001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOnTask001.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -117,7 +120,7 @@ export default function requestCallbackTaskTest() {
     it('testOnTask002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOnTask002.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -154,7 +157,7 @@ export default function requestCallbackTaskTest() {
     it('testOnTask003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test1.txt',
+        url: baseUrl + '/test1.txt',
         saveas: 'testOnTask003.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -188,7 +191,7 @@ export default function requestCallbackTaskTest() {
     it('testOnTask004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOnTask004.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -222,7 +225,7 @@ export default function requestCallbackTaskTest() {
     it('testOnTask005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOnTask005.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -256,7 +259,7 @@ export default function requestCallbackTaskTest() {
     it('testOnTask006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/large_test.zip',
+        url: baseUrl + '/large_test.zip',
         saveas: 'testOnTask006.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -292,7 +295,7 @@ export default function requestCallbackTaskTest() {
     it('testOnTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOnTask007.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -333,7 +336,7 @@ export default function requestCallbackTaskTest() {
     it('testOnTask008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/large_test.zip',
+        url: baseUrl + '/large_test.zip',
         saveas: 'testOnTask008.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -375,7 +378,7 @@ export default function requestCallbackTaskTest() {
     it('testOnTask009', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/large_test.zip',
+        url: baseUrl + '/large_test.zip',
         saveas: 'testOnTask009.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -415,7 +418,7 @@ export default function requestCallbackTaskTest() {
     it('testOnTask010', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test1.txt',
+        url: baseUrl + '/test1.txt',
         saveas: 'testOnTask010.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -515,7 +518,7 @@ export default function requestCallbackTaskTest() {
     it('testOffTask001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOffTask001.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -552,7 +555,7 @@ export default function requestCallbackTaskTest() {
     it('testOffTask002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOffTask002.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -588,7 +591,7 @@ export default function requestCallbackTaskTest() {
     it('testOffTask003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test1.txt',
+        url: baseUrl + '/test1.txt',
         saveas: 'testOffTask003.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -626,7 +629,7 @@ export default function requestCallbackTaskTest() {
     it('testOffTask004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOffTask004.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -668,7 +671,7 @@ export default function requestCallbackTaskTest() {
     it('testOffTask005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOffTask005.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -714,7 +717,7 @@ export default function requestCallbackTaskTest() {
     it('testOffTask006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOffTask006.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -753,7 +756,7 @@ export default function requestCallbackTaskTest() {
     it('testOffTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOffTask007.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -801,7 +804,7 @@ export default function requestCallbackTaskTest() {
     it('testOffTask008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOffTask008.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -850,7 +853,7 @@ export default function requestCallbackTaskTest() {
     it('testOffTask009', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOffTask009.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -892,7 +895,7 @@ export default function requestCallbackTaskTest() {
     it('testOnResponse001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOnResponse001.txt',
         mode: request.agent.Mode.BACKGROUND,
         overwrite: true,
@@ -929,7 +932,7 @@ export default function requestCallbackTaskTest() {
     it('testOnResponse002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOnResponse002.txt',
         mode: request.agent.Mode.BACKGROUND,
         overwrite: true,
@@ -971,7 +974,7 @@ export default function requestCallbackTaskTest() {
     it('testOnResponse003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOnResponse003.txt',
         mode: request.agent.Mode.BACKGROUND,
         overwrite: true,
@@ -1016,7 +1019,7 @@ export default function requestCallbackTaskTest() {
     it('testOnResponse004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testOnResponse004.txt',
         mode: request.agent.Mode.BACKGROUND,
         overwrite: true,
@@ -1053,7 +1056,7 @@ export default function requestCallbackTaskTest() {
     it('testOnResponse005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.jpg',
+        url: baseUrl + '/test.jpg',
         saveas: 'testOnResponse005.txt',
         mode: request.agent.Mode.BACKGROUND,
         overwrite: true,
@@ -1091,7 +1094,7 @@ export default function requestCallbackTaskTest() {
     it('testOnWait001', 0, async (done: Function) => {
       const conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: `testOnWait001.txt`,
         mode: request.agent.Mode.BACKGROUND,
         overwrite: true,
