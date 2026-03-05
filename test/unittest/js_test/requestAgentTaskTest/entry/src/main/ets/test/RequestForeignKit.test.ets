@@ -19,14 +19,22 @@ import fs from '@ohos.file.fs';
 import commonEvent from '@ohos.commonEventManager';
 import common from '@ohos.app.ability.common';
 import { BusinessError } from "@ohos.base";
+import Server from '../common/iTcpServer'
 
 export default function requestForeignKitTest() {
   describe('requestForeignKitTest', () => {
-    beforeAll(() => {
+    let server: Server | null = null;
+
+    beforeAll(async () => {
       console.info('beforeAll called');
+      server = new Server();
+      await server.serverStart();
     });
-    afterAll(() => {
+    afterAll(async () => {
       console.info('afterAll called');
+      if (server) {
+        await server.serverClose();
+      }
     });
     beforeEach(() => {
       console.info('beforeEach called');
@@ -61,7 +69,7 @@ export default function requestForeignKitTest() {
     it('testDownloadTaskUserFile001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         mode: request.agent.Mode.BACKGROUND,
         saveas: 'file://media/Photo/1/test.txt'
       };
@@ -96,7 +104,7 @@ export default function requestForeignKitTest() {
     it('testDownloadTaskUserFile002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         mode: request.agent.Mode.FOREGROUND,
         saveas: 'file://media/Photo/1/test.txt',
         overwrite: false,
@@ -132,7 +140,7 @@ export default function requestForeignKitTest() {
     it('testDownloadTaskUserFile003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         mode: request.agent.Mode.FOREGROUND,
         saveas: 'file://media/Photo/1/test.txt',
         overwrite: true,
@@ -175,7 +183,7 @@ export default function requestForeignKitTest() {
       };
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         mode: request.agent.Mode.BACKGROUND,
         data: [formItem],
       };
@@ -210,7 +218,7 @@ export default function requestForeignKitTest() {
     it('testTaskBroadcastEvent001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskBroadcastEvent001.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -256,7 +264,7 @@ export default function requestForeignKitTest() {
     it('testTaskBroadcastEvent002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.mp3',
+        url: 'http://127.0.0.1:8078/test.mp3',
         saveas: 'testTaskBroadcastEvent002.txt',
         mode: request.agent.Mode.BACKGROUND
       };

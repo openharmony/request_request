@@ -17,14 +17,22 @@ import request from '@ohos.request';
 import fs from '@ohos.file.fs';
 import common from '@ohos.app.ability.common';
 import wantAgent, { WantAgent } from '@ohos.app.ability.wantAgent';
+import Server from '../common/iTcpServer'
 
 export default function requestHttpConfigTest() {
   describe('requestHttpConfigTest', () => {
-    beforeAll(() => {
+    let server: Server | null = null;
+
+    beforeAll(async () => {
       console.info('beforeAll called');
+      server = new Server();
+      await server.serverStart();
     });
-    afterAll(() => {
+    afterAll(async () => {
       console.info('afterAll called');
+      if (server) {
+        await server.serverClose();
+      }
     });
     beforeEach(() => {
       console.info('beforeEach called');
@@ -97,9 +105,9 @@ export default function requestHttpConfigTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. Create a Record object (for type conversion) with action: DOWNLOAD, no url parameter.
-     *           2. Try to call request.agent.create() with type-cast config; in the success callback 
+     *           2. Try to call request.agent.create() with type-cast config; in the success callback
      *             (unexpected), assert false and call done().
-     *           3. Catch the thrown exception, assert err.code equals 401 (missing url error), 
+     *           3. Catch the thrown exception, assert err.code equals 401 (missing url error),
      *             then call done().
      * @tc.require: issues#1573
      */
@@ -131,9 +139,9 @@ export default function requestHttpConfigTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. Create a Config object with action: DOWNLOAD, url set to empty string ('').
-     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *           2. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
-     *           3. Catch the thrown exception, assert err.code equals 401 (invalid url error), 
+     *           3. Catch the thrown exception, assert err.code equals 401 (invalid url error),
      *             then call done().
      * @tc.require: issues#1573
      */
@@ -165,9 +173,9 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url set to a non-download-supporting 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url set to a non-download-supporting
      *             address (https://gitee.com/openharmony/request_request).
-     *           2. Call request.agent.create() with a callback; in the callback, assert err is null 
+     *           2. Call request.agent.create() with a callback; in the callback, assert err is null
      *             (task created successfully).
      *           3. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
@@ -175,7 +183,7 @@ export default function requestHttpConfigTest() {
     it('testTaskUrl003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/openharmony/request_request',
+        url: 'http://127.0.0.1:8078/unsupported',
       };
       request.agent.create(context, conf, async (err, data) => {
         expect(err === null).assertTrue();
@@ -196,11 +204,11 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions
      *             and close it.
-     *           2. Create a Config object with action: UPLOAD, url set to a non-upload-supporting 
+     *           2. Create a Config object with action: UPLOAD, url set to a non-upload-supporting
      *             address, and data containing the test file.
-     *           3. Call request.agent.create() with a callback; in the callback, assert err is null 
+     *           3. Call request.agent.create() with a callback; in the callback, assert err is null
      *             (task created successfully).
      *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
@@ -210,7 +218,7 @@ export default function requestHttpConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'https://gitee.com/openharmony/request_request',
+        url: 'http://127.0.0.1:8078/unsupported',
         data: [formItem]
       };
       request.agent.create(context, conf, async (err, data) => {
@@ -232,11 +240,11 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url set to non-http/https scheme 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url set to non-http/https scheme
      *             (admin://127.0.0.1).
-     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *           2. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
-     *           3. Catch the thrown exception, assert err.code equals 401 (invalid scheme error), 
+     *           3. Catch the thrown exception, assert err.code equals 401 (invalid scheme error),
      *             then call done().
      * @tc.require: issues#1573
      */
@@ -268,18 +276,18 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url composed of 'http://127.0.0.1/' 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url composed of 'http://127.0.0.1:8078/'
      *             plus 8176 'a's (total length 8193), and saveas: testTaskUrl006.
-     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *           2. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
-     *           3. Catch the thrown exception, assert err.code equals 401 (url too long error), 
+     *           3. Catch the thrown exception, assert err.code equals 401 (url too long error),
      *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskUrl006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1/' + 'a'.repeat(8176),
+        url: 'http://127.0.0.1:8078/' + 'a'.repeat(8176),
         saveas: 'testTaskUrl006'
       };
       try {
@@ -305,9 +313,9 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url composed of 'http://127.0.0.1/' 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, url composed of 'http://127.0.0.1:8078/'
      *             plus 8175 'a's (total length 8192), and saveas: testTaskUrl007.
-     *           2. Call request.agent.create() with a callback; in the callback, assert true 
+     *           2. Call request.agent.create() with a callback; in the callback, assert true
      *             (task created successfully).
      *           3. Clean up by calling request.agent.remove() to delete the task, then call done().
      *           4. In the outer catch, assert false (unexpected exception) and call done().
@@ -343,12 +351,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions
      *             and close it.
-     *           2. Create a Config object with action: UPLOAD, url composed of 'http://127.0.0.1/' 
-     *             plus 8175 'a's (total length 8192), data containing the test file, and saveas: 
+     *           2. Create a Config object with action: UPLOAD, url composed of 'http://127.0.0.1:8078/'
+     *             plus 8175 'a's (total length 8192), data containing the test file, and saveas:
      *             testTaskUrl008.
-     *           3. Call request.agent.create() with a callback; in the callback, assert true 
+     *           3. Call request.agent.create() with a callback; in the callback, assert true
      *             (task created successfully), then call done().
      *           4. In the outer catch, assert false (unexpected exception) and call done().
      * @tc.require: issues#1573
@@ -385,14 +393,14 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions
      *             and close it.
-     *           2. Create a Config object with action: UPLOAD, url composed of 'http://127.0.0.1/' 
-     *             plus 8176 'a's (total length 8193), data containing the test file, and saveas: 
+     *           2. Create a Config object with action: UPLOAD, url composed of 'http://127.0.0.1:8078/'
+     *             plus 8176 'a's (total length 8193), data containing the test file, and saveas:
      *             testTaskUrl009.
-     *           3. Try to call request.agent.create() to create a task; in the success callback 
+     *           3. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
-     *           4. Catch the thrown exception, assert err.code equals 401 (url too long error), 
+     *           4. Catch the thrown exception, assert err.code equals 401 (url too long error),
      *             then call done().
      * @tc.require: issues#1573
      */
@@ -401,7 +409,7 @@ export default function requestHttpConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1/' + 'a'.repeat(8176),
+        url: 'http://127.0.0.1:8078/' + 'a'.repeat(8176),
         data: [formItem],
         saveas: 'testTaskUrl009'
       };
@@ -428,12 +436,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions
      *             and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data containing 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data containing
      *             the test file, and method: 'POST'.
      *           3. Call request.agent.create() to create an upload task instance.
-     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *           4. Call task.start() to execute the task; in the success callback, assert true
      *             (task executed successfully) and call done().
      *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
@@ -443,7 +451,7 @@ export default function requestHttpConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         data: [{
           name: 'file',
           value: {
@@ -474,10 +482,10 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskMethod002.txt, 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskMethod002.txt,
      *             and method: 'POST'.
      *           2. Call request.agent.create() to create a download task instance.
-     *           3. Call task.start() to execute the task; in the success callback, assert true 
+     *           3. Call task.start() to execute the task; in the success callback, assert true
      *             (task executed successfully).
      *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      *           5. In the catch callback, assert false (task execution failed) and call done().
@@ -486,7 +494,7 @@ export default function requestHttpConfigTest() {
     it('testTaskMethod002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskMethod002.txt',
         method: 'POST'
       };
@@ -513,10 +521,10 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Record object (for type conversion) with action: DOWNLOAD, valid URL, 
+     * @tc.step: 1. Create a Record object (for type conversion) with action: DOWNLOAD, valid URL,
      *             saveas: testTaskMethod003.txt, and method: 123 (number type).
      *           2. Call request.agent.create() with type-cast config to create a download task instance.
-     *           3. Call task.start() to execute the task; in the success callback, assert 
+     *           3. Call task.start() to execute the task; in the success callback, assert
      *             task.config.method equals 123.
      *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      *           5. In the catch callback, assert false (task execution failed) and call done().
@@ -525,7 +533,7 @@ export default function requestHttpConfigTest() {
     it('testTaskMethod003', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "url": "http://127.0.0.1:8078/test.txt",
         "saveas": "testTaskMethod003.txt",
         "method": 123
       };
@@ -552,10 +560,10 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskMethod004.txt, 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskMethod004.txt,
      *             and method: '' (empty string).
      *           2. Call request.agent.create() to create a download task instance.
-     *           3. Call task.start() to execute the task; in the success callback, assert 
+     *           3. Call task.start() to execute the task; in the success callback, assert
      *             task.config.method equals ''.
      *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      *           5. In the catch callback, assert false (task execution failed) and call done().
@@ -564,7 +572,7 @@ export default function requestHttpConfigTest() {
     it('testTaskMethod004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskMethod004.txt',
         method: ''
       };
@@ -591,12 +599,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions
      *             and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data containing 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data containing
      *             the test file, and method: 'GET'.
      *           3. Call request.agent.create() to create an upload task instance.
-     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *           4. Call task.start() to execute the task; in the success callback, assert true
      *             (task executed successfully).
      *           5. Clean up by calling request.agent.remove() to delete the task, then call done().
      *           6. In the catch callback, assert false (task execution failed) and call done().
@@ -607,7 +615,7 @@ export default function requestHttpConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         data: [{
           name: 'file',
           value: {
@@ -640,20 +648,20 @@ export default function requestHttpConfigTest() {
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
      * @tc.step: 1. Wait for 2 seconds (to avoid potential conflicts with previous tasks).
-     *           2. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskMethod006.txt, 
+     *           2. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskMethod006.txt,
      *             and method: 'PUT'.
      *           3. Call request.agent.create() to create a download task instance.
-     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *           4. Call task.start() to execute the task; in the success callback, assert true
      *             (task executed successfully).
      *           5. Clean up by calling request.agent.remove() to delete the task, then call done().
      *           6. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
      */
     it('testTaskMethod006', 0, async (done: Function) => {
-      await sleep(2000);
+      await sleep(300);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskMethod006.txt',
         method: 'PUT'
       };
@@ -680,12 +688,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions
      *             and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data containing 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data containing
      *             the test file, and headers: {'content-type': 'application/json'}.
      *           3. Call request.agent.create() to create an upload task instance.
-     *           4. Call task.start() to execute the task; in the success callback, assert true 
+     *           4. Call task.start() to execute the task; in the success callback, assert true
      *             (task executed successfully) and call done().
      *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
@@ -695,7 +703,7 @@ export default function requestHttpConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         data: [{
           name: 'file',
           value: {
@@ -728,12 +736,12 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions 
+     * @tc.step: 1. In the cache directory, create a test file (test.txt) with read-write permissions
      *             and close it.
-     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data containing 
+     *           2. Create a Config object with action: UPLOAD, url: http://127.0.0.1, data containing
      *             the test file, no headers parameter.
      *           3. Call request.agent.create() to create an upload task instance.
-     *           4. Call task.start() to execute the task; in the success callback, assert 
+     *           4. Call task.start() to execute the task; in the success callback, assert
      *             typeof task.config.headers equals 'undefined' (no headers set) and call done().
      *           5. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
@@ -743,7 +751,7 @@ export default function requestHttpConfigTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         data: [{
           name: 'file',
           value: {
@@ -773,10 +781,10 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskHeaders003.txt, 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskHeaders003.txt,
      *             no headers parameter.
      *           2. Call request.agent.create() to create a download task instance.
-     *           3. Call task.start() to execute the task; in the success callback, assert 
+     *           3. Call task.start() to execute the task; in the success callback, assert
      *             typeof task.config.headers equals 'undefined' (no headers set).
      *           4. Clean up by calling request.agent.remove() to delete the task, then call done().
      *           5. In the catch callback, assert false (task execution failed) and call done().
@@ -785,7 +793,7 @@ export default function requestHttpConfigTest() {
     it('testTaskHeaders003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskHeaders003.txt',
       };
       let task = await request.agent.create(context, conf);
@@ -798,7 +806,7 @@ export default function requestHttpConfigTest() {
         done();
       });
     });
-    
+
     /**
      * @tc.number: testTaskHeaders004
      * @tc.name: testTaskHeaders004
@@ -811,10 +819,10 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: README.md, 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: README.md,
      *             mode: BACKGROUND, and headers: {'content-type': 'multipart/form-data'}.
      *           2. Call request.agent.create() to create a download task instance.
-     *           3. Call task.start() to execute the task; in the success callback, assert true 
+     *           3. Call task.start() to execute the task; in the success callback, assert true
      *             (task executed successfully) and call done().
      *           4. In the catch callback, assert false (task execution failed) and call done().
      * @tc.require: issues#1573
@@ -822,7 +830,7 @@ export default function requestHttpConfigTest() {
     it('testTaskHeaders004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: `README.md`,
         mode: request.agent.Mode.BACKGROUND,
         headers: {
@@ -851,18 +859,18 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, proxy set to invalid format 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, proxy set to invalid format
      *             (https://127.0.0.1:8080).
-     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *           2. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
-     *           3. Catch the thrown exception, assert err.code equals 401 (invalid proxy format error), 
+     *           3. Catch the thrown exception, assert err.code equals 401 (invalid proxy format error),
      *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskProxy001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         proxy: 'https://127.0.0.1:8080'
       };
       try {
@@ -888,18 +896,18 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, proxy set to invalid format 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, proxy set to invalid format
      *             (http://127.0.0.1:8080/proxy).
-     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *           2. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
-     *           3. Catch the thrown exception, assert err.code equals 401 (invalid proxy format error), 
+     *           3. Catch the thrown exception, assert err.code equals 401 (invalid proxy format error),
      *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskProxy002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         proxy: 'http://127.0.0.1:8080/proxy'
       };
       try {
@@ -925,18 +933,18 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, proxy set to invalid format 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, proxy set to invalid format
      *             (http://127.0.0.1:111111, port exceeds range).
-     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *           2. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
-     *           3. Catch the thrown exception, assert err.code equals 401 (invalid proxy format error), 
+     *           3. Catch the thrown exception, assert err.code equals 401 (invalid proxy format error),
      *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskProxy003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         proxy: 'http://127.0.0.1:111111'
       };
       try {
@@ -962,7 +970,7 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, description: 'test upload', 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, description: 'test upload',
      *             and saveas: testTaskDescription001.txt.
      *           2. Call request.agent.create() to create a download task instance.
      *           3. Assert task.config.description equals 'test upload' (description set correctly).
@@ -972,7 +980,7 @@ export default function requestHttpConfigTest() {
     it('testTaskDescription001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         description: 'test upload',
         saveas: 'testTaskDescription001.txt',
       };
@@ -994,9 +1002,9 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Record object (for type conversion) with action: DOWNLOAD, valid URL, 
+     * @tc.step: 1. Create a Record object (for type conversion) with action: DOWNLOAD, valid URL,
      *             description: 123 (number type), and saveas: testTaskDescription002.txt.
-     *           2. Call request.agent.create() with type-cast config and a callback; in the callback, 
+     *           2. Call request.agent.create() with type-cast config and a callback; in the callback,
      *             assert data.config.description equals 123 (description set correctly).
      *           3. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
@@ -1004,7 +1012,7 @@ export default function requestHttpConfigTest() {
     it('testTaskDescription002', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "url": "http://127.0.0.1:8078/test.txt",
         "description": 123,
         "saveas": "testTaskDescription002.txt",
       };
@@ -1027,18 +1035,18 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskDescription003.txt, 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, saveas: testTaskDescription003.txt,
      *             and description: 1025 'a's (length exceeds limit).
-     *           2. Try to call request.agent.create() to create a task; in the success callback 
+     *           2. Try to call request.agent.create() to create a task; in the success callback
      *             (unexpected), assert false and call done().
-     *           3. Catch the thrown exception, assert err.code equals 401 (description too long error), 
+     *           3. Catch the thrown exception, assert err.code equals 401 (description too long error),
      *             then call done().
      * @tc.require: issues#1573
      */
     it('testTaskDescription003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskDescription003.txt',
         description: 'a'.repeat(1025)
       };
@@ -1065,9 +1073,9 @@ export default function requestHttpConfigTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, description: 1024 'a's 
+     * @tc.step: 1. Create a Config object with action: DOWNLOAD, valid URL, description: 1024 'a's
      *             (length equals limit), and saveas: testTaskDescription004.txt.
-     *           2. Call request.agent.create() with a callback; in the callback, assert err is null 
+     *           2. Call request.agent.create() with a callback; in the callback, assert err is null
      *             (task created successfully).
      *           3. Clean up by calling request.agent.remove() to delete the task, then call done().
      * @tc.require: issues#1573
@@ -1075,7 +1083,7 @@ export default function requestHttpConfigTest() {
     it('testTaskDescription004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         description: 'a'.repeat(1024),
         saveas: 'testTaskDescription004.txt',
       };

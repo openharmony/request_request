@@ -18,14 +18,22 @@ import request from '@ohos.request';
 import fs from '@ohos.file.fs';
 import common from '@ohos.app.ability.common';
 import wantAgent, { WantAgent } from '@ohos.app.ability.wantAgent';
+import Server from '../common/iTcpServer'
 
 export default function requestTaskGroupTest() {
   describe('requestTaskGroupTest', () => {
-    beforeAll(() => {
+    let server: Server | null = null;
+
+    beforeAll(async () => {
       console.info('beforeAll called');
+      server = new Server();
+      await server.serverStart();
     });
-    afterAll(() => {
+    afterAll(async () => {
       console.info('afterAll called');
+      if (server) {
+        await server.serverClose();
+      }
     });
     beforeEach(() => {
       console.info('beforeEach called');
@@ -747,7 +755,7 @@ export default function requestTaskGroupTest() {
       };
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testGroupa05.txt',
         overwrite: true,
       };
@@ -784,14 +792,14 @@ export default function requestTaskGroupTest() {
       };
       let conf1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testGroupa061.txt',
         overwrite: true,
         mode: request.agent.Mode.FOREGROUND
       };
       let conf2: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testGroupa061.txt',
         overwrite: true,
         mode: request.agent.Mode.BACKGROUND
@@ -832,14 +840,14 @@ export default function requestTaskGroupTest() {
       };
       let conf1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testGroupa071.txt',
         overwrite: true,
         mode: request.agent.Mode.BACKGROUND
       };
       let conf2: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testGroupa071.txt',
         overwrite: true,
         mode: request.agent.Mode.BACKGROUND
@@ -971,7 +979,7 @@ export default function requestTaskGroupTest() {
       };
       let taskConfig: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testGroupAttach004.txt',
         overwrite: true,
         notification: {
@@ -1012,7 +1020,7 @@ export default function requestTaskGroupTest() {
       };
       let taskConfig: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testGroupAttach005.txt',
         overwrite: true,
         notification: {
@@ -1052,7 +1060,7 @@ export default function requestTaskGroupTest() {
       };
       let taskConfig: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testGroupAttach006.txt',
         overwrite: true,
         notification: {
@@ -1091,7 +1099,7 @@ export default function requestTaskGroupTest() {
       };
       let taskConfig: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testGroupAttach007.txt',
         overwrite: true,
         notification: {
@@ -1129,7 +1137,7 @@ export default function requestTaskGroupTest() {
       };
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testGroupd01.txt',
         overwrite: true,
       };
@@ -1169,7 +1177,7 @@ export default function requestTaskGroupTest() {
       };
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testGroupd02.txt',
         overwrite: true,
       };
