@@ -16,15 +16,23 @@
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from "@ohos/hypium"
 import request from '@ohos.request';
 import fs from '@ohos.file.fs';
+import Server from '../common/iTcpServer'
 import common from '@ohos.app.ability.common';
 
 export default function requestDownloadFileTest() {
   describe('requestDownloadFileTest', () => {
-    beforeAll(() => {
+    let server: Server | null = null;
+
+    beforeAll(async () => {
       console.info('beforeAll called');
+      server = new Server();
+      await server.serverStart();
     });
-    afterAll(() => {
+    afterAll(async () => {
       console.info('afterAll called');
+      if (server) {
+        await server.serverClose();
+      }
     });
     beforeEach(() => {
       console.info('beforeEach called');
@@ -45,7 +53,7 @@ export default function requestDownloadFileTest() {
     let context: common.UIAbilityContext = globalThis.abilityContext;
     let cacheDir: String = globalThis.cacheDir;
     let globalDownloadConf: request.DownloadConfig = {
-      url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+      url: 'http://127.0.0.1:8078/test.txt',
       header: {
         headers: 'http'
       },
@@ -134,7 +142,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadUrl003', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/openharmony/request_request',
+        url: 'http://127.0.0.1:8078/unsupported',
         filePath: 'testDownloadUrl003.txt',
       };
       request.downloadFile(context, conf).then(async (data) => {
@@ -193,14 +201,14 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Construct an URL with length 8193 (base "http://127.0.0.1/" + 8176 'a's) and set it in DownloadConfig with filePath: testDownloadUrl005.txt.
+     * @tc.step: 1. Construct an URL with length 8193 (base "http://127.0.0.1:8078/" + 8176 'a's) and set it in DownloadConfig with filePath: testDownloadUrl005.txt.
      *           2. Try to call request.downloadFile() with the config; in the success callback (unexpected), assert false and call done().
      *           3. Catch the thrown exception, assert err.code equals 401 (URL too long error), then call done().
      * @tc.require: issues#1573
      */
     it('testDownloadUrl005', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1/' + 'a'.repeat(8176),
+        url: 'http://127.0.0.1:8078/' + 'a'.repeat(8176),
         filePath: 'testDownloadUrl005.txt',
       };
       try {
@@ -259,14 +267,14 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Construct an URL with length 8192 (base "http://127.0.0.1/" + 8175 'a's) and set it in DownloadConfig.
+     * @tc.step: 1. Construct an URL with length 8192 (base "http://127.0.0.1:8078/" + 8175 'a's) and set it in DownloadConfig.
      *           2. Try to call request.downloadFile() with the config; in the success callback (unexpected), assert false and call done().
      *           3. Catch the thrown exception, assert err.code equals 13400001 (file path error), then call done().
      * @tc.require: issues#1573
      */
     it('testDownloadUrl007', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1/' + 'a'.repeat(8175),
+        url: 'http://127.0.0.1:8078/' + 'a'.repeat(8175),
       };
       try {
         request.downloadFile(context, conf, (err, data) => {
@@ -324,12 +332,12 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFile002', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testV9_file02.txt'
       };
       try {
         await request.downloadFile(context, conf);
-        await sleep(2000);
+        await sleep(300);
         await request.downloadFile(context, conf);
         done();
       } catch (err) {
@@ -358,7 +366,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFile003', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testV9_file03.txt'
       };
       try {
@@ -392,7 +400,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFile0031', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testV9_file04.txt'
       };
       try {
@@ -427,7 +435,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFile0032', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'file://media/Photo/1/test.txt',
         background: false,
       };
@@ -462,7 +470,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFile004', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFile004.txt',
         networkType: request.NETWORK_WIFI
       };
@@ -497,7 +505,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFile005', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFile005.txt',
         networkType: request.NETWORK_MOBILE
       };
@@ -538,7 +546,7 @@ export default function requestDownloadFileTest() {
       }
       let filePath = cacheDir + '//test.txt';
       let conf: request.DownloadConfig  = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: filePath,
       }
       try {
@@ -595,7 +603,7 @@ export default function requestDownloadFileTest() {
       }
       let filePath = cacheDir + '/A//B/test.txt';
       let conf: request.DownloadConfig  = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: filePath,
       }
       try {
@@ -651,7 +659,7 @@ export default function requestDownloadFileTest() {
       }
       let filePath = cacheDir + '/A///////B/test.txt';
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: filePath,
       }
       try {
@@ -707,7 +715,7 @@ export default function requestDownloadFileTest() {
       }
       let filePath = cacheDir + '/A//////./B/.//test.txt';
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: filePath,
       }
       try {
@@ -754,7 +762,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOn001.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -792,7 +800,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOn002.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -865,7 +873,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOn004.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -907,7 +915,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOn005.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -949,7 +957,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOn006.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -990,7 +998,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOn007.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1032,7 +1040,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOn008.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1072,7 +1080,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOff001.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1106,7 +1114,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOff002.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1145,7 +1153,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOff003.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1189,7 +1197,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOff0031.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1208,7 +1216,7 @@ export default function requestDownloadFileTest() {
         task.on('complete', CompletedCallback1);
         task.on('complete', CompletedCallback2);
         task.off('complete');
-        await sleep(2000);
+        await sleep(300);
         expect(true).assertTrue();
         done();
       } catch (err) {
@@ -1242,7 +1250,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOff004.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1283,7 +1291,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOff005.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1336,7 +1344,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOff0051.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1391,7 +1399,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOff006.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1442,7 +1450,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOff007.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1462,7 +1470,7 @@ export default function requestDownloadFileTest() {
         task.on('pause', PauseCallback2);
         task.off('pause');
         await task.suspend();
-        await sleep(2000);
+        await sleep(300);
         expect(true).assertTrue();
         await task.delete();
         done();
@@ -1498,7 +1506,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOff008.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1548,7 +1556,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadFileOff009.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1703,7 +1711,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadTaskRestore001.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1747,7 +1755,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadTaskRestore0011.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1815,7 +1823,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadTaskDelete002.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1852,7 +1860,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadTaskDelete0021.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1893,7 +1901,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadGetTaskInfo001.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1941,7 +1949,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadGetTaskInfo0011.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1987,7 +1995,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadGetTaskInfo002.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -2032,7 +2040,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         filePath: 'testDownloadGetTaskInfo0021.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -2072,7 +2080,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadGetTaskInfo003', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        url: 'http://127.0.0.1:8078/large_test.zip',
         filePath: "DownloadGetTaskInfo003"
       };
       let task = await request.downloadFile(context, conf);
@@ -2119,7 +2127,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadGetTaskInfo0031', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/large_test.zip',
+        url: 'http://127.0.0.1:8078/large_test.zip',
         filePath: "DownloadGetTaskInfo0031",
       };
       let task = await request.downloadFile(context, conf);

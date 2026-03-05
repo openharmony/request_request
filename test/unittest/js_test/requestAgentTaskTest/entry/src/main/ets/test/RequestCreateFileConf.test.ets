@@ -17,14 +17,22 @@ import request from '@ohos.request';
 import fs from '@ohos.file.fs';
 import common from '@ohos.app.ability.common';
 import wantAgent, { WantAgent } from '@ohos.app.ability.wantAgent';
+import Server from '../common/iTcpServer'
 
 export default function requestCreateFileConfTest() {
   describe('requestCreateFileConfTest', () => {
-    beforeAll(() => {
+    let server: Server | null = null;
+
+    beforeAll(async () => {
       console.info('beforeAll called');
+      server = new Server();
+      await server.serverStart();
     });
-    afterAll(() => {
+    afterAll(async () => {
       console.info('afterAll called');
+      if (server) {
+        await server.serverClose();
+      }
     });
     beforeEach(() => {
       console.info('beforeEach called');
@@ -107,7 +115,7 @@ export default function requestCreateFileConfTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskOverwrite001.txt',
         overwrite: true
       };
@@ -146,7 +154,7 @@ export default function requestCreateFileConfTest() {
     it('testTaskOverwrite002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskOverwrite002.txt',
         overwrite: true
       };
@@ -188,7 +196,7 @@ export default function requestCreateFileConfTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskOverwrite003.txt',
         overwrite: false
       };
@@ -227,7 +235,7 @@ export default function requestCreateFileConfTest() {
     it('testTaskOverwrite004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskOverwrite004.txt',
         overwrite: false
       };
@@ -266,7 +274,7 @@ export default function requestCreateFileConfTest() {
     it('testTaskOverwrite005', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "url": "http://127.0.0.1:8078/test.txt",
         "saveas": "testTaskOverwrite005",
         "overwrite": "true"
       };
@@ -308,7 +316,7 @@ export default function requestCreateFileConfTest() {
       fs.closeSync(file);
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "url": "http://127.0.0.1:8078/test.txt",
         "saveas": "testTaskOverwrite006.txt",
         "overwrite": "true"
       };
@@ -348,7 +356,7 @@ export default function requestCreateFileConfTest() {
     it('testTaskOverwrite007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskOverwrite007.txt'
       };
       try {
@@ -394,7 +402,7 @@ export default function requestCreateFileConfTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskOverwrite008.txt'
       };
       try {
@@ -435,7 +443,7 @@ export default function requestCreateFileConfTest() {
       fs.mkdirSync(dirPath);
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         overwrite: true,
         saveas: './testTaskOverwrite009'
       };
@@ -475,7 +483,7 @@ export default function requestCreateFileConfTest() {
     it('testTaskSaveas001', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "url": "http://127.0.0.1:8078/test.txt",
         "mode": request.agent.Mode.BACKGROUND,
         "saveas": 123
       };
@@ -513,7 +521,7 @@ export default function requestCreateFileConfTest() {
     it('testTaskSaveas002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         mode: request.agent.Mode.BACKGROUND
       };
       try {
@@ -557,7 +565,7 @@ export default function requestCreateFileConfTest() {
     it('testTaskIndex001', 0, async (done: Function) => {
       let conf: Record<string, string | number> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt",
+        "url": "http://127.0.0.1:8078/test.txt",
         "saveas": "testTaskIndex001.txt",
         "index": "0",
         "mode": request.agent.Mode.BACKGROUND
@@ -594,7 +602,7 @@ export default function requestCreateFileConfTest() {
     it('testTaskIndex002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         saveas: 'testTaskIndex002.txt',
         index: 0,
         begins: 10,
@@ -638,7 +646,7 @@ export default function requestCreateFileConfTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         index: 1
       };
       try {
@@ -683,7 +691,7 @@ export default function requestCreateFileConfTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         data: [{
           name: 'file',
           value: {
@@ -726,7 +734,7 @@ export default function requestCreateFileConfTest() {
     it('testTaskIndex006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt',
+        url: 'http://127.0.0.1:8078/test.txt',
         mode: request.agent.Mode.BACKGROUND,
         saveas: 'testTaskIndex006',
         begins: 5,
@@ -767,7 +775,7 @@ export default function requestCreateFileConfTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         data: [{
           name: 'file',
           value: {
@@ -813,7 +821,7 @@ export default function requestCreateFileConfTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         data: [{
           name: 'file',
           value: {
@@ -861,7 +869,7 @@ export default function requestCreateFileConfTest() {
       fs.closeSync(test2);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         data: [
           {
             name: 'file',
@@ -915,7 +923,7 @@ export default function requestCreateFileConfTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         multipart: true,
         data: [formItem1]
       };
@@ -956,7 +964,7 @@ export default function requestCreateFileConfTest() {
       fs.closeSync(file);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         multipart: false,
         data: [formItem1]
       };
