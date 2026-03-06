@@ -21,6 +21,7 @@
 mod database;
 mod notification_config;
 mod notify_flow;
+mod progress_percentage;
 mod progress_size;
 mod publish;
 mod task_handle;

@@ -32,31 +32,9 @@ const DOWNLOAD_COMPLETE: &str = "request_agent_download_complete\0"; // Template
 use super::database::CustomizedNotification;
 use super::ffi::{GetSystemResourceString, NotifyContent, ProgressCircle};
 use super::notify_flow::{GroupProgress, ProgressNotify};
+use super::progress_percentage;
 use super::progress_size;
 use crate::config::Action;
-
-/// Formats progress as a percentage string with two decimal places.
-/// 
-/// Returns a formatted percentage string representing the current progress relative to the total.
-/// 
-/// # Arguments
-/// 
-/// * `current` - Current progress value
-/// * `total` - Total progress value
-/// 
-/// # Returns
-/// 
-/// Formatted percentage string (e.g., "45.67%")
-fn progress_percentage(current: u64, total: u64) -> String {
-    if total == 0 {
-        return "100%".to_string();
-    }
-    format!(
-        "{}.{:02}%",
-        current * 100 / total,
-        current * 100 % total * 100 / total
-    )
-}
 
 /// Formats progress size as a human-readable string.
 /// 
@@ -71,6 +49,22 @@ fn progress_percentage(current: u64, total: u64) -> String {
 /// Human-readable size string (e.g., "1.5 MB")
 fn progress_size(current: u64) -> String {
     progress_size::progress_size(current)
+}
+
+/// Formats progress as a percentage string with two decimal places.
+///
+/// Uses the progress_percentage module to format percentage with locale-aware formatting.
+///
+/// # Arguments
+///
+/// * `current` - Current progress value
+/// * `total` - Total progress value
+///
+/// # Returns
+///
+/// Formatted percentage string with locale-aware decimal separator (e.g., "50.00%" or "50,00%")
+fn progress_percentage(current: u64, total: u64) -> String {
+    progress_percentage::progress_percentage(current, total)
 }
 
 impl NotifyContent {
