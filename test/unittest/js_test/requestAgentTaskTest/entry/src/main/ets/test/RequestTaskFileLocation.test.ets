@@ -24,6 +24,7 @@ import Server from '../common/iTcpServer'
 export default function requestFileLocTaskTest() {
   describe('requestFileLocTaskTest', () => {
     let server: Server | null = null;
+    let baseUrl: string = "";
     let context: common.UIAbilityContext = globalThis.abilityContext;
     let cacheDir: String = globalThis.cacheDir;
 
@@ -31,7 +32,9 @@ export default function requestFileLocTaskTest() {
       console.info('beforeAll called');
       try {
         server = new Server();
-        await server.serverStart();
+        let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info("server started on " + baseUrl);
         console.info('Server started successfully');
       } catch (err) {
         console.info('Server start error (may already be running): ' + JSON.stringify(err));
@@ -100,7 +103,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           saveas: 'testDownloadTaskSaveas001.txt',
           mode: request.agent.Mode.BACKGROUND
         };
@@ -131,7 +134,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           mode: request.agent.Mode.BACKGROUND,
           saveas: './'
         };
@@ -163,7 +166,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           mode: request.agent.Mode.BACKGROUND,
           saveas: './test_saveas_003'
         };
@@ -195,7 +198,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           mode: request.agent.Mode.BACKGROUND,
           saveas: 'test_saveas_004'
         };
@@ -227,7 +230,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           mode: request.agent.Mode.BACKGROUND,
           saveas: 'a/b/test_saveas_005'
         };
@@ -259,7 +262,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           mode: request.agent.Mode.BACKGROUND,
           saveas: 'internal://cache/test_saveas_006'
         };
@@ -291,7 +294,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           mode: request.agent.Mode.BACKGROUND,
           saveas: '/data/storage/el1/base/test_saveas_007'
         };
@@ -323,7 +326,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           mode: request.agent.Mode.BACKGROUND,
           saveas: '/data/storage/test_saveas_008'
         };
@@ -356,7 +359,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           mode: request.agent.Mode.BACKGROUND,
           saveas: '/data/storage/../../data/storage/el1/../el2/base/test_saveas_009'
         };
@@ -388,7 +391,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           mode: request.agent.Mode.BACKGROUND,
           saveas: '/data/storage/../../el2/base/test_saveas_010'
         };
@@ -421,7 +424,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           mode: request.agent.Mode.BACKGROUND,
           saveas: 'file://com.acts.request/data/storage/el2/base/test_saveas_011'
         };
@@ -453,7 +456,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           mode: request.agent.Mode.BACKGROUND,
           saveas: 'file://com.acts.request1111/data/storage/el2/base/test_saveas_012'
         };
@@ -486,7 +489,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.DOWNLOAD,
-          url: 'http://127.0.0.1:8078/test.txt',
+          url: baseUrl + '/test.txt',
           mode: request.agent.Mode.BACKGROUND,
           saveas: 'internal://files/path_save_as_013/test_saveas_013'
         };
@@ -522,7 +525,7 @@ export default function requestFileLocTaskTest() {
         fs.closeSync(file);
         let conf: request.agent.Config = {
           action: request.agent.Action.UPLOAD,
-          url: 'http://127.0.0.1:8078',
+          url: baseUrl,
           data: [{
             name: 'file',
             value: {
@@ -565,7 +568,7 @@ export default function requestFileLocTaskTest() {
         fs.closeSync(file);
         let conf: request.agent.Config = {
           action: request.agent.Action.UPLOAD,
-          url: 'http://127.0.0.1:8078',
+          url: baseUrl,
           data: [{
             name: 'file',
             value: {
@@ -608,7 +611,7 @@ export default function requestFileLocTaskTest() {
         fs.closeSync(file);
         let conf: request.agent.Config = {
           action: request.agent.Action.UPLOAD,
-          url: 'http://127.0.0.1:8078',
+          url: baseUrl,
           data: [{
             name: 'file',
             value: {
@@ -651,7 +654,7 @@ export default function requestFileLocTaskTest() {
         fs.closeSync(file);
         let conf: request.agent.Config = {
           action: request.agent.Action.UPLOAD,
-          url: 'http://127.0.0.1:8078',
+          url: baseUrl,
           data: [{
             name: 'file',
             value: {
@@ -694,7 +697,7 @@ export default function requestFileLocTaskTest() {
         fs.closeSync(file);
         let conf: request.agent.Config = {
           action: request.agent.Action.UPLOAD,
-          url: 'http://127.0.0.1:8078',
+          url: baseUrl,
           data: [{
             name: 'file',
             value: {
@@ -733,7 +736,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.UPLOAD,
-          url: 'http://127.0.0.1:8078',
+          url: baseUrl,
           data: [{
             name: 'file',
             value: {
@@ -774,7 +777,7 @@ export default function requestFileLocTaskTest() {
         fs.closeSync(file);
         let conf: request.agent.Config = {
           action: request.agent.Action.UPLOAD,
-          url: 'http://127.0.0.1:8078',
+          url: baseUrl,
           data: [{
             name: 'file',
             value: {
@@ -813,7 +816,7 @@ export default function requestFileLocTaskTest() {
       try {
         let conf: request.agent.Config = {
           action: request.agent.Action.UPLOAD,
-          url: 'http://127.0.0.1:8078',
+          url: baseUrl,
           data: [{
             name: 'file',
             value: {
@@ -854,7 +857,7 @@ export default function requestFileLocTaskTest() {
         fs.closeSync(file);
         let conf: request.agent.Config = {
           action: request.agent.Action.UPLOAD,
-          url: 'http://127.0.0.1:8078',
+          url: baseUrl,
           data: [{
             name: 'file',
             value: {
@@ -897,7 +900,7 @@ export default function requestFileLocTaskTest() {
         fs.closeSync(file);
         let conf: request.agent.Config = {
           action: request.agent.Action.UPLOAD,
-          url: 'http://127.0.0.1:8078',
+          url: baseUrl,
           data: [{
             name: 'file',
             value: {

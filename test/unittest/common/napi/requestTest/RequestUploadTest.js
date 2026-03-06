@@ -70,7 +70,7 @@ describe('RequestUploadTest', async function () {
     }
 
     let uploadConfig = {
-      url: 'http://127.0.0.1',
+      url: 'http://127.0.0.1:8078',
       header: {
         headers: 'http'
       },
@@ -80,7 +80,7 @@ describe('RequestUploadTest', async function () {
     };
 
     let uploadConfig1 = {
-        url: 'http://127.0.0.1',
+        url: 'http://127.0.0.1:8078',
         header: {
           headers: 'http'
         },
@@ -90,7 +90,7 @@ describe('RequestUploadTest', async function () {
     };
 
     let uploadConfig2 = {
-      url:  'http://127.0.0.1',
+      url:  'http://127.0.0.1:8078',
       header: {
         headers: 'http'
       },
@@ -103,7 +103,7 @@ describe('RequestUploadTest', async function () {
     };
 
     let uploadConfig3 = {
-      url:  'http://127.0.0.1',
+      url:  'http://127.0.0.1:8078',
       header: {
         headers: 'http'
       },
@@ -116,7 +116,7 @@ describe('RequestUploadTest', async function () {
     };
 
     let uploadConfig4 = {
-      url:  'http://127.0.0.1',
+      url:  'http://127.0.0.1:8078',
       header: {
         headers: 'http'
       },

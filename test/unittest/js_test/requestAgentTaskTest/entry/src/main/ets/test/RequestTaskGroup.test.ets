@@ -23,11 +23,14 @@ import Server from '../common/iTcpServer'
 export default function requestTaskGroupTest() {
   describe('requestTaskGroupTest', () => {
     let server: Server | null = null;
+    let baseUrl: string = "";
 
     beforeAll(async () => {
       console.info('beforeAll called');
       server = new Server();
-      await server.serverStart();
+      let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info("server started on " + baseUrl);
     });
     afterAll(async () => {
       console.info('afterAll called');
@@ -755,7 +758,7 @@ export default function requestTaskGroupTest() {
       };
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testGroupa05.txt',
         overwrite: true,
       };
@@ -792,14 +795,14 @@ export default function requestTaskGroupTest() {
       };
       let conf1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testGroupa061.txt',
         overwrite: true,
         mode: request.agent.Mode.FOREGROUND
       };
       let conf2: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testGroupa061.txt',
         overwrite: true,
         mode: request.agent.Mode.BACKGROUND
@@ -840,14 +843,14 @@ export default function requestTaskGroupTest() {
       };
       let conf1: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testGroupa071.txt',
         overwrite: true,
         mode: request.agent.Mode.BACKGROUND
       };
       let conf2: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testGroupa071.txt',
         overwrite: true,
         mode: request.agent.Mode.BACKGROUND
@@ -979,7 +982,7 @@ export default function requestTaskGroupTest() {
       };
       let taskConfig: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testGroupAttach004.txt',
         overwrite: true,
         notification: {
@@ -1020,7 +1023,7 @@ export default function requestTaskGroupTest() {
       };
       let taskConfig: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testGroupAttach005.txt',
         overwrite: true,
         notification: {
@@ -1060,7 +1063,7 @@ export default function requestTaskGroupTest() {
       };
       let taskConfig: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testGroupAttach006.txt',
         overwrite: true,
         notification: {
@@ -1099,7 +1102,7 @@ export default function requestTaskGroupTest() {
       };
       let taskConfig: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testGroupAttach007.txt',
         overwrite: true,
         notification: {
@@ -1137,7 +1140,7 @@ export default function requestTaskGroupTest() {
       };
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testGroupd01.txt',
         overwrite: true,
       };
@@ -1177,7 +1180,7 @@ export default function requestTaskGroupTest() {
       };
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testGroupd02.txt',
         overwrite: true,
       };

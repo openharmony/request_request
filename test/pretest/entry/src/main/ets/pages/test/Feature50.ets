@@ -23,6 +23,7 @@ import fs from '@ohos.file.fs';
 import photoAccessHelper from '@ohos.file.photoAccessHelper';
 import picker from '@ohos.file.picker';
 import dataShare from '@ohos.data.dataShare';
+import Server from '../../common/iTcpServer';
 
 @Entry
 @Component
@@ -33,11 +34,22 @@ struct feature50 {
   @State seq: number = 0;
   @State proxyUrl: string = '';
   controller: TextAreaController = new TextAreaController()
-  @State Url_400k: string = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt';
+  @State Url_400k: string = 'http://127.0.0.1:8078/test400K.txt';
   @State taskLists: Array<request.agent.Task> = [];
   @State cost_time: number = 0;
   @State timeCard: string = "0";
+  private server: Server | null = null;
 
+  aboutToAppear() {
+    this.server = new Server();
+    this.server.serverStart();
+  }
+
+  aboutToDisappear() {
+    if (this.server) {
+      this.server.serverClose();
+    }
+  }
 
   build() {
     Row() {

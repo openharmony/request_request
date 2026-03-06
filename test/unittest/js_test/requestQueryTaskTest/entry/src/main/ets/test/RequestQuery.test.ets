@@ -18,14 +18,25 @@ import request from '@ohos.request';
 import fs from '@ohos.file.fs';
 import common from '@ohos.app.ability.common';
 import { BusinessError } from "@ohos.base";
+import Server from '../common/iTcpServer';
 
 export default function requestQueryTest() {
   describe('requestQueryTest', () => {
-    beforeAll(() => {
+    let server: Server | null = null;
+    let baseUrl: string = '';
+    
+    beforeAll(async () => {
       console.info('beforeAll called');
+      server = new Server();
+      let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info('server started on ' + baseUrl);
     });
-    afterAll(() => {
+    afterAll(async () => {
       console.info('afterAll called');
+      if (server) {
+        await server.serverClose();
+      }
     });
     beforeEach(() => {
       console.info('beforeEach called');
@@ -169,7 +180,7 @@ export default function requestQueryTest() {
     it('testShowTask006', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         mode: request.agent.Mode.BACKGROUND,
         description: 'download task',
         saveas: `testShowTask006.txt`,
@@ -179,7 +190,7 @@ export default function requestQueryTest() {
       request.agent.show(task.tid).then(async (info) => {
         expect(info.uid).assertEqual(undefined);
         expect(info.bundle).assertEqual(undefined);
-        expect(info.url).assertEqual('https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk');
+        expect(info.url).assertEqual(baseUrl + '/test.apk');
         expect(info.data).assertEqual('download task');
         expect(info.saveas).assertEqual("/data/storage/el2/base/haps/testModule/cache/testShowTask006.txt");
         expect(info.tid).assertEqual(task.tid);
@@ -220,7 +231,7 @@ export default function requestQueryTest() {
     it('testShowTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testShowTask007.txt`,
         mode: request.agent.Mode.BACKGROUND
       };
@@ -228,7 +239,7 @@ export default function requestQueryTest() {
       request.agent.show(task.tid, async (err, info) => {
         expect(info.uid).assertEqual(undefined);
         expect(info.bundle).assertEqual(undefined);
-        expect(info.url).assertEqual('https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk');
+        expect(info.url).assertEqual(baseUrl + '/test.apk');
         expect(info.data).assertEqual("");
         expect(info.saveas).assertEqual("/data/storage/el2/base/haps/testModule/cache/testShowTask007.txt");
         expect(info.tid).assertEqual(task.tid);
@@ -266,7 +277,7 @@ export default function requestQueryTest() {
     it('testShowTask008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         mode: request.agent.Mode.BACKGROUND,
         saveas: `testShowTask008.txt`,
         token: "12345678"
@@ -415,7 +426,7 @@ export default function requestQueryTest() {
     it('testTouchTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         mode: request.agent.Mode.BACKGROUND,
         saveas: `testTouchTask007.txt`,
         token: "12345678"
@@ -449,7 +460,7 @@ export default function requestQueryTest() {
       fs.closeSync(file2);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: baseUrl,
         data: [
           { name: 'file1', value: { path: `./test1.txt`, filename: 'test1.txt' } },
           { name: 'file2', value: { path: `./test2.txt`, filename: 'test2.txt' } },
@@ -462,7 +473,7 @@ export default function requestQueryTest() {
       request.agent.touch(task.tid, "12345678").then(async (info: request.agent.TaskInfo) => {
         expect(info.uid).assertEqual(undefined);
         expect(info.bundle).assertEqual(undefined);
-        expect(info.url).assertEqual('http://127.0.0.1');
+        expect(info.url).assertEqual(baseUrl);
         expect(info.data?.length).assertEqual(4);
         expect(info.saveas).assertEqual("");
         expect(info.tid).assertEqual(task.tid);
@@ -505,7 +516,7 @@ export default function requestQueryTest() {
       fs.closeSync(file1);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: baseUrl,
         data: [{ name: 'file1', value: { path: `./test1.txt`, filename: 'test1.txt' } }],
         token: "12345678"
       };
@@ -513,7 +524,7 @@ export default function requestQueryTest() {
       request.agent.touch(task.tid, "12345678", async (err, info) => {
         expect(info.uid).assertEqual(undefined);
         expect(info.bundle).assertEqual(undefined);
-        expect(info.url).assertEqual('http://127.0.0.1');
+        expect(info.url).assertEqual(baseUrl);
         expect(info.data?.length).assertEqual(1);
         expect(info.saveas).assertEqual("");
         expect(info.tid).assertEqual(task.tid);
@@ -551,7 +562,7 @@ export default function requestQueryTest() {
     it('testSearchTask001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask001.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -596,7 +607,7 @@ export default function requestQueryTest() {
     it('testSearchTask003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask003.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -627,7 +638,7 @@ export default function requestQueryTest() {
     it('testSearchTask004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask004.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -652,7 +663,7 @@ export default function requestQueryTest() {
     it('testSearchTask005', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask005.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -732,7 +743,7 @@ export default function requestQueryTest() {
     it('testSearchTask008', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask008.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -764,7 +775,7 @@ export default function requestQueryTest() {
     it('testSearchTask009', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask009.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -795,7 +806,7 @@ export default function requestQueryTest() {
     it('testSearchTask010', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask010.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -827,7 +838,7 @@ export default function requestQueryTest() {
     it('testSearchTask011', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask011.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -860,7 +871,7 @@ export default function requestQueryTest() {
     it('testSearchTask012', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask012.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -891,7 +902,7 @@ export default function requestQueryTest() {
     it('testSearchTask013', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask013.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -922,7 +933,7 @@ export default function requestQueryTest() {
     it('testSearchTask014', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask014.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -953,7 +964,7 @@ export default function requestQueryTest() {
     it('testSearchTask015', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask015.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -984,7 +995,7 @@ export default function requestQueryTest() {
     it('testSearchTask016', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask016.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -1012,7 +1023,7 @@ export default function requestQueryTest() {
     it('testSearchTask017', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask017.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -1041,7 +1052,7 @@ export default function requestQueryTest() {
     it('testSearchTask018', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSearchTask018.txt`,
       };
       let task = await request.agent.create(context, conf);

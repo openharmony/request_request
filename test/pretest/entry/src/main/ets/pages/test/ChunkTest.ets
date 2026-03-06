@@ -18,6 +18,7 @@ import request from '@ohos.request';
 import systemDateTime from '@ohos.systemDateTime';
 import common from '@ohos.app.ability.common';
 import wifiManager from '@ohos.wifiManager';
+import Server from '../../common/iTcpServer';
 
 @Entry
 @Component
@@ -30,12 +31,13 @@ struct download {
   @State mode: request.agent.Mode = request.agent.Mode.FOREGROUND;
   @State method: string = 'GET';
   @State overwrite: boolean = true;
-  @State downloadUrl: string = 'http://192.168.3.2:35620';
+  @State downloadUrl: string = 'http://127.0.0.1:8078';
   @State retry: boolean = true;
   @State priority: number = 0;
   controller: TextAreaController = new TextAreaController();
   private context = getContext(this) as common.UIAbilityContext;
   private task: undefined|request.agent.Task;
+  private server: Server | null = null;
   @State config: request.agent.Config = {
     action: request.agent.Action.DOWNLOAD,
     url: this.downloadUrl,
@@ -48,6 +50,17 @@ struct download {
     priority: this.priority,
     token: undefined
   };
+
+  aboutToAppear() {
+    this.server = new Server();
+    this.server.serverStart();
+  }
+
+  aboutToDisappear() {
+    if (this.server) {
+      this.server.serverClose();
+    }
+  }
 
   build() {
     Row() {

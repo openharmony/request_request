@@ -18,14 +18,30 @@ import request from '@ohos.request';
 import fs from '@ohos.file.fs';
 import common from '@ohos.app.ability.common';
 import { BusinessError } from "@ohos.base";
+import Server from '../common/iTcpServer';
 
 export default function requestSystemQueryTest() {
   describe('requestSystemQueryTest', () => {
-    beforeAll(() => {
+    let server: Server | null = null;
+    let baseUrl: string = '';
+    
+    beforeAll(async () => {
       console.info('beforeAll called');
+      server = new Server();
+      let port = await server.serverStart();
+      if (port === 0) {
+        // 服务器启动失败，使用默认端口
+        console.info('server start failed, using default port 8078');
+        port = 8078;
+      }
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info('server baseUrl: ' + baseUrl);
     });
-    afterAll(() => {
+    afterAll(async () => {
       console.info('afterAll called');
+      if (server) {
+        await server.serverClose();
+      }
     });
     beforeEach(() => {
       console.info('beforeEach called');
@@ -64,7 +80,7 @@ export default function requestSystemQueryTest() {
     it('testSystemSearchTask001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSystemSearchTask001.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -89,7 +105,7 @@ export default function requestSystemQueryTest() {
     it('testSystemSearchTask002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSystemSearchTask002.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -108,7 +124,7 @@ export default function requestSystemQueryTest() {
     it('testSystemSearchTask003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSystemSearchTask003.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -133,7 +149,7 @@ export default function requestSystemQueryTest() {
     it('testSystemSearchTask004', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSystemSearchTask004.txt`,
       };
       let task = await request.agent.create(context, conf);
@@ -231,7 +247,7 @@ export default function requestSystemQueryTest() {
       fs.closeSync(file2);
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1',
+        url: baseUrl,
         data: [
           { name: 'file1', value: { path: `./test1.txt`, filename: 'test1.txt' } },
           { name: 'file2', value: { path: `./test2.txt`, filename: 'test2.txt' } },
@@ -277,7 +293,7 @@ export default function requestSystemQueryTest() {
     it('testSystemQueryTask007', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'https://gitee.com/chenzhixue/downloadTest/releases/download/v1.0/test.apk',
+        url: baseUrl + '/test.apk',
         saveas: `testSystemQueryTask007.txt`,
         mode: request.agent.Mode.BACKGROUND
       };

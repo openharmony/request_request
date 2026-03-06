@@ -19,6 +19,7 @@ import { BusinessError } from '@ohos.base';
 import featureAbility from '@ohos.ability.featureAbility'
 import fileio from '@ohos.fileio';
 import fs from '@ohos.file.fs'
+import Server from '../../common/iTcpServer';
 
 @Entry
 @Component
@@ -26,8 +27,20 @@ struct Uploadpage {
   @State value: string = "";
   @State n: number = 1;
   @State progress: string = '0%';
-  @State Url_400k: string = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt';
+  @State Url_400k: string = 'http://127.0.0.1:8078/test400K.txt';
   @State task_num: number = 1000;
+  private server: Server | null = null;
+
+  aboutToAppear() {
+    this.server = new Server();
+    this.server.serverStart();
+  }
+
+  aboutToDisappear() {
+    if (this.server) {
+      this.server.serverClose();
+    }
+  }
 
   build() {
     Row() {

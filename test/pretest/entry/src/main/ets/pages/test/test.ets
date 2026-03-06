@@ -19,6 +19,7 @@ import request from '@ohos.request';
 import common from '@ohos.app.ability.common';
 import wifiManager from '@ohos.wifiManager';
 import { BusinessError } from '@kit.BasicServicesKit';
+import Server from '../../common/iTcpServer';
 
 
 @Entry
@@ -26,7 +27,7 @@ import { BusinessError } from '@kit.BasicServicesKit';
 struct upload {
   @State message: string = '';
   private uploadTask: undefined | request.UploadTask;
-  @State upLoadUrl: string = 'http://192.168.0.118:8080/hfs/';
+  @State upLoadUrl: string = 'http://127.0.0.1:8078/';
   @State files: Array<request.File> = [];
   @State method: string = 'POST';
   @State data: Array<request.RequestData> = [];
@@ -44,6 +45,18 @@ struct upload {
   @State retry: boolean = true;
   @State priority: number = 0;
   @State timeCard: string = "0";
+  private server: Server | null = null;
+
+  aboutToAppear() {
+    this.server = new Server();
+    this.server.serverStart();
+  }
+
+  aboutToDisappear() {
+    if (this.server) {
+      this.server.serverClose();
+    }
+  }
 
   build() {
     Row() {
@@ -803,7 +816,7 @@ struct upload {
   async uploadUrl1() {
     try {
       this.uploadConfig = {
-        url: 'http://127.0.0.1/' + 'a'.repeat(2048),
+        url: 'http://127.0.0.1:8078/' + 'a'.repeat(2048),
         header: { 'Accept': '*/*' },
         method: this.method,
         files: this.files,
@@ -853,7 +866,7 @@ struct upload {
   async uploadUrl3() {
     try {
       this.uploadConfig = {
-        url: 'https://gitee.com/openharmony/request_request',
+        url: 'http://127.0.0.1:8078/unsupported',
         header: { 'Accept': '*/*' },
         method: this.method,
         files: this.files,
@@ -879,10 +892,10 @@ struct upload {
     try {
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'https://gitee.com/openharmony/request_request',
+        url: 'http://127.0.0.1:8078/unsupported',
       }
       this.uploadConfig = {
-        url: 'https://gitee.com/openharmony/request_request',
+        url: 'http://127.0.0.1:8078/unsupported',
         header: { 'Accept': '*/*' },
         method: this.method,
         files: this.files,

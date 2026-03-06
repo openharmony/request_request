@@ -22,11 +22,14 @@ import Server from '../common/iTcpServer'
 export default function requestBasicConfigTest() {
   describe('requestBasicConfigTest', () => {
     let server: Server | null = null;
+    let baseUrl: string = "";
 
     beforeAll(async () => {
       console.info('beforeAll called');
       server = new Server();
-      await server.serverStart();
+      let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info("server started on " + baseUrl);
     });
     afterAll(async () => {
       console.info('afterAll called');
@@ -115,7 +118,7 @@ export default function requestBasicConfigTest() {
 
         let config: request.agent.Config = {
             action: request.agent.Action.DOWNLOAD,
-            url: "http://127.0.0.1:8078/test.txt",
+            url: baseUrl + "/test.txt",
             title: undefined,
             description: undefined,
             mode: undefined,
@@ -171,7 +174,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskNormalConfig001 test success!");
             }).catch((err: Error) => {
@@ -204,7 +207,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: "title",
         description: undefined,
         mode: undefined,
@@ -260,7 +263,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual("title");
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigTitle001 test success!");
             }).catch((err: Error) => {
@@ -293,7 +296,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: "",
         description: undefined,
         mode: undefined,
@@ -349,7 +352,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual("");
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigTitle002 test success!");
             }).catch((err: Error) => {
@@ -382,7 +385,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: 'a'.repeat(256),
         description: undefined,
         mode: undefined,
@@ -438,7 +441,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual("a".repeat(256));
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigTitle003 test success!");
             }).catch((err: Error) => {
@@ -471,7 +474,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: 'a'.repeat(257),
         description: undefined,
         mode: undefined,
@@ -533,7 +536,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": 1,
         "description": undefined,
         "mode": undefined,
@@ -590,7 +593,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(1);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigTitle005 test success!");
             }).catch((err: Error) => {
@@ -623,7 +626,7 @@ export default function requestBasicConfigTest() {
 
         let config: request.agent.Config = {
             action: request.agent.Action.DOWNLOAD,
-            url: "http://127.0.0.1:8078/test.txt",
+            url: baseUrl + "/test.txt",
             title: undefined,
             description: "desc",
             mode: undefined,
@@ -679,7 +682,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigDescription001 test success!");
             }).catch((err: Error) => {
@@ -712,7 +715,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: "",
         mode: undefined,
@@ -768,7 +771,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigDescription002 test success!");
             }).catch((err: Error) => {
@@ -801,7 +804,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: 'a'.repeat(1024),
         mode: undefined,
@@ -857,7 +860,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigDescription003 test success!");
             }).catch((err: Error) => {
@@ -890,7 +893,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: 'a'.repeat(1025),
         mode: undefined,
@@ -952,7 +955,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": 1,
         "mode": undefined,
@@ -1009,7 +1012,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigDescription005 test success!");
             }).catch((err: Error) => {
@@ -1042,7 +1045,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: request.agent.Mode.BACKGROUND,
@@ -1098,7 +1101,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigMode001 test success!");
             }).catch((err: Error) => {
@@ -1131,7 +1134,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: request.agent.Mode.FOREGROUND,
@@ -1187,7 +1190,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigMode002 test success!");
             }).catch((err: Error) => {
@@ -1220,7 +1223,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": 1,
@@ -1277,7 +1280,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigMode003 test success!");
             }).catch((err: Error) => {
@@ -1310,7 +1313,7 @@ export default function requestBasicConfigTest() {
       
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -1366,7 +1369,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigOverwrite001 test success!");
             }).catch((err: Error) => {
@@ -1399,7 +1402,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -1455,7 +1458,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigOverwrite002 test success!");
             }).catch((err: Error) => {
@@ -1488,7 +1491,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -1544,7 +1547,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigMethod001 test success!");
             }).catch((err: Error) => {
@@ -1577,7 +1580,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -1633,7 +1636,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigMethod002 test success!");
             }).catch((err: Error) => {
@@ -1661,7 +1664,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -1717,7 +1720,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigMethod003 test success!");
             }).catch((err: Error) => {
@@ -1745,7 +1748,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -1802,7 +1805,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigMethod003 test success!");
             }).catch((err: Error) => {
@@ -1830,7 +1833,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -1888,7 +1891,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigMethod003 test success!");
             }).catch((err: Error) => {
@@ -1916,7 +1919,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -1974,7 +1977,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigHeaders002 test success!");
             }).catch((err: Error) => {
@@ -2007,7 +2010,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -2069,7 +2072,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2125,7 +2128,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigSaveas001 test success!");
             }).catch((err: Error) => {
@@ -2158,7 +2161,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -2215,7 +2218,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigSaveas002 test success!");
             }).catch((err: Error) => {
@@ -2248,7 +2251,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2304,7 +2307,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigSaveas003 test success!");
             }).catch((err: Error) => {
@@ -2337,7 +2340,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2393,7 +2396,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigSaveas004 test success!");
             }).catch((err: Error) => {
@@ -2426,7 +2429,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2482,7 +2485,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigSaveas005 test success!");
             }).catch((err: Error) => {
@@ -2515,7 +2518,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2571,7 +2574,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigSaveas006 test success!");
             }).catch((err: Error) => {
@@ -2604,7 +2607,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2665,7 +2668,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2721,7 +2724,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigSaveas008 test success!");
             }).catch((err: Error) => {
@@ -2754,7 +2757,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2815,7 +2818,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -2871,7 +2874,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigMetered001 test success!");
             }).catch((err: Error) => {
@@ -2904,7 +2907,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -2961,7 +2964,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigMetered002 test success!");
             }).catch((err: Error) => {
@@ -2994,7 +2997,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -3050,7 +3053,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigRoaming001 test success!");
             }).catch((err: Error) => {
@@ -3083,7 +3086,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -3140,7 +3143,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigRoaming002 test success!");
             }).catch((err: Error) => {
@@ -3173,7 +3176,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -3229,7 +3232,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigRetry001 test success!");
             }).catch((err: Error) => {
@@ -3262,7 +3265,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -3319,7 +3322,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigRetry002 test success!");
             }).catch((err: Error) => {
@@ -3352,7 +3355,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -3408,7 +3411,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigRedirect001 test success!");
             }).catch((err: Error) => {
@@ -3441,7 +3444,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -3498,7 +3501,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigSaveas002 test success!");
             }).catch((err: Error) => {
@@ -3531,7 +3534,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -3593,7 +3596,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -3650,7 +3653,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigProxy002 test success!");
             }).catch((err: Error) => {
@@ -3683,7 +3686,7 @@ export default function requestBasicConfigTest() {
 
       let config: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: "http://127.0.0.1:8078/test.txt",
+        url: baseUrl + "/test.txt",
         title: undefined,
         description: undefined,
         mode: undefined,
@@ -3740,7 +3743,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigIndex001 test success!");
             }).catch((err: Error) => {
@@ -3773,7 +3776,7 @@ export default function requestBasicConfigTest() {
 
       let config: Record<string, string | number | undefined> = {
         "action": request.agent.Action.DOWNLOAD,
-        "url": "http://127.0.0.1:8078/test.txt",
+        "url": baseUrl + "/test.txt",
         "title": undefined,
         "description": undefined,
         "mode": undefined,
@@ -3830,7 +3833,7 @@ export default function requestBasicConfigTest() {
                 expect(info.timeout).assertEqual(undefined);
                 expect(info.title).assertEqual(undefined);
                 expect(info.token).assertEqual(undefined);
-                expect(info.url).assertEqual('http://127.0.0.1:8078/test.txt');
+                expect(info.url).assertEqual(baseUrl + '/test.txt');
                 await request.agent.remove(task.tid);
                 console.info("===> testTaskConfigIndex002 test success!");
             }).catch((err: Error) => {

@@ -24,11 +24,14 @@ import Server from '../common/iTcpServer'
 export default function requestForeignKitTest() {
   describe('requestForeignKitTest', () => {
     let server: Server | null = null;
+    let baseUrl: string = "";
 
     beforeAll(async () => {
       console.info('beforeAll called');
       server = new Server();
-      await server.serverStart();
+      let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info("server started on " + baseUrl);
     });
     afterAll(async () => {
       console.info('afterAll called');
@@ -69,7 +72,7 @@ export default function requestForeignKitTest() {
     it('testDownloadTaskUserFile001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         mode: request.agent.Mode.BACKGROUND,
         saveas: 'file://media/Photo/1/test.txt'
       };
@@ -104,7 +107,7 @@ export default function requestForeignKitTest() {
     it('testDownloadTaskUserFile002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         mode: request.agent.Mode.FOREGROUND,
         saveas: 'file://media/Photo/1/test.txt',
         overwrite: false,
@@ -140,7 +143,7 @@ export default function requestForeignKitTest() {
     it('testDownloadTaskUserFile003', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         mode: request.agent.Mode.FOREGROUND,
         saveas: 'file://media/Photo/1/test.txt',
         overwrite: true,
@@ -183,7 +186,7 @@ export default function requestForeignKitTest() {
       };
       let conf: request.agent.Config = {
         action: request.agent.Action.UPLOAD,
-        url: 'http://127.0.0.1:8078',
+        url: baseUrl,
         mode: request.agent.Mode.BACKGROUND,
         data: [formItem],
       };
@@ -218,7 +221,7 @@ export default function requestForeignKitTest() {
     it('testTaskBroadcastEvent001', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         saveas: 'testTaskBroadcastEvent001.txt',
         mode: request.agent.Mode.BACKGROUND
       };
@@ -264,7 +267,7 @@ export default function requestForeignKitTest() {
     it('testTaskBroadcastEvent002', 0, async (done: Function) => {
       let conf: request.agent.Config = {
         action: request.agent.Action.DOWNLOAD,
-        url: 'http://127.0.0.1:8078/test.mp3',
+        url: baseUrl + '/test.mp3',
         saveas: 'testTaskBroadcastEvent002.txt',
         mode: request.agent.Mode.BACKGROUND
       };

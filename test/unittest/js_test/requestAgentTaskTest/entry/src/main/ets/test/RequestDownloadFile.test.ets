@@ -22,11 +22,14 @@ import common from '@ohos.app.ability.common';
 export default function requestDownloadFileTest() {
   describe('requestDownloadFileTest', () => {
     let server: Server | null = null;
+    let baseUrl: string = "";
 
     beforeAll(async () => {
       console.info('beforeAll called');
       server = new Server();
-      await server.serverStart();
+      let port = await server.serverStart();
+      baseUrl = `http://127.0.0.1:${port}`;
+      console.info("server started on " + baseUrl);
     });
     afterAll(async () => {
       console.info('afterAll called');
@@ -53,7 +56,7 @@ export default function requestDownloadFileTest() {
     let context: common.UIAbilityContext = globalThis.abilityContext;
     let cacheDir: String = globalThis.cacheDir;
     let globalDownloadConf: request.DownloadConfig = {
-      url: 'http://127.0.0.1:8078/test.txt',
+      url: baseUrl + '/test.txt',
       header: {
         headers: 'http'
       },
@@ -142,7 +145,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadUrl003', 0, (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/unsupported',
+        url: baseUrl + '/unsupported',
         filePath: 'testDownloadUrl003.txt',
       };
       request.downloadFile(context, conf).then(async (data) => {
@@ -201,7 +204,7 @@ export default function requestDownloadFileTest() {
      *             3. The application is always at the foreground of the device
      *             4. The download_server SA process has been initiated
      *             5. The local cache of the previous use case has been cleared
-     * @tc.step: 1. Construct an URL with length 8193 (base "http://127.0.0.1:8078/" + 8176 'a's) and set it in DownloadConfig with filePath: testDownloadUrl005.txt.
+     * @tc.step: 1. Construct an URL with length 8193 (base baseUrl + "/" + 8176 'a's) and set it in DownloadConfig with filePath: testDownloadUrl005.txt.
      *           2. Try to call request.downloadFile() with the config; in the success callback (unexpected), assert false and call done().
      *           3. Catch the thrown exception, assert err.code equals 401 (URL too long error), then call done().
      * @tc.require: issues#1573
@@ -332,7 +335,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFile002', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testV9_file02.txt'
       };
       try {
@@ -366,7 +369,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFile003', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testV9_file03.txt'
       };
       try {
@@ -400,7 +403,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFile0031', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testV9_file04.txt'
       };
       try {
@@ -435,7 +438,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFile0032', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'file://media/Photo/1/test.txt',
         background: false,
       };
@@ -470,7 +473,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFile004', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFile004.txt',
         networkType: request.NETWORK_WIFI
       };
@@ -505,7 +508,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadFile005', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFile005.txt',
         networkType: request.NETWORK_MOBILE
       };
@@ -546,7 +549,7 @@ export default function requestDownloadFileTest() {
       }
       let filePath = cacheDir + '//test.txt';
       let conf: request.DownloadConfig  = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: filePath,
       }
       try {
@@ -603,7 +606,7 @@ export default function requestDownloadFileTest() {
       }
       let filePath = cacheDir + '/A//B/test.txt';
       let conf: request.DownloadConfig  = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: filePath,
       }
       try {
@@ -659,7 +662,7 @@ export default function requestDownloadFileTest() {
       }
       let filePath = cacheDir + '/A///////B/test.txt';
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: filePath,
       }
       try {
@@ -715,7 +718,7 @@ export default function requestDownloadFileTest() {
       }
       let filePath = cacheDir + '/A//////./B/.//test.txt';
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: filePath,
       }
       try {
@@ -762,7 +765,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOn001.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -800,7 +803,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOn002.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -873,7 +876,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOn004.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -915,7 +918,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOn005.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -957,7 +960,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOn006.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -998,7 +1001,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOn007.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1040,7 +1043,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOn008.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1080,7 +1083,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOff001.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1114,7 +1117,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOff002.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1153,7 +1156,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOff003.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1197,7 +1200,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOff0031.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1250,7 +1253,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOff004.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1291,7 +1294,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOff005.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1344,7 +1347,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOff0051.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1399,7 +1402,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOff006.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1450,7 +1453,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOff007.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1506,7 +1509,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOff008.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1556,7 +1559,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadFileOff009.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1711,7 +1714,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadTaskRestore001.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1755,7 +1758,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadTaskRestore0011.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1823,7 +1826,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadTaskDelete002.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1860,7 +1863,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadTaskDelete0021.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1901,7 +1904,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadGetTaskInfo001.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1949,7 +1952,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadGetTaskInfo0011.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -1968,7 +1971,7 @@ export default function requestDownloadFileTest() {
         done();
       }
     });
-    
+
     /**
      * @tc.number: testDownloadGetTaskInfo002
      * @tc.name: testDownloadGetTaskInfo002
@@ -1995,7 +1998,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadGetTaskInfo002.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -2040,7 +2043,7 @@ export default function requestDownloadFileTest() {
         fs.unlinkSync(filePath);
       }
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/test.txt',
+        url: baseUrl + '/test.txt',
         filePath: 'testDownloadGetTaskInfo0021.txt'
       };
       let task = await request.downloadFile(context, conf);
@@ -2080,7 +2083,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadGetTaskInfo003', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/large_test.zip',
+        url: baseUrl + '/large_test.zip',
         filePath: "DownloadGetTaskInfo003"
       };
       let task = await request.downloadFile(context, conf);
@@ -2127,7 +2130,7 @@ export default function requestDownloadFileTest() {
      */
     it('testDownloadGetTaskInfo0031', 0, async (done: Function) => {
       let conf: request.DownloadConfig = {
-        url: 'http://127.0.0.1:8078/large_test.zip',
+        url: baseUrl + '/large_test.zip',
         filePath: "DownloadGetTaskInfo0031",
       };
       let task = await request.downloadFile(context, conf);

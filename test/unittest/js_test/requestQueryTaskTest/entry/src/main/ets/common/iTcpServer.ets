@@ -167,23 +167,13 @@ let handleClient = (client: socket.TCPSocketConnection) => {
     
     // Check if this is testTimeout006 (large_test.zip for timeout testing)
     // It uses totalTimeout: 2, so we need to delay > 2 seconds
-    const isTimeout006 = request.path.indexOf('large_test.zip') >= 0 && 
+    const isTimeout006 = request.path.includes('large_test.zip') && 
                          !request.headers.get('range');
     
     if (isTimeout006) {
       // Delay 3 seconds for testTimeout006 to trigger totalTimeout fault
       console.log('===>delaying response 3s for testTimeout006');
       await sleep(3000);
-    }
-    
-    // Check if this is testTimeout007 (testTimeout007.txt for total timeout testing)
-    // It uses totalTimeout: 10, so we need to delay > 10 seconds
-    const isTimeout007 = request.path.indexOf('testTimeout007.txt') >= 0;
-    
-    if (isTimeout007) {
-      // Delay 12 seconds for testTimeout007 to trigger totalTimeout fault
-      console.log('===>delaying response 12s for testTimeout007');
-      await sleep(12000);
     }
     
     const response = handleRequest(request);

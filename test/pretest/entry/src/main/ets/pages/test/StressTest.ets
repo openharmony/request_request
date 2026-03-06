@@ -22,20 +22,33 @@ import bundleManager from '@ohos.bundle.bundleManager';
 import fs from '@ohos.file.fs';
 import photoAccessHelper from '@ohos.file.photoAccessHelper';
 import picker from '@ohos.file.picker';
+import Server from '../../common/iTcpServer';
 
 @Entry
 @Component
 struct feature50 {
   @State downloadNum: number = 0;
   @State message: string = "";
-  @State url: string = 'http://192.168.175.242:8080/hfs/test.txt';
+  @State url: string = 'http://127.0.0.1:8078/test.txt';
   controller: TextAreaController = new TextAreaController()
-  @State Url_400k: string = 'https://gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test400K.txt';
+  @State Url_400k: string = 'http://127.0.0.1:8078/test400K.txt';
   @State taskLists: Array<request.agent.Task> = [];
   @State cost_time: number = 0;
   private context = getContext(this) as common.UIAbilityContext;
   @State tid: string = '';
   private task: undefined | request.agent.Task;
+  private server: Server | null = null;
+
+  aboutToAppear() {
+    this.server = new Server();
+    this.server.serverStart();
+  }
+
+  aboutToDisappear() {
+    if (this.server) {
+      this.server.serverClose();
+    }
+  }
 
   build() {
     Row() {

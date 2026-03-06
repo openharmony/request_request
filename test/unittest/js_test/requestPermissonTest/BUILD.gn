@@ -13,12 +13,15 @@
 
 import("//build/test.gni")
 
-ohos_js_unittest("RequestPermissionTest") {
-  module_out_path = "request/request/request"
+ohos_js_stage_unittest("RequestPermissionTest") {
+  module_out_path = "request/request/requestPermissionTest"
 
   hap_profile = "./config.json"
-
+  ets2abc = true
   certificate_profile = "./signature/openharmony_sx.p7b"
+  hap_name = "RequestPermissionTest"
+  subsystem_name = "request"
+  part_name = "request"
 }
 
 group("unittest") {
