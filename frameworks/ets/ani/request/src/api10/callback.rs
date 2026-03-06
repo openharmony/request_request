@@ -533,7 +533,9 @@ pub struct CallbackColl {
     on_fail: Mutex<Vec<GlobalRefCallback<(bridge::Progress,)>>>,
     /// Callbacks to be executed when HTTP response is received.
     on_response: Mutex<Vec<GlobalRefCallback<(bridge::HttpResponse,)>>>,
+    /// Callbacks to be executed when a fault occurs.
     on_fault: Mutex<Vec<GlobalRefCallback<(bridge::Faults,)>>>,
+    /// Callbacks to be executed when task enters waiting state.
     on_wait: Mutex<Vec<GlobalRefCallback<(bridge::WaitingReason,)>>>,
 }
 
@@ -630,6 +632,13 @@ impl request_client::Callback for CallbackColl {
         }
     }
 
+    /// Handles fault events.
+    ///
+    /// Executes all registered fault callbacks with the fault type.
+    ///
+    /// # Parameters
+    ///
+    /// * `faults` - The type of fault that occurred
     fn on_fault(&self, faults: Faults) {
         let callbacks = self.on_fault.lock().unwrap();
         for callback in callbacks.iter() {
@@ -637,6 +646,13 @@ impl request_client::Callback for CallbackColl {
         }
     }
 
+    /// Handles wait events.
+    ///
+    /// Executes all registered wait callbacks with the waiting reason.
+    ///
+    /// # Parameters
+    ///
+    /// * `waiting_reason` - The reason why the task is waiting
     fn on_wait(&self, waiting_reason: WaitingReason) {
         let callbacks = self.on_wait.lock().unwrap();
         for callback in callbacks.iter() {

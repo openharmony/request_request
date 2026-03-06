@@ -504,14 +504,20 @@ impl From<request_core::info::Faults> for Faults {
     }
 }
 
+/// Represents reasons why a task is waiting.
 #[ani_rs::ani(path = "@ohos.request.request.agent.WaitingReason")]
 pub enum WaitingReason {
+    /// Task queue is at capacity.
     TaskQueueFull = 0x00,
+    /// Current network does not match task requirements.
     NetworkNotMatch = 0x01,
+    /// Application is running in the background.
     AppBackground = 0x02,
+    /// User is currently inactive.
     UserInactivated = 0x03,
 }
 
+/// Converts from core WaitingReason to API WaitingReason.
 impl From<request_core::info::WaitingReason> for WaitingReason {
     fn from(value: request_core::info::WaitingReason) -> Self {
         match value {
@@ -684,6 +690,10 @@ pub struct GroupConfig<'local> {
     pub notification: Notification<'local>,
 }
 
+/// Converts from core TaskConfig to API Config.
+///
+/// Transforms the core task configuration into the ETS API configuration
+/// format, mapping internal fields to their API counterparts.
 impl From<request_core::config::TaskConfig> for Config<'_> {
     fn from(value: request_core::config::TaskConfig) -> Self {
         Config {

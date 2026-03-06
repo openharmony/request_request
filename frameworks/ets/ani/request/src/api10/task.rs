@@ -23,6 +23,7 @@ use request_client::RequestClient;
 use crate::api10::bridge::Task;
 use crate::constant::*;
 
+/// Minimum allowed speed limit in bytes per second (16 KB/s).
 const MIN_SPEED_LIMIT: i64 = 16 * 1024;
 
 /// Starts a request task.
@@ -193,6 +194,20 @@ pub fn set_max_speed(this: Task, speed: i64) -> Result<(), BusinessError> {
         .map_err(|e| BusinessError::new_static(e, "Failed to set task max speed"))
 }
 
+/// Validates the maximum speed setting against minimum speed.
+///
+/// Checks that the specified maximum speed is not less than the configured
+/// minimum speed for the task.
+///
+/// # Parameters
+///
+/// * `this` - The task to check speed for
+/// * `speed` - The maximum speed value to validate
+///
+/// # Returns
+///
+/// * `Ok(())` if the speed is valid
+/// * `Err(BusinessError)` if the max speed is less than the min speed
 #[ani_rs::native]
 pub fn check_max_speed(this: Task, speed: i64) -> Result<(), BusinessError> {
     if let Some(ref min_speed) = this.config.min_speed {

@@ -32,9 +32,23 @@ use crate::api10::bridge::{Config, Filter, Task, TaskInfo};
 use crate::constant::*;
 use crate::seq::TaskSeq;
 
+/// Minimum allowed length for authentication tokens (in bytes).
 const TOKEN_MIN_BYTES: usize = 8;
+/// Maximum allowed length for authentication tokens (in bytes).
 const TOKEN_MAX_BYTES: usize = 2048;
 
+/// Validates task ID format.
+///
+/// Checks that the task ID is not empty and does not exceed the maximum length.
+///
+/// # Parameters
+///
+/// * `id` - Task ID to validate
+///
+/// # Returns
+///
+/// * `Ok(())` if the task ID is valid
+/// * `Err(BusinessError)` if the task ID is empty or too long
 #[ani_rs::native]
 pub fn check_tid(id: String) -> Result<(), BusinessError> {
     if id.is_empty() {
@@ -52,6 +66,18 @@ pub fn check_tid(id: String) -> Result<(), BusinessError> {
     Ok(())
 }
 
+/// Validates authentication token format.
+///
+/// Checks that the token length is within the allowed range.
+///
+/// # Parameters
+///
+/// * `token` - Authentication token to validate
+///
+/// # Returns
+///
+/// * `Ok(())` if the token is valid
+/// * `Err(BusinessError)` if the token length is out of range
 #[ani_rs::native]
 pub fn check_token(token: String) -> Result<(), BusinessError> {
     if token.len() < TOKEN_MIN_BYTES || token.len() > TOKEN_MAX_BYTES {
