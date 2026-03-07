@@ -19,9 +19,24 @@ use request_utils::context::Context;
 use crate::api10::bridge::GroupConfig;
 use crate::constant::*;
 
+/// Maximum allowed length for notification titles.
 const MAX_TITLE_LENGTH: usize = 1024;
+/// Maximum allowed length for notification text content.
 const MAX_TEXT_LENGTH: usize = 3072;
 
+/// Validates notification title and text length.
+///
+/// Checks that the title and text do not exceed their maximum allowed lengths.
+///
+/// # Parameters
+///
+/// * `title` - Optional notification title to validate
+/// * `text` - Optional notification text to validate
+///
+/// # Returns
+///
+/// * `Ok(())` if both title and text are within limits
+/// * `Err(BusinessError)` if either exceeds its maximum length
 fn ParseTitleText(title: &Option<String>, text: &Option<String>) -> Result<(), BusinessError> {
     if let Some(v) = title {
         if v.len() > MAX_TITLE_LENGTH {
@@ -42,6 +57,18 @@ fn ParseTitleText(title: &Option<String>, text: &Option<String>) -> Result<(), B
     Ok(())
 }
 
+/// Validates group ID format.
+///
+/// Checks that the group ID is not empty.
+///
+/// # Parameters
+///
+/// * `gid` - Group ID to validate
+///
+/// # Returns
+///
+/// * `Ok(())` if the group ID is valid
+/// * `Err(BusinessError)` if the group ID is empty
 fn ParseGid(gid: &str) -> Result<(), BusinessError> {
     if gid.is_empty() {
         return Err(BusinessError::new(

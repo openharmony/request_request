@@ -301,6 +301,20 @@ pub fn on_fail(
     Ok(())
 }
 
+/// Unregisters a progress callback for a download task.
+///
+/// Removes the specified callback from the progress callback list for the task.
+///
+/// # Parameters
+///
+/// * `env` - The animation environment reference
+/// * `this` - The download task to unregister the callback from
+/// * `callback` - The callback function to remove
+///
+/// # Returns
+///
+/// * `Ok(())` if the callback was successfully unregistered
+/// * `Err(BusinessError)` if there was an error during unregistration
 #[ani_rs::native]
 pub fn off_progress(
     env: &AniEnv,
@@ -317,6 +331,21 @@ pub fn off_progress(
     Ok(())
 }
 
+/// Unregisters an event callback for a download task.
+///
+/// Removes the specified callback from the event callback list for the task.
+///
+/// # Parameters
+///
+/// * `env` - The animation environment reference
+/// * `this` - The download task to unregister the callback from
+/// * `event` - The event type ("complete", "pause", "remove")
+/// * `callback` - The callback function to remove
+///
+/// # Returns
+///
+/// * `Ok(())` if the callback was successfully unregistered
+/// * `Err(BusinessError)` if there was an error during unregistration
 #[ani_rs::native]
 pub fn off_event(
     env: &AniEnv,
@@ -352,6 +381,20 @@ pub fn off_event(
     Ok(())
 }
 
+/// Unregisters a failure callback for a download task.
+///
+/// Removes the specified callback from the failure callback list for the task.
+///
+/// # Parameters
+///
+/// * `env` - The animation environment reference
+/// * `this` - The download task to unregister the callback from
+/// * `callback` - The callback function to remove
+///
+/// # Returns
+///
+/// * `Ok(())` if the callback was successfully unregistered
+/// * `Err(BusinessError)` if there was an error during unregistration
 #[ani_rs::native]
 pub fn off_fail(
     env: &AniEnv,
@@ -368,6 +411,20 @@ pub fn off_fail(
     Ok(())
 }
 
+/// Unregisters all callbacks of a specific event type for a task.
+///
+/// Clears all callbacks of the specified event type for the task.
+///
+/// # Parameters
+///
+/// * `env` - The animation environment reference
+/// * `this` - The download task to unregister callbacks from
+/// * `event` - The event type to clear callbacks for
+///
+/// # Returns
+///
+/// * `Ok(())` if the callbacks were successfully cleared
+/// * `Err(BusinessError)` if there was an error
 #[ani_rs::native]
 pub fn off_events(env: &AniEnv, this: DownloadTask, event: String) -> Result<(), BusinessError> {
     let task_id = this.task_id.parse().unwrap();
@@ -622,13 +679,17 @@ pub struct CallbackColl {
     on_complete: Mutex<Vec<GlobalRefCallback<()>>>,
     /// Callbacks triggered when download is paused.
     on_pause: Mutex<Vec<GlobalRefCallback<()>>>,
+    /// Callbacks triggered when download is removed.
     on_remove: Mutex<Vec<GlobalRefCallback<()>>>,
     /// Callbacks triggered when download is resumed.
     on_resume: Mutex<Vec<GlobalRefCallback<()>>>,
     /// Callbacks triggered when download fails.
     on_fail: Mutex<Vec<GlobalRefCallback<(i32,)>>>,
+    /// Callbacks triggered when upload completes.
     on_complete_upload: Mutex<Vec<GlobalRefCallback<(Vec<bridge::TaskState>,)>>>,
+    /// Callbacks triggered when upload fails.
     on_fail_upload: Mutex<Vec<GlobalRefCallback<(Vec<bridge::TaskState>,)>>>,
+    /// Callbacks triggered when HTTP headers are received.
     on_header_receive: Mutex<Vec<GlobalRefCallback<(HashMap<String, String>,)>>>,
 }
 
@@ -723,6 +784,13 @@ impl request_client::Callback for CallbackColl {
         }
     }
 
+    /// Handles task removal events.
+    ///
+    /// Executes all registered removal callbacks.
+    ///
+    /// # Parameters
+    ///
+    /// * `_progress` - The progress information at the time of removal
     fn on_remove(&self, _progress: &Progress) {
         let callbacks = self.on_remove.lock().unwrap();
         for callback in callbacks.iter() {
@@ -730,6 +798,13 @@ impl request_client::Callback for CallbackColl {
         }
     }
 
+    /// Handles upload completion events.
+    ///
+    /// Executes all registered upload completion callbacks with the task states.
+    ///
+    /// # Parameters
+    ///
+    /// * `task_states` - The final states of all upload tasks
     fn on_complete_upload(&self, task_states: Vec<TaskState>) {
         let callbacks = self.on_complete_upload.lock().unwrap();
         let mut states = Vec::new();
@@ -741,6 +816,13 @@ impl request_client::Callback for CallbackColl {
         }
     }
 
+    /// Handles upload failure events.
+    ///
+    /// Executes all registered upload failure callbacks with the task states.
+    ///
+    /// # Parameters
+    ///
+    /// * `task_states` - The error states of all failed upload tasks
     fn on_fail_upload(&self, task_states: Vec<TaskState>) {
         let callbacks = self.on_fail_upload.lock().unwrap();
         let mut states = Vec::new();
@@ -752,6 +834,13 @@ impl request_client::Callback for CallbackColl {
         }
     }
 
+    /// Handles HTTP header receive events.
+    ///
+    /// Executes all registered header receive callbacks with the headers.
+    ///
+    /// # Parameters
+    ///
+    /// * `progress` - The progress information containing headers and body
     fn on_header_receive(&self, progress: &Progress) {
         info!("header_receive 1");
         let callbacks = self.on_header_receive.lock().unwrap();
