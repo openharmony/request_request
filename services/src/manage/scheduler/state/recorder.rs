@@ -28,8 +28,8 @@ use crate::manage::scheduler::qos::RssCapacity;
 pub(super) struct StateRecord {
     /// Set of UIDs currently in the foreground.
     pub(super) foreground_abilities: HashSet<u64>,
-    /// User ID currently in the foreground.
-    pub(super) top_user: u64,
+    /// Set of user IDs currently in the foreground (supports multi-foreground).
+    pub(super) foreground_users: HashSet<u64>,
     /// Current network connection state.
     pub(super) network: NetworkState,
     /// Set of currently active user accounts.
@@ -47,7 +47,7 @@ impl StateRecord {
     pub(crate) fn new() -> Self {
         StateRecord {
             foreground_abilities: HashSet::new(),
-            top_user: 0,
+            foreground_users: HashSet::new(),
             network: NetworkState::Offline,
             active_accounts: HashSet::new(),
             rss_level: 0,
@@ -60,7 +60,7 @@ impl StateRecord {
     ///
     /// * `network` - Current network state.
     /// * `foreground_abilities` - Optional list of foreground application UIDs.
-    /// * `foreground_account` - User ID currently in the foreground.
+    /// * `foreground_accounts` - Set of user IDs currently in the foreground (supports multi-foreground).
     /// * `active_accounts` - Set of currently active user accounts.
     ///
     /// # Returns
@@ -70,7 +70,7 @@ impl StateRecord {
         &mut self,
         network: NetworkState,
         foreground_abilities: Option<Vec<u64>>,
-        foreground_account: u64,
+        foreground_accounts: HashSet<u64>,
         active_accounts: HashSet<u64>,
     ) -> SqlList {
         let mut sql_list = SqlList::new();
@@ -88,7 +88,7 @@ impl StateRecord {
         }
 
         // Update internal state
-        self.top_user = foreground_account;
+        self.foreground_users = foreground_accounts;
         self.active_accounts = active_accounts;
         self.network = network;
 
@@ -141,7 +141,7 @@ impl StateRecord {
     ///
     /// # Arguments
     ///
-    /// * `foreground_account` - User ID currently in the foreground.
+    /// * `foreground_accounts` - Set of user IDs currently in the foreground (supports multi-foreground).
     /// * `active_accounts` - Set of currently active user accounts.
     ///
     /// # Returns
@@ -150,11 +150,11 @@ impl StateRecord {
     /// `None` if no change.
     pub(crate) fn update_accounts(
         &mut self,
-        foreground_account: u64,
+        foreground_accounts: HashSet<u64>,
         active_accounts: HashSet<u64>,
     ) -> Option<SqlList> {
         // Skip update if active accounts haven't changed
-        if self.active_accounts == active_accounts {
+        if self.active_accounts == active_accounts && self.foreground_users == foreground_accounts {
             return None;
         }
 
@@ -164,7 +164,7 @@ impl StateRecord {
 
         // Update internal account state
         self.active_accounts = active_accounts;
-        self.top_user = foreground_account;
+        self.foreground_users = foreground_accounts;
 
         Some(sql_list)
     }

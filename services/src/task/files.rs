@@ -254,13 +254,13 @@ fn get_uuid_from_uid(uid: u64) -> u64 {
 /// ```
 pub(crate) fn check_current_account(task_uid: u64) -> bool {
     let task_account = get_uuid_from_uid(task_uid);
-    let (foreground_account, _active_accounts) = account::query_active_accounts();
-    // 0 account_id tasks can run under other account_ids
-    let b = (task_account == 0) || (task_account == foreground_account);
+    let (foreground_accounts, _active_accounts) = account::query_active_accounts();
+    // 0 account_id tasks can be run under other account_ids
+    let b = (task_account == 0) || foreground_accounts.contains(&task_account);
     if !b {
         info!(
-            "check_current_account: {}, {}",
-            foreground_account, task_account
+            "check_current_account: {:?}, {}",
+            foreground_accounts, task_account
         );
     }
     b

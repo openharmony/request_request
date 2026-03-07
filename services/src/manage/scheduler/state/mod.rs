@@ -80,7 +80,7 @@ impl Handler {
         // Get current network information
         let network_info = NetworkManager::query_network();
         // Get account information
-        let (foreground_account, active_accounts) = account::query_active_accounts();
+        let (foreground_accounts, active_accounts) = account::query_active_accounts();
 
         #[allow(unused_mut)]
         let mut foreground_abilities = vec![];
@@ -116,7 +116,7 @@ impl Handler {
         self.recorder.init(
             network_info,
             foreground_abilities,
-            foreground_account,
+            foreground_accounts,
             active_accounts,
         )
     }
@@ -160,9 +160,9 @@ impl Handler {
     /// SQL statements to update the database if account state changed.
     pub(crate) fn update_account(&mut self, _a: ()) -> Option<SqlList> {
         // Query current account information
-        let (foreground_account, active_accounts) = account::query_active_accounts();
+        let (foreground_accounts, active_accounts) = account::query_active_accounts();
         self.recorder
-            .update_accounts(foreground_account, active_accounts)
+            .update_accounts(foreground_accounts, active_accounts)
     }
 
     /// Updates the top (foreground) UID.
@@ -270,13 +270,13 @@ impl Handler {
         &self.recorder.foreground_abilities
     }
 
-    /// Gets the top (foreground) user ID.
+    /// Gets the top (foreground) user IDs (supports multi-foreground).
     ///
     /// # Returns
     ///
-    /// The user ID currently in the foreground.
-    pub(crate) fn top_user(&self) -> u64 {
-        self.recorder.top_user
+    /// A reference to the set of user IDs currently in the foreground.
+    pub(crate) fn foreground_users(&self) -> &HashSet<u64> {
+        &self.recorder.foreground_users
     }
 
     /// Gets the current network state.
