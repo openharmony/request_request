@@ -45,7 +45,8 @@ ohos_static_library("request_application_cxx") {
     "ability_runtime:ability_manager",
     "ability_runtime:ani_base_context",
     "rust_cxx:cxx_cppdeps",
-    "runtime_core:ani"
+    "runtime_core:ani",
+    "ipc:ipc_single",
   ]
   deps = [ ":request_application_cxx_gen" ]
   subsystem_name = "request"
@@ -116,6 +117,7 @@ ohos_static_library("request_data_ability_cxx") {
     "ability_runtime:app_context",
     "rust_cxx:cxx_cppdeps",
     "ability_runtime:data_ability_helper",
+    "ipc:ipc_single",
   ]
   deps = [ ":request_data_ability_cxx_gen" ]
   subsystem_name = "request"
