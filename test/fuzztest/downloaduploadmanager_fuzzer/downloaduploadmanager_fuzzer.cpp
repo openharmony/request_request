@@ -277,14 +277,6 @@ std::vector<uint8_t> convertToVectorUint8_t(FuzzedDataProvider &provider)
     return result;
 }
 
-uint32_t ConvertToUint32(const uint8_t *ptr, size_t size)
-{
-    if (ptr == nullptr || (size < sizeof(uint32_t))) {
-        return 0;
-    }
-    return *(reinterpret_cast<const uint32_t *>(ptr));
-}
-
 void GrantNativePermission()
 {
     const char **perms = new const char *[1];
@@ -308,7 +300,7 @@ void GrantNativePermission()
 // @tc.name: ut_create_request_fuzzer
 // @tc.desc: Fuzz test for creating a request
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Grant native permission
 // 3. Get next sequence number
 // 4. Call Create method with config and task ID
@@ -316,10 +308,10 @@ void GrantNativePermission()
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void CreateRequestFuzzTest(const uint8_t *data, size_t size)
+void CreateRequestFuzzTest(FuzzedDataProvider &provider)
 {
     Config config;
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
 
     GrantNativePermission();
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
@@ -329,16 +321,16 @@ void CreateRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.name: ut_start_request_fuzzer
 // @tc.desc: Fuzz test for starting a request
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Grant native permission
 // 3. Call Start method with task ID
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void StartRequestFuzzTest(const uint8_t *data, size_t size)
+void StartRequestFuzzTest(FuzzedDataProvider &provider)
 {
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     GrantNativePermission();
     RequestManager::GetInstance()->Start(tid);
 }
@@ -346,16 +338,16 @@ void StartRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.name: ut_stop_request_fuzzer
 // @tc.desc: Fuzz test for stopping a request
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Grant native permission
 // 3. Call Stop method with task ID
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void StopRequestFuzzTest(const uint8_t *data, size_t size)
+void StopRequestFuzzTest(FuzzedDataProvider &provider)
 {
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     GrantNativePermission();
     RequestManager::GetInstance()->Stop(tid);
 }
@@ -364,17 +356,17 @@ void StopRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.desc: Fuzz test for showing request information
 // @tc.precon: NA
 // @tc.step: 1. Create TaskInfo object
-// 2. Convert input data to task ID string
+// 2. Convert input data to task ID string using provider
 // 3. Grant native permission
 // 4. Call Show method with task ID and TaskInfo
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ShowRequestFuzzTest(const uint8_t *data, size_t size)
+void ShowRequestFuzzTest(FuzzedDataProvider &provider)
 {
     TaskInfo info;
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     GrantNativePermission();
     RequestManager::GetInstance()->Show(tid, info);
 }
@@ -406,18 +398,18 @@ void TouchRequestFuzzTest(FuzzedDataProvider &provider)
 // @tc.precon: NA
 // @tc.step: 1. Create Filter object
 // 2. Create vector for task IDs
-// 3. Convert input data to string and add to vector
+// 3. Convert input data to string and add to vector using provider
 // 4. Grant native permission
 // 5. Call Search method with filter and task IDs vector
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void SearchRequestFuzzTest(const uint8_t *data, size_t size)
+void SearchRequestFuzzTest(FuzzedDataProvider &provider)
 {
     Filter filter;
     std::vector<std::string> tids;
-    std::string str(reinterpret_cast<const char *>(data), size);
+    std::string str = provider.ConsumeRandomLengthString(MAX_LENGTH);
     tids.push_back(str);
     GrantNativePermission();
     RequestManager::GetInstance()->Search(filter, tids);
@@ -426,18 +418,19 @@ void SearchRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.name: ut_pause_request_fuzzer
 // @tc.desc: Fuzz test for pausing a request
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to Version enum
-// 2. Convert input data to task ID string
+// @tc.step: 1. Convert input data to Version enum using provider
+// 2. Convert input data to task ID string using provider
 // 3. Grant native permission
 // 4. Call Pause method with task ID and version
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void PauseRequestFuzzTest(const uint8_t *data, size_t size)
+void PauseRequestFuzzTest(FuzzedDataProvider &provider)
 {
-    Version version = static_cast<Version>(ConvertToUint32(data, size));
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    size_t versionIndex = provider.ConsumeIntegralInRange<size_t>(0, versions.size() - 1);
+    Version version = versions[versionIndex];
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     GrantNativePermission();
     RequestManager::GetInstance()->Pause(tid, version);
 }
@@ -464,18 +457,19 @@ void QueryMimeTypeRequestFuzzTest(FuzzedDataProvider &provider)
 // @tc.name: ut_remove_request_fuzzer
 // @tc.desc: Fuzz test for removing a request
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to Version enum
-// 2. Convert input data to task ID string
+// @tc.step: 1. Convert input data to Version enum using provider
+// 2. Convert input data to task ID string using provider
 // 3. Grant native permission
 // 4. Call Remove method with task ID and version
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RemoveRequestFuzzTest(const uint8_t *data, size_t size)
+void RemoveRequestFuzzTest(FuzzedDataProvider &provider)
 {
-    Version version = static_cast<Version>(ConvertToUint32(data, size));
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    size_t versionIndex = provider.ConsumeIntegralInRange<size_t>(0, versions.size() - 1);
+    Version version = versions[versionIndex];
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     GrantNativePermission();
     RequestManager::GetInstance()->Remove(tid, version);
 }
@@ -483,16 +477,16 @@ void RemoveRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.name: ut_resume_request_fuzzer
 // @tc.desc: Fuzz test for resuming a request
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Grant native permission
 // 3. Call Resume method with task ID
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResumeRequestFuzzTest(const uint8_t *data, size_t size)
+void ResumeRequestFuzzTest(FuzzedDataProvider &provider)
 {
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     GrantNativePermission();
     RequestManager::GetInstance()->Resume(tid);
 }
@@ -523,16 +517,16 @@ void GetTaskRequestFuzzTest(FuzzedDataProvider &provider)
 // @tc.name: ut_subscribe_request_fuzzer
 // @tc.desc: Fuzz test for subscribing to a request
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Grant native permission
 // 3. Call Subscribe method with task ID
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void SubscribeRequestFuzzTest(const uint8_t *data, size_t size)
+void SubscribeRequestFuzzTest(FuzzedDataProvider &provider)
 {
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     GrantNativePermission();
     RequestManager::GetInstance()->Subscribe(tid);
 }
@@ -540,16 +534,16 @@ void SubscribeRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.name: ut_unsubscribe_request_fuzzer
 // @tc.desc: Fuzz test for unsubscribing from a request
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Grant native permission
 // 3. Call Unsubscribe method with task ID
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void UnsubscribeRequestFuzzTest(const uint8_t *data, size_t size)
+void UnsubscribeRequestFuzzTest(FuzzedDataProvider &provider)
 {
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     GrantNativePermission();
     RequestManager::GetInstance()->Unsubscribe(tid);
 }
@@ -559,17 +553,17 @@ void UnsubscribeRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.precon: NA
 // @tc.step: 1. Grant native permission
 // 2. Call IsSaReady method
-// 3. Convert input data to task ID string
+// 3. Convert input data to task ID string using provider
 // 4. Call Start method with task ID
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void IsSaReadyRequestFuzzTest(const uint8_t *data, size_t size)
+void IsSaReadyRequestFuzzTest(FuzzedDataProvider &provider)
 {
     GrantNativePermission();
     RequestManager::GetInstance()->IsSaReady();
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     RequestManager::GetInstance()->Start(tid);
 }
 
@@ -578,17 +572,17 @@ void IsSaReadyRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.precon: NA
 // @tc.step: 1. Grant native permission
 // 2. Call ReopenChannel method
-// 3. Convert input data to task ID string
+// 3. Convert input data to task ID string using provider
 // 4. Call Start method with task ID
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ReopenChannelRequestFuzzTest(const uint8_t *data, size_t size)
+void ReopenChannelRequestFuzzTest(FuzzedDataProvider &provider)
 {
     GrantNativePermission();
     RequestManager::GetInstance()->ReopenChannel();
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     RequestManager::GetInstance()->Start(tid);
 }
 
@@ -598,18 +592,18 @@ void ReopenChannelRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.step: 1. Grant native permission
 // 2. Call SubscribeSA method
 // 3. Call UnsubscribeSA method
-// 4. Convert input data to task ID string
+// 4. Convert input data to task ID string using provider
 // 5. Call Start method with task ID
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void SubscribeSARequestFuzzTest(const uint8_t *data, size_t size)
+void SubscribeSARequestFuzzTest(FuzzedDataProvider &provider)
 {
     GrantNativePermission();
     RequestManager::GetInstance()->SubscribeSA();
     RequestManager::GetInstance()->UnsubscribeSA();
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     RequestManager::GetInstance()->Start(tid);
 }
 
@@ -643,7 +637,7 @@ public:
 // @tc.name: ut_add_remove_listener_request_fuzzer
 // @tc.desc: Fuzz test for adding and removing listeners
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Grant native permission
 // 3. Create response listener and add to request
 // 4. Remove response listener
@@ -653,9 +647,9 @@ public:
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void AddAndRemoveListenerRequestFuzzTest(const uint8_t *data, size_t size)
+void AddAndRemoveListenerRequestFuzzTest(FuzzedDataProvider &provider)
 {
-    std::string taskId(reinterpret_cast<const char *>(data), size);
+    std::string taskId = provider.ConsumeRandomLengthString(MAX_LENGTH);
     GrantNativePermission();
     SubscribeType type = SubscribeType::RESPONSE;
     std::shared_ptr<FuzzResponseListenerImpl> listener = std::make_shared<FuzzResponseListenerImpl>();
@@ -670,7 +664,7 @@ void AddAndRemoveListenerRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.name: ut_remove_all_listeners_request_fuzzer
 // @tc.desc: Fuzz test for removing all listeners
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Grant native permission
 // 3. Add response listener
 // 4. Add notify data listener
@@ -680,9 +674,9 @@ void AddAndRemoveListenerRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RemoveAllListenersRequestFuzzTest(const uint8_t *data, size_t size)
+void RemoveAllListenersRequestFuzzTest(FuzzedDataProvider &provider)
 {
-    std::string taskId(reinterpret_cast<const char *>(data), size);
+    std::string taskId = provider.ConsumeRandomLengthString(MAX_LENGTH);
     GrantNativePermission();
     SubscribeType type = SubscribeType::RESPONSE;
     std::shared_ptr<FuzzResponseListenerImpl> listener = std::make_shared<FuzzResponseListenerImpl>();
@@ -703,17 +697,17 @@ void TestFunc(void)
 // @tc.desc: Fuzz test for restoring listeners
 // @tc.precon: NA
 // @tc.step: 1. Grant native permission
-// 2. Convert input data to task ID string
+// 2. Convert input data to task ID string using provider
 // 3. Call Start method with task ID
 // 4. Call RestoreListener with TestFunc
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RestoreListenerRequestFuzzTest(const uint8_t *data, size_t size)
+void RestoreListenerRequestFuzzTest(FuzzedDataProvider &provider)
 {
     GrantNativePermission();
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     RequestManager::GetInstance()->Start(tid);
     RequestManager::GetInstance()->RestoreListener(TestFunc);
 }
@@ -721,7 +715,7 @@ void RestoreListenerRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.name: ut_query_request_fuzzer
 // @tc.desc: Fuzz test for querying request information
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Create TaskInfo object
 // 3. Grant native permission
 // 4. Call Query method with task ID and TaskInfo
@@ -729,9 +723,9 @@ void RestoreListenerRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void QueryRequestFuzzTest(const uint8_t *data, size_t size)
+void QueryRequestFuzzTest(FuzzedDataProvider &provider)
 {
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     TaskInfo taskinfo;
     GrantNativePermission();
     RequestManager::GetInstance()->Query(tid, taskinfo);
@@ -740,16 +734,16 @@ void QueryRequestFuzzTest(const uint8_t *data, size_t size)
 // @tc.name: ut_request_get_id_fuzzer
 // @tc.desc: Fuzz test for Request getId method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Create Request object with task ID
 // 3. Call getId method
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RequestFuzzTestGetId(const uint8_t *data, size_t size)
+void RequestFuzzTestGetId(FuzzedDataProvider &provider)
 {
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     GrantNativePermission();
     auto request = OHOS::Request::Request(tid);
     request.getId();
@@ -758,7 +752,7 @@ void RequestFuzzTestGetId(const uint8_t *data, size_t size)
 // @tc.name: ut_request_has_listener_fuzzer
 // @tc.desc: Fuzz test for Request HasListener method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Create Request object with task ID
 // 3. Create response listener
 // 4. Add listener to request
@@ -768,9 +762,9 @@ void RequestFuzzTestGetId(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RequestFuzzTestHasListener(const uint8_t *data, size_t size)
+void RequestFuzzTestHasListener(FuzzedDataProvider &provider)
 {
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     SubscribeType type = SubscribeType::RESPONSE;
     auto request = OHOS::Request::Request(tid);
     std::shared_ptr<FuzzResponseListenerImpl> listenerPtr = std::make_shared<FuzzResponseListenerImpl>();
@@ -783,7 +777,7 @@ void RequestFuzzTestHasListener(const uint8_t *data, size_t size)
 // @tc.name: ut_request_on_notify_data_receive_fuzzer
 // @tc.desc: Fuzz test for Request OnNotifyDataReceive method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Create Request object with task ID
 // 3. Create and configure NotifyData object
 // 4. Call OnNotifyDataReceive without listener
@@ -793,9 +787,9 @@ void RequestFuzzTestHasListener(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RequestFuzzTestOnNotifyDataReceive(const uint8_t *data, size_t size)
+void RequestFuzzTestOnNotifyDataReceive(FuzzedDataProvider &provider)
 {
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     SubscribeType type = SubscribeType::COMPLETED;
     auto request = OHOS::Request::Request(tid);
     std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
@@ -811,7 +805,7 @@ void RequestFuzzTestOnNotifyDataReceive(const uint8_t *data, size_t size)
 // @tc.name: ut_request_add_remove_listener_fuzzer
 // @tc.desc: Fuzz test for Request AddListener and RemoveListener methods
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Create Request object with task ID
 // 3. Create and configure NotifyData object
 // 4. Call OnNotifyDataReceive without listener
@@ -821,9 +815,9 @@ void RequestFuzzTestOnNotifyDataReceive(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RequestFuzzTestAddAndRemoveListener(const uint8_t *data, size_t size)
+void RequestFuzzTestAddAndRemoveListener(FuzzedDataProvider &provider)
 {
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     SubscribeType type = SubscribeType::COMPLETED;
     GrantNativePermission();
     auto request = OHOS::Request::Request(tid);
@@ -840,7 +834,7 @@ void RequestFuzzTestAddAndRemoveListener(const uint8_t *data, size_t size)
 // @tc.name: ut_request_on_response_receive_fuzzer
 // @tc.desc: Fuzz test for Request OnResponseReceive method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to task ID string
+// @tc.step: 1. Convert input data to task ID string using provider
 // 2. Create Request object with task ID
 // 3. Create Response object
 // 4. Call OnResponseReceive without listener
@@ -850,9 +844,9 @@ void RequestFuzzTestAddAndRemoveListener(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RequestFuzzTestOnResponseReceive(const uint8_t *data, size_t size)
+void RequestFuzzTestOnResponseReceive(FuzzedDataProvider &provider)
 {
-    std::string tid(reinterpret_cast<const char *>(data), size);
+    std::string tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     SubscribeType type = SubscribeType::RESPONSE;
     std::shared_ptr<Response> response = std::make_shared<Response>();
     GrantNativePermission();
@@ -885,13 +879,13 @@ void FuzzFwkTestOberver::OnRunningTaskCountUpdate(int count)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RunningTaskCountFuzzTestSubscribeRunningTaskCount(const uint8_t *data, size_t size)
+void RunningTaskCountFuzzTestSubscribeRunningTaskCount(FuzzedDataProvider &provider)
 {
     GrantNativePermission();
     auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(true);
     if (proxy == nullptr) {
         std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FuzzFwkTestOberver>();
-        ob->OnRunningTaskCountUpdate(static_cast<int>(*data));
+        ob->OnRunningTaskCountUpdate(provider.ConsumeIntegral<int8_t>());
         SubscribeRunningTaskCount(ob);
         UnsubscribeRunningTaskCount(ob);
     }
@@ -915,12 +909,12 @@ void RunningTaskCountFuzzTestSubscribeRunningTaskCount(const uint8_t *data, size
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RunningTaskCountFuzzTestUnubscribeRunning(const uint8_t *data, size_t size)
+void RunningTaskCountFuzzTestUnubscribeRunning(FuzzedDataProvider &provider)
 {
     GrantNativePermission();
     std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FuzzFwkTestOberver>();
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob1);
-    ob1->OnRunningTaskCountUpdate(static_cast<int>(*data));
+    ob1->OnRunningTaskCountUpdate(provider.ConsumeIntegral<int8_t>());
 
     std::shared_ptr<IRunningTaskObserver> ob2 = std::make_shared<FuzzFwkTestOberver>();
     UnsubscribeRunningTaskCount(ob2);
@@ -931,7 +925,7 @@ void RunningTaskCountFuzzTestUnubscribeRunning(const uint8_t *data, size_t size)
 // @tc.desc: Fuzz test for getting and setting running task count
 // @tc.precon: NA
 // @tc.step: 1. Grant native permission
-// 2. Convert input data to integer value
+// 2. Convert input data to integer value using provider
 // 3. Set count to expected value
 // 4. Test GetCount method
 // 5. Restore original count
@@ -940,10 +934,10 @@ void RunningTaskCountFuzzTestUnubscribeRunning(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RunningTaskCountFuzzTestGetAndSetCount(const uint8_t *data, size_t size)
+void RunningTaskCountFuzzTestGetAndSetCount(FuzzedDataProvider &provider)
 {
     GrantNativePermission();
-    int old = static_cast<int>(*data);
+    int old = provider.ConsumeIntegral<int8_t>();
     int except = 1; // 10 is except count num
     FwkRunningTaskCountManager::GetInstance()->SetCount(except);
     FwkRunningTaskCountManager::GetInstance()->GetCount();
@@ -962,11 +956,11 @@ void RunningTaskCountFuzzTestGetAndSetCount(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RunningTaskCountFuzzTestUpdateRunningTaskCount(const uint8_t *data, size_t size)
+void RunningTaskCountFuzzTestUpdateRunningTaskCount(FuzzedDataProvider &provider)
 {
     GrantNativePermission();
     std::shared_ptr<IRunningTaskObserver> ob = std::make_shared<FuzzFwkTestOberver>();
-    ob->OnRunningTaskCountUpdate(static_cast<int>(*data));
+    ob->OnRunningTaskCountUpdate(provider.ConsumeIntegral<int8_t>());
     FwkIRunningTaskObserver runningOb = FwkIRunningTaskObserver(ob);
     runningOb.UpdateRunningTaskCount();
 }
@@ -983,20 +977,20 @@ void RunningTaskCountFuzzTestUpdateRunningTaskCount(const uint8_t *data, size_t 
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RunningTaskCountFuzzTestNotifyAllObservers(const uint8_t *data, size_t size)
+void RunningTaskCountFuzzTestNotifyAllObservers(FuzzedDataProvider &provider)
 {
     GrantNativePermission();
     std::shared_ptr<IRunningTaskObserver> ob1 = std::make_shared<FuzzFwkTestOberver>();
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob1);
     FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
     FwkRunningTaskCountManager::GetInstance()->DetachObserver(ob1);
-    ob1->OnRunningTaskCountUpdate(static_cast<int>(*data));
+    ob1->OnRunningTaskCountUpdate(provider.ConsumeIntegral<int8_t>());
 }
 
 // @tc.name: ut_run_count_notify_stub_instance_callback_fuzzer
 // @tc.desc: Fuzz test for RunCountNotifyStub getInstance, Done and CallBack methods
 // @tc.precon: NA
-// @tc.step: 1. Create TaskInfo and configure with input data
+// @tc.step: 1. Create TaskInfo and configure with input data using provider
 // 2. Create Notify object
 // 3. Grant native permission
 // 4. Test GetInstance, Done and CallBack methods
@@ -1004,10 +998,10 @@ void RunningTaskCountFuzzTestNotifyAllObservers(const uint8_t *data, size_t size
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RunCountNotifyStubFuzzTestGetInstanceDoneCallBack(const uint8_t *data, size_t size)
+void RunCountNotifyStubFuzzTestGetInstanceDoneCallBack(FuzzedDataProvider &provider)
 {
     TaskInfo taskInfo;
-    taskInfo.tid = std::string(reinterpret_cast<const char *>(data), size);
+    taskInfo.tid = provider.ConsumeRandomLengthString(MAX_LENGTH);
     Notify notify;
     GrantNativePermission();
 
@@ -1019,7 +1013,7 @@ void RunCountNotifyStubFuzzTestGetInstanceDoneCallBack(const uint8_t *data, size
 // @tc.name: ut_run_count_notify_stub_on_callback_fuzzer
 // @tc.desc: Fuzz test for RunCountNotifyStub OnCallBack method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to int64 value
+// @tc.step: 1. Convert input data to int64 value using provider
 // 2. Save current count
 // 3. Create and configure MessageParcel
 // 4. Grant native permission
@@ -1029,9 +1023,9 @@ void RunCountNotifyStubFuzzTestGetInstanceDoneCallBack(const uint8_t *data, size
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void RunCountNotifyStubFuzzTestOnCallBack(const uint8_t *data, size_t size)
+void RunCountNotifyStubFuzzTestOnCallBack(FuzzedDataProvider &provider)
 {
-    int64_t except = static_cast<int64_t>(*data);
+    int64_t except = provider.ConsumeIntegral<int64_t>();
     int old = FwkRunningTaskCountManager::GetInstance()->GetCount();
     OHOS::MessageParcel parcel;
     parcel.WriteInt64(except);
@@ -1050,7 +1044,7 @@ static constexpr int32_t INT16_SIZE = 2;  // 2 is int16 and uint16 num length
 // @tc.name: ut_response_message_int64_from_parcel_fuzzer
 // @tc.desc: Fuzz test for ResponseMessageReceiver Int64FromParcel method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to int64 value
+// @tc.step: 1. Convert input data to int64 value using provider
 // 2. Create parcel pointer
 // 3. Test Int64FromParcel with INT32_SIZE
 // 4. Test Int64FromParcel with INT64_SIZE
@@ -1058,9 +1052,9 @@ static constexpr int32_t INT16_SIZE = 2;  // 2 is int16 and uint16 num length
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestInt64FromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestInt64FromParcel(FuzzedDataProvider &provider)
 {
-    int64_t except = static_cast<int64_t>(*data);
+    int64_t except = provider.ConsumeIntegral<int64_t>();
     char *parcel = reinterpret_cast<char *>(&except);
     int64_t num;
     int testSize = INT32_SIZE;
@@ -1072,7 +1066,7 @@ void ResponseMessageFuzzTestInt64FromParcel(const uint8_t *data, size_t size)
 // @tc.name: ut_response_message_uint64_from_parcel_fuzzer
 // @tc.desc: Fuzz test for ResponseMessageReceiver Uint64FromParcel method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to uint64 value
+// @tc.step: 1. Convert input data to uint64 value using provider
 // 2. Create parcel pointer
 // 3. Test Uint64FromParcel with INT32_SIZE
 // 4. Test Uint64FromParcel with INT64_SIZE
@@ -1080,9 +1074,9 @@ void ResponseMessageFuzzTestInt64FromParcel(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestUint64FromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestUint64FromParcel(FuzzedDataProvider &provider)
 {
-    uint64_t except = static_cast<uint64_t>(*data);
+    uint64_t except = provider.ConsumeIntegral<uint64_t>();
     char *parcel = reinterpret_cast<char *>(&except);
     uint64_t num;
     int testSize = INT32_SIZE;
@@ -1094,7 +1088,7 @@ void ResponseMessageFuzzTestUint64FromParcel(const uint8_t *data, size_t size)
 // @tc.name: ut_response_message_int32_from_parcel_fuzzer
 // @tc.desc: Fuzz test for ResponseMessageReceiver Int32FromParcel method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to int32 value
+// @tc.step: 1. Convert input data to int32 value using provider
 // 2. Create parcel pointer
 // 3. Test Int32FromParcel with INT16_SIZE
 // 4. Test Int32FromParcel with INT32_SIZE
@@ -1102,9 +1096,9 @@ void ResponseMessageFuzzTestUint64FromParcel(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestInt32FromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestInt32FromParcel(FuzzedDataProvider &provider)
 {
-    int32_t except = static_cast<int32_t>(*data);
+    int32_t except = provider.ConsumeIntegral<int32_t>();
     char *parcel = reinterpret_cast<char *>(&except);
     int32_t num;
     int testSize = INT16_SIZE;
@@ -1116,7 +1110,7 @@ void ResponseMessageFuzzTestInt32FromParcel(const uint8_t *data, size_t size)
 // @tc.name: ut_response_message_uint32_from_parcel_fuzzer
 // @tc.desc: Fuzz test for ResponseMessageReceiver Uint32FromParcel method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to uint32 value
+// @tc.step: 1. Convert input data to uint32 value using provider
 // 2. Create parcel pointer
 // 3. Test Uint32FromParcel with INT16_SIZE
 // 4. Test Uint32FromParcel with INT32_SIZE
@@ -1124,9 +1118,9 @@ void ResponseMessageFuzzTestInt32FromParcel(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestUint32FromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestUint32FromParcel(FuzzedDataProvider &provider)
 {
-    uint32_t except = static_cast<uint32_t>(*data);
+    uint32_t except = provider.ConsumeIntegral<uint32_t>();
     char *parcel = reinterpret_cast<char *>(&except);
     uint32_t num;
     int testSize = INT16_SIZE;
@@ -1138,7 +1132,7 @@ void ResponseMessageFuzzTestUint32FromParcel(const uint8_t *data, size_t size)
 // @tc.name: ut_response_message_int16_from_parcel_fuzzer
 // @tc.desc: Fuzz test for ResponseMessageReceiver Int16FromParcel method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to int16 value
+// @tc.step: 1. Convert input data to int16 value using provider
 // 2. Create parcel pointer
 // 3. Test Int16FromParcel with size 0
 // 4. Test Int16FromParcel with INT16_SIZE
@@ -1146,9 +1140,9 @@ void ResponseMessageFuzzTestUint32FromParcel(const uint8_t *data, size_t size)
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestInt16FromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestInt16FromParcel(FuzzedDataProvider &provider)
 {
-    int16_t except = static_cast<int16_t>(*data);
+    int16_t except = provider.ConsumeIntegral<int16_t>();
     char *parcel = reinterpret_cast<char *>(&except);
     int16_t num;
     int testSize = 0;
@@ -1160,16 +1154,17 @@ void ResponseMessageFuzzTestInt16FromParcel(const uint8_t *data, size_t size)
 // @tc.name: ut_response_message_state_from_parcel_fuzzer
 // @tc.desc: Fuzz test for ResponseMessageReceiver StateFromParcel method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to State enum
+// @tc.step: 1. Convert input data to State enum using provider
 // 2. Test with invalid state value
 // 3. Test with valid state value (State::ANY)
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestStateFromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestStateFromParcel(FuzzedDataProvider &provider)
 {
-    State state = static_cast<State>(*data);
+    size_t stateIndex = provider.ConsumeIntegralInRange<size_t>(0, static_cast<size_t>(State::ANY));
+    State state = static_cast<State>(stateIndex);
     uint32_t except = static_cast<uint32_t>(State::ANY) + 1;
     char *parcel = reinterpret_cast<char *>(&except);
     int testSize = INT32_SIZE;
@@ -1183,16 +1178,17 @@ void ResponseMessageFuzzTestStateFromParcel(const uint8_t *data, size_t size)
 // @tc.name: ut_response_message_action_from_parcel_fuzzer
 // @tc.desc: Fuzz test for ResponseMessageReceiver ActionFromParcel method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to Action enum
+// @tc.step: 1. Convert input data to Action enum using provider
 // 2. Test with invalid action value
 // 3. Test with valid action value (Action::ANY)
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestActionFromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestActionFromParcel(FuzzedDataProvider &provider)
 {
-    Action action = static_cast<Action>(*data);
+    size_t actionIndex = provider.ConsumeIntegralInRange<size_t>(0, static_cast<size_t>(Action::ANY));
+    Action action = static_cast<Action>(actionIndex);
     uint32_t except = static_cast<uint32_t>(Action::ANY) + 1;
     char *parcel = reinterpret_cast<char *>(&except);
     int testSize = INT32_SIZE;
@@ -1206,16 +1202,17 @@ void ResponseMessageFuzzTestActionFromParcel(const uint8_t *data, size_t size)
 // @tc.name: ut_response_message_version_from_parcel_fuzzer
 // @tc.desc: Fuzz test for ResponseMessageReceiver VersionFromParcel method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to Version enum
+// @tc.step: 1. Convert input data to Version enum using provider
 // 2. Test with invalid version value
 // 3. Test with valid version value (Version::API10)
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestVersionFromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestVersionFromParcel(FuzzedDataProvider &provider)
 {
-    Version version = static_cast<Version>(*data);
+    size_t versionIndex = provider.ConsumeIntegralInRange<size_t>(0, versions.size() - 1);
+    Version version = versions[versionIndex];
     uint32_t except = static_cast<uint32_t>(Version::API10) + 1;
     char *parcel = reinterpret_cast<char *>(&except);
     int testSize = INT32_SIZE;
@@ -1229,16 +1226,17 @@ void ResponseMessageFuzzTestVersionFromParcel(const uint8_t *data, size_t size)
 // @tc.name: ut_response_message_subscribe_type_from_parcel_fuzzer
 // @tc.desc: Fuzz test for ResponseMessageReceiver SubscribeTypeFromParcel method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to SubscribeType enum
+// @tc.step: 1. Convert input data to SubscribeType enum using provider
 // 2. Test with invalid type value
 // 3. Test with valid type value (SubscribeType::BUTT)
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestSubscribeTypeFromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestSubscribeTypeFromParcel(FuzzedDataProvider &provider)
 {
-    SubscribeType type = static_cast<SubscribeType>(*data);
+    size_t typeIndex = provider.ConsumeIntegralInRange<size_t>(0, static_cast<size_t>(SubscribeType::BUTT));
+    SubscribeType type = static_cast<SubscribeType>(typeIndex);
     uint32_t except = static_cast<uint32_t>(SubscribeType::BUTT) + 1;
     char *parcel = reinterpret_cast<char *>(&except);
     int testSize = INT32_SIZE;
@@ -1252,7 +1250,7 @@ void ResponseMessageFuzzTestSubscribeTypeFromParcel(const uint8_t *data, size_t 
 // @tc.name: ut_response_message_string_from_parcel_fuzzer
 // @tc.desc: Fuzz test for ResponseMessageReceiver StringFromParcel method
 // @tc.precon: NA
-// @tc.step: 1. Convert input data to string
+// @tc.step: 1. Convert input data to string using provider
 // 2. Create parcel pointer from string
 // 3. Test StringFromParcel with size-1
 // 4. Test StringFromParcel with size+1
@@ -1260,10 +1258,10 @@ void ResponseMessageFuzzTestSubscribeTypeFromParcel(const uint8_t *data, size_t 
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestStringFromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestStringFromParcel(FuzzedDataProvider &provider)
 {
     std::string str;
-    std::string except(reinterpret_cast<const char *>(data), size);
+    std::string except = provider.ConsumeRandomLengthString(MAX_LENGTH);
     char *parcel = const_cast<char *>(except.c_str());
     int testSize = except.size() - 1;
     ResponseMessageReceiver::StringFromParcel(str, parcel, testSize);
@@ -1275,31 +1273,31 @@ void ResponseMessageFuzzTestStringFromParcel(const uint8_t *data, size_t size)
 // @tc.desc: Fuzz test for ResponseMessageReceiver ResponseHeaderFromParcel method
 // @tc.precon: NA
 // @tc.step: 1. Create a new Parcel object
-// 2. Write random data to the parcel
+// 2. Write random data to the parcel using provider
 // 3. Create ResponseMessageReceiver instance
 // 4. Call ResponseHeaderFromParcel method with parcel
 // @tc.expect: Function should handle various parcel data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestResponseHeaderFromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestResponseHeaderFromParcel(FuzzedDataProvider &provider)
 {
     std::map<std::string, std::vector<std::string>> headers;
     std::string except = "header:aaa,bbb,ccc\n";
     char *parcel = const_cast<char *>(except.c_str());
     int testSize = except.size();
     ResponseMessageReceiver::ResponseHeaderFromParcel(headers, parcel, testSize);
-    std::string str(reinterpret_cast<const char *>(data), size);
+    std::string str = provider.ConsumeRandomLengthString(MAX_LENGTH);
     parcel = const_cast<char *>(str.c_str());
     testSize = except.size();
     ResponseMessageReceiver::ResponseHeaderFromParcel(headers, parcel, testSize);
 }
 
-void ResponseMessageFuzzTestProgressExtrasFromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestProgressExtrasFromParcel(FuzzedDataProvider &provider)
 {
     int arraySize = 64; // 64 is char array length
     char except[arraySize];
-    uint32_t length = static_cast<uint32_t>(*data);
+    uint32_t length = provider.ConsumeIntegral<uint32_t>();
     int ret = memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length));
     if (ret != 0) {
         return;
@@ -1329,7 +1327,7 @@ void ResponseMessageFuzzTestProgressExtrasFromParcel(const uint8_t *data, size_t
 // @tc.desc: Fuzz test for ResponseMessageReceiver VecInt64FromParcel method
 // @tc.precon: NA
 // @tc.step: 1. Create test array with INT32_SIZE + INT64_SIZE
-// 2. Copy input data to test array as length
+// 2. Copy input data to test array as length using provider
 // 3. Copy test value to the array
 // 4. Test VecInt64FromParcel with INT16_SIZE
 // 5. Test VecInt64FromParcel with INT64_SIZE
@@ -1338,11 +1336,11 @@ void ResponseMessageFuzzTestProgressExtrasFromParcel(const uint8_t *data, size_t
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestVecInt64FromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestVecInt64FromParcel(FuzzedDataProvider &provider)
 {
     int arraySize = INT32_SIZE + INT64_SIZE;
     char except[arraySize];
-    uint32_t length = static_cast<uint32_t>(*data);
+    uint32_t length = provider.ConsumeIntegral<uint32_t>();
     int ret = memcpy_s(except, static_cast<size_t>(arraySize), reinterpret_cast<void *>(&length), sizeof(length));
     if (ret != 0) {
         return;
@@ -1369,16 +1367,16 @@ void ResponseMessageFuzzTestVecInt64FromParcel(const uint8_t *data, size_t size)
 // @tc.desc: Fuzz test for ResponseMessageReceiver constructor with various input data
 // @tc.precon: NA
 // @tc.step: 1. Create a null IResponseMessageHandler pointer
-// 2. Extract socket file descriptor from fuzz data
+// 2. Extract socket file descriptor from fuzz data using provider
 // 3. Create ResponseMessageReceiver instance with the handler and socket descriptor
 // @tc.expect: No crash occurs during object creation
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 1
-void ResponseMessageFuzzTestResponseMessageReceiver(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestResponseMessageReceiver(FuzzedDataProvider &provider)
 {
     IResponseMessageHandler *handler = nullptr;
-    int32_t sockFd = static_cast<int32_t>(*data);
+    int32_t sockFd = provider.ConsumeIntegral<int32_t>();
     ResponseMessageReceiver receiver = ResponseMessageReceiver(handler, sockFd);
 }
 
@@ -1386,13 +1384,13 @@ void ResponseMessageFuzzTestResponseMessageReceiver(const uint8_t *data, size_t 
 // @tc.desc: Fuzz test for ResponseMessageReceiver MsgHeaderParcel method
 // @tc.precon: NA
 // @tc.step: 1. Create MessageHeader object
-// 2. Convert input data to various header fields
+// 2. Convert input data to various header fields using provider
 // 3. Test MsgHeaderParcel with different input sizes and values
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestMsgHeaderParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestMsgHeaderParcel(FuzzedDataProvider &provider)
 {
     uint32_t magicNum = ResponseMessageReceiver::RESPONSE_MAGIC_NUM - 1;
     int pos = 0;
@@ -1403,7 +1401,7 @@ void ResponseMessageFuzzTestMsgHeaderParcel(const uint8_t *data, size_t size)
         return;
     }
     pos += sizeof(magicNum);
-    int32_t msgId = static_cast<int32_t>(*data);
+    int32_t msgId = provider.ConsumeIntegral<int32_t>();
     ret = memcpy_s(except + pos, static_cast<size_t>(arraySize - pos), reinterpret_cast<void *>(&msgId), sizeof(msgId));
     if (ret != 0) {
         return;
@@ -1459,17 +1457,17 @@ void ResponseMessageFuzzTestMsgHeaderParcel(const uint8_t *data, size_t size)
 // @tc.precon: NA
 // @tc.step: 1. Create shared_ptr<Response> object
 // 2. Create test array with various data fields
-// 3. Copy task ID, version, status code, reason, headers to test array
+// 3. Copy task ID, version, status code, reason, headers to test array using provider
 // 4. Test ResponseFromParcel with INT16_SIZE
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestResponseFromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestResponseFromParcel(FuzzedDataProvider &provider)
 {
     std::shared_ptr<Response> response = std::make_shared<Response>();
     int pos = 0;
-    int32_t tid = static_cast<int32_t>(*data);
+    int32_t tid = provider.ConsumeIntegral<int32_t>();
     std::string version = "version";
     int32_t statusCode = 456; // 456 is except statusCode
     std::string reason = "reason";
@@ -1523,17 +1521,17 @@ void ResponseMessageFuzzTestResponseFromParcel(const uint8_t *data, size_t size)
 // @tc.precon: NA
 // @tc.step: 1. Create vector<TaskState> object
 // 2. Create test array with INT32_SIZE length and other data
-// 3. Copy length, path, response code, message to test array
+// 3. Copy length, path, response code, message to test array using provider
 // 4. Test TaskStatesFromParcel with various test sizes
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestTaskStatesFromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestTaskStatesFromParcel(FuzzedDataProvider &provider)
 {
     std::vector<TaskState> taskStates;
     int pos = 0;
-    int32_t length = static_cast<int32_t>(*data);
+    int32_t length = provider.ConsumeIntegral<int32_t>();
     std::string path = "path";
     int32_t responseCode = NETWORK_OFFLINE;
     std::string message = "message";
@@ -1581,17 +1579,17 @@ void ResponseMessageFuzzTestTaskStatesFromParcel(const uint8_t *data, size_t siz
 // @tc.precon: NA
 // @tc.step: 1. Create shared_ptr<NotifyData> object
 // 2. Create test array with various data fields
-// 3. Copy subscribe type, task ID, state, index, processed, etc. to test array
+// 3. Copy subscribe type, task ID, state, index, processed, etc. to test array using provider
 // 4. Test NotifyDataFromParcel with various parameters
 // @tc.expect: Function should handle various input data without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
 // @tc.level: Level 3
-void ResponseMessageFuzzTestNotifyDataFromParcel(const uint8_t *data, size_t size)
+void ResponseMessageFuzzTestNotifyDataFromParcel(FuzzedDataProvider &provider)
 {
     std::shared_ptr<NotifyData> notifyData = std::make_shared<NotifyData>();
     int pos = 0;
-    int32_t length = static_cast<int32_t>(*data);
+    int32_t length = provider.ConsumeIntegral<int32_t>();
     SubscribeType type = SubscribeType::BUTT;
     uint32_t taskId = 123; // 123 is except tid
     State state = State::ANY;
@@ -1887,55 +1885,55 @@ class FuzzRemoteObjectImpl : public OHOS::IRemoteObject {};
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    /* Run your code on data */
-    OHOS::CreateRequestFuzzTest(data, size);
-    OHOS::StartRequestFuzzTest(data, size);
-    OHOS::StopRequestFuzzTest(data, size);
-    OHOS::ShowRequestFuzzTest(data, size);
-    OHOS::SearchRequestFuzzTest(data, size);
-    OHOS::PauseRequestFuzzTest(data, size);
-    OHOS::RemoveRequestFuzzTest(data, size);
-    OHOS::ResumeRequestFuzzTest(data, size);
-    OHOS::SubscribeRequestFuzzTest(data, size);
-    OHOS::UnsubscribeRequestFuzzTest(data, size);
-    OHOS::RestoreListenerRequestFuzzTest(data, size);
-    OHOS::IsSaReadyRequestFuzzTest(data, size);
-    OHOS::ReopenChannelRequestFuzzTest(data, size);
-    OHOS::SubscribeSARequestFuzzTest(data, size);
-    OHOS::AddAndRemoveListenerRequestFuzzTest(data, size);
-    OHOS::RemoveAllListenersRequestFuzzTest(data, size);
-    OHOS::QueryRequestFuzzTest(data, size);
-    OHOS::RequestFuzzTestGetId(data, size);
-    OHOS::RequestFuzzTestHasListener(data, size);
-    OHOS::RequestFuzzTestOnNotifyDataReceive(data, size);
-    OHOS::RequestFuzzTestAddAndRemoveListener(data, size);
-    OHOS::RequestFuzzTestOnResponseReceive(data, size);
-    OHOS::RunningTaskCountFuzzTestSubscribeRunningTaskCount(data, size);
-    OHOS::RunningTaskCountFuzzTestUnubscribeRunning(data, size);
-    OHOS::RunningTaskCountFuzzTestGetAndSetCount(data, size);
-    OHOS::RunningTaskCountFuzzTestUpdateRunningTaskCount(data, size);
-    OHOS::RunningTaskCountFuzzTestNotifyAllObservers(data, size);
-    OHOS::RunCountNotifyStubFuzzTestGetInstanceDoneCallBack(data, size);
-    OHOS::RunCountNotifyStubFuzzTestOnCallBack(data, size);
-    OHOS::ResponseMessageFuzzTestInt64FromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestUint64FromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestInt32FromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestUint32FromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestInt16FromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestStateFromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestActionFromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestVersionFromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestSubscribeTypeFromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestStringFromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestResponseHeaderFromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestProgressExtrasFromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestVecInt64FromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestResponseMessageReceiver(data, size);
-    OHOS::ResponseMessageFuzzTestMsgHeaderParcel(data, size);
-    OHOS::ResponseMessageFuzzTestResponseFromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestTaskStatesFromParcel(data, size);
-    OHOS::ResponseMessageFuzzTestNotifyDataFromParcel(data, size);
     FuzzedDataProvider provider(data, size);
+    /* Run your code on data */
+    OHOS::CreateRequestFuzzTest(provider);
+    OHOS::StartRequestFuzzTest(provider);
+    OHOS::StopRequestFuzzTest(provider);
+    OHOS::ShowRequestFuzzTest(provider);
+    OHOS::SearchRequestFuzzTest(provider);
+    OHOS::PauseRequestFuzzTest(provider);
+    OHOS::RemoveRequestFuzzTest(provider);
+    OHOS::ResumeRequestFuzzTest(provider);
+    OHOS::SubscribeRequestFuzzTest(provider);
+    OHOS::UnsubscribeRequestFuzzTest(provider);
+    OHOS::RestoreListenerRequestFuzzTest(provider);
+    OHOS::IsSaReadyRequestFuzzTest(provider);
+    OHOS::ReopenChannelRequestFuzzTest(provider);
+    OHOS::SubscribeSARequestFuzzTest(provider);
+    OHOS::AddAndRemoveListenerRequestFuzzTest(provider);
+    OHOS::RemoveAllListenersRequestFuzzTest(provider);
+    OHOS::QueryRequestFuzzTest(provider);
+    OHOS::RequestFuzzTestGetId(provider);
+    OHOS::RequestFuzzTestHasListener(provider);
+    OHOS::RequestFuzzTestOnNotifyDataReceive(provider);
+    OHOS::RequestFuzzTestAddAndRemoveListener(provider);
+    OHOS::RequestFuzzTestOnResponseReceive(provider);
+    OHOS::RunningTaskCountFuzzTestSubscribeRunningTaskCount(provider);
+    OHOS::RunningTaskCountFuzzTestUnubscribeRunning(provider);
+    OHOS::RunningTaskCountFuzzTestGetAndSetCount(provider);
+    OHOS::RunningTaskCountFuzzTestUpdateRunningTaskCount(provider);
+    OHOS::RunningTaskCountFuzzTestNotifyAllObservers(provider);
+    OHOS::RunCountNotifyStubFuzzTestGetInstanceDoneCallBack(provider);
+    OHOS::RunCountNotifyStubFuzzTestOnCallBack(provider);
+    OHOS::ResponseMessageFuzzTestInt64FromParcel(provider);
+    OHOS::ResponseMessageFuzzTestUint64FromParcel(provider);
+    OHOS::ResponseMessageFuzzTestInt32FromParcel(provider);
+    OHOS::ResponseMessageFuzzTestUint32FromParcel(provider);
+    OHOS::ResponseMessageFuzzTestInt16FromParcel(provider);
+    OHOS::ResponseMessageFuzzTestStateFromParcel(provider);
+    OHOS::ResponseMessageFuzzTestActionFromParcel(provider);
+    OHOS::ResponseMessageFuzzTestVersionFromParcel(provider);
+    OHOS::ResponseMessageFuzzTestSubscribeTypeFromParcel(provider);
+    OHOS::ResponseMessageFuzzTestStringFromParcel(provider);
+    OHOS::ResponseMessageFuzzTestResponseHeaderFromParcel(provider);
+    OHOS::ResponseMessageFuzzTestProgressExtrasFromParcel(provider);
+    OHOS::ResponseMessageFuzzTestVecInt64FromParcel(provider);
+    OHOS::ResponseMessageFuzzTestResponseMessageReceiver(provider);
+    OHOS::ResponseMessageFuzzTestMsgHeaderParcel(provider);
+    OHOS::ResponseMessageFuzzTestResponseFromParcel(provider);
+    OHOS::ResponseMessageFuzzTestTaskStatesFromParcel(provider);
+    OHOS::ResponseMessageFuzzTestNotifyDataFromParcel(provider);
     OHOS::RequestManagerFuzzTest(provider);
     OHOS::GetTaskRequestFuzzTest(provider);
     OHOS::QueryMimeTypeRequestFuzzTest(provider);

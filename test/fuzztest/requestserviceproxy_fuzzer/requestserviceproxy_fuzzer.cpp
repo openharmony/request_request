@@ -83,6 +83,33 @@ constexpr std::array<OHOS::Request::WaitingReason, 4> waitingReasons = {
     WaitingReason::UserInactivated,
 };
 
+constexpr std::array<OHOS::Request::SubscribeType, 10> subscribeTypes = {
+    SubscribeType::COMPLETED,
+    SubscribeType::FAILED,
+    SubscribeType::HEADER_RECEIVE,
+    SubscribeType::PAUSE,
+    SubscribeType::PROGRESS,
+    SubscribeType::REMOVE,
+    SubscribeType::RESUME,
+    SubscribeType::RESPONSE,
+    SubscribeType::FAULT_OCCUR,
+    SubscribeType::WAIT,
+};
+
+constexpr std::array<OHOS::Request::State, 11> states = {
+    State::INITIALIZED,
+    State::WAITING,
+    State::RUNNING,
+    State::RETRYING,
+    State::PAUSED,
+    State::STOPPED,
+    State::COMPLETED,
+    State::FAILED,
+    State::REMOVED,
+    State::DEFAULT,
+    State::ANY,
+};
+
 Filter convertToFilter(FuzzedDataProvider &provider)
 {
     std::string bundle = provider.ConsumeRandomLengthString(MAX_LENGTH);
@@ -528,8 +555,9 @@ bool UnSubscribeFuzzTest(FuzzedDataProvider &provider)
 bool SubRunCountFuzzTest(FuzzedDataProvider &provider)
 {
     sptr<NotifyInterface> listener = RunCountNotifyStub::GetInstance();
+    bool trigger = provider.ConsumeBool();
 
-    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(true);
+    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(trigger);
     if (proxy == nullptr) {
         return true;
     }
@@ -540,7 +568,10 @@ bool SubRunCountFuzzTest(FuzzedDataProvider &provider)
 
 bool UnsubRunCountFuzzTest(FuzzedDataProvider &provider)
 {
-    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(true);
+    sptr<NotifyInterface> listener = RunCountNotifyStub::GetInstance();
+    bool trigger = provider.ConsumeBool();
+
+    auto proxy = RequestManagerImpl::GetInstance()->GetRequestServiceProxy(trigger);
     if (proxy == nullptr) {
         return true;
     }
@@ -970,6 +1001,20 @@ void RequestManagerImplFuzzTestSetMaxSpeed(FuzzedDataProvider &provider)
 void RequestManagerImplFuzzTestOnResponseReceive(FuzzedDataProvider &provider)
 {
     Response resp;
+    resp.taskId = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    resp.version = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    resp.statusCode = provider.ConsumeIntegral<int32_t>();
+    resp.reason = provider.ConsumeRandomLengthString(MAX_LENGTH);
+    int headerCount = provider.ConsumeIntegralInRange<int>(0, MAX_NUM);
+    for (int i = 0; i < headerCount; i++) {
+        std::string key = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        std::vector<std::string> values;
+        int valueCount = provider.ConsumeIntegralInRange<int>(1, MAX_NUM);
+        for (int j = 0; j < valueCount; j++) {
+            values.push_back(provider.ConsumeRandomLengthString(MAX_LENGTH));
+        }
+        resp.headers[key] = values;
+    }
     auto respptr = std::make_shared<Response>(resp);
     RequestManagerImpl::GetInstance()->OnResponseReceive(respptr);
 }
@@ -977,6 +1022,23 @@ void RequestManagerImplFuzzTestOnResponseReceive(FuzzedDataProvider &provider)
 void RequestManagerImplFuzzTestOnNotifyDataReceive(FuzzedDataProvider &provider)
 {
     NotifyData notifyData;
+    notifyData.type = subscribeTypes[provider.ConsumeIntegralInRange<size_t>(0, subscribeTypes.size() - 1)];
+    notifyData.taskId = provider.ConsumeIntegral<uint32_t>();
+    notifyData.progress.state = states[provider.ConsumeIntegralInRange<size_t>(0, states.size() - 1)];
+    notifyData.progress.index = provider.ConsumeIntegral<uint32_t>();
+    notifyData.progress.processed = provider.ConsumeIntegral<uint64_t>();
+    notifyData.progress.totalProcessed = provider.ConsumeIntegral<uint64_t>();
+    notifyData.action = actions[provider.ConsumeIntegralInRange<size_t>(0, actions.size() - 1)];
+    notifyData.version = versions[provider.ConsumeIntegralInRange<size_t>(0, versions.size() - 1)];
+    notifyData.mode = modes[provider.ConsumeIntegralInRange<size_t>(0, modes.size() - 1)];
+    int taskStateCount = provider.ConsumeIntegralInRange<int>(0, MAX_NUM);
+    for (int i = 0; i < taskStateCount; i++) {
+        TaskState taskState;
+        taskState.path = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        taskState.responseCode = provider.ConsumeIntegral<uint32_t>();
+        taskState.message = provider.ConsumeRandomLengthString(MAX_LENGTH);
+        notifyData.taskStates.push_back(taskState);
+    }
     auto notifyDataptr = std::make_shared<NotifyData>(notifyData);
     RequestManagerImpl::GetInstance()->OnNotifyDataReceive(notifyDataptr);
 }
