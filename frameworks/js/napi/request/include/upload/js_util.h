@@ -28,10 +28,6 @@
 #include "upload/upload_hilog_wrapper.h"
 #include "upload_config.h"
 
-#define DECLARE_NAPI_METHOD(name, func)         \
-    {                                           \
-        name, 0, func, 0, 0, 0, napi_default, 0 \
-    }
 namespace OHOS::Request::Upload {
 class JSUtil {
 public:

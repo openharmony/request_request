@@ -25,11 +25,6 @@
 #include "request_event.h"
 
 using namespace OHOS::Request;
-#define DECLARE_NAPI_METHOD(name, func)         \
-    {                                           \
-        name, 0, func, 0, 0, 0, napi_default, 0 \
-    }
-
 static constexpr const char *BROADCAST_EVENT_COMPLETE = "ohos.request.event.COMPLETE";
 
 static void NapiCreateAction(napi_env env, napi_value &action)
@@ -136,16 +131,16 @@ static napi_value InitAgent(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("VISIBILITY_COMPLETION", visibility_completion),
         DECLARE_NAPI_STATIC_PROPERTY("VISIBILITY_PROGRESS", visibility_progress),
 
-        DECLARE_NAPI_METHOD("create", JsTask::JsCreate),
-        DECLARE_NAPI_METHOD("getTask", JsTask::GetTask),
-        DECLARE_NAPI_METHOD("remove", JsTask::Remove),
-        DECLARE_NAPI_METHOD("show", JsTask::Show),
-        DECLARE_NAPI_METHOD("touch", JsTask::Touch),
-        DECLARE_NAPI_METHOD("search", JsTask::Search),
-        DECLARE_NAPI_METHOD("query", JsTask::Query),
-        DECLARE_NAPI_METHOD("createGroup", createGroup),
-        DECLARE_NAPI_METHOD("attachGroup", attachGroup),
-        DECLARE_NAPI_METHOD("deleteGroup", deleteGroup),
+        DECLARE_NAPI_FUNCTION("create", JsTask::JsCreate),
+        DECLARE_NAPI_FUNCTION("getTask", JsTask::GetTask),
+        DECLARE_NAPI_FUNCTION("remove", JsTask::Remove),
+        DECLARE_NAPI_FUNCTION("show", JsTask::Show),
+        DECLARE_NAPI_FUNCTION("touch", JsTask::Touch),
+        DECLARE_NAPI_FUNCTION("search", JsTask::Search),
+        DECLARE_NAPI_FUNCTION("query", JsTask::Query),
+        DECLARE_NAPI_FUNCTION("createGroup", createGroup),
+        DECLARE_NAPI_FUNCTION("attachGroup", attachGroup),
+        DECLARE_NAPI_FUNCTION("deleteGroup", deleteGroup),
     };
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
     if (status != napi_ok) {
@@ -261,11 +256,11 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_PAUSED", session_paused),
         DECLARE_NAPI_STATIC_PROPERTY("SESSION_FAILED", session_failed),
         DECLARE_NAPI_PROPERTY("agent", agent),
-        DECLARE_NAPI_METHOD("download", JsTask::JsDownload),
-        DECLARE_NAPI_METHOD("upload", JsTask::JsUpload),
-        DECLARE_NAPI_METHOD("downloadFile", JsTask::JsRequestFile),
-        DECLARE_NAPI_METHOD("uploadFile", JsTask::JsRequestFile),
-        DECLARE_NAPI_METHOD("onDownloadComplete", Legacy::RequestManager::OnDownloadComplete),
+        DECLARE_NAPI_FUNCTION("download", JsTask::JsDownload),
+        DECLARE_NAPI_FUNCTION("upload", JsTask::JsUpload),
+        DECLARE_NAPI_FUNCTION("downloadFile", JsTask::JsRequestFile),
+        DECLARE_NAPI_FUNCTION("uploadFile", JsTask::JsRequestFile),
+        DECLARE_NAPI_FUNCTION("onDownloadComplete", Legacy::RequestManager::OnDownloadComplete),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
