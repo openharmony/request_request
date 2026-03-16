@@ -186,50 +186,46 @@ export default class Server {
   }
   
   /**
-   * 启动服务器，尝试使用指定的起始端口，如果失败则自动递增端口号
-   * @param startPort 起始端口号（默认 8078）
+   * 启动服务器，使用端口 0 让系统自动分配可用端口
    * @returns 实际监听的端口号
    */
-  async serverStart(startPort: number = 8078): Promise<number> {
+  async serverStart(): Promise<number> {
     // 如果服务器已经在运行，返回当前端口
     if (this.isRunning && this.iServer) {
       console.log('===>server already running on port ' + this.serverPort);
       return this.serverPort;
     }
     
-    // 尝试端口范围：从 startPort 到 startPort + 100
-    for (let port = startPort; port < startPort + 100; port++) {
-      // 每次尝试都创建新的服务器实例
-      this.iServer = socket.constructTCPSocketServerInstance();
-      
-      let addr: socket.NetAddress = {
-        address: '127.0.0.1', 
-        port: port
-      }
-      
-      try {
-        console.log('===>trying to start server on 127.0.0.1:' + port);
-        await this.iServer.listen(addr);
-        console.log('===>server listening on port ' + port);
-        this.iServer.on('connect', this.handleClient);
-        this.isRunning = true;
-        this.serverPort = port;
-        return port;
-      } catch (err) {
-        console.log('===>port ' + port + ' failed: ' + JSON.stringify(err));
-        // 端口失败，清理实例并继续尝试下一个
-        this.iServer = null;
-        continue;
-      }
+    // 创建服务器实例
+    this.iServer = socket.constructTCPSocketServerInstance();
+    
+    // 使用端口 0，让系统自动分配可用端口
+    let addr: socket.NetAddress = {
+      address: '127.0.0.1', 
+      port: 0
     }
     
-    // 所有端口都失败了，清理并返回0（让测试用例决定如何处理）
-    console.log('===>all ports from ' + startPort + ' to ' + (startPort + 99) + ' failed');
-    this.iServer = null;
-    this.isRunning = false;
-    this.serverPort = 0;
-    // 不抛出异常，返回0让调用者处理
-    return 0;
+    try {
+      console.log('===>trying to start server on 127.0.0.1:0 (auto-assign port)');
+      await this.iServer.listen(addr);
+      
+      // 获取实际绑定的地址信息
+      let localAddr: socket.NetAddress = await this.iServer.getLocalAddress();
+      let port = localAddr.port;
+      
+      console.log('===>server listening on port ' + port);
+      this.iServer.on('connect', this.handleClient);
+      this.isRunning = true;
+      this.serverPort = port;
+      return port;
+    } catch (err) {
+      console.log('===>server start failed: ' + JSON.stringify(err));
+      // 启动失败，清理实例
+      this.iServer = null;
+      this.isRunning = false;
+      this.serverPort = 0;
+      return 0;
+    }
   }
   
   /**

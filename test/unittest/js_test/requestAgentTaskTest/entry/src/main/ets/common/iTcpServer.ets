@@ -203,10 +203,10 @@ export default class Server {
   /**
    * 启动服务器（单例模式）
    * 如果全局服务器已运行，复用；否则尝试启动新的
-   * @param startPort 起始端口号（默认 8078）
+   * 使用端口 0 让系统自动分配可用端口
    * @returns 实际监听的端口号
    */
-  async serverStart(startPort: number = 8078): Promise<number> {
+  async serverStart(): Promise<number> {
     // 如果全局服务器已经在运行，复用
     if (globalIsRunning && globalServer) {
       console.log('===>using existing global server on port ' + globalPort);
@@ -214,39 +214,37 @@ export default class Server {
       return globalPort;
     }
     
-    // 尝试端口范围：从 startPort 到 startPort + 100
-    for (let port = startPort; port < startPort + 100; port++) {
-      // 每次尝试都创建新的服务器实例
-      globalServer = socket.constructTCPSocketServerInstance();
-      
-      let addr: socket.NetAddress = {
-        address: '127.0.0.1', 
-        port: port
-      }
-      
-      try {
-        console.log('===>trying to start server on 127.0.0.1:' + port);
-        await globalServer.listen(addr);
-        console.log('===>server listening on port ' + port);
-        globalServer.on('connect', handleClient);
-        globalIsRunning = true;
-        globalPort = port;
-        this.myPort = port;
-        return port;
-      } catch (err) {
-        console.log('===>port ' + port + ' failed: ' + JSON.stringify(err));
-        // 端口失败，清理实例并继续尝试下一个
-        globalServer = null;
-        continue;
-      }
+    // 创建服务器实例
+    globalServer = socket.constructTCPSocketServerInstance();
+    
+    // 使用端口 0，让系统自动分配可用端口
+    let addr: socket.NetAddress = {
+      address: '127.0.0.1', 
+      port: 0
     }
     
-    // 所有端口都失败了，清理并抛出错误
-    console.log('===>all ports from ' + startPort + ' to ' + (startPort + 99) + ' failed');
-    globalServer = null;
-    globalIsRunning = false;
-    globalPort = 0;
-    throw new Error('Failed to start server on any port');
+    try {
+      console.log('===>trying to start server on 127.0.0.1:0 (auto-assign port)');
+      await globalServer.listen(addr);
+      
+      // 获取实际绑定的地址信息
+      let localAddr: socket.NetAddress = await globalServer.getLocalAddress();
+      let port = localAddr.port;
+      
+      console.log('===>server listening on port ' + port);
+      globalServer.on('connect', handleClient);
+      globalIsRunning = true;
+      globalPort = port;
+      this.myPort = port;
+      return port;
+    } catch (err) {
+      console.log('===>server start failed: ' + JSON.stringify(err));
+      // 启动失败，清理实例
+      globalServer = null;
+      globalIsRunning = false;
+      globalPort = 0;
+      throw new Error('Failed to start server: ' + JSON.stringify(err));
+    }
   }
   
   /**
