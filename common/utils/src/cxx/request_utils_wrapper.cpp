@@ -47,7 +47,11 @@ rust::string SHA256(rust::str input)
 bool IsStageContext(AniEnv *env, AniObject *obj)
 {
     ani_boolean stageMode;
-    AbilityRuntime::IsStageContext(reinterpret_cast<ani_env *>(env), *reinterpret_cast<ani_object *>(obj), stageMode);
+    ani_status status = AbilityRuntime::IsStageContext(reinterpret_cast<ani_env *>(env),
+        *reinterpret_cast<ani_object *>(obj), stageMode);
+    if (status != ANI_OK) {
+        return false;
+    }
     return stageMode == 1;
 }
 
