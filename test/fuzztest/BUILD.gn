@@ -17,6 +17,18 @@ group("fuzztest") {
   deps = [
     "downloaduploadmanager_fuzzer:fuzztest",
     "predownload_fuzzer:fuzztest",
-    "requestserviceproxy_fuzzer:fuzztest",
+    "requestserviceproxytask_fuzzer:fuzztest",
+    "requestserviceproxyremove_fuzzer:fuzztest",
+    "requestserviceproxyquery_fuzzer:fuzztest",
+    "requestserviceproxysubscribe_fuzzer:fuzztest",
+    "requestserviceproxygroup_fuzzer:fuzztest",
+    "requestserviceproxytouch_fuzzer:fuzztest",
+    "requestserviceproxysearch_fuzzer:fuzztest",
+    "requestserviceproxyutils_fuzzer:fuzztest",
+    "requestserviceproxymanager1_fuzzer:fuzztest",
+    "requestserviceproxymanager2_fuzzer:fuzztest",
+    "requestserviceproxymanager3_fuzzer:fuzztest",
+    "requestserviceproxymanager4_fuzzer:fuzztest",
+    "requestserviceproxymanager5_fuzzer:fuzztest",
   ]
 }

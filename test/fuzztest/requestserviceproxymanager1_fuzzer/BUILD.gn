@@ -1,0 +1,83 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#####################hydra-fuzz###################
+import("//build/ohos.gni")
+import("//build/test.gni")
+
+##############################fuzztest##########################################
+ohos_fuzztest("RequestServiceProxyManager1FuzzTest") {
+    module_out_path = "request/request/request"
+    fuzz_config_file = "../../../test/fuzztest/requestserviceproxymanager1_fuzzer"
+
+    include_dirs = [
+        "../../../frameworks/native/request/include",
+        "../../../common/include",
+        "../../../common/sys_event/include",
+        "../../../common/utf8_utils/include",
+        "../../../interfaces/inner_kits/running_count/include",
+        "../requestserviceproxy_fuzzer",
+    ]
+
+    cflags = [
+        "-g",
+        "-O0",
+        "-Wno-unused-variable",
+        "-fno-omit-frame-pointer",
+        "-Dprivate=public",
+    ]
+
+    sources = [
+        "../../../frameworks/native/request/src/parcel_helper.cpp",
+        "../../../frameworks/native/request/src/request.cpp",
+        "../../../frameworks/native/request/src/request_common_utils.cpp",
+        "../../../frameworks/native/request/src/request_manager.cpp",
+        "../../../frameworks/native/request/src/request_manager_impl.cpp",
+        "../../../frameworks/native/request/src/request_running_task_count.cpp",
+        "../../../frameworks/native/request/src/request_service_proxy.cpp",
+        "../../../frameworks/native/request/src/response_message_receiver.cpp",
+        "../../../frameworks/native/request/src/runcount_notify_stub.cpp",
+        "../../../common/sys_event/src/sys_event.cpp",
+        "../../../common/utf8_utils/src/utf8_utils.cpp",
+        "requestserviceproxymanager1_fuzzer.cpp",
+    ]
+
+    deps = [
+        "../../../common/sys_event:request_sysevent",
+        "../../../common/utf8_utils:request_utf8_utils",
+    ]
+
+    external_deps = [
+        "ability_runtime:extensionkit_native",
+        "c_utils:utils",
+        "eventhandler:libeventhandler",
+        "hilog:libhilog",
+        "hisysevent:libhisysevent",
+        "init:libbegetutil",
+        "ipc:ipc_single",
+        "relational_store:native_dataability",
+        "relational_store:native_rdb",
+        "samgr:samgr_proxy",
+    ]
+}
+
+###############################################################################
+group("fuzztest") {
+    testonly = true
+    deps = []
+    deps += [
+        # deps file
+        ":RequestServiceProxyManager1FuzzTest",
+    ]
+}
+###############################################################################

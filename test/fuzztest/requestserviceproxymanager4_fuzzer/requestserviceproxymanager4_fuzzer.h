@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef TEST_FUZZTEST_REQUESTSERVICEPROXY_FUZZER_H
-#define TEST_FUZZTEST_REQUESTSERVICEPROXY_FUZZER_H
+#ifndef TEST_FUZZTEST_REQUESTSERVICEPROXYMANAGER4_FUZZER_H
+#define TEST_FUZZTEST_REQUESTSERVICEPROXYMANAGER4_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "requestserviceproxy_fuzzer"
+#define FUZZ_PROJECT_NAME "requestserviceproxymanager4_fuzzer"
 
-#endif // TEST_FUZZTEST_REQUESTSERVICEPROXY_FUZZER_H
+#endif // TEST_FUZZTEST_REQUESTSERVICEPROXYMANAGER4_FUZZER_H
