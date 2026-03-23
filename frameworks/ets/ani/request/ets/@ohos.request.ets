@@ -962,7 +962,7 @@ export default namespace request {
       loadLibrary("request_ani")
     }
 
-    readonly tid: string;
+    tid: string;
 
     config: Config;
 
