@@ -184,26 +184,22 @@ rust::string GetSystemLanguage()
 
 std::shared_ptr<Media::PixelMap> CreatePixelMap()
 {
-    static std::shared_ptr<Media::PixelMap> cachedPixelMap = nullptr;
+    static std::shared_ptr<Media::PixelMap> cachedPixelMap;
     static std::mutex updateMutex;
     static std::string cachedColorMode;
     
-    auto currentColorMode = GetCurrentSystemColorMode();
-    if (cachedPixelMap != nullptr && cachedColorMode == currentColorMode) {
-        return cachedPixelMap;
-    }
-    
     std::unique_lock<std::mutex> lock(updateMutex);
-    if (cachedPixelMap != nullptr && cachedColorMode == currentColorMode) {
+    
+    auto currentColorMode = GetCurrentSystemColorMode();
+    if (cachedPixelMap && cachedColorMode == currentColorMode) {
         return cachedPixelMap;
     }
     
     auto newPixelMap = CreatePixelMapByColorMode(currentColorMode);
-    if (newPixelMap != nullptr) {
+    if (newPixelMap) {
         cachedPixelMap = newPixelMap;
         cachedColorMode = currentColorMode;
     }
-    
     return cachedPixelMap;
 }
 
