@@ -40,6 +40,7 @@ public:
 
 private:
     void OnCallBack(MessageParcel &data);
+    bool CheckCallingPermission(uint32_t code);
 };
 } // namespace OHOS::Request
 #endif // RUNCOUNT_NOTIFY_STUB_H

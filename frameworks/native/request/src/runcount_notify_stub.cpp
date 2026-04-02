@@ -19,14 +19,17 @@
 #include <memory>
 #include <thread>
 
+#include "accesstoken_kit.h"
 #include "base/request/request/interfaces/inner_kits/running_count/include/running_task_count.h"
 #include "download_server_ipc_interface_code.h"
+#include "ipc_skeleton.h"
 #include "log.h"
 #include "parcel_helper.h"
 #include "request_running_task_count.h"
 #include "string_ex.h"
 
 namespace OHOS::Request {
+constexpr int32_t EXPECT_UID = 3815;
 void RunCountNotifyStub::CallBack(const Notify &notify)
 {
 }
@@ -50,7 +53,7 @@ int32_t RunCountNotifyStub::OnRemoteRequest(
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
 
-    if (code == static_cast<uint32_t>(RequestNotifyInterfaceCode::REQUEST_NOTIFY_RUNCOUNT)) {
+    if (CheckCallingPermission(code)) {
         OnCallBack(data);
         return ERR_NONE;
     } else {
@@ -67,6 +70,27 @@ void RunCountNotifyStub::OnCallBack(MessageParcel &data)
 
     FwkRunningTaskCountManager::GetInstance()->SetCount(runCount);
     FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
+}
+
+bool RunCountNotifyStub::CheckCallingPermission(uint32_t code)
+{
+    auto callerToken = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    auto callerUid = IPCSkeleton::GetCallingUid();
+    bool res = true;
+    if (code != static_cast<uint32_t>(RequestNotifyInterfaceCode::REQUEST_NOTIFY_RUNCOUNT)) {
+        REQUEST_HILOGE("Access forbidden, the interface code is %{public}d", code);
+        res = false;
+    }
+    if (callerUid != EXPECT_UID) {
+        REQUEST_HILOGE("Access forbidden, the uid is %{public}d", callerUid);
+        res = false;
+    }
+    if (tokenType != Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        REQUEST_HILOGE("Access forbidden, the token type is %{public}d", tokenType);
+        res = false;
+    }
+    return res;
 }
 
 } // namespace OHOS::Request
