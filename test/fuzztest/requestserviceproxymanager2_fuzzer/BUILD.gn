@@ -59,6 +59,7 @@ ohos_fuzztest("RequestServiceProxyManager2FuzzTest") {
 
     external_deps = [
         "ability_runtime:extensionkit_native",
+        "access_token:libaccesstoken_sdk",
         "c_utils:utils",
         "eventhandler:libeventhandler",
         "hilog:libhilog",
