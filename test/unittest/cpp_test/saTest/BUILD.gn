@@ -27,7 +27,9 @@ ohos_unittest("saTest") {
 
   sources = [
     "../../../../services/src/cxx/c_string_wrapper.cpp",
+    "../../../../services/src/cxx/request_cert_mgr_adapter.cpp",
     "src/c_string_wrapper_test.cpp",
+    "src/request_cert_mgr_adapter_test.cpp",
   ]
 
   external_deps = [
@@ -45,6 +47,7 @@ ohos_unittest("saTest") {
     "googletest:gmock_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "init:libbegetutil",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_appdatafwk",

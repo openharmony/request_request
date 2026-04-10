@@ -34,6 +34,7 @@ use ylong_http_client::{
 
 cfg_oh! {
     use crate::manage::SystemConfig;
+    use crate::manage::config::load_certificates_from_paths;
     use crate::utils::url_policy::check_url_domain;
 }
 
@@ -85,7 +86,7 @@ use crate::task::files::convert_path;
 pub(crate) fn build_client(
     config: &TaskConfig,
     total_timeout: u64,
-    #[cfg(feature = "oh")] mut system: SystemConfig,
+    #[cfg(feature = "oh")] system: SystemConfig,
 ) -> Result<Client, Box<dyn Error + Send + Sync>> {
     const DEFAULT_CONNECTION_TIMEOUT: u64 = 60;
 
@@ -136,12 +137,13 @@ pub(crate) fn build_client(
     // HTTP url that contains redirects also require a certificate when
     // redirected to HTTPS.
 
-    // Add system certificates if available
+    // Load and add system certificates from paths on-demand
     #[cfg(feature = "oh")]
-    if let Some(certs) = system.certs.take() {
-        // Load and trust system-provided CA certificates
-        for cert in certs.into_iter() {
-            client = client.add_root_certificate(cert)
+    {
+        let certs =
+            load_certificates_from_paths(config.common_data.uid, config.common_data.task_id);
+        for cert in certs {
+            client = client.add_root_certificate(cert);
         }
     }
 
