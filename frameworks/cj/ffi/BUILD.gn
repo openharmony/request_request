@@ -70,6 +70,7 @@ ohos_shared_library("cj_request_ffi") {
 
   sources = [
     "src/cj_app_state_callback.cpp",
+    "src/cj_failed_listener.cpp",
     "src/cj_initialize.cpp",
     "src/cj_listener_list.cpp",
     "src/cj_notify_data_listener.cpp",

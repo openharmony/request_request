@@ -215,9 +215,48 @@ typedef struct {
     CTask tid;
 } RetTask;
 
+typedef struct {
+    char *description;
+    int64_t downloadedBytes;
+    int64_t downloadId;
+    int32_t failedReason;
+    char *fileName;
+    char *filePath;
+    int32_t pausedReason;
+    int32_t status;
+    char *targetURI;
+    char *downloadTitle;
+    int64_t downloadTotalBytes;
+    char *mimeType;
+} CDownloadInfo;
+
+typedef struct {
+    char *url;
+    CHashStrArr header;
+    bool enableMetered;
+    bool enableRoaming;
+    char *description;
+    int32_t networkType;
+    char *filePath;
+    char *title;
+    bool background;
+} CDownloadConfig;
+
+typedef struct {
+    RetError err;
+    const char *taskId;
+} RetDownloadTask;
+
+typedef struct {
+    RetError err;
+    CDownloadInfo task;
+} RetDownloadInfo;
+
 FFI_EXPORT void FfiOHOSRequestFreeTask(const char *taskId);
 FFI_EXPORT RetError FfiOHOSRequestTaskProgressOn(char *event, const char *taskId, void *callback);
 FFI_EXPORT RetError FfiOHOSRequestTaskProgressOff(char *event, const char *taskId, void *callback);
+FFI_EXPORT RetError FfiOHOSRequestTaskFailedOn(const char *taskId, void *callback);
+FFI_EXPORT RetError FfiOHOSRequestTaskFailedOff(const char *taskId, void *callback);
 FFI_EXPORT RetError FfiOHOSRequestTaskStart(const char *taskId);
 FFI_EXPORT RetError FfiOHOSRequestTaskPause(const char *taskId);
 FFI_EXPORT RetError FfiOHOSRequestTaskResume(const char *taskId);
@@ -228,5 +267,6 @@ FFI_EXPORT RetError FfiOHOSRequestRemoveTask(const char *taskId);
 FFI_EXPORT RetTaskInfo FfiOHOSRequestShowTask(const char *taskId);
 FFI_EXPORT RetTaskInfo FfiOHOSRequestTouchTask(const char *taskId, char *token);
 FFI_EXPORT RetTaskArr FfiOHOSRequestSearchTask(CFilter filter);
+FFI_EXPORT RetDownloadInfo FfiOHOSRequestShowDownloadTask(const char *taskId);
 }
 #endif

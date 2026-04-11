@@ -476,6 +476,17 @@ ExceptionError CJRequestTask::Touch(const std::string &tid, TaskInfo &task, cons
     return err;
 }
 
+ExceptionError CJRequestTask::Show(const std::string &tid, TaskInfo &task)
+{
+    ExceptionError err;
+
+    int32_t result = RequestManager::GetInstance()->Show(tid, task);
+    if (result != ExceptionErrorCode::E_OK) {
+        return ConvertError(result);
+    }
+    return err;
+}
+
 ExceptionError CJRequestTask::Search(const Filter &filter, std::vector<std::string> &tids)
 {
     ExceptionError err;
@@ -563,6 +574,40 @@ ExceptionError CJRequestTask::Off(std::string event, CFunc callback)
         }
         notifyDataListenerMap_[subscribeType]->RemoveListener((CFunc)callback);
     }
+    return err;
+}
+
+ExceptionError CJRequestTask::OnFailed(std::string &taskId, void *callback)
+{
+    int32_t seq = RequestManager::GetInstance()->GetNextSeq();
+    REQUEST_HILOGI("Begin task on failed, seq: %{public}d", seq);
+
+    ExceptionError err;
+    {
+        std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
+        if (failedListener_ == nullptr) {
+            failedListener_ = std::make_shared<CJFailedListener>(GetTidStr());
+        }
+    }
+    failedListener_->AddListener(CJLambda::Create((void (*)(int32_t))callback), callback);
+
+    REQUEST_HILOGI("End task on failed successfully, seq: %{public}d, tid: %{public}s", seq, GetTidStr().c_str());
+    return err;
+}
+
+ExceptionError CJRequestTask::OffFailed(CFunc callback)
+{
+    int32_t seq = RequestManager::GetInstance()->GetNextSeq();
+    REQUEST_HILOGI("Begin task off failed, seq: %{public}d", seq);
+
+    ExceptionError err;
+    {
+        std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
+        if (failedListener_ == nullptr) {
+            failedListener_ = std::make_shared<CJFailedListener>(GetTidStr());
+        }
+    }
+    failedListener_->RemoveListener(callback);
     return err;
 }
 

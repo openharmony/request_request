@@ -50,9 +50,12 @@ public:
     static RetTaskInfo ShowTask(std::string taskId);
     static RetTaskInfo TouchTask(std::string taskId, const char *token);
     static RetTaskArr SearchTask(CFilter &filter);
+    static RetDownloadInfo ShowDownloadTask(std::string taskId);
     static ExceptionError Convert2Filter(CFilter &filter, Filter &out);
     static RetError ProgressOn(char *event, std::string taskId, void *callback);
     static RetError ProgressOff(char *event, std::string taskId, void *callback);
+    static RetError FailedOn(std::string taskId, void *callback);
+    static RetError FailedOff(std::string taskId, void *callback);
     static RetError TaskStart(std::string taskId);
     static RetError TaskPause(std::string taskId);
     static RetError TaskResume(std::string taskId);

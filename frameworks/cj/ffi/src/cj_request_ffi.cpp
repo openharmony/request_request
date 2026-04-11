@@ -38,6 +38,16 @@ RetError FfiOHOSRequestTaskProgressOff(char *event, const char *taskId, void *ca
     return CJRequestImpl::ProgressOff(event, taskId, callback);
 }
 
+RetError FfiOHOSRequestTaskFailedOn(const char *taskId, void *callback)
+{
+    return CJRequestImpl::FailedOn(taskId, callback);
+}
+
+RetError FfiOHOSRequestTaskFailedOff(const char *taskId, void *callback)
+{
+    return CJRequestImpl::FailedOff(taskId, callback);
+}
+
 RetError FfiOHOSRequestTaskStart(const char *taskId)
 {
     return CJRequestImpl::TaskStart(taskId);
@@ -86,6 +96,11 @@ RetTaskInfo FfiOHOSRequestTouchTask(const char *taskId, char *token)
 RetTaskArr FfiOHOSRequestSearchTask(CFilter filter)
 {
     return CJRequestImpl::SearchTask(filter);
+}
+
+RetDownloadInfo FfiOHOSRequestShowDownloadTask(const char *taskId)
+{
+    return CJRequestImpl::ShowDownloadTask(taskId);
 }
 }
 } // namespace OHOS::CJSystemapi::Request

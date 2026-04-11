@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "ability_context.h"
+#include "cj_failed_listener.h"
 #include "cj_notify_data_listener.h"
 #include "cj_request_ffi.h"
 #include "cj_response_listener.h"
@@ -43,11 +44,13 @@ public:
 
     static ExceptionError Remove(const std::string &tid);
     static ExceptionError Touch(const std::string &tid, TaskInfo &task, const std::string &token = "null");
+    static ExceptionError Show(const std::string &tid, TaskInfo &task);
     static ExceptionError Search(const Filter &filter, std::vector<std::string> &tids);
 
     std::recursive_mutex listenerMutex_;
     std::map<SubscribeType, std::shared_ptr<CJNotifyDataListener>> notifyDataListenerMap_;
     std::shared_ptr<CJResponseListener> responseListener_;
+    std::shared_ptr<CJFailedListener> failedListener_;
 
     Config config_;
     std::string taskId_{};
@@ -85,6 +88,8 @@ public:
     ExceptionError Create(OHOS::AbilityRuntime::Context *context, Config &config);
     ExceptionError On(std::string type, std::string &taskId, void *callback);
     ExceptionError Off(std::string event, CFunc callback);
+    ExceptionError OnFailed(std::string &taskId, void *callback);
+    ExceptionError OffFailed(CFunc callback);
 
     static void ReloadListener();
 

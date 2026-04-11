@@ -158,11 +158,6 @@ CTaskInfo CJRequestImpl::Convert2CTaskInfo(TaskInfo &task)
 
     out.url = MallocCString(task.url);
     out.saveas = MallocCString(GetSaveas(task.files, task.action));
-    if (task.action == Action::DOWNLOAD) {
-        out.data.str = MallocCString(task.data);
-    } else {
-        out.data.formItems = Convert2CFormItemArr(task.files, task.forms);
-    }
     out.data = Convert2RequestData(task.action, task.data, task.files, task.forms);
 
     out.tid = MallocCString(task.tid);
@@ -314,6 +309,20 @@ RetTaskInfo CJRequestImpl::ShowTask(std::string taskId)
     }
 
     ret.task = Convert2CTaskInfo(task);
+    return ret;
+}
+
+RetDownloadInfo CJRequestImpl::ShowDownloadTask(std::string taskId)
+{
+    RetDownloadInfo ret{};
+    TaskInfo task{};
+    ExceptionError result = CJRequestTask::Show(taskId, task);
+    if (result.code != ExceptionErrorCode::E_OK) {
+        ret.err = Convert2RetErr(result);
+        return ret;
+    }
+
+    ret.task = Convert2CDownloadInfo(task);
     return ret;
 }
 
@@ -476,6 +485,44 @@ RetError CJRequestImpl::ProgressOff(char *event, std::string taskId, void *callb
     ExceptionError result = task->Off(event, callback);
     if (result.code != 0) {
         REQUEST_HILOGE("[CJRequestImpl] task off failed, ret:%{public}d.", result.code);
+        return Convert2RetErr(result);
+    }
+
+    return ret;
+}
+
+RetError CJRequestImpl::FailedOn(std::string taskId, void *callback)
+{
+    REQUEST_HILOGD("[CJRequestImpl] FailedOn start");
+    RetError ret{};
+    CJRequestTask *task = CJRequestTask::FindTaskById(taskId);
+    if (task == nullptr) {
+        REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}s.", taskId.c_str());
+        return Convert2RetErr(ExceptionErrorCode::E_TASK_NOT_FOUND);
+    }
+
+    ExceptionError result = task->OnFailed(taskId, callback);
+    if (result.code != 0) {
+        REQUEST_HILOGE("[CJRequestImpl] task on failed failed, ret:%{public}d.", result.code);
+        return Convert2RetErr(result);
+    }
+
+    return ret;
+}
+
+RetError CJRequestImpl::FailedOff(std::string taskId, void *callback)
+{
+    REQUEST_HILOGD("[CJRequestImpl] FailedOff start");
+    RetError ret{};
+    CJRequestTask *task = CJRequestTask::FindTaskById(taskId);
+    if (task == nullptr) {
+        REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}s.", taskId.c_str());
+        return ret;
+    }
+
+    ExceptionError result = task->OffFailed(callback);
+    if (result.code != 0) {
+        REQUEST_HILOGE("[CJRequestImpl] task off failed failed, ret:%{public}d.", result.code);
         return Convert2RetErr(result);
     }
 
