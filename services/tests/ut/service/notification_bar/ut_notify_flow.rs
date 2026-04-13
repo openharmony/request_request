@@ -263,7 +263,7 @@ fn ut_group_visibility_progress() {
     assert!(content.is_some());
 
     // Update group progress visibility to false
-    db.update_group_config(group_id, true, _current_time, true, 0b00); // No bits set
+    db.update_group_config(group_id, false, _current_time, true, 0b00); // No bits set
     // Verify visibility is updated in database
     assert!(!db.is_progress_visible_from_group(group_id));
 

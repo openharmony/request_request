@@ -27,16 +27,16 @@ const COMMA_DECIMAL_LIST: &[&str] = &["sl", "lt", "fi", "nl", "da", "id"];
 ///
 /// Formatted percentage string with locale-aware decimal separator
 fn format_percentage(percentage: f64, lang: &str) -> String {
-    let integer_part = percentage.trunc() as u64;
-    let decimal_part = ((percentage - integer_part as f64) * 100.0) as u64;
-    
+    let truncated = (percentage * 100.0).floor() / 100.0;
+    let formatted = format!("{:.2}%", truncated);
+
     let decimal_separator = if COMMA_DECIMAL_LIST.contains(&lang) {
-        ","
+        formatted.replace('.', ",")
     } else {
-        "."
+        formatted
     };
-    
-    format!("{}{}{:02}%", integer_part, decimal_separator, decimal_part)
+
+    decimal_separator
 }
 
 /// Formats a percentage progress value as a human-readable string.
