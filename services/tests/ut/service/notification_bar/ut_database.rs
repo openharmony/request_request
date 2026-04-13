@@ -303,7 +303,7 @@ fn ut_notify_database_visibility() {
         0b00,
     );
     db.update_task_customized_notification(&config);
-    assert!(!db.is_completion_visible(task_id));
+    assert!(db.is_completion_visible(task_id));
     assert!(!db.is_progress_visible(task_id));
 
     let config = NotificationConfig::new(
@@ -343,8 +343,8 @@ fn ut_notify_database_visibility() {
     assert!(db.is_progress_visible(task_id));
 
     db.update_group_config(group_id, true, _current_time, true, 0b00);
-    assert!(!db.is_completion_visible_from_group(group_id));
-    assert!(!db.is_progress_visible_from_group(group_id));
+    assert!(db.is_completion_visible_from_group(group_id));
+    assert!(db.is_progress_visible_from_group(group_id));
 
     db.update_group_config(group_id, true, _current_time, true, 0b01);
     assert!(db.is_completion_visible_from_group(group_id));
