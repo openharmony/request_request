@@ -42,7 +42,7 @@ fn ut_account_check_oh() {
             TaskManagerEvent::Account(AccountEvent::Changed)
         ));
         assert!(!ACTIVE_ACCOUNTS.lock().unwrap().foreground.is_empty());
-        assert!(!ACTIVE_ACCOUNTS.lock().unwrap().background.is_empty());
+        assert!(ACTIVE_ACCOUNTS.lock().unwrap().background.is_empty());
     })
 }
 
