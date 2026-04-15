@@ -33,6 +33,7 @@
       "components": [
         "rust_cxx",
         "ylong_runtime",
+        "ylong_http",
         "os_account",
         "samgr",
         "init",
