@@ -32,6 +32,10 @@ using OHOS::Request::Progress;
 using OHOS::Request::Reason;
 using OHOS::Request::Response;
 
+static const std::string AREA1 = "/data/storage/el1/base";
+static const std::string AREA2 = "/data/storage/el2/base";
+static const std::string AREA5 = "/data/storage/el5/base";
+
 void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileData);
 char *MallocCString(const std::string &origin);
 bool IsPathValid(const std::string &filePath);
