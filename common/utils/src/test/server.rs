@@ -19,18 +19,15 @@ where
     F: FnOnce(Lines<BufReader<&mut TcpStream>>) + Send + 'static,
 {
     let server = "127.0.0.1";
-    let mut port = 7878;
-    let listener = loop {
-        match TcpListener::bind((server, port)) {
-            Ok(listener) => break listener,
-            Err(_) => port += 1,
-        }
-    };
+    // let the OS assigns a port to this listener.
+    let port = 0;
+    let listener = TcpListener::bind((server, port)).unwrap();
+    let addr = listener.local_addr().unwrap().to_string();
     std::thread::spawn(move || {
         let stream = listener.incoming().next().unwrap().unwrap();
         handle_connection(stream, f);
     });
-    format!("http://{}:{}", server, port)
+    format!("http://{}", addr.as_str())
 }
 
 fn handle_connection<F>(mut stream: TcpStream, task_f: F)
