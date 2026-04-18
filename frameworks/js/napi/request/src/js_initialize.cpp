@@ -1211,9 +1211,9 @@ bool JsInitialize::CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime:
             std::make_shared<AppFileService::ModuleFileUri::FileUri>(file.uri);
         std::string realPath = fileUri->GetRealPath();
         if (config.firstInit) {
-            file.fd = open(realPath.c_str(), O_RDWR | O_TRUNC);
+            file.fd = open(realPath.c_str(), O_RDWR | O_TRUNC | O_CLOEXEC);
         } else {
-            file.fd = open(realPath.c_str(), O_RDWR | O_APPEND);
+            file.fd = open(realPath.c_str(), O_RDWR | O_APPEND | O_CLOEXEC);
         }
     }
     if (file.fd < 0) {

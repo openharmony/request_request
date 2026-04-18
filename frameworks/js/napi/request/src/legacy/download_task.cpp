@@ -17,6 +17,10 @@
 
 #include <pthread.h>
 
+#include <cerrno>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "constant.h"
 #include "log.h"
 
@@ -44,9 +48,15 @@ DownloadTask::~DownloadTask()
 FILE *DownloadTask::OpenDownloadFile() const
 {
     auto downloadFile = option_.fileDir_ + '/' + option_.filename_;
-    FILE *filp = fopen(downloadFile.c_str(), "w+");
+    int fd = open(downloadFile.c_str(), O_RDWR | O_CREAT | O_NOFOLLOW | O_TRUNC | O_CLOEXEC, 0644);
+    if (fd < 0) {
+        REQUEST_HILOGE("open download file failed, errno=%{public}d", errno);
+        return nullptr;
+    }
+    FILE *filp = fdopen(fd, "w+");
     if (filp == nullptr) {
-        REQUEST_HILOGE("open download file failed");
+        REQUEST_HILOGE("fdopen failed, errno=%{public}d", errno);
+        close(fd);
     }
     return filp;
 }
@@ -80,7 +90,10 @@ void DownloadTask::NotifyDone(bool successful, const std::string &errMsg)
 
         if (!successful) {
             REQUEST_HILOGE("remove download file");
-            remove((option_.fileDir_ + '/' + option_.filename_).c_str());
+            int ret = remove((option_.fileDir_ + '/' + option_.filename_).c_str());
+            if (ret != 0) {
+                REQUEST_HILOGW("Remove download file failed, errno: %{public}d", errno);
+            }
         }
     }
 

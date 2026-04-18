@@ -19,6 +19,7 @@
 #include <securec.h>
 #include <sys/stat.h>
 
+#include <cerrno>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -436,10 +437,17 @@ void RequestAction::StandardizeFileSpec(FileSpec &file)
 bool RequestAction::IsPathValid(const std::string &filePath)
 {
     auto path = filePath.substr(0, filePath.rfind('/'));
-    char resolvedPath[PATH_MAX + 1] = { 0 };
-    if (path.length() > PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr
-        || strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
+    if (path.length() > PATH_MAX) {
         REQUEST_HILOGE("invalid file path!");
+        return false;
+    }
+    char resolvedPath[PATH_MAX + 1] = { 0 };
+    if (realpath(path.c_str(), resolvedPath) == nullptr) {
+        REQUEST_HILOGE("realpath failed, errno: %{public}d", errno);
+        return false;
+    }
+    if (strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
+        REQUEST_HILOGE("resolved path mismatch!");
         return false;
     }
     return true;
@@ -576,9 +584,9 @@ ExceptionErrorCode RequestAction::CheckUserFileSpec(
             std::make_shared<AppFileService::ModuleFileUri::FileUri>(file.uri);
         std::string realPath = fileUri->GetRealPath();
         if (config.firstInit) {
-            file.fd = open(realPath.c_str(), O_RDWR | O_TRUNC);
+            file.fd = open(realPath.c_str(), O_RDWR | O_TRUNC | O_CLOEXEC);
         } else {
-            file.fd = open(realPath.c_str(), O_RDWR | O_APPEND);
+            file.fd = open(realPath.c_str(), O_RDWR | O_APPEND | O_CLOEXEC);
         }
     }
     if (file.fd < 0) {
@@ -860,7 +868,10 @@ ExceptionErrorCode RequestAction::CreateTasks(std::vector<TaskBuilder> &builders
 void RequestAction::RemoveFile(const std::string &filePath)
 {
     auto removeFile = [filePath]() -> void {
-        std::remove(filePath.c_str());
+        int ret = std::remove(filePath.c_str());
+        if (ret != 0) {
+            REQUEST_HILOGW("Remove file failed, filePath: %{public}s, errno: %{public}d", filePath.c_str(), errno);
+        }
         return;
     };
     ffrt::submit(removeFile, {}, {}, ffrt::task_attr().name("Os_Request_Rm").qos(ffrt::qos_default));
