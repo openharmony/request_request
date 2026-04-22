@@ -53,7 +53,7 @@ std::map<std::string, CJRequestTask *> CJRequestTask::taskMap_;
 
 std::mutex CJRequestTask::pathMutex_;
 std::map<std::string, int32_t> CJRequestTask::pathMap_;
-std::map<std::string, std::tuple<bool, uint32_t>> CJRequestTask::pathMapV2_;
+std::map<std::string, std::tuple<bool, bool, uint32_t>> CJRequestTask::pathMapV2_;
 
 bool CJRequestTask::register_ = false;
 
@@ -226,6 +226,15 @@ static bool SubAcl(const std::string &path)
     return true;
 }
 
+static void RollbackPaths(const std::vector<std::pair<std::string, bool>> &paths)
+{
+    for (auto &path : paths) {
+        if (!CJRequestTask::SubOnePathToMap(path.first, path.second)) {
+            REQUEST_HILOGE("RollbackPaths SubOnePathToMap failed: %{public}s", path.first.c_str());
+        }
+    }
+}
+
 bool CJRequestTask::SetPathPermissionSince20(const std::string &filepath, bool needWritePermission)
 {
     std::vector<std::pair<std::string, bool>> paths = SelectPath(SplitPath(filepath));
@@ -238,9 +247,7 @@ bool CJRequestTask::SetPathPermissionSince20(const std::string &filepath, bool n
     completedPaths.reserve(paths.size());
     for (auto &elem : paths) {
         if (!AddOnePathToMap(elem.first, elem.second, needWritePermission)) {
-            for (auto &path : completedPaths) {
-                SubOnePathToMap(path.first, path.second);
-            }
+            RollbackPaths(completedPaths);
             return false;
         }
         completedPaths.emplace_back(elem);
@@ -359,7 +366,9 @@ void CJRequestTask::RemovePathMapSince20(const std::string &filepath)
     }
 
     for (auto &elem : paths) {
-        SubOnePathToMap(elem.first, elem.second);
+        if (!SubOnePathToMap(elem.first, elem.second)) {
+            REQUEST_HILOGE("RemovePathMap SubOnePathToMap failed: %{public}s", elem.first.c_str());
+        }
     }
 }
 
@@ -591,13 +600,17 @@ bool CJRequestTask::AddOnePathToMap(const std::string &path, bool isFile, bool n
         if (!AddAcl(path, isFile, needWritePermission)) {
             return false;
         }
-        pathMapV2_.emplace(path, std::tuple(isFile, 1));
+        pathMapV2_.emplace(path, std::tuple(isFile, needWritePermission, 1));
     } else {
-        if (!AddAcl(path, isFile, needWritePermission)) {
-            return false;
+        auto &[iFile, hasWritePermission, count] = it->second;
+        bool newHasWrite = hasWritePermission || needWritePermission;
+        if (newHasWrite && !hasWritePermission) {
+            if (!AddAcl(path, isFile, true)) {
+                return false;
+            }
         }
-        auto &[iFile, count] = it->second;
         iFile = isFile;
+        hasWritePermission = newHasWrite;
         count++;
     }
     return true;
@@ -611,12 +624,13 @@ bool CJRequestTask::SubOnePathToMap(const std::string &path, bool isFile)
         REQUEST_HILOGE("SubOnePathToMap path not found: %{public}s", path.c_str());
         return false;
     }
-    auto &[iFile, count] = it->second;
+    auto &[iFile, hasWritePermission, count] = it->second;
     if (iFile != isFile) {
         REQUEST_HILOGE("SubOnePathToMap path changed: %{public}s", path.c_str());
     }
     if (count <= 0) {
         REQUEST_HILOGE("SubOnePathToMap count is 0: %{public}s", path.c_str());
+        SubAcl(path);
         pathMapV2_.erase(it);
         return false;
     }

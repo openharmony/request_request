@@ -62,7 +62,7 @@ public:
 
     static std::mutex pathMutex_;
     static std::map<std::string, int32_t> pathMap_;
-    static std::map<std::string, std::tuple<bool, uint32_t>> pathMapV2_;
+    static std::map<std::string, std::tuple<bool, bool, uint32_t>> pathMapV2_;
     static void AddPathMap(const std::string &filepath, const std::string &baseDir);
     static void RemovePathMap(const std::string &filepath);
     static void RemovePathMapSince20(const std::string &filepath);
