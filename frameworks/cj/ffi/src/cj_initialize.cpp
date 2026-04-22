@@ -56,9 +56,6 @@ static constexpr uint32_t MAX_UPLOAD_FILES = 100;
 static constexpr uint32_t FILE_PERMISSION = 0644;
 static const mode_t WRITE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 static const mode_t READ_MODE = S_IRUSR | S_IWUSR | S_IRGRP;
-static const std::string AREA1 = "/data/storage/el1/base";
-static const std::string AREA2 = "/data/storage/el2/base";
-static const std::string AREA5 = "/data/storage/el5/base";
 
 std::string GetHostnameFromURL(const std::string &url)
 {
@@ -649,7 +646,7 @@ ExceptionError CJInitialize::UploadBodyFileProcV2(std::string &path, Config &con
             FAULT_EVENT, DfxErrorCode::STANDARD_FAULT_01, config.bundleName, "", std::to_string(ret));
     };
 
-    bool setRes = CJRequestTask::SetPathPermission(path);
+    bool setRes = CJRequestTask::SetPathPermission(path, true);
     int32_t retClose = fclose(bodyFile);
     if (retClose != 0) {
         REQUEST_HILOGE("upload body fclose fail: %{public}d", retClose);
@@ -822,7 +819,7 @@ ExceptionError CJInitialize::CheckFileSpec(const std::shared_ptr<OHOS::AbilityRu
             return err;
         }
 
-        if (!CJRequestTask::SetPathPermission(file.uri)) {
+        if (!CJRequestTask::SetPathPermission(file.uri, config.action == Action::DOWNLOAD)) {
             err.code = ExceptionErrorCode::E_FILE_IO;
             err.errInfo = "set path permission fail";
             return err;

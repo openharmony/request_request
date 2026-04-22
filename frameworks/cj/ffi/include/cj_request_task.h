@@ -62,17 +62,21 @@ public:
 
     static std::mutex pathMutex_;
     static std::map<std::string, int32_t> pathMap_;
+    static std::map<std::string, std::tuple<bool, bool, uint32_t>> pathMapV2_;
     static void AddPathMap(const std::string &filepath, const std::string &baseDir);
     static void RemovePathMap(const std::string &filepath);
+    static void RemovePathMapSince20(const std::string &filepath);
     static void ResetDirAccess(const std::string &filepath);
     static void RemoveDirsPermission(const std::vector<std::string> &dirs);
 
     static bool register_;
     static void RegisterForegroundResume();
 
-    static bool SetPathPermission(const std::string &filepath);
+    static bool SetPathPermission(const std::string &filepath, bool needWritePermission = true);
+    static bool SetPathPermissionSince20(const std::string &filepath, bool needWritePermission);
     static bool SetDirsPermission(std::vector<std::string> &dirs);
-
+    static bool AddOnePathToMap(const std::string &path, bool isFile, bool needWritePermission = true);
+    static bool SubOnePathToMap(const std::string &path, bool isFile);
     std::string GetTidStr() const;
     void SetTid();
 
