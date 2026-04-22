@@ -97,4 +97,11 @@ rust::string GetHttpAddress(const HttpClientResponse &response)
     return rust::string::lossy(statistics.serverIpAddress.address_);
 }
 
+bool HasDefaultNetWrapper()
+{
+    bool hasDefaultNet = false;
+    int32_t ret = NetConnClient::GetInstance().HasDefaultNet(hasDefaultNet);
+    return (ret == 0 && hasDefaultNet);
+}
+
 } // namespace OHOS::Request

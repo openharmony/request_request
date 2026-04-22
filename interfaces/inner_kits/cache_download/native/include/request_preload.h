@@ -57,6 +57,40 @@ enum class CacheStrategy : uint32_t {
     LAZY = 1,
 };
 
+/**
+ * Task retry configuration.
+ */
+struct RetryOptions {
+    /**
+     * Maximum number of retry attempts.
+     * The default value is 1.
+     * The minimum value is 0.
+     * The maximum value is 10.
+     * When set to 0, no retries will be performed.
+     */
+    int32_t maxRetryCount;
+};
+
+/**
+ * Task timeout configuration.
+ */
+struct TimeoutOptions {
+    /**
+     * Network availability check timeout, in seconds.
+     * The default value is 20.
+     * The minimum value is 0.
+     * The maximum value is 20.
+     * When set to 0, no check will be performed.
+     */
+    int32_t networkCheckTimeout;
+    /**
+     * Complete HTTP request-response cycle timeout, in seconds.
+     * The default value is 60.
+     * The minimum value is 1.
+     */
+    int32_t httpTotalTimeout;
+};
+
 template<typename T> class Slice {
 public:
     Slice(std::unique_ptr<rust::Slice<T>> &&slice);
@@ -164,6 +198,8 @@ struct PreloadOptions {
     std::vector<std::tuple<std::string, std::string>> headers;
     SslType sslType;
     std::string caPath;
+    RetryOptions retry;
+    TimeoutOptions timeout;
 };
 
 class Preload {
@@ -182,6 +218,9 @@ public:
 
     void ClearMemoryCache();
     void ClearFileCache();
+
+    void SetGlobalRetryOptions(const RetryOptions &options);
+    void SetGlobalTimeoutOptions(const TimeoutOptions &options);
 
     std::shared_ptr<PreloadHandle> load(std::string const &url, std::unique_ptr<PreloadCallback>,
         std::unique_ptr<PreloadOptions> options = nullptr, bool update = false);

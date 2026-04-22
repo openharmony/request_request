@@ -34,6 +34,8 @@ rust::vec<rust::string> GetResolvConf();
 
 rust::string GetHttpAddress(const HttpClientResponse &response);
 
+bool HasDefaultNetWrapper();
+
 inline std::unique_ptr<HttpClientRequest> NewHttpClientRequest()
 {
     return std::make_unique<HttpClientRequest>();

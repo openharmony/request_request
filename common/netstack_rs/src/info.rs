@@ -274,7 +274,7 @@ impl DownloadInfo {
     /// Creates a new `DownloadInfo` instance with default values.
     ///
     /// Initializes all nested structures with their default values.
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             resource: ResourceInfo::new(),
             network: NetworkInfo::new(),

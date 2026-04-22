@@ -33,15 +33,37 @@ use crate::info::RustDownloadInfo;
 use crate::services::{CacheDownloadService, PreloadCallback};
 
 /// Interval for reporting progress updates.
-///
-/// Progress updates are only reported once every PROGRESS_INTERVAL calls to
-/// avoid excessive callback invocations during rapid data reception.
 const PROGRESS_INTERVAL: usize = 8;
 
-/// Primary callback handler for managing download operations and notifications.
+/// Configuration options for download task retry and timeout behavior.
 ///
-/// Handles download lifecycle events, cache updates, progress reporting,
-/// and callback management for download operations.
+/// Groups related timeout and retry settings into a single structure
+/// for cleaner function signatures.
+pub(crate) struct TaskConfig {
+    /// Maximum retry count (task override or global setting)
+    pub(crate) max_retry: Option<usize>,
+    /// Network check timeout in seconds (task override or global setting)
+    pub(crate) network_check_timeout: Option<u32>,
+    /// HTTP total timeout in seconds (task override or global setting)
+    pub(crate) http_total_timeout: Option<u32>,
+}
+
+impl TaskConfig {
+    /// Creates a new TaskConfig with the specified values.
+    pub(crate) fn new(
+        max_retry: Option<usize>,
+        network_check_timeout: Option<u32>,
+        http_total_timeout: Option<u32>,
+    ) -> Self {
+        Self {
+            max_retry,
+            network_check_timeout,
+            http_total_timeout,
+        }
+    }
+}
+
+/// Primary callback handler for managing download operations and notifications.
 pub(crate) struct PrimeCallback {
     /// Unique identifier for the download task
     task_id: TaskId,
@@ -57,23 +79,18 @@ pub(crate) struct PrimeCallback {
     progress_restriction: ProgressRestriction,
     /// Sequence number for task ordering
     seq: usize,
+    /// Task configuration (retry and timeout settings)
+    config: TaskConfig,
 }
 
 /// Restricts the frequency of progress updates.
-///
-/// Prevents excessive progress notifications by tracking the last reported
-/// progress value and implementing a counter-based throttling mechanism.
 struct ProgressRestriction {
-    /// Last processed download position
     processed: u64,
-    /// Counter for throttling progress updates
     count: usize,
-    /// Whether any data has been received yet
     data_receive: bool,
 }
 
 impl ProgressRestriction {
-    /// Creates a new progress restriction with default initial values.
     fn new() -> Self {
         Self {
             processed: 0,
@@ -85,17 +102,6 @@ impl ProgressRestriction {
 
 impl PrimeCallback {
     /// Creates a new prime callback for a download task.
-    ///
-    /// # Parameters
-    /// - `task_id`: Unique identifier for the download task
-    /// - `cache_manager`: Cache manager for storing downloaded data
-    /// - `finish`: Flag to indicate when the download has finished
-    /// - `state`: Current state of the download
-    /// - `callbacks`: Queue of callbacks to notify about download events
-    /// - `seq`: Sequence number for task ordering
-    ///
-    /// # Returns
-    /// A new `PrimeCallback` instance
     pub(crate) fn new(
         task_id: TaskId,
         cache_manager: &'static CacheManager,
@@ -103,6 +109,7 @@ impl PrimeCallback {
         state: Arc<AtomicUsize>,
         callbacks: Arc<Mutex<VecDeque<Box<dyn PreloadCallback>>>>,
         seq: usize,
+        config: TaskConfig,
     ) -> Self {
         Self {
             task_id: task_id.clone(),
@@ -112,20 +119,28 @@ impl PrimeCallback {
             callbacks,
             progress_restriction: ProgressRestriction::new(),
             seq,
+            config,
         }
     }
 
-    /// Sets the download state to running.
     pub(crate) fn set_running(&self) {
         self.state.store(RUNNING, Ordering::Release);
     }
 
-    /// Gets the task ID associated with this callback.
-    ///
-    /// # Returns
-    /// A copy of the task ID
     pub(crate) fn task_id(&self) -> TaskId {
         self.task_id.clone()
+    }
+
+    pub(crate) fn max_retry(&self) -> Option<usize> {
+        self.config.max_retry
+    }
+
+    pub(crate) fn network_check_timeout(&self) -> Option<u32> {
+        self.config.network_check_timeout
+    }
+
+    pub(crate) fn http_total_timeout(&self) -> Option<u32> {
+        self.config.http_total_timeout
     }
 }
 

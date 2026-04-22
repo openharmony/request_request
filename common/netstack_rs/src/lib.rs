@@ -63,6 +63,11 @@ pub mod error;
 /// implementation.
 mod wrapper;
 
+/// Network detection functions.
+///
+/// Re-export from wrapper module for checking network availability.
+pub use wrapper::has_default_net;
+
 /// Types for download and performance information.
 ///
 /// This module provides structures for tracking download progress and
@@ -82,3 +87,23 @@ pub(crate) const LOG_LABEL: HiLogLabel = HiLogLabel {
     domain: 0xD001C50,
     tag: "PreloadNative",
 };
+
+// Retry constants
+/// Default maximum retry count for download tasks.
+pub const DEFAULT_MAX_RETRY_COUNT: usize = 1;
+/// Minimum retry count (disables retry).
+pub const MIN_RETRY_COUNT: usize = 0;
+/// Maximum allowed retry count.
+pub const MAX_RETRY_COUNT: usize = 10;
+
+// Timeout constants
+/// Default network check timeout in seconds.
+pub const DEFAULT_NETWORK_CHECK_TIMEOUT: u32 = 20;
+/// Minimum network check timeout (skip network check).
+pub const MIN_NETWORK_CHECK_TIMEOUT: u32 = 0;
+/// Maximum network check timeout in seconds.
+pub const MAX_NETWORK_CHECK_TIMEOUT: u32 = 20;
+/// Default HTTP total timeout in seconds.
+pub const DEFAULT_HTTP_TOTAL_TIMEOUT: u32 = 60;
+/// Minimum HTTP total timeout in seconds.
+pub const MIN_HTTP_TOTAL_TIMEOUT: u32 = 1;
