@@ -67,6 +67,10 @@ pub struct CallbackWrapper {
     tries: usize,
     /// Current progress in bytes
     current: u64,
+    /// Maximum retry count (task override or global setting)
+    max_retry: Option<usize>,
+    /// Network check timeout in seconds (task override or global setting)
+    network_check_timeout: Option<u32>,
 }
 
 impl CallbackWrapper {
@@ -105,7 +109,27 @@ impl CallbackWrapper {
             info_mgr,
             tries: 0,
             current,
+            max_retry: None,
+            network_check_timeout: None,
         }
+    }
+
+    /// Sets the retry and timeout configuration for this callback.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_retry` - Maximum retry count (None uses default 3)
+    /// * `network_check_timeout` - Network check timeout in seconds (None uses default 20)
+    /// * `tries` - Current retry attempt count
+    pub(crate) fn set_config(
+        &mut self,
+        max_retry: Option<usize>,
+        network_check_timeout: Option<u32>,
+        tries: usize,
+    ) {
+        self.max_retry = max_retry;
+        self.network_check_timeout = network_check_timeout;
+        self.tries = tries;
     }
 }
 
@@ -180,6 +204,7 @@ impl CallbackWrapper {
 
         // Convert FFI error to Rust error
         let error = HttpClientError::from_ffi(error);
+        let info = self.info.clone();
 
         // Handle write errors as cancellations
         if *error.code() == HttpErrorCode::HttpWriteError {
@@ -187,46 +212,128 @@ impl CallbackWrapper {
             return;
         }
 
+        // Get configurable parameters (default values if not set)
+        let max_retry = self.max_retry.unwrap_or(crate::DEFAULT_MAX_RETRY_COUNT);
+        let network_check_timeout = self
+            .network_check_timeout
+            .unwrap_or(crate::DEFAULT_NETWORK_CHECK_TIMEOUT);
+
+        // Check if already exceeded max retry count
+        if self.tries >= max_retry {
+            // Final failure, call user callback
+            let Some(mut callback) = self.inner.take() else {
+                return;
+            };
+            callback.on_fail(error, info);
+            return;
+        }
+
         // Take the user callback if available
-        let Some(callback) = self.inner.take() else {
+        let Some(mut callback) = self.inner.take() else {
             return;
         };
 
-        let info = self.info.clone();
-        // Attempt to create a new task for retrying
-        let (new_task, mut new_callback) = match self.create_new_task(callback, request) {
-            NewTaskResult::Success(new_task, new_callback) => (new_task, new_callback),
-            NewTaskResult::Failed(mut callback) => {
-                // If task creation failed, call the fail callback
-                callback.on_fail(error, info);
-                return;
-            }
-        };
-
-        // Retry immediately if we haven't exceeded the retry limit
-        if self.tries < 3 {
+        // Check network availability
+        if ffi::HasDefaultNetWrapper() {
+            // Network available, immediately retry
             self.tries += 1;
-            new_callback.tries = self.tries;
+            let (new_task, new_callback) = match self.create_new_task(callback, request) {
+                NewTaskResult::Success(new_task, new_callback) => (new_task, new_callback),
+                NewTaskResult::Failed(mut cb) => {
+                    cb.on_fail(error, info);
+                    return;
+                }
+            };
             Self::start_new_task(new_task, new_callback);
             return;
         }
 
-        // For final attempt, use a spawned task to wait for potential reset signal
-        let reset = self.reset.clone();
+        // No network available
+        if network_check_timeout == 0 {
+            // networkCheckTimeout=0, directly fail without waiting
+            callback.on_fail(error, info);
+            return;
+        }
+
+        // Create new task and wait for network recovery
+        let (new_task, new_callback) = match self.create_new_task(callback, request) {
+            NewTaskResult::Success(new_task, new_callback) => (new_task, new_callback),
+            NewTaskResult::Failed(mut cb) => {
+                cb.on_fail(error, info);
+                return;
+            }
+        };
+
+        // Wait for network with retry loop
+        Self::wait_for_network_and_retry(
+            new_task,
+            new_callback,
+            error,
+            info,
+            self.reset.clone(),
+            max_retry,
+            network_check_timeout,
+        );
+    }
+
+    /// Waits for network availability and retries the task.
+    ///
+    /// Performs active network detection combined with passive callback waiting.
+    /// Implements retry loop: timeout → tries++ → continue waiting.
+    ///
+    /// # Arguments
+    ///
+    /// * `task` - The HTTP task to retry (already created, not yet started)
+    /// * `callback` - The callback wrapper for the task
+    /// * `error` - The error information
+    /// * `info` - Download information
+    /// * `reset` - Atomic flag for passive network callback
+    /// * `max_retry` - Maximum retry count
+    /// * `timeout_secs` - Maximum time to wait for network per retry attempt
+    fn wait_for_network_and_retry(
+        task: SharedPtr<ffi::HttpClientTask>,
+        mut callback: Box<CallbackWrapper>,
+        error: HttpClientError,
+        info: DownloadInfo,
+        reset: Arc<AtomicBool>,
+        max_retry: usize,
+        timeout_secs: u32,
+    ) {
         ffrt_spawn(move || {
-            // Wait up to 20 seconds for a reset signal
-            for _ in 0..20 {
-                ffrt_sleep(1000);
-                if reset.load(Ordering::SeqCst) {
-                    // If reset is signaled, start the new task
-                    Self::start_new_task(new_task, new_callback);
-                    reset.store(false, Ordering::SeqCst);
+            loop {
+                // Check if reached max retry count
+                if callback.tries >= max_retry {
+                    // Final failure
+                    if let Some(mut cb) = callback.inner.take() {
+                        cb.on_fail(error, info);
+                    }
                     return;
                 }
-            }
-            // If no reset signal after waiting, call the fail callback
-            if let Some(mut callback) = new_callback.inner {
-                callback.on_fail(error, info);
+
+                // Wait for network (up to timeout_secs)
+                for _ in 0..timeout_secs {
+                    ffrt_sleep(1000);
+
+                    // Active network detection
+                    if ffi::HasDefaultNetWrapper() {
+                        // Network available, start retry
+                        callback.tries += 1;
+                        Self::start_new_task(task, callback);
+                        return;
+                    }
+
+                    // Check passive network callback signal
+                    if reset.load(Ordering::SeqCst) {
+                        // Network callback triggered, start retry
+                        callback.tries += 1;
+                        reset.store(false, Ordering::SeqCst);
+                        Self::start_new_task(task, callback);
+                        return;
+                    }
+                }
+
+                // Timeout exceeded, tries++, continue waiting loop
+                callback.tries += 1;
             }
         });
     }
@@ -331,14 +438,16 @@ impl CallbackWrapper {
             return NewTaskResult::Failed(callback);
         }
         // Create a new callback wrapper with the provided callback
-        let new_callback = Box::new(CallbackWrapper::from_callback(
+        let mut new_callback = Box::new(CallbackWrapper::from_callback(
             callback,
             self.reset.clone(),
             self.task.clone(),
             self.task_id.clone(),
             self.info_mgr.clone(),
-            0,
+            self.current,
         ));
+        // Copy configuration and tries from current callback to new callback
+        new_callback.set_config(self.max_retry, self.network_check_timeout, self.tries);
         // Return success with the new task and callback
         NewTaskResult::Success(new_task, new_callback)
     }
@@ -367,6 +476,17 @@ impl CallbackWrapper {
 // implementation
 unsafe impl Send for HttpClientTask {}
 unsafe impl Sync for HttpClientTask {}
+
+/// Checks if there is a default network available.
+///
+/// Uses the NetConnClient to actively detect network availability.
+///
+/// # Returns
+///
+/// `true` if a default network is available, `false` otherwise
+pub fn has_default_net() -> bool {
+    ffi::HasDefaultNetWrapper()
+}
 
 // C++ FFI bridge definitions - do not generate /// comments around this block
 #[allow(unused_unsafe)]
@@ -470,6 +590,9 @@ pub(crate) mod ffi {
 
         fn GetErrorCode(self: &HttpClientError) -> HttpErrorCode;
         fn GetErrorMessage(self: &HttpClientError) -> &CxxString;
+
+        // Network check function for active detection
+        fn HasDefaultNetWrapper() -> bool;
     }
 
     #[repr(i32)]

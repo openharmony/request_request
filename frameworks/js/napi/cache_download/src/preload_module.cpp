@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <memory>
 #include <optional>
 
@@ -48,10 +49,45 @@ constexpr int64_t MAX_INFO_LIST_SIZE = 8192;
 const std::string INTERNET_PERMISSION = "ohos.permission.INTERNET";
 const std::string GET_NETWORK_INFO_PERMISSION = "ohos.permission.GET_NETWORK_INFO";
 
+// Retry constants
+constexpr int64_t DEFAULT_MAX_RETRY_COUNT = 1;
+constexpr int64_t MIN_RETRY_COUNT = 0;
+constexpr int64_t MAX_RETRY_COUNT = 10;
+
+// Timeout constants
+constexpr int64_t DEFAULT_NETWORK_CHECK_TIMEOUT = 20;
+constexpr int64_t MIN_NETWORK_CHECK_TIMEOUT = 0;
+constexpr int64_t MAX_NETWORK_CHECK_TIMEOUT = 20;
+constexpr int64_t DEFAULT_HTTP_TOTAL_TIMEOUT = 60;
+constexpr int64_t MIN_HTTP_TOTAL_TIMEOUT = 1;
+constexpr int64_t MAX_HTTP_TOTAL_TIMEOUT = static_cast<int64_t>(std::numeric_limits<uint32_t>::max() / 1000);
+
+struct Range {
+    int64_t minVal;
+    int64_t maxVal;
+};
+
+bool ParseNumberField(napi_env env, napi_value obj, const char *fieldName, Range range, int32_t &outValue)
+{
+    napi_value field = GetNamedProperty(env, obj, fieldName);
+    if (IsValueMissingOrSkipped(env, field)) {
+        return true;
+    }
+    if (GetValueType(env, field) != napi_number) {
+        return false;
+    }
+    int64_t value = GetValueNum(env, field);
+    if (value < range.minVal || value > range.maxVal) {
+        return false;
+    }
+    outValue = static_cast<int32_t>(value);
+    return true;
+}
+
 napi_status CallbackInfo::RegisterCallback(napi_value cb)
 {
     std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
-    
+
     for (auto &[isActive, ref] : allCb_) {
         napi_value existingCallback = nullptr;
         napi_get_reference_value(env_, ref, &existingCallback);
@@ -70,7 +106,7 @@ napi_status CallbackInfo::RegisterCallback(napi_value cb)
         }
         return napi_ok;
     }
-    
+
     napi_ref ref;
     napi_status status = napi_create_reference(env_, cb, 1, &ref);
     if (status != napi_ok) {
@@ -86,20 +122,20 @@ napi_status CallbackInfo::RegisterCallback(napi_value cb)
 napi_status CallbackInfo::RemoveCallback(napi_value cb)
 {
     std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
-    
+
     if (validCbNum == 0) {
         return napi_ok;
     }
 
     if (cb == nullptr) {
         if (!isInvoked_) {
-            for (const auto& callback : allCb_) {
+            for (const auto &callback : allCb_) {
                 napi_delete_reference(env_, callback.second);
             }
             allCb_.clear();
         } else {
             toDeleteCount_ = allCb_.size();
-            for (auto& callback : allCb_) {
+            for (auto &callback : allCb_) {
                 callback.first = false;
             }
             validCbNum = 0;
@@ -107,10 +143,10 @@ napi_status CallbackInfo::RemoveCallback(napi_value cb)
         return napi_ok;
     }
 
-    auto it = std::find_if(allCb_.begin(), allCb_.end(), [this, cb](const auto& callback) {
+    auto it = std::find_if(allCb_.begin(), allCb_.end(), [this, cb](const auto &callback) {
         napi_value referenceValue = nullptr;
         napi_get_reference_value(env_, callback.second, &referenceValue);
-        
+
         bool isEqual = false;
         napi_strict_equals(env_, cb, referenceValue, &isEqual);
         return isEqual;
@@ -134,14 +170,13 @@ void CallbackInfo::CleanupCallbacks()
         return;
     }
     // STL erase-remove_if
-    auto newEnd = std::remove_if(allCb_.begin(), allCb_.end(),
-        [this](const std::pair<bool, napi_ref>& cbPair) -> bool {
-            if (!cbPair.first) {
-                napi_delete_reference(env_, cbPair.second);
-                return true; // will be erased
-            }
-            return false;
-        });
+    auto newEnd = std::remove_if(allCb_.begin(), allCb_.end(), [this](const std::pair<bool, napi_ref> &cbPair) -> bool {
+        if (!cbPair.first) {
+            napi_delete_reference(env_, cbPair.second);
+            return true; // will be erased
+        }
+        return false;
+    });
     size_t deletedCount = static_cast<size_t>(std::distance(newEnd, allCb_.end()));
     allCb_.erase(newEnd, allCb_.end());
     toDeleteCount_ = (toDeleteCount_ > deletedCount) ? (toDeleteCount_ - deletedCount) : 0;
@@ -234,7 +269,7 @@ napi_status CallbackManager::RegisterCallback(const std::string &url, CallbackTy
     }
     std::shared_ptr<CallbackInfo> info = targetMap[url];
     mgrMutex_.unlock();
-    
+
     return info->RegisterCallback(cb);
 }
 
@@ -254,8 +289,8 @@ napi_status CallbackManager::RemoveCallback(const std::string &url, CallbackType
     return info->RemoveCallback(cb);
 }
 
-void CallbackManager::InvokeSuccessCallbacks(const std::string &url, std::shared_ptr<Data> data, napi_env env,
-                                             const std::string &taskId)
+void CallbackManager::InvokeSuccessCallbacks(
+    const std::string &url, std::shared_ptr<Data> data, napi_env env, const std::string &taskId)
 {
     REQUEST_HILOGD("Invoking success callbacks for URL");
     mgrMutex_.lock();
@@ -270,18 +305,17 @@ void CallbackManager::InvokeSuccessCallbacks(const std::string &url, std::shared
     int32_t ret = napi_send_event(
         info->env_,
         [url, info]() {
-            napi_value values[2] = {nullptr};
+            napi_value values[2] = { nullptr };
             info->InvokeSuccessCallbacks(values);
         },
-        napi_eprio_high,
-        "request:cachedownload.download");
+        napi_eprio_high, "request:cachedownload.download");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
     }
 }
 
-void CallbackManager::InvokeErrorCallbacks(const std::string &url, std::shared_ptr<DownloadError> error, napi_env env,
-                                           const std::string &taskId)
+void CallbackManager::InvokeErrorCallbacks(
+    const std::string &url, std::shared_ptr<DownloadError> error, napi_env env, const std::string &taskId)
 {
     REQUEST_HILOGD("Invoking error callbacks for URL");
     mgrMutex_.lock();
@@ -296,19 +330,18 @@ void CallbackManager::InvokeErrorCallbacks(const std::string &url, std::shared_p
     int32_t ret = napi_send_event(
         info->env_,
         [url, info, error]() {
-            napi_value values[2] = {nullptr};
+            napi_value values[2] = { nullptr };
 
             napi_value value = nullptr;
             napi_create_object(info->env_, &value);
-            napi_set_named_property(info->env_, value, "errorCode",
-                                    Convert2JSValue(info->env_, static_cast<uint32_t>(error->errorCode)));
+            napi_set_named_property(
+                info->env_, value, "errorCode", Convert2JSValue(info->env_, static_cast<uint32_t>(error->errorCode)));
             napi_set_named_property(info->env_, value, "message", Convert2JSValue(info->env_, error->message));
             values[0] = value;
 
             info->InvokeErrorCallbacks(values);
         },
-        napi_eprio_high,
-        "request:cachedownload.download");
+        napi_eprio_high, "request:cachedownload.download");
     if (ret != napi_ok) {
         REQUEST_HILOGE("napi_send_event failed: %{public}d", ret);
     }
@@ -354,7 +387,7 @@ PreloadCallback CreatePreloadCallback(napi_env env, const std::string url)
         .OnFail =
             [env, url, &cbManager](const PreloadError &error, const std::string &taskId) {
                 REQUEST_HILOGD("OnFail called with url");
-                ErrorCode errorCode = ErrorCode::OTHERS;  // Default to OTHERS
+                ErrorCode errorCode = ErrorCode::OTHERS; // Default to OTHERS
                 ErrorKind kind = error.GetErrorKind();
                 switch (kind) {
                     case ErrorKind::DNS:
@@ -415,6 +448,15 @@ napi_value download(napi_env env, napi_callback_info info)
     }
     bool isUpdate = true;
     GetCacheStrategy(env, args[1], isUpdate);
+    // 参数校验：超出范围抛出错误
+    if (!SetOptionsRetry(env, args[1], options)) {
+        ThrowError(env, E_PARAMETER_CHECK, "maxRetryCount out of range [0, 10]");
+        return nullptr;
+    }
+    if (!SetOptionsTimeout(env, args[1], options)) {
+        ThrowError(env, E_PARAMETER_CHECK, "timeout parameter out of range");
+        return nullptr;
+    }
     auto jsCallback = CreatePreloadCallback(env, url);
     Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(jsCallback), std::move(options), isUpdate);
     return nullptr;
@@ -550,7 +592,7 @@ napi_value onDownloadSuccess(napi_env env, napi_callback_info info)
         ThrowError(env, E_PARAMETER_CHECK, "parameter obtain error");
         return nullptr;
     }
-    
+
     // parameter check
     if (argc < TWO_ARG) {
         ThrowError(env, E_PARAMETER_CHECK, "missing mandatory parameters, wrong number of arguments");
@@ -699,6 +741,71 @@ napi_value offDownloadError(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value setGlobalRetryOptions(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1] = { nullptr };
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
+
+    RetryOptions retryOptions = { .maxRetryCount = static_cast<int32_t>(DEFAULT_MAX_RETRY_COUNT) };
+
+    if (argc == 0 || IsValueMissingOrSkipped(env, args[0])) {
+        Preload::GetInstance()->SetGlobalRetryOptions(retryOptions);
+        return nullptr;
+    }
+
+    if (GetValueType(env, args[0]) != napi_object) {
+        ThrowError(env, E_PARAMETER_CHECK, "parameter type error");
+        return nullptr;
+    }
+
+    if (!ParseNumberField(env, args[0], "maxRetryCount", {MIN_RETRY_COUNT, MAX_RETRY_COUNT},
+        retryOptions.maxRetryCount)) {
+        ThrowError(env, E_PARAMETER_CHECK, "maxRetryCount type error or out of range [0, 10]");
+        return nullptr;
+    }
+
+    Preload::GetInstance()->SetGlobalRetryOptions(retryOptions);
+    return nullptr;
+}
+
+napi_value setGlobalTimeoutOptions(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1] = { nullptr };
+    PRELOAD_NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr), "napi_get_cb_info failed");
+
+    TimeoutOptions timeoutOptions = {
+        .networkCheckTimeout = static_cast<int32_t>(DEFAULT_NETWORK_CHECK_TIMEOUT),
+        .httpTotalTimeout = static_cast<int32_t>(DEFAULT_HTTP_TOTAL_TIMEOUT)
+    };
+
+    if (argc == 0 || IsValueMissingOrSkipped(env, args[0])) {
+        Preload::GetInstance()->SetGlobalTimeoutOptions(timeoutOptions);
+        return nullptr;
+    }
+
+    if (GetValueType(env, args[0]) != napi_object) {
+        ThrowError(env, E_PARAMETER_CHECK, "parameter type error");
+        return nullptr;
+    }
+
+    if (!ParseNumberField(env, args[0], "networkCheckTimeout", {MIN_NETWORK_CHECK_TIMEOUT, MAX_NETWORK_CHECK_TIMEOUT},
+        timeoutOptions.networkCheckTimeout)) {
+        ThrowError(env, E_PARAMETER_CHECK, "networkCheckTimeout type error or out of range [0, 20]");
+        return nullptr;
+    }
+
+    if (!ParseNumberField(env, args[0], "httpTotalTimeout", {MIN_HTTP_TOTAL_TIMEOUT, MAX_HTTP_TOTAL_TIMEOUT},
+        timeoutOptions.httpTotalTimeout)) {
+        ThrowError(env, E_PARAMETER_CHECK, "httpTotalTimeout type error or out of range");
+        return nullptr;
+    }
+
+    Preload::GetInstance()->SetGlobalTimeoutOptions(timeoutOptions);
+    return nullptr;
+}
+
 static void NapiCreateEnumSslType(napi_env env, napi_value &sslType)
 {
     napi_create_object(env, &sslType);
@@ -747,6 +854,8 @@ static napi_value registerFunc(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("onDownloadError", onDownloadError),
         DECLARE_NAPI_FUNCTION("offDownloadSuccess", offDownloadSuccess),
         DECLARE_NAPI_FUNCTION("offDownloadError", offDownloadError),
+        DECLARE_NAPI_FUNCTION("setGlobalRetryOptions", setGlobalRetryOptions),
+        DECLARE_NAPI_FUNCTION("setGlobalTimeoutOptions", setGlobalTimeoutOptions),
 
     };
     PRELOAD_NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc),

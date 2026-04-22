@@ -24,6 +24,8 @@ export default namespace cacheDownload {
         sslType?: SslType;
         caPath?: string;
         cacheStrategy?: CacheStrategy;
+        retry?: RetryOptions;
+        timeout?: TimeoutOptions;
     }
 
     export enum SslType {
@@ -42,6 +44,15 @@ export default namespace cacheDownload {
         TCP = 0x10,
         SSL = 0x20,
         HTTP = 0x30,
+    }
+
+    export interface TimeoutOptions {
+      networkCheckTimeout?: int;
+      httpTotalTimeout?: int;
+    }
+
+    export interface RetryOptions {
+      maxRetryCount?: int;
     }
 
     export interface ResourceInfo {
@@ -127,4 +138,8 @@ export default namespace cacheDownload {
     export native function offDownloadSuccess(url: string, callback?: Callback<void>): void;
 
     export native function offDownloadError(url: string, callback?: Callback<DownloadError>): void;
+
+    export native function setGlobalRetryOptions(options?: RetryOptions): void;
+
+    export native function setGlobalTimeoutOptions(options?: TimeoutOptions): void;
 }
