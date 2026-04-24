@@ -407,6 +407,9 @@ impl TaskManager {
             ScheduleEvent::RestoreAllTasks => self.restore_all_tasks(),
             ScheduleEvent::Unload => return self.unload_sa(),
             ScheduleEvent::Shutdown => self.shutdown(),
+            ScheduleEvent::RestartCountDown => {
+                self.scheduler.restart_count_down();
+            }
         }
         false
     }
