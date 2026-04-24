@@ -197,16 +197,18 @@ fn ut_task_manager_schedule_event() {
         ScheduleEvent::RestoreAllTasks,
         ScheduleEvent::Unload,
         ScheduleEvent::Shutdown,
+        ScheduleEvent::RestartCountDown,
     ];
-    
-    assert_eq!(events.len(), 4);
-    
+
+    assert_eq!(events.len(), 5);
+
     for event in events {
         match event {
             ScheduleEvent::ClearTimeoutTasks => assert!(true),
             ScheduleEvent::RestoreAllTasks => assert!(true),
             ScheduleEvent::Unload => assert!(true),
             ScheduleEvent::Shutdown => assert!(true),
+            ScheduleEvent::RestartCountDown => assert!(true),
         }
     }
 }

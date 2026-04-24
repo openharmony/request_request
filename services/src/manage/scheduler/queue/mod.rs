@@ -406,8 +406,12 @@ impl RunningQueue {
     pub(crate) fn shutdown(&self) {
         self.keeper.shutdown();
     }
-}
 
+    /// Restarts the 30s idle countdown timer on the keeper.
+    pub(crate) fn restart_count_down(&self) {
+        self.keeper.restart_count_down();
+    }
+}
 /// Handle for canceling a running task with both flag and future cancellation.
 struct AbortHandle {
     /// Atomic flag that can be checked by the running task to detect
