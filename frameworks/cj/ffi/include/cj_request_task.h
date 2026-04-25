@@ -16,6 +16,7 @@
 #ifndef OH_CJ_REQUEST_TASK_H
 #define OH_CJ_REQUEST_TASK_H
 
+#include <atomic>
 #include <cstdint>
 #include <map>
 #include <mutex>
@@ -50,6 +51,7 @@ public:
 
     Config config_;
     std::string taskId_{};
+    std::atomic<bool> skipPermissionCheck{true};
 
     static std::mutex taskMutex_;
     static std::map<std::string, CJRequestTask *> taskMap_;
