@@ -70,6 +70,7 @@ CJRequestTask::CJRequestTask()
 {
     config_.version = Version::API10;
     config_.action = Action::ANY;
+    skipPermissionCheck = true;
     REQUEST_HILOGD("construct CJRequestTask()");
 }
 
@@ -586,6 +587,7 @@ void CJRequestTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool i
         for (auto &file : task->config_.files) {
             RemovePathMap(file.uri);
         }
+        task->skipPermissionCheck = false;
     }
     if (isRmCertsAcls) {
         RemoveDirsPermission(task->config_.certsPath);
@@ -604,10 +606,8 @@ bool CJRequestTask::AddOnePathToMap(const std::string &path, bool isFile, bool n
     } else {
         auto &[iFile, hasWritePermission, count] = it->second;
         bool newHasWrite = hasWritePermission || needWritePermission;
-        if (newHasWrite && !hasWritePermission) {
-            if (!AddAcl(path, isFile, true)) {
-                return false;
-            }
+        if (!AddAcl(path, isFile, newHasWrite)) {
+            return false;
         }
         iFile = isFile;
         hasWritePermission = newHasWrite;
