@@ -404,6 +404,8 @@ pub(crate) enum ScheduleEvent {
     Unload,
     /// Shutdown the service completely.
     Shutdown,
+    /// Restart the idle countdown timer.
+    RestartCountDown,
 }
 
 #[cfg(not(feature = "oh"))]

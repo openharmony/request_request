@@ -29,7 +29,7 @@ use crate::service::active_counter::ActiveCounter;
 use crate::utils::runtime_spawn;
 
 /// Number of seconds to wait before triggering service unload when idle.
-const UNLOAD_WAITING: u64 = 60;
+const UNLOAD_WAITING: u64 = 30;
 
 /// Service Ability keeper that manages idle timeout and unload scheduling.
 ///
@@ -66,7 +66,7 @@ impl SAKeeper {
     ///
     /// A new `SAKeeper` instance with an initial countdown timer running.
     pub(crate) fn new(tx: TaskManagerTx, active_counter: ActiveCounter) -> Self {
-        info!("Countdown 60s future started");
+        info!("Countdown {}s future started", UNLOAD_WAITING);
         let tx = &tx.tx;
         let handle = count_down(tx.clone());
         Self {
@@ -89,6 +89,23 @@ impl SAKeeper {
             handle.cancel();
         }
     }
+
+    /// Restarts the 30-second idle countdown timer.
+    pub(crate) fn restart_count_down(&self) {
+        let mut inner = self.inner.lock().unwrap();
+        // Cancel old timer if running
+        if let Some(handle) = inner.handle.take() {
+            handle.cancel();
+        }
+        inner.handle = Some(count_down(self.tx.clone()));
+        debug!("Countdown {}s future restarted", UNLOAD_WAITING);
+    }
+
+    #[cfg(test)]
+    #[allow(dead_code)]
+    fn is_timer_running(&self) -> bool {
+        self.inner.lock().unwrap().handle.is_some()
+    }
 }
 
 impl Clone for SAKeeper {
@@ -109,7 +126,7 @@ impl Clone for SAKeeper {
                 self.active_counter.increment();
                 if let Some(handle) = inner.handle.take() {
                     handle.cancel();
-                    debug!("Countdown 60s future canceled");
+                    debug!("Countdown {}s future canceled", UNLOAD_WAITING);
                 }
             }
         }
@@ -135,7 +152,7 @@ impl Drop for SAKeeper {
         // Only restart countdown and decrement active counter when transitioning from 1
         // to 0 tasks
         if inner.cnt == 0 {
-            debug!("Countdown 60s future restarted");
+            debug!("Countdown {}s future restarted", UNLOAD_WAITING);
             inner.handle = Some(count_down(self.tx.clone()));
             self.active_counter.decrement();
         }

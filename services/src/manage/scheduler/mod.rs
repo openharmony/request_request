@@ -853,6 +853,11 @@ impl Scheduler {
     pub(crate) fn shutdown(&mut self) {
         self.running_queue.shutdown();
     }
+
+    /// Restarts the idle countdown timer.
+    pub(crate) fn restart_count_down(&self) {
+        self.running_queue.restart_count_down();
+    }
 }
 
 impl RequestDb {
