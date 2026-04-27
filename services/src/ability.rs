@@ -141,6 +141,9 @@ impl Ability for RequestAbility {
 
     fn on_active(&self, reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason) {
         info!("on_active: {:?}", reason);
+        if let Some(task_manager) = self.task_manager.lock().unwrap().as_ref() {
+            task_manager.send_event(TaskManagerEvent::Schedule(ScheduleEvent::RestartCountDown));
+        }
     }
 
     fn on_idle(&self, reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason) -> i32 {

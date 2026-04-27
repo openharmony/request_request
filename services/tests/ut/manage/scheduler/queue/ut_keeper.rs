@@ -12,10 +12,23 @@
 // limitations under the License.
 
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 
 use super::*;
+use crate::manage::task_manager::TaskManagerTx;
 use crate::service::active_counter::ActiveCounter;
+use ylong_runtime::sync::mpsc::unbounded_channel;
+
+static KEEPER: OnceLock<SAKeeper> = OnceLock::new();
+
+fn keeper() -> &'static SAKeeper {
+    KEEPER.get_or_init(|| {
+        let (tx, _) = unbounded_channel();
+        let task_manager_tx = TaskManagerTx::new(tx);
+        let counter = ActiveCounter::new();
+        SAKeeper::new(task_manager_tx, counter)
+    })
+}
 
 // @tc.name: ut_sa_keeper_unload_waiting_constant
 // @tc.desc: Test UNLOAD_WAITING constant value
@@ -27,7 +40,7 @@ use crate::service::active_counter::ActiveCounter;
 // @tc.require: issues#ICN16H
 #[test]
 fn ut_sa_keeper_unload_waiting_constant() {
-    assert_eq!(UNLOAD_WAITING, 60);
+    assert_eq!(UNLOAD_WAITING, 30);
 }
 
 // @tc.name: ut_sa_keeper_active_counter_integration
@@ -173,9 +186,9 @@ fn ut_sa_keeper_duration_calculation() {
     
     let duration = Duration::from_secs(UNLOAD_WAITING);
     
-    assert_eq!(duration.as_secs(), 60);
-    assert_eq!(duration.as_millis(), 60000);
-    assert_eq!(duration.as_micros(), 60000000);
+    assert_eq!(duration.as_secs(), 30);
+    assert_eq!(duration.as_millis(), 30000);
+    assert_eq!(duration.as_micros(), 30000000);
 }
 
 // @tc.name: ut_sa_keeper_inner_state_management
@@ -254,6 +267,62 @@ fn ut_sa_keeper_concurrent_access() {
     counter.decrement();
     counter.increment();
     counter.decrement();
-    
+
     assert_eq!(counter.get(), 2);
+}
+
+// @tc.name: ut_sa_keeper_restart_count_down
+// @tc.desc: Test restart_count_down on a real SAKeeper instance
+// @tc.precon: NA
+// @tc.step: 1. Get shared SAKeeper
+//           2. Verify timer is running after creation
+//           3. Call restart_count_down
+//           4. Verify timer is still running
+// @tc.expect: restart_count_down keeps the timer alive on a healthy keeper
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
+#[test]
+fn ut_sa_keeper_restart_count_down() {
+    let k = keeper();
+    assert!(k.is_timer_running());
+    k.restart_count_down();
+    assert!(k.is_timer_running());
+}
+
+// @tc.name: ut_sa_keeper_restart_count_down_after_shutdown
+// @tc.desc: Test the full shutdown -> restart cycle on a real SAKeeper
+// @tc.precon: NA
+// @tc.step: 1. Get shared SAKeeper (timer running)
+//           2. Call shutdown to kill timer
+//           3. Verify timer is stopped
+//           4. Call restart_count_down
+//           5. Verify timer is running again
+// @tc.expect: restart_count_down restores timer after shutdown
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
+#[test]
+fn ut_sa_keeper_restart_count_down_after_shutdown() {
+    let k = keeper();
+    k.shutdown();
+    assert!(!k.is_timer_running());
+    k.restart_count_down();
+    assert!(k.is_timer_running());
+}
+
+// @tc.name: ut_sa_keeper_multiple_restart_count_down
+// @tc.desc: Test multiple consecutive restart_count_down calls
+// @tc.precon: NA
+// @tc.step: 1. Get shared SAKeeper
+//           2. Call restart_count_down multiple times
+//           3. Verify timer is running after each call
+// @tc.expect: Multiple restarts are safe and timer stays alive
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
+#[test]
+fn ut_sa_keeper_multiple_restart_count_down() {
+    let k = keeper();
+    for _ in 0..3 {
+        k.restart_count_down();
+        assert!(k.is_timer_running());
+    }
 }
