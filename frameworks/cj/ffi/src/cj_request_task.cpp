@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -509,7 +509,7 @@ void CJRequestTask::ReloadListener()
     }
 }
 
-ExceptionError CJRequestTask::On(std::string type, std::string &taskId, void *callback)
+ExceptionError CJRequestTask::On(std::string type, std::string &taskId, int64_t callback)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task on, seq: %{public}d", seq);
@@ -522,6 +522,7 @@ ExceptionError CJRequestTask::On(std::string type, std::string &taskId, void *ca
         return err;
     }
 
+    void *cb = reinterpret_cast<void *>(callback);
     if (subscribeType == SubscribeType::RESPONSE) {
         {
             std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
@@ -529,15 +530,14 @@ ExceptionError CJRequestTask::On(std::string type, std::string &taskId, void *ca
                 responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
             }
         }
-        responseListener_->AddListener(CJLambda::Create((void (*)(CResponse progress))callback), callback);
+        responseListener_->AddListener(CJLambda::Create((void (*)(CResponse progress))cb), cb);
     } else {
         std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
         auto listener = notifyDataListenerMap_.find(subscribeType);
         if (listener == notifyDataListenerMap_.end()) {
             notifyDataListenerMap_[subscribeType] = std::make_shared<CJNotifyDataListener>(GetTidStr(), subscribeType);
         }
-        notifyDataListenerMap_[subscribeType]->AddListener(CJLambda::Create((void (*)(CProgress progress))callback),
-            (CFunc)callback);
+        notifyDataListenerMap_[subscribeType]->AddListener(CJLambda::Create((void (*)(CProgress progress))cb), cb);
     }
 
     REQUEST_HILOGI("End task on event %{public}s successfully, seq: %{public}d, tid: %{public}s", type.c_str(), seq,
@@ -546,7 +546,7 @@ ExceptionError CJRequestTask::On(std::string type, std::string &taskId, void *ca
     return err;
 }
 
-ExceptionError CJRequestTask::Off(std::string event, CFunc callback)
+ExceptionError CJRequestTask::Off(std::string event, int64_t callback)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task off, seq: %{public}d", seq);
@@ -559,6 +559,7 @@ ExceptionError CJRequestTask::Off(std::string event, CFunc callback)
         return err;
     }
 
+    CFunc cb = reinterpret_cast<CFunc>(callback);
     if (subscribeType == SubscribeType::RESPONSE) {
         {
             std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
@@ -566,48 +567,53 @@ ExceptionError CJRequestTask::Off(std::string event, CFunc callback)
                 responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
             }
         }
-        responseListener_->RemoveListener((CFunc)callback);
+        responseListener_->RemoveListener(cb);
     } else {
         std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
         if (notifyDataListenerMap_.find(subscribeType) == notifyDataListenerMap_.end()) {
             notifyDataListenerMap_[subscribeType] = std::make_shared<CJNotifyDataListener>(GetTidStr(), subscribeType);
         }
-        notifyDataListenerMap_[subscribeType]->RemoveListener((CFunc)callback);
+        notifyDataListenerMap_[subscribeType]->RemoveListener(cb);
     }
     return err;
 }
 
-ExceptionError CJRequestTask::OnFailed(std::string &taskId, void *callback)
+ExceptionError CJRequestTask::OnFailed(std::string &taskId, int64_t callback)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task on failed, seq: %{public}d", seq);
 
     ExceptionError err;
+    std::shared_ptr<CJFailedListener> failedListener;
     {
         std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
         if (failedListener_ == nullptr) {
             failedListener_ = std::make_shared<CJFailedListener>(GetTidStr());
         }
+        failedListener = failedListener_;
     }
-    failedListener_->AddListener(CJLambda::Create((void (*)(int32_t))callback), callback);
+    void *cb = reinterpret_cast<void *>(callback);
+    failedListener->AddListener(CJLambda::Create((void (*)(int32_t))cb), cb);
 
     REQUEST_HILOGI("End task on failed successfully, seq: %{public}d, tid: %{public}s", seq, GetTidStr().c_str());
     return err;
 }
 
-ExceptionError CJRequestTask::OffFailed(CFunc callback)
+ExceptionError CJRequestTask::OffFailed(int64_t callback)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task off failed, seq: %{public}d", seq);
 
     ExceptionError err;
+    std::shared_ptr<CJFailedListener> failedListener;
     {
         std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
         if (failedListener_ == nullptr) {
             failedListener_ = std::make_shared<CJFailedListener>(GetTidStr());
         }
+        failedListener = failedListener_;
     }
-    failedListener_->RemoveListener(callback);
+    failedListener->RemoveListener(reinterpret_cast<CFunc>(callback));
     return err;
 }
 

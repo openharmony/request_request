@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,7 +26,7 @@ using OHOS::Request::DownloadErrorCode;
 using OHOS::Request::RequestManager;
 using OHOS::Request::Version;
 
-static std::map<Reason, DownloadErrorCode> failMap_ = {
+static std::map<Reason, DownloadErrorCode> g_failMap = {
     {Reason::REASON_OK, DownloadErrorCode::ERROR_FILE_ALREADY_EXISTS},
     {Reason::IO_ERROR, DownloadErrorCode::ERROR_FILE_ERROR},
     {Reason::INSUFFICIENT_SPACE, DownloadErrorCode::ERROR_INSUFFICIENT_SPACE},
@@ -64,9 +64,8 @@ void CJFailedListener::AddListener(std::function<void(int32_t)> cb, CFunc cbId)
     }
 }
 
-void CJFailedListener::RemoveListener(CFunc cbId)
+void CJFailedListener::RemoveListenerInner(CFunc cbId)
 {
-    std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
     if (this->validCbNum == 0) {
         return;
     }
@@ -76,18 +75,25 @@ void CJFailedListener::RemoveListener(CFunc cbId)
             it->first = false;
         }
         this->validCbNum = 0;
-    } else {
-        for (auto it = this->allCb_.begin(); it != this->allCb_.end(); it++) {
-            if (it->second->cbId_ == cbId) {
-                if (it->first == true) {
-                    it->first = false;
-                    --this->validCbNum;
-                }
-                break;
-            }
-        }
+        return;
     }
 
+    for (auto it = this->allCb_.begin(); it != this->allCb_.end(); it++) {
+        if (it->second->cbId_ != cbId) {
+            continue;
+        }
+        if (it->first) {
+            it->first = false;
+            --this->validCbNum;
+        }
+        break;
+    }
+}
+
+void CJFailedListener::RemoveListener(CFunc cbId)
+{
+    std::lock_guard<std::recursive_mutex> lock(allCbMutex_);
+    this->RemoveListenerInner(cbId);
     if (this->validCbNum == 0) {
         RequestManager::GetInstance()->RemoveListener(this->taskId_, SubscribeType::FAILED, shared_from_this());
     }
@@ -98,8 +104,8 @@ int32_t CJFailedListener::ConvertToErrCode(const std::shared_ptr<NotifyData> &no
     if (notifyData->taskStates.empty()) {
         return static_cast<int32_t>(DownloadErrorCode::ERROR_UNKNOWN);
     }
-    auto it = failMap_.find(static_cast<Reason>(notifyData->taskStates[0].responseCode));
-    if (it != failMap_.end()) {
+    auto it = g_failMap.find(static_cast<Reason>(notifyData->taskStates[0].responseCode));
+    if (it != g_failMap.end()) {
         return static_cast<int32_t>(it->second);
     }
     return static_cast<int32_t>(DownloadErrorCode::ERROR_UNKNOWN);

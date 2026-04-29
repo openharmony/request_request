@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -453,7 +453,7 @@ void CJRequestImpl::FreeTask(std::string taskId)
     delete CJRequestTask::ClearTaskMap(taskId);
 }
 
-RetError CJRequestImpl::ProgressOn(char *event, std::string taskId, void *callback)
+RetError CJRequestImpl::ProgressOn(char *event, std::string taskId, int64_t callback)
 {
     REQUEST_HILOGD("[CJRequestImpl] ProgressOn start");
     RetError ret{};
@@ -472,7 +472,7 @@ RetError CJRequestImpl::ProgressOn(char *event, std::string taskId, void *callba
     return ret;
 }
 
-RetError CJRequestImpl::ProgressOff(char *event, std::string taskId, void *callback)
+RetError CJRequestImpl::ProgressOff(char *event, std::string taskId, int64_t callback)
 {
     REQUEST_HILOGD("[CJRequestImpl] ProgressOff start");
     RetError ret{};
@@ -491,10 +491,14 @@ RetError CJRequestImpl::ProgressOff(char *event, std::string taskId, void *callb
     return ret;
 }
 
-RetError CJRequestImpl::FailedOn(std::string taskId, void *callback)
+RetError CJRequestImpl::FailedOn(std::string taskId, int64_t callback)
 {
     REQUEST_HILOGD("[CJRequestImpl] FailedOn start");
     RetError ret{};
+    if (callback == 0) {
+        REQUEST_HILOGE("[CJRequestImpl] callback is 0");
+        return Convert2RetErr(ExceptionErrorCode::E_PARAMETER_CHECK);
+    }
     CJRequestTask *task = CJRequestTask::FindTaskById(taskId);
     if (task == nullptr) {
         REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}s.", taskId.c_str());
@@ -510,14 +514,18 @@ RetError CJRequestImpl::FailedOn(std::string taskId, void *callback)
     return ret;
 }
 
-RetError CJRequestImpl::FailedOff(std::string taskId, void *callback)
+RetError CJRequestImpl::FailedOff(std::string taskId, int64_t callback)
 {
     REQUEST_HILOGD("[CJRequestImpl] FailedOff start");
     RetError ret{};
+    if (callback == 0) {
+        REQUEST_HILOGE("[CJRequestImpl] callback is 0");
+        return Convert2RetErr(ExceptionErrorCode::E_PARAMETER_CHECK);
+    }
     CJRequestTask *task = CJRequestTask::FindTaskById(taskId);
     if (task == nullptr) {
         REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}s.", taskId.c_str());
-        return ret;
+        return Convert2RetErr(ExceptionErrorCode::E_TASK_NOT_FOUND);
     }
 
     ExceptionError result = task->OffFailed(callback);

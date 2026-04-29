@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -86,10 +86,10 @@ public:
     void SetTid();
 
     ExceptionError Create(OHOS::AbilityRuntime::Context *context, Config &config);
-    ExceptionError On(std::string type, std::string &taskId, void *callback);
-    ExceptionError Off(std::string event, CFunc callback);
-    ExceptionError OnFailed(std::string &taskId, void *callback);
-    ExceptionError OffFailed(CFunc callback);
+    ExceptionError On(std::string type, std::string &taskId, int64_t callback);
+    ExceptionError Off(std::string event, int64_t callback);
+    ExceptionError OnFailed(std::string &taskId, int64_t callback);
+    ExceptionError OffFailed(int64_t callback);
 
     static void ReloadListener();
 

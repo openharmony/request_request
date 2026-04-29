@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -52,10 +52,10 @@ public:
     static RetTaskArr SearchTask(CFilter &filter);
     static RetDownloadInfo ShowDownloadTask(std::string taskId);
     static ExceptionError Convert2Filter(CFilter &filter, Filter &out);
-    static RetError ProgressOn(char *event, std::string taskId, void *callback);
-    static RetError ProgressOff(char *event, std::string taskId, void *callback);
-    static RetError FailedOn(std::string taskId, void *callback);
-    static RetError FailedOff(std::string taskId, void *callback);
+    static RetError ProgressOn(char *event, std::string taskId, int64_t callback);
+    static RetError ProgressOff(char *event, std::string taskId, int64_t callback);
+    static RetError FailedOn(std::string taskId, int64_t callback);
+    static RetError FailedOff(std::string taskId, int64_t callback);
     static RetError TaskStart(std::string taskId);
     static RetError TaskPause(std::string taskId);
     static RetError TaskResume(std::string taskId);

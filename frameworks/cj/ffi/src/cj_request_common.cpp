@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -469,7 +469,7 @@ CDownloadInfo Convert2CDownloadInfo(const TaskInfo &task)
     CDownloadInfo out = {0};
     out.description = MallocCString(task.description);
     out.downloadedBytes = task.progress.processed;
-    out.downloadId = strtoul(task.tid.c_str(), NULL, 10);
+    out.downloadId = static_cast<int64_t>(strtoul(task.tid.c_str(), nullptr, DECIMALISM));
     if (task.progress.state == State::FAILED) {
         auto it = failMapForDownload.find(task.code);
         if (it != failMapForDownload.end()) {
@@ -497,6 +497,8 @@ CDownloadInfo Convert2CDownloadInfo(const TaskInfo &task)
     auto stateIt = stateMapForDownload.find(task.progress.state);
     if (stateIt != stateMapForDownload.end()) {
         out.status = static_cast<int32_t>(stateIt->second);
+    } else {
+        out.status = static_cast<int32_t>(SESSION_FAILED);
     }
     out.targetURI = MallocCString(task.url);
     out.downloadTitle = MallocCString(task.title);
