@@ -142,14 +142,20 @@ struct Notification {
     uint32_t visibility = 0b01;
 };
 
+// Minimum speed configuration for download/upload tasks.
+// If the transfer speed falls below the threshold for the specified duration,
+// the task will fail with a LOW_SPEED error.
 struct MinSpeed {
-    int64_t speed = 0;
-    int64_t duration = 0;
+    int64_t speed = 0;    // Minimum speed threshold in bytes per second. 0 means no speed limit.
+    int64_t duration = 0; // Duration in seconds to monitor the speed. 0 means no duration check.
 };
 
+// Timeout configuration for download/upload tasks.
+// Controls how long the task will wait for connection establishment and completion.
 struct Timeout {
-    uint64_t connectionTimeout = 0;
-    uint64_t totalTimeout = 0;
+    uint64_t connectionTimeout = 0; // Maximum time in seconds to wait for connection. 0 means use default (60s).
+    uint64_t totalTimeout = 0;      // Maximum total time in seconds for the task. 0 means use default.
+                                    // Default: 7 days if task has notification, 10 minutes otherwise.
 };
 
 struct Config {
