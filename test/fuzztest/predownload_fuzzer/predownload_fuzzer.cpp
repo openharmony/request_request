@@ -32,6 +32,7 @@ using namespace OHOS::Security::AccessToken;
 
 namespace OHOS {
 constexpr int64_t PRELOAD_UTF8_SIZE_LIMIT = 8192;
+constexpr size_t TIMEOUT_PARAM_COUNT = 2;
 
 uint16_t ConvertToUint16(const uint8_t *ptr, size_t size)
 {
@@ -118,6 +119,67 @@ void SetDownloadInfoListSizeFuzzTest(const uint8_t *data, size_t size)
     Preload::GetInstance()->SetDownloadInfoListSize(len);
 }
 
+// @tc.name: ut_set_global_retry_options_fuzzer
+// @tc.desc: Fuzz test for Preload SetGlobalRetryOptions method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to int32_t maxRetryCount
+// 2. Grant native permission
+// 3. Create RetryOptions with fuzzed value
+// 4. Call GetInstance()->SetGlobalRetryOptions with options
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
+void SetGlobalRetryOptionsFuzzTest(const uint8_t *data, size_t size)
+{
+    if (size < sizeof(int32_t)) {
+        return;
+    }
+
+    int32_t maxRetryCount;
+    if (memcpy_s(&maxRetryCount, sizeof(maxRetryCount), data, sizeof(int32_t)) != 0) {
+        return;
+    }
+
+    GrantNativePermission();
+    RetryOptions retryOptions;
+    retryOptions.maxRetryCount = maxRetryCount;
+    Preload::GetInstance()->SetGlobalRetryOptions(retryOptions);
+}
+
+// @tc.name: ut_set_global_timeout_options_fuzzer
+// @tc.desc: Fuzz test for Preload SetGlobalTimeoutOptions method
+// @tc.precon: NA
+// @tc.step: 1. Convert input data to two int32_t values for timeouts
+// 2. Grant native permission
+// 3. Create TimeoutOptions with fuzzed values
+// 4. Call GetInstance()->SetGlobalTimeoutOptions with options
+// @tc.expect: Function should handle various input data without crashes
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 3
+void SetGlobalTimeoutOptionsFuzzTest(const uint8_t *data, size_t size)
+{
+    if (size < sizeof(int32_t) * TIMEOUT_PARAM_COUNT) {
+        return;
+    }
+
+    int32_t networkCheckTimeout;
+    int32_t httpTotalTimeout;
+    if (memcpy_s(&networkCheckTimeout, sizeof(networkCheckTimeout), data, sizeof(int32_t)) != 0) {
+        return;
+    }
+    if (memcpy_s(&httpTotalTimeout, sizeof(httpTotalTimeout), data + sizeof(int32_t), sizeof(int32_t)) != 0) {
+        return;
+    }
+
+    GrantNativePermission();
+    TimeoutOptions timeoutOptions;
+    timeoutOptions.networkCheckTimeout = networkCheckTimeout;
+    timeoutOptions.httpTotalTimeout = httpTotalTimeout;
+    Preload::GetInstance()->SetGlobalTimeoutOptions(timeoutOptions);
+}
+
 } // namespace OHOS
 
 // @tc.name: ut_llvm_fuzzer_test_one_input
@@ -125,6 +187,8 @@ void SetDownloadInfoListSizeFuzzTest(const uint8_t *data, size_t size)
 // @tc.precon: NA
 // @tc.step: 1. Call GetDownloadInfoFuzzTest with input data
 // 2. Call SetDownloadInfoListSizeFuzzTest with input data
+// 3. Call SetGlobalRetryOptionsFuzzTest with input data
+// 4. Call SetGlobalTimeoutOptionsFuzzTest with input data
 // @tc.expect: Entry point should execute all fuzz tests without crashes
 // @tc.type: FUNC
 // @tc.require: issueNumber
@@ -135,5 +199,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     /* Run your code on data */
     OHOS::GetDownloadInfoFuzzTest(data, size);
     OHOS::SetDownloadInfoListSizeFuzzTest(data, size);
+    OHOS::SetGlobalRetryOptionsFuzzTest(data, size);
+    OHOS::SetGlobalTimeoutOptionsFuzzTest(data, size);
     return 0;
 }

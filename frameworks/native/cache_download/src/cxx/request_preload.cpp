@@ -16,12 +16,19 @@
 #include "request_preload.h"
 
 #include <cstdint>
+#include <limits>
 #include <memory>
 
 #include "cxx.h"
 #include "log.h"
 #include "utf8_utils.h"
 #include "wrapper.rs.h"
+
+// Sentinel values for FFI options: use max values to indicate "use global default"
+static constexpr size_t FFI_MAX_RETRY_DEFAULT = std::numeric_limits<size_t>::max();
+static constexpr uint32_t FFI_TIMEOUT_DEFAULT = std::numeric_limits<uint32_t>::max();
+// Sentinel value for "not set by user" in PreloadOptions
+static constexpr int32_t SENTINEL_NOT_SET = -1;
 
 namespace OHOS::Request {
 
@@ -352,7 +359,13 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
     }
 
     // Prepare options for FFI call
-    FfiPredownloadOptions ffiOptions = { .headers = rust::Vec<rust::str>() };
+    // Use max values as sentinel values meaning "use global default"
+    FfiPredownloadOptions ffiOptions = {
+        .headers = rust::Vec<rust::str>(),
+        .max_retry = FFI_MAX_RETRY_DEFAULT,
+        .network_check_timeout = FFI_TIMEOUT_DEFAULT,
+        .http_total_timeout = FFI_TIMEOUT_DEFAULT
+    };
     if (options != nullptr) {
         // Validate and set headers
         for (const auto &[key, value] : options->headers) {
@@ -368,6 +381,18 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
 
         ffiOptions.ssl_type = rust::str(SslTypeName.at(options->sslType));
         ffiOptions.ca_path = rust::str(options->caPath);
+
+        // Set task-level retry/timeout configuration if explicitly set by user
+        // SENTINEL_NOT_SET (-1) means user didn't set, use FFI sentinel to indicate "use global"
+        if (options->retry.maxRetryCount != SENTINEL_NOT_SET) {
+            ffiOptions.max_retry = static_cast<size_t>(options->retry.maxRetryCount);
+        }
+        if (options->timeout.networkCheckTimeout != SENTINEL_NOT_SET) {
+            ffiOptions.network_check_timeout = static_cast<uint32_t>(options->timeout.networkCheckTimeout);
+        }
+        if (options->timeout.httpTotalTimeout != SENTINEL_NOT_SET) {
+            ffiOptions.http_total_timeout = static_cast<uint32_t>(options->timeout.httpTotalTimeout);
+        }
     }
 
     if (!Utf8Utils::RunUtf8Validation(std::vector<uint8_t>(url.begin(), url.end()))) {
@@ -486,6 +511,17 @@ void Preload::ClearMemoryCache()
 void Preload::ClearFileCache()
 {
     agent_->clear_file_cache();
+}
+
+void Preload::SetGlobalRetryOptions(const RetryOptions &options)
+{
+    agent_->set_global_retry_options(static_cast<size_t>(options.maxRetryCount));
+}
+
+void Preload::SetGlobalTimeoutOptions(const TimeoutOptions &options)
+{
+    agent_->set_global_timeout_options(
+        static_cast<uint32_t>(options.networkCheckTimeout), static_cast<uint32_t>(options.httpTotalTimeout));
 }
 
 /**

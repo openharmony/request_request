@@ -125,7 +125,7 @@ fn ut_request_task_start_success() {
         result.clone(),
     ));
     let info_mgr = Arc::new(DownloadInfoMgr::new());
-    task.set_callback(callback, info_mgr, TaskId::from_url(TEST_URL));
+    task.set_callback_with_config(callback, info_mgr, TaskId::from_url(TEST_URL), None, None, 0);
     task.start();
     while !finished.load(Ordering::SeqCst) {
         std::thread::sleep(std::time::Duration::from_millis(100));
@@ -175,7 +175,7 @@ fn ut_request_task_cancel() {
         result.clone(),
     ));
     let info_mgr = Arc::new(DownloadInfoMgr::new());
-    task.set_callback(callback, info_mgr, TaskId::from_url(TEST_URL));
+    task.set_callback_with_config(callback, info_mgr, TaskId::from_url(TEST_URL), None, None, 0);
     task.start();
     std::thread::sleep(std::time::Duration::from_millis(1));
     task.cancel();
@@ -218,7 +218,7 @@ fn ut_request_task_fail() {
         result.clone(),
     ));
     let info_mgr = Arc::new(DownloadInfoMgr::new());
-    task.set_callback(callback, info_mgr, TaskId::from_url(LOCAL_URL));
+    task.set_callback_with_config(callback, info_mgr, TaskId::from_url(LOCAL_URL), None, None, 0);
     task.start();
     while !finished.load(Ordering::SeqCst) {
         std::thread::sleep(std::time::Duration::from_millis(100));
@@ -263,7 +263,14 @@ fn ut_request_task_connect_timeout() {
         result.clone(),
     ));
     let info_mgr = Arc::new(DownloadInfoMgr::new());
-    task.set_callback(callback, info_mgr, TaskId::from_url("222.222.222.222"));
+    task.set_callback_with_config(
+        callback,
+        info_mgr,
+        TaskId::from_url("222.222.222.222"),
+        None,
+        None,
+        0,
+    );
     task.start();
     while !finished.load(Ordering::SeqCst) {
         std::thread::sleep(std::time::Duration::from_millis(100));
@@ -308,7 +315,7 @@ fn ut_request_task_timeout() {
         result.clone(),
     ));
     let info_mgr = Arc::new(DownloadInfoMgr::new());
-    task.set_callback(callback, info_mgr, TaskId::from_url(TEST_URL));
+    task.set_callback_with_config(callback, info_mgr, TaskId::from_url(TEST_URL), None, None, 0);
     task.start();
     while !finished.load(Ordering::SeqCst) {
         std::thread::sleep(std::time::Duration::from_millis(100));
@@ -383,7 +390,14 @@ fn ut_request_task_reset_range() {
         total: total.clone(),
     });
     let info_mgr = Arc::new(DownloadInfoMgr::new());
-    task.set_callback(callback, info_mgr, TaskId::from_url(RANGE_TEST_URL));
+    task.set_callback_with_config(
+        callback,
+        info_mgr,
+        TaskId::from_url(RANGE_TEST_URL),
+        None,
+        None,
+        0,
+    );
     task.start();
 
     while !data_receive.load(Ordering::SeqCst) {
@@ -467,10 +481,13 @@ fn ut_request_task_reset_not_range() {
         total: total.clone(),
     });
     let info_mgr = Arc::new(DownloadInfoMgr::new());
-    task.set_callback(
+    task.set_callback_with_config(
         callback,
         info_mgr,
         TaskId::from_url(NOT_SUPPORT_RANGE_TEST_URL),
+        None,
+        None,
+        0,
     );
     task.start();
 

@@ -21,14 +21,26 @@
 #include "js_native_api.h"
 #include "js_native_api_types.h"
 #include "napi/native_common.h"
+#include "napi_utils.h"
 #include "request_preload.h"
 namespace OHOS::Request {
+inline bool IsValueMissingOrSkipped(napi_env env, napi_value value)
+{
+    if (value == nullptr) {
+        return true;
+    }
+    napi_valuetype type = GetValueType(env, value);
+    return type == napi_undefined || type == napi_null;
+}
+
 bool BuildInfoPerformance(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo);
 bool BuildInfoNetwork(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo);
 bool BuildInfoResource(napi_env env, const CppDownloadInfo &result, napi_value &jsInfo);
 void SetOptionsHeaders(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options);
 void SetOptionsSslType(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options);
 void GetCacheStrategy(napi_env env, napi_value arg, bool &isUpdate);
+bool SetOptionsRetry(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options);
+bool SetOptionsTimeout(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options);
 inline napi_status SetPerformanceField(napi_env env, napi_value performance, double field_value, const char *js_name);
 } // namespace OHOS::Request
 #endif

@@ -13,7 +13,10 @@
  * limitations under the License.
  */
 
+#include "preload_common.h"
+
 #include <cstdint>
+#include <limits>
 #include <mutex>
 #include <string>
 
@@ -21,10 +24,21 @@
 #include "js_native_api.h"
 #include "js_native_api_types.h"
 #include "napi/native_common.h"
-#include "napi_utils.h"
 
 static const std::string SSL_TYPE_TLS = "TLS";
 static const std::string SSL_TYPE_TLCP = "TLCP";
+
+constexpr int64_t MIN_RETRY_COUNT = 0;
+constexpr int64_t MAX_RETRY_COUNT = 10;
+
+constexpr int64_t MIN_NETWORK_CHECK_TIMEOUT = 0;
+constexpr int64_t MAX_NETWORK_CHECK_TIMEOUT = 20;
+constexpr int64_t MIN_HTTP_TOTAL_TIMEOUT = 1;
+// httpTotalTimeout upper limit: u32::MAX / 1000 (since API unit is seconds, netstack unit is ms)
+constexpr int64_t MAX_HTTP_TOTAL_TIMEOUT = static_cast<int64_t>(std::numeric_limits<uint32_t>::max() / 1000);
+
+// Sentinel value for "not set by user" - use -1 to indicate use global default
+constexpr int32_t SENTINEL_NOT_SET = -1;
 
 namespace OHOS::Request {
 
@@ -55,34 +69,42 @@ void SetOptionsHeaders(napi_env env, napi_value arg, std::unique_ptr<PreloadOpti
 void SetOptionsSslType(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options)
 {
     napi_value napiSslType = GetNamedProperty(env, arg, "sslType");
-    if (napiSslType != nullptr) {
-        std::string sslType = GetStringValueWithDefault(env, napiSslType);
-        if (sslType == SSL_TYPE_TLS) {
-            options->sslType = SslType::TLS;
-        } else if (sslType == SSL_TYPE_TLCP) {
-            options->sslType = SslType::TLCP;
-        } else {
-            options->sslType = SslType::TLS;
-        }
-    } else {
+    // undefined/null 视为缺失，使用默认值
+    if (IsValueMissingOrSkipped(env, napiSslType)) {
         options->sslType = SslType::DEFAULT;
+        return;
+    }
+    // 类型必须是 string
+    if (GetValueType(env, napiSslType) != napi_string) {
+        options->sslType = SslType::DEFAULT;
+        return;
+    }
+    std::string sslType = GetStringValueWithDefault(env, napiSslType);
+    if (sslType == SSL_TYPE_TLS) {
+        options->sslType = SslType::TLS;
+    } else if (sslType == SSL_TYPE_TLCP) {
+        options->sslType = SslType::TLCP;
+    } else {
+        options->sslType = SslType::TLS;
     }
 }
 
 void GetCacheStrategy(napi_env env, napi_value arg, bool &isUpdate)
 {
     napi_value napiCacheStrategy = GetNamedProperty(env, arg, "cacheStrategy");
-    if (napiCacheStrategy != nullptr) {
-        if (GetValueType(env, napiCacheStrategy) != napi_number) {
-            isUpdate = true;
-            return;
-        }
-        int64_t numCacheStrategy = GetValueNum(env, napiCacheStrategy);
-        if (numCacheStrategy == static_cast<int64_t>(CacheStrategy::LAZY)) {
-            isUpdate = false;
-        } else {
-            isUpdate = true;
-        }
+    // undefined/null 视为缺失，使用默认值
+    if (IsValueMissingOrSkipped(env, napiCacheStrategy)) {
+        isUpdate = true;
+        return;
+    }
+    // 类型必须是 number
+    if (GetValueType(env, napiCacheStrategy) != napi_number) {
+        isUpdate = true;
+        return;
+    }
+    int64_t numCacheStrategy = GetValueNum(env, napiCacheStrategy);
+    if (numCacheStrategy == static_cast<int64_t>(CacheStrategy::LAZY)) {
+        isUpdate = false;
     } else {
         isUpdate = true;
     }
@@ -201,6 +223,73 @@ bool BuildInfoPerformance(napi_env env, const CppDownloadInfo &result, napi_valu
         return false;
     }
 
+    return true;
+}
+
+bool SetOptionsRetry(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options)
+{
+    options->retry.maxRetryCount = SENTINEL_NOT_SET;
+
+    napi_value retry = GetNamedProperty(env, arg, "retry");
+    if (IsValueMissingOrSkipped(env, retry)) {
+        return true;
+    }
+    if (GetValueType(env, retry) != napi_valuetype::napi_object) {
+        return false;
+    }
+
+    napi_value maxRetryCount = GetNamedProperty(env, retry, "maxRetryCount");
+    if (IsValueMissingOrSkipped(env, maxRetryCount)) {
+        return true;
+    }
+    if (GetValueType(env, maxRetryCount) != napi_number) {
+        return false;
+    }
+
+    int64_t value = GetValueNum(env, maxRetryCount);
+    if (value < MIN_RETRY_COUNT || value > MAX_RETRY_COUNT) {
+        return false;
+    }
+    options->retry.maxRetryCount = static_cast<int32_t>(value);
+    return true;
+}
+
+bool SetOptionsTimeout(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options)
+{
+    options->timeout.networkCheckTimeout = SENTINEL_NOT_SET;
+    options->timeout.httpTotalTimeout = SENTINEL_NOT_SET;
+
+    napi_value timeout = GetNamedProperty(env, arg, "timeout");
+    if (IsValueMissingOrSkipped(env, timeout)) {
+        return true;
+    }
+    if (GetValueType(env, timeout) != napi_valuetype::napi_object) {
+        return false;
+    }
+
+    napi_value networkCheckTimeout = GetNamedProperty(env, timeout, "networkCheckTimeout");
+    if (!IsValueMissingOrSkipped(env, networkCheckTimeout)) {
+        if (GetValueType(env, networkCheckTimeout) != napi_number) {
+            return false;
+        }
+        int64_t value = GetValueNum(env, networkCheckTimeout);
+        if (value < MIN_NETWORK_CHECK_TIMEOUT || value > MAX_NETWORK_CHECK_TIMEOUT) {
+            return false;
+        }
+        options->timeout.networkCheckTimeout = static_cast<int32_t>(value);
+    }
+
+    napi_value httpTotalTimeout = GetNamedProperty(env, timeout, "httpTotalTimeout");
+    if (!IsValueMissingOrSkipped(env, httpTotalTimeout)) {
+        if (GetValueType(env, httpTotalTimeout) != napi_number) {
+            return false;
+        }
+        int64_t value = GetValueNum(env, httpTotalTimeout);
+        if (value < MIN_HTTP_TOTAL_TIMEOUT || value > MAX_HTTP_TOTAL_TIMEOUT) {
+            return false;
+        }
+        options->timeout.httpTotalTimeout = static_cast<int32_t>(value);
+    }
     return true;
 }
 } // namespace OHOS::Request

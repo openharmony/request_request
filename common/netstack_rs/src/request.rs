@@ -57,6 +57,12 @@ pub struct Request<C: RequestCallback + 'static> {
     info_mgr: Option<Arc<DownloadInfoMgr>>,
     /// Optional task identifier for request tracking
     task_id: Option<TaskId>,
+    /// Optional maximum retry count (overrides global setting)
+    max_retry: Option<usize>,
+    /// Optional network check timeout in seconds (overrides global setting)
+    network_check_timeout: Option<u32>,
+    /// Current retry attempt count (used when retrying after network wait)
+    tries: usize,
 }
 
 impl<C: RequestCallback> Request<C> {
@@ -70,6 +76,9 @@ impl<C: RequestCallback> Request<C> {
             callback: None,
             info_mgr: None,
             task_id: None,
+            max_retry: None,
+            network_check_timeout: None,
+            tries: 0,
         }
     }
 
@@ -247,6 +256,70 @@ impl<C: RequestCallback> Request<C> {
         self
     }
 
+    /// Sets the maximum retry count for this request.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_retry` - Maximum number of retry attempts (0-10)
+    ///
+    /// # Returns
+    ///
+    /// A mutable reference to `self` for method chaining
+    pub fn max_retry(&mut self, max_retry: usize) -> &mut Self {
+        self.max_retry = Some(max_retry);
+        self
+    }
+
+    /// Sets the network check timeout for this request.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Network check timeout in seconds (0-20)
+    ///
+    /// # Returns
+    ///
+    /// A mutable reference to `self` for method chaining
+    pub fn network_check_timeout(&mut self, timeout: u32) -> &mut Self {
+        self.network_check_timeout = Some(timeout);
+        self
+    }
+
+    /// Sets the current retry attempt count.
+    ///
+    /// Used when retrying after network wait to preserve retry count.
+    ///
+    /// # Arguments
+    ///
+    /// * `tries` - Current retry attempt count
+    ///
+    /// # Returns
+    ///
+    /// A mutable reference to `self` for method chaining
+    pub fn tries(&mut self, tries: usize) -> &mut Self {
+        self.tries = tries;
+        self
+    }
+
+    /// Gets the task ID if set.
+    ///
+    /// # Returns
+    ///
+    /// Reference to the task ID if configured, otherwise `None`
+    pub fn task_id_ref(&self) -> Option<&TaskId> {
+        self.task_id.as_ref()
+    }
+
+    /// Takes the callback out of the request.
+    ///
+    /// This is useful when you need to call callback methods without building the task.
+    ///
+    /// # Returns
+    ///
+    /// The callback if set, otherwise `None`
+    pub fn take_callback(&mut self) -> Option<C> {
+        self.callback.take()
+    }
+
     /// Consumes the builder and creates a RequestTask.
     ///
     /// # Returns
@@ -268,7 +341,14 @@ impl<C: RequestCallback> Request<C> {
                 self.info_mgr.take(),
                 self.task_id.take(),
             ) {
-                task.set_callback(Box::new(callback), mgr, task_id);
+                task.set_callback_with_config(
+                    Box::new(callback),
+                    mgr,
+                    task_id,
+                    self.max_retry,
+                    self.network_check_timeout,
+                    self.tries,
+                );
             }
             task
         })

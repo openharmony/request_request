@@ -197,3 +197,26 @@ HWTEST_F(NetstackRequest, GetHttpAddress, TestSize.Level1)
     rust::string address = GetHttpAddress(task->GetResponse());
     EXPECT_FALSE(address.empty());
 }
+
+/**
+ * @tc.name: HasDefaultNetWrapper
+ * @tc.desc: Test HasDefaultNetWrapper function
+ * @tc.precon: NA
+ * @tc.step: 1. Call HasDefaultNetWrapper function
+ *           2. Verify request is not nullptr
+ * @tc.expect: Function returns valid bool value without crash
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 0
+ */
+HWTEST_F(NetstackRequest, HasDefaultNetWrapper, TestSize.Level0)
+{
+    std::unique_ptr<HttpClientRequest> request = NewHttpClientRequest();
+    if (HasDefaultNetWrapper()) {
+        SetRequestSslType(*request, "TLS");
+    } else {
+        SetRequestSslType(*request, "TLCP");
+    }
+
+    ASSERT_NE(request, nullptr);
+}
