@@ -49,6 +49,20 @@ public:
     TaskBuilder &setPriority(uint32_t priority);
     TaskBuilder &setExtras(const std::map<std::string, std::string> &extras);
 
+    // Sets the timeout configuration for the task.
+    // connectionTimeout: Maximum time in seconds to wait for connection establishment.
+    //                    Default is 60 seconds if set to 0.
+    // totalTimeout: Maximum total time in seconds for the entire task.
+    //               Default is 7 days (with notification) or 10 minutes (without notification) if set to 0.
+    TaskBuilder &setTimeout(const Timeout &timeout);
+
+    // Sets the minimum speed requirement for the task.
+    // If the transfer speed falls below the threshold for the specified duration,
+    // the task will fail with a LOW_SPEED error.
+    // speed: Minimum speed threshold in bytes per second. 0 means no speed limit.
+    // duration: Duration in seconds to monitor the speed. 0 means no duration check.
+    TaskBuilder &setMinSpeed(const MinSpeed &minSpeed);
+
 public:
     std::pair<Config, ExceptionErrorCode> build();
 

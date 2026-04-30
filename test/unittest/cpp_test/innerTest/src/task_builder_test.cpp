@@ -1339,3 +1339,191 @@ HWTEST_F(TaskBuilderTest, build009, TestSize.Level1)
     auto res = builder.setAction(Action::DOWNLOAD).setUrl("https://example.com/").setSaveAs("./data/").build();
     EXPECT_EQ(res.second, ExceptionErrorCode::E_PARAMETER_CHECK);
 }
+
+/**
+ * @tc.name: setTimeout001
+ * @tc.desc: Verify setTimeout with valid timeout values
+ * @tc.precon: NA
+ * @tc.step: 1. Create TaskBuilder instance
+ *           2. Set timeout with connectionTimeout=30 and totalTimeout=3600
+ *           3. Verify config.timeout values are set correctly
+ * @tc.expect: Timeout values should be set correctly
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(TaskBuilderTest, setTimeout001, TestSize.Level1)
+{
+    TaskBuilder builder;
+    Timeout timeout;
+    timeout.connectionTimeout = 30;
+    timeout.totalTimeout = 3600;
+    builder.setTimeout(timeout);
+    EXPECT_EQ(builder.config.timeout.connectionTimeout, 30);
+    EXPECT_EQ(builder.config.timeout.totalTimeout, 3600);
+}
+
+/**
+ * @tc.name: setTimeout002
+ * @tc.desc: Verify setTimeout with zero values (use default on SA side)
+ * @tc.precon: NA
+ * @tc.step: 1. Create TaskBuilder instance
+ *           2. Set timeout with connectionTimeout=0 and totalTimeout=0
+ *           3. Verify config.timeout values are set to 0
+ * @tc.expect: Timeout values should be set to 0 (SA will use defaults)
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(TaskBuilderTest, setTimeout002, TestSize.Level1)
+{
+    TaskBuilder builder;
+    Timeout timeout;
+    timeout.connectionTimeout = 0;
+    timeout.totalTimeout = 0;
+    builder.setTimeout(timeout);
+    EXPECT_EQ(builder.config.timeout.connectionTimeout, 0);
+    EXPECT_EQ(builder.config.timeout.totalTimeout, 0);
+}
+
+/**
+ * @tc.name: setTimeout003
+ * @tc.desc: Verify setTimeout with maximum total timeout value
+ * @tc.precon: NA
+ * @tc.step: 1. Create TaskBuilder instance
+ *           2. Set timeout with totalTimeout=604800 (7 days)
+ *           3. Verify config.timeout.totalTimeout is set correctly
+ * @tc.expect: totalTimeout should be set to 604800
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(TaskBuilderTest, setTimeout003, TestSize.Level1)
+{
+    TaskBuilder builder;
+    Timeout timeout;
+    timeout.connectionTimeout = 60;
+    timeout.totalTimeout = 604800;
+    builder.setTimeout(timeout);
+    EXPECT_EQ(builder.config.timeout.connectionTimeout, 60);
+    EXPECT_EQ(builder.config.timeout.totalTimeout, 604800);
+}
+
+/**
+ * @tc.name: setTimeout004
+ * @tc.desc: Verify setTimeout with method chaining
+ * @tc.precon: NA
+ * @tc.step: 1. Create TaskBuilder instance
+ *           2. Set action, url, and timeout in chain
+ *           3. Verify all values are set correctly
+ * @tc.expect: All values should be set correctly via method chaining
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(TaskBuilderTest, setTimeout004, TestSize.Level1)
+{
+    Timeout timeout;
+    timeout.connectionTimeout = 120;
+    timeout.totalTimeout = 7200;
+    TaskBuilder builder;
+    builder.setAction(Action::DOWNLOAD).setUrl("https://127.0.0.1/data.txt").setTimeout(timeout);
+    EXPECT_EQ(builder.config.action, Action::DOWNLOAD);
+    EXPECT_EQ(builder.config.url, "https://127.0.0.1/data.txt");
+    EXPECT_EQ(builder.config.timeout.connectionTimeout, 120);
+    EXPECT_EQ(builder.config.timeout.totalTimeout, 7200);
+}
+
+/**
+ * @tc.name: setMinSpeed001
+ * @tc.desc: Verify setMinSpeed with valid speed and duration values
+ * @tc.precon: NA
+ * @tc.step: 1. Create TaskBuilder instance
+ *           2. Set minSpeed with speed=1024 and duration=60
+ *           3. Verify config.minSpeed values are set correctly
+ * @tc.expect: minSpeed values should be set correctly
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(TaskBuilderTest, setMinSpeed001, TestSize.Level1)
+{
+    TaskBuilder builder;
+    MinSpeed minSpeed;
+    minSpeed.speed = 1024;
+    minSpeed.duration = 60;
+    builder.setMinSpeed(minSpeed);
+    EXPECT_EQ(builder.config.minSpeed.speed, 1024);
+    EXPECT_EQ(builder.config.minSpeed.duration, 60);
+}
+
+/**
+ * @tc.name: setMinSpeed002
+ * @tc.desc: Verify setMinSpeed with zero values (no speed limit)
+ * @tc.precon: NA
+ * @tc.step: 1. Create TaskBuilder instance
+ *           2. Set minSpeed with speed=0 and duration=0
+ *           3. Verify config.minSpeed values are set to 0
+ * @tc.expect: minSpeed values should be set to 0 (no speed limit)
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(TaskBuilderTest, setMinSpeed002, TestSize.Level1)
+{
+    TaskBuilder builder;
+    MinSpeed minSpeed;
+    minSpeed.speed = 0;
+    minSpeed.duration = 0;
+    builder.setMinSpeed(minSpeed);
+    EXPECT_EQ(builder.config.minSpeed.speed, 0);
+    EXPECT_EQ(builder.config.minSpeed.duration, 0);
+}
+
+/**
+ * @tc.name: setMinSpeed003
+ * @tc.desc: Verify setMinSpeed with high speed threshold
+ * @tc.precon: NA
+ * @tc.step: 1. Create TaskBuilder instance
+ *           2. Set minSpeed with speed=1048576 (1MB/s) and duration=30
+ *           3. Verify config.minSpeed values are set correctly
+ * @tc.expect: minSpeed values should be set correctly
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(TaskBuilderTest, setMinSpeed003, TestSize.Level1)
+{
+    TaskBuilder builder;
+    MinSpeed minSpeed;
+    minSpeed.speed = 1048576;
+    minSpeed.duration = 30;
+    builder.setMinSpeed(minSpeed);
+    EXPECT_EQ(builder.config.minSpeed.speed, 1048576);
+    EXPECT_EQ(builder.config.minSpeed.duration, 30);
+}
+
+/**
+ * @tc.name: setMinSpeed004
+ * @tc.desc: Verify setMinSpeed with method chaining
+ * @tc.precon: NA
+ * @tc.step: 1. Create TaskBuilder instance
+ *           2. Set action, url, and minSpeed in chain
+ *           3. Verify all values are set correctly
+ * @tc.expect: All values should be set correctly via method chaining
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(TaskBuilderTest, setMinSpeed004, TestSize.Level1)
+{
+    MinSpeed minSpeed;
+    minSpeed.speed = 5120;
+    minSpeed.duration = 120;
+    TaskBuilder builder;
+    builder.setAction(Action::DOWNLOAD).setUrl("https://127.0.0.1/data.txt").setMinSpeed(minSpeed);
+    EXPECT_EQ(builder.config.action, Action::DOWNLOAD);
+    EXPECT_EQ(builder.config.url, "https://127.0.0.1/data.txt");
+    EXPECT_EQ(builder.config.minSpeed.speed, 5120);
+    EXPECT_EQ(builder.config.minSpeed.duration, 120);
+}
