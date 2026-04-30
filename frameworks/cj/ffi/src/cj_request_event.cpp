@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,12 +38,14 @@ static constexpr const char *EVENT_REMOVE = "remove";
 static constexpr const char *EVENT_PROGRESS = "progress";
 static constexpr const char *EVENT_RESPONSE = "response";
 static constexpr const char *EVENT_FAULT_OCCUR = "faultOccur";
+static constexpr const char *EVENT_WAIT = "wait";
 
 std::map<std::string, SubscribeType> CJRequestEvent::supportEventsV10_ = {
     {EVENT_PROGRESS, SubscribeType::PROGRESS}, {EVENT_COMPLETED, SubscribeType::COMPLETED},
     {EVENT_FAILED, SubscribeType::FAILED},     {EVENT_PAUSE, SubscribeType::PAUSE},
     {EVENT_RESUME, SubscribeType::RESUME},     {EVENT_REMOVE, SubscribeType::REMOVE},
     {EVENT_RESPONSE, SubscribeType::RESPONSE}, {EVENT_FAULT_OCCUR, SubscribeType::FAULT_OCCUR},
+    {EVENT_WAIT, SubscribeType::WAIT},
 };
 
 SubscribeType CJRequestEvent::StringToSubscribeType(const std::string &type)
@@ -92,7 +94,16 @@ ExceptionErrorCode CJRequestEvent::StartExec(const CJRequestTask *task)
         }
     }
 
-    return (ExceptionErrorCode)RequestManager::GetInstance()->Start(task->GetTidStr());
+    std::string tid = task->GetTidStr();
+    {
+        CJRequestTask *foundTask = CJRequestTask::FindTaskById(tid);
+        if (foundTask == nullptr) {
+            REQUEST_HILOGE("Start task not found %{public}s.", tid.c_str());
+            return ExceptionErrorCode::E_TASK_STATE;
+        }
+    }
+
+    return (ExceptionErrorCode)RequestManager::GetInstance()->Start(tid);
 }
 
 ExceptionErrorCode CJRequestEvent::StopExec(const CJRequestTask *task)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,62 @@ using OHOS::Request::Faults;
 using OHOS::Request::FileSpec;
 using OHOS::Request::FormItem;
 using OHOS::Request::Reason;
+using OHOS::Request::State;
+
+constexpr int32_t DECIMALISM = 10;
+
+enum DownloadErrorCode {
+    ERROR_CANNOT_RESUME = 0,
+    ERROR_DEVICE_NOT_FOUND,
+    ERROR_FILE_ALREADY_EXISTS,
+    ERROR_FILE_ERROR,
+    ERROR_HTTP_DATA_ERROR,
+    ERROR_INSUFFICIENT_SPACE,
+    ERROR_TOO_MANY_REDIRECTS,
+    ERROR_UNHANDLED_HTTP_CODE,
+    ERROR_UNKNOWN,
+    ERROR_OFFLINE,
+    ERROR_UNSUPPORTED_NETWORK_TYPE,
+};
+
+enum DownloadStatus {
+    SESSION_SUCCESS = 0,
+    SESSION_RUNNING,
+    SESSION_PENDING,
+    SESSION_PAUSED,
+    SESSION_FAILED,
+    SESSION_UNKNOWN,
+};
+
+enum PausedReason {
+    PAUSED_QUEUED_FOR_WIFI = 0,
+    PAUSED_WAITING_FOR_NETWORK,
+    PAUSED_WAITING_TO_RETRY,
+    PAUSED_BY_USER,
+    PAUSED_UNKNOWN,
+};
+
+static std::map<State, DownloadStatus> stateMapForDownload = {
+    { State::INITIALIZED, SESSION_PENDING },
+    { State::WAITING, SESSION_PAUSED },
+    { State::RUNNING, SESSION_RUNNING },
+    { State::RETRYING, SESSION_RUNNING },
+    { State::PAUSED, SESSION_PAUSED },
+    { State::COMPLETED, SESSION_SUCCESS },
+    { State::STOPPED, SESSION_FAILED },
+    { State::FAILED, SESSION_FAILED },
+};
+
+static std::map<Reason, DownloadErrorCode> failMapForDownload = {
+    { Reason::REASON_OK, ERROR_FILE_ALREADY_EXISTS },
+    { Reason::IO_ERROR, ERROR_FILE_ERROR },
+    { Reason::INSUFFICIENT_SPACE, ERROR_INSUFFICIENT_SPACE },
+    { Reason::REDIRECT_ERROR, ERROR_TOO_MANY_REDIRECTS },
+    { Reason::OTHERS_ERROR, ERROR_UNKNOWN },
+    { Reason::NETWORK_OFFLINE, ERROR_OFFLINE },
+    { Reason::UNSUPPORTED_NETWORK_TYPE, ERROR_UNSUPPORTED_NETWORK_TYPE },
+    { Reason::UNSUPPORT_RANGE_REQUEST, ERROR_UNKNOWN },
+};
 
 static constexpr const char *REASON_OK_INFO = "Task successful";
 static constexpr const char *TASK_SURVIVAL_ONE_MONTH_INFO = "The task has not been completed for a month yet";
@@ -406,5 +462,48 @@ CFormItemArr Convert2CFormItemArr(const std::vector<FileSpec> &files, const std:
 bool CheckApiVersionAfter19()
 {
     return GetSdkApiVersion() > API_VERSION_19;
+}
+
+CDownloadInfo Convert2CDownloadInfo(const TaskInfo &task)
+{
+    CDownloadInfo out = {0};
+    out.description = MallocCString(task.description);
+    out.downloadedBytes = task.progress.processed;
+    out.downloadId = static_cast<int64_t>(strtoul(task.tid.c_str(), nullptr, DECIMALISM));
+    if (task.progress.state == State::FAILED) {
+        auto it = failMapForDownload.find(task.code);
+        if (it != failMapForDownload.end()) {
+            out.failedReason = static_cast<int32_t>(it->second);
+        } else {
+            out.failedReason = ERROR_UNKNOWN;
+        }
+    }
+    if (!task.files.empty()) {
+        out.fileName = MallocCString(task.files[0].filename);
+        out.filePath = MallocCString(task.files[0].uri);
+    } else {
+        out.fileName = MallocCString("");
+        out.filePath = MallocCString("");
+    }
+    if (task.progress.state == State::WAITING
+        && (task.code == Reason::NETWORK_OFFLINE || task.code == Reason::UNSUPPORTED_NETWORK_TYPE)) {
+        out.pausedReason = PAUSED_WAITING_FOR_NETWORK;
+    }
+    if (task.progress.state == State::PAUSED) {
+        if (task.code == Reason::USER_OPERATION) {
+            out.pausedReason = PAUSED_BY_USER;
+        }
+    }
+    auto stateIt = stateMapForDownload.find(task.progress.state);
+    if (stateIt != stateMapForDownload.end()) {
+        out.status = static_cast<int32_t>(stateIt->second);
+    } else {
+        out.status = static_cast<int32_t>(SESSION_FAILED);
+    }
+    out.targetURI = MallocCString(task.url);
+    out.downloadTitle = MallocCString(task.title);
+    out.downloadTotalBytes = task.progress.sizes.size() > 0 ? task.progress.sizes[0] : 0;
+    out.mimeType = MallocCString(task.mimeType);
+    return out;
 }
 } // namespace OHOS::CJSystemapi::Request
