@@ -219,31 +219,37 @@ impl RequestTask {
         self.response().headers()
     }
 
-    /// Sets the callback handler for this task.
+    /// Sets the callback handler with retry/timeout configuration.
     ///
     /// # Arguments
     ///
     /// * `callback` - The callback implementation
     /// * `info_mgr` - Download info manager for performance tracking
     /// * `task_id` - Unique identifier for this task
-    pub(crate) fn set_callback(
+    /// * `max_retry` - Optional maximum retry count
+    /// * `network_check_timeout` - Optional network check timeout in seconds
+    /// * `tries` - Current retry attempt count
+    pub(crate) fn set_callback_with_config(
         &mut self,
         callback: Box<dyn RequestCallback + 'static>,
         info_mgr: Arc<DownloadInfoMgr>,
         task_id: TaskId,
+        max_retry: Option<usize>,
+        network_check_timeout: Option<u32>,
+        tries: usize,
     ) {
         let task = self.inner.lock().unwrap();
-        OnCallback(
-            &task,
-            Box::new(CallbackWrapper::from_callback(
-                callback,
-                self.reset.clone(),
-                Arc::downgrade(&self.inner),
-                task_id,
-                info_mgr,
-                0,
-            )),
-        );
+        let mut wrapper = Box::new(CallbackWrapper::from_callback(
+            callback,
+            self.reset.clone(),
+            Arc::downgrade(&self.inner),
+            task_id,
+            info_mgr,
+            0,
+        ));
+        // Apply configuration and tries to the wrapper
+        wrapper.set_config(max_retry, network_check_timeout, tries);
+        OnCallback(&task, wrapper);
     }
 
     /// Helper method to get a pinned mutable reference to the underlying task.

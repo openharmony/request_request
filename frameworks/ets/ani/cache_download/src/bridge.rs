@@ -22,9 +22,21 @@ pub enum SslType {
 }
 
 #[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.CacheStrategy")]
+#[derive(PartialEq)]
 pub enum CacheStrategy {
     FORCE,
     LAZY,
+}
+
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.RetryOptions")]
+pub struct RetryOptions {
+    pub max_retry_count: Option<i32>,
+}
+
+#[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.TimeoutOptions")]
+pub struct TimeoutOptions {
+    pub network_check_timeout: Option<i32>,
+    pub http_total_timeout: Option<i32>,
 }
 
 #[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.CacheDownloadOptions")]
@@ -33,6 +45,8 @@ pub struct CacheDownloadOptions {
     pub ssl_type: Option<SslType>,
     pub ca_path: Option<String>,
     pub cache_strategy: Option<CacheStrategy>,
+    pub retry: Option<RetryOptions>,
+    pub timeout: Option<TimeoutOptions>,
 }
 
 #[ani_rs::ani(path = "@ohos.request.cacheDownload.cacheDownload.ResourceInfoInner")]

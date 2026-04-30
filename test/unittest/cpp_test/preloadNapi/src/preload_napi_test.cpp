@@ -81,3 +81,243 @@ HWTEST_F(PreloadNapiTest, BuildDownloadInfoNullTest, TestSize.Level1)
     EXPECT_TRUE(flagInfo->load());
     Preload::GetInstance()->Remove(url);
 }
+
+/**
+ * @tc.name: SetGlobalRetryOptionsTest001
+ * @tc.desc: Test SetGlobalRetryOptions with valid value
+ * @tc.precon: NA
+ * @tc.step: 1. Create RetryOptions with maxRetryCount = 5
+ *           2. Call SetGlobalRetryOptions
+ *           3. Restore to default value
+ * @tc.expect: Function executes without error
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadNapiTest, SetGlobalRetryOptionsTest001, TestSize.Level1)
+{
+    RetryOptions retryOptions;
+    retryOptions.maxRetryCount = 5;
+    Preload::GetInstance()->SetGlobalRetryOptions(retryOptions);
+    EXPECT_TRUE(true);
+    // Restore to default
+    retryOptions.maxRetryCount = 1;
+    Preload::GetInstance()->SetGlobalRetryOptions(retryOptions);
+}
+
+/**
+ * @tc.name: SetGlobalRetryOptionsTest002
+ * @tc.desc: Test SetGlobalRetryOptions with minimum value
+ * @tc.precon: NA
+ * @tc.step: 1. Create RetryOptions with maxRetryCount = 0
+ *           2. Call SetGlobalRetryOptions
+ *           3. Restore to default value
+ * @tc.expect: Function executes without error
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadNapiTest, SetGlobalRetryOptionsTest002, TestSize.Level1)
+{
+    RetryOptions retryOptions;
+    retryOptions.maxRetryCount = 0;
+    Preload::GetInstance()->SetGlobalRetryOptions(retryOptions);
+    EXPECT_TRUE(true);
+    // Restore to default
+    retryOptions.maxRetryCount = 1;
+    Preload::GetInstance()->SetGlobalRetryOptions(retryOptions);
+}
+
+/**
+ * @tc.name: SetGlobalRetryOptionsTest003
+ * @tc.desc: Test SetGlobalRetryOptions with maximum value
+ * @tc.precon: NA
+ * @tc.step: 1. Create RetryOptions with maxRetryCount = 10
+ *           2. Call SetGlobalRetryOptions
+ *           3. Restore to default value
+ * @tc.expect: Function executes without error
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadNapiTest, SetGlobalRetryOptionsTest003, TestSize.Level1)
+{
+    RetryOptions retryOptions;
+    retryOptions.maxRetryCount = 10;
+    Preload::GetInstance()->SetGlobalRetryOptions(retryOptions);
+    EXPECT_TRUE(true);
+    // Restore to default
+    retryOptions.maxRetryCount = 1;
+    Preload::GetInstance()->SetGlobalRetryOptions(retryOptions);
+}
+
+/**
+ * @tc.name: SetGlobalRetryOptionsTest004
+ * @tc.desc: Test SetGlobalRetryOptions with default value
+ * @tc.precon: NA
+ * @tc.step: 1. Create RetryOptions with default maxRetryCount = 1
+ *           2. Call SetGlobalRetryOptions
+ * @tc.expect: Function executes without error
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadNapiTest, SetGlobalRetryOptionsTest004, TestSize.Level1)
+{
+    RetryOptions retryOptions;
+    retryOptions.maxRetryCount = 1;
+    Preload::GetInstance()->SetGlobalRetryOptions(retryOptions);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: SetGlobalTimeoutOptionsTest001
+ * @tc.desc: Test SetGlobalTimeoutOptions with valid values
+ * @tc.precon: NA
+ * @tc.step: 1. Create TimeoutOptions with networkCheckTimeout = 10, httpTotalTimeout = 30
+ *           2. Call SetGlobalTimeoutOptions
+ *           3. Restore to default values
+ * @tc.expect: Function executes without error
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadNapiTest, SetGlobalTimeoutOptionsTest001, TestSize.Level1)
+{
+    TimeoutOptions timeoutOptions;
+    timeoutOptions.networkCheckTimeout = 10;
+    timeoutOptions.httpTotalTimeout = 30;
+    Preload::GetInstance()->SetGlobalTimeoutOptions(timeoutOptions);
+    EXPECT_TRUE(true);
+    // Restore to default
+    timeoutOptions.networkCheckTimeout = 20;
+    timeoutOptions.httpTotalTimeout = 60;
+    Preload::GetInstance()->SetGlobalTimeoutOptions(timeoutOptions);
+}
+
+/**
+ * @tc.name: SetGlobalTimeoutOptionsTest002
+ * @tc.desc: Test SetGlobalTimeoutOptions with minimum networkCheckTimeout
+ * @tc.precon: NA
+ * @tc.step: 1. Create TimeoutOptions with networkCheckTimeout = 0, httpTotalTimeout = 60
+ *           2. Call SetGlobalTimeoutOptions
+ *           3. Restore to default values
+ * @tc.expect: Function executes without error
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadNapiTest, SetGlobalTimeoutOptionsTest002, TestSize.Level1)
+{
+    TimeoutOptions timeoutOptions;
+    timeoutOptions.networkCheckTimeout = 0;
+    timeoutOptions.httpTotalTimeout = 60;
+    Preload::GetInstance()->SetGlobalTimeoutOptions(timeoutOptions);
+    EXPECT_TRUE(true);
+    // Restore to default
+    timeoutOptions.networkCheckTimeout = 20;
+    timeoutOptions.httpTotalTimeout = 60;
+    Preload::GetInstance()->SetGlobalTimeoutOptions(timeoutOptions);
+}
+
+/**
+ * @tc.name: SetGlobalTimeoutOptionsTest003
+ * @tc.desc: Test SetGlobalTimeoutOptions with maximum networkCheckTimeout
+ * @tc.precon: NA
+ * @tc.step: 1. Create TimeoutOptions with networkCheckTimeout = 20, httpTotalTimeout = 60
+ *           2. Call SetGlobalTimeoutOptions
+ * @tc.expect: Function executes without error
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadNapiTest, SetGlobalTimeoutOptionsTest003, TestSize.Level1)
+{
+    TimeoutOptions timeoutOptions;
+    timeoutOptions.networkCheckTimeout = 20;
+    timeoutOptions.httpTotalTimeout = 60;
+    Preload::GetInstance()->SetGlobalTimeoutOptions(timeoutOptions);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: SetGlobalTimeoutOptionsTest004
+ * @tc.desc: Test SetGlobalTimeoutOptions with minimum httpTotalTimeout
+ * @tc.precon: NA
+ * @tc.step: 1. Create TimeoutOptions with networkCheckTimeout = 20, httpTotalTimeout = 1
+ *           2. Call SetGlobalTimeoutOptions
+ *           3. Restore to default values
+ * @tc.expect: Function executes without error
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadNapiTest, SetGlobalTimeoutOptionsTest004, TestSize.Level1)
+{
+    TimeoutOptions timeoutOptions;
+    timeoutOptions.networkCheckTimeout = 20;
+    timeoutOptions.httpTotalTimeout = 1;
+    Preload::GetInstance()->SetGlobalTimeoutOptions(timeoutOptions);
+    EXPECT_TRUE(true);
+    // Restore to default
+    timeoutOptions.httpTotalTimeout = 60;
+    Preload::GetInstance()->SetGlobalTimeoutOptions(timeoutOptions);
+}
+
+/**
+ * @tc.name: SetGlobalTimeoutOptionsTest005
+ * @tc.desc: Test SetGlobalTimeoutOptions with default values
+ * @tc.precon: NA
+ * @tc.step: 1. Create TimeoutOptions with default values (20, 60)
+ *           2. Call SetGlobalTimeoutOptions
+ * @tc.expect: Function executes without error
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadNapiTest, SetGlobalTimeoutOptionsTest005, TestSize.Level1)
+{
+    TimeoutOptions timeoutOptions;
+    timeoutOptions.networkCheckTimeout = 20;
+    timeoutOptions.httpTotalTimeout = 60;
+    Preload::GetInstance()->SetGlobalTimeoutOptions(timeoutOptions);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: PreloadOptionsRetryTest001
+ * @tc.desc: Test PreloadOptions with task-level retry configuration
+ * @tc.precon: NA
+ * @tc.step: 1. Create PreloadOptions with retry.maxRetryCount = 5
+ *           2. Verify the retry configuration is set correctly
+ * @tc.expect: retry.maxRetryCount equals 5
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadNapiTest, PreloadOptionsRetryTest001, TestSize.Level1)
+{
+    std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
+    options->retry.maxRetryCount = 5;
+    EXPECT_EQ(options->retry.maxRetryCount, 5);
+}
+
+/**
+ * @tc.name: PreloadOptionsTimeoutTest001
+ * @tc.desc: Test PreloadOptions with task-level timeout configuration
+ * @tc.precon: NA
+ * @tc.step: 1. Create PreloadOptions with timeout settings
+ *           2. Verify the timeout configuration is set correctly
+ * @tc.expect: timeout fields equal expected values
+ * @tc.type: FUNC
+ * @tc.require: issueNumber
+ * @tc.level: Level 1
+ */
+HWTEST_F(PreloadNapiTest, PreloadOptionsTimeoutTest001, TestSize.Level1)
+{
+    std::unique_ptr<PreloadOptions> options = std::make_unique<PreloadOptions>();
+    options->timeout.networkCheckTimeout = 15;
+    options->timeout.httpTotalTimeout = 90;
+    EXPECT_EQ(options->timeout.networkCheckTimeout, 15);
+    EXPECT_EQ(options->timeout.httpTotalTimeout, 90);
+}

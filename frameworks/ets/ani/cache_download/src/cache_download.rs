@@ -33,6 +33,19 @@ const MAX_MEM_SIZE: i64 = 1073741824;
 const MAX_URL_LENGTH: usize = 8192;
 const MAX_INFO_LIST_SIZE: u16 = 8192;
 
+// Retry constants
+const DEFAULT_MAX_RETRY_COUNT: i32 = 1;
+const MIN_RETRY_COUNT: i32 = 0;
+const MAX_RETRY_COUNT: i32 = 10;
+
+// Timeout constants
+const DEFAULT_NETWORK_CHECK_TIMEOUT: i32 = 20;
+const MIN_NETWORK_CHECK_TIMEOUT: i32 = 0;
+const MAX_NETWORK_CHECK_TIMEOUT: i32 = 20;
+const DEFAULT_HTTP_TOTAL_TIMEOUT: i32 = 60;
+const MIN_HTTP_TOTAL_TIMEOUT: i32 = 1;
+const MAX_HTTP_TOTAL_TIMEOUT: i32 = (u32::MAX / 1000) as i32;
+
 static HAS_INTERNET_PERM: OnceLock<bool> = OnceLock::new();
 
 static HAS_GET_NETWORK_INFO_PERM: OnceLock<bool> = OnceLock::new();
@@ -91,14 +104,14 @@ pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), Busine
             "internet permission denied".to_string(),
         ));
     }
-    if (url.len() > MAX_URL_LENGTH as usize) {
+    if url.len() > MAX_URL_LENGTH {
         return Err(BusinessError::new(
             401,
             "url exceeds the maximum length".to_string(),
         ));
     }
     let mut request = DownloadRequest::new(&url);
-    // Apply headers if provided in options
+
     let headers = options.headers.unwrap_or_default();
     let headers_vec: Vec<(String, String)> = headers.into_iter().collect();
     let borrowed: Vec<(&str, &str)> = headers_vec
@@ -108,6 +121,7 @@ pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), Busine
     if !borrowed.is_empty() {
         request.headers(borrowed);
     }
+
     if let Some(ssl_type) = options.ssl_type {
         match ssl_type {
             SslType::TLS => request.ssl_type("TLS"),
@@ -116,20 +130,41 @@ pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), Busine
     }
     if let Some(ref ca_path) = options.ca_path {
         if !ca_path.is_empty() {
-            request.ca_path(ca_path);
+            request.ca_path(ca_path.as_str());
         }
     }
-    let mut is_update = true;
-    if let Some(cache_strategy) = options.cache_strategy {
-        if let CacheStrategy::LAZY = cache_strategy {
-            is_update = false;
+
+    let is_update = options.cache_strategy != Some(CacheStrategy::LAZY);
+
+    if let Some(ref retry) = options.retry {
+        if let Some(max_retry_count) = retry.max_retry_count {
+            if max_retry_count >= MIN_RETRY_COUNT && max_retry_count <= MAX_RETRY_COUNT {
+                request.max_retry(max_retry_count as usize);
+            }
         }
     }
-    // Initiate preloading with Netstack downloader and auto-refresh enabled
+
+    if let Some(ref timeout) = options.timeout {
+        if let Some(network_check_timeout) = timeout.network_check_timeout {
+            if network_check_timeout >= MIN_NETWORK_CHECK_TIMEOUT
+                && network_check_timeout <= MAX_NETWORK_CHECK_TIMEOUT
+            {
+                request.network_check_timeout(network_check_timeout as u32);
+            }
+        }
+        if let Some(http_total_timeout) = timeout.http_total_timeout {
+            if http_total_timeout >= MIN_HTTP_TOTAL_TIMEOUT
+                && http_total_timeout <= MAX_HTTP_TOTAL_TIMEOUT
+            {
+                request.http_total_timeout(http_total_timeout as u32);
+            }
+        }
+    }
+
     CacheDownloadService::get_instance().preload(
         request,
         Box::new(CallbackWrapper::new(url.clone())),
-        is_update, // Enable auto-refresh of cached resources
+        is_update,
         Downloader::Netstack,
     );
     Ok(())
@@ -382,5 +417,71 @@ fn check_url_length(url: &str) -> Result<(), BusinessError> {
             "url exceeds the maximum length".to_string(),
         ));
     }
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn set_global_retry_options(
+    options: Option<crate::bridge::RetryOptions>,
+) -> Result<(), BusinessError> {
+    // 参数缺失时使用默认值
+    let max_retry_count = match options {
+        None => DEFAULT_MAX_RETRY_COUNT,
+        Some(o) => match o.max_retry_count {
+            None => DEFAULT_MAX_RETRY_COUNT,
+            Some(v) => {
+                // 参数范围校验
+                if v < MIN_RETRY_COUNT || v > MAX_RETRY_COUNT {
+                    return Err(BusinessError::new(
+                        401,
+                        "maxRetryCount out of range [0, 10]".to_string(),
+                    ));
+                }
+                v
+            }
+        },
+    };
+    CacheDownloadService::get_instance().set_global_retry_options(max_retry_count as usize);
+    Ok(())
+}
+
+#[ani_rs::native]
+pub fn set_global_timeout_options(
+    options: Option<crate::bridge::TimeoutOptions>,
+) -> Result<(), BusinessError> {
+    // 参数缺失时使用默认值
+    let network_check_timeout = match options {
+        None => DEFAULT_NETWORK_CHECK_TIMEOUT,
+        Some(ref o) => match o.network_check_timeout {
+            None => DEFAULT_NETWORK_CHECK_TIMEOUT,
+            Some(v) => {
+                // 参数范围校验
+                if v < MIN_NETWORK_CHECK_TIMEOUT || v > MAX_NETWORK_CHECK_TIMEOUT {
+                    return Err(BusinessError::new(
+                        401,
+                        "networkCheckTimeout out of range [0, 20]".to_string(),
+                    ));
+                }
+                v
+            }
+        },
+    };
+    let http_total_timeout = match options {
+        None => DEFAULT_HTTP_TOTAL_TIMEOUT,
+        Some(ref o) => match o.http_total_timeout {
+            None => DEFAULT_HTTP_TOTAL_TIMEOUT,
+            Some(v) => {
+                if v < MIN_HTTP_TOTAL_TIMEOUT || v > MAX_HTTP_TOTAL_TIMEOUT {
+                    return Err(BusinessError::new(
+                        401,
+                        "httpTotalTimeout out of range [1, u32::MAX/1000]".to_string(),
+                    ));
+                }
+                v
+            }
+        },
+    };
+    CacheDownloadService::get_instance()
+        .set_global_timeout_options(network_check_timeout as u32, http_total_timeout as u32);
     Ok(())
 }
