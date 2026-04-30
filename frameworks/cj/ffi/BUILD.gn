@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -70,6 +70,7 @@ ohos_shared_library("cj_request_ffi") {
 
   sources = [
     "src/cj_app_state_callback.cpp",
+    "src/cj_failed_listener.cpp",
     "src/cj_initialize.cpp",
     "src/cj_listener_list.cpp",
     "src/cj_notify_data_listener.cpp",

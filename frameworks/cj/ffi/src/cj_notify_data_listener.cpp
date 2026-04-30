@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -68,15 +68,19 @@ void CJNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData
     }
 
     uint32_t index = notifyData->progress.index;
+    if (task->config_.multipart) {
+        index = 0;
+    }
     size_t len = task->config_.bodyFileNames.size();
-    if (index < len) {
-        std::string &filePath = task->config_.bodyFileNames[index];
-        ReadBytesFromFile(filePath, notifyData->progress.bodyBytes);
-        // Waiting for "complete" to read and delete.
-        if (!(notifyData->version == Version::API10 && index + 1 == len &&
-              notifyData->type == SubscribeType::PROGRESS)) {
-            RemoveFile(filePath);
-        }
+    if (index >= len) {
+        return;
+    }
+    std::string filePath = task->config_.bodyFileNames[index];
+    ReadBytesFromFile(filePath, notifyData->progress.bodyBytes);
+    if (notifyData->type == SubscribeType::PROGRESS && index + 1 != len) {
+        RemoveFile(filePath);
+    } else if (notifyData->type == SubscribeType::COMPLETED) {
+        RemoveFile(filePath);
     }
 }
 
