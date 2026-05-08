@@ -29,5 +29,7 @@ ani_rs::ani_constructor! {
         "offDownloadSuccess" : cache_download::off_download_success,
         "onDownloadError" : cache_download::on_download_error,
         "offDownloadError" : cache_download::off_download_error,
+        "setGlobalRetryOptions" : cache_download::set_global_retry_options,
+        "setGlobalTimeoutOptions" : cache_download::set_global_timeout_options,
     ]
 }

@@ -138,26 +138,38 @@ pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), Busine
 
     if let Some(ref retry) = options.retry {
         if let Some(max_retry_count) = retry.max_retry_count {
-            if max_retry_count >= MIN_RETRY_COUNT && max_retry_count <= MAX_RETRY_COUNT {
-                request.max_retry(max_retry_count as usize);
+            if max_retry_count < MIN_RETRY_COUNT || max_retry_count > MAX_RETRY_COUNT {
+                return Err(BusinessError::new(
+                    401,
+                    "maxRetryCount out of range".to_string(),
+                ));
             }
+            request.max_retry(max_retry_count as usize);
         }
     }
 
     if let Some(ref timeout) = options.timeout {
         if let Some(network_check_timeout) = timeout.network_check_timeout {
-            if network_check_timeout >= MIN_NETWORK_CHECK_TIMEOUT
-                && network_check_timeout <= MAX_NETWORK_CHECK_TIMEOUT
+            if network_check_timeout < MIN_NETWORK_CHECK_TIMEOUT
+                || network_check_timeout > MAX_NETWORK_CHECK_TIMEOUT
             {
-                request.network_check_timeout(network_check_timeout as u32);
+                return Err(BusinessError::new(
+                    401,
+                    "networkCheckTimeout out of range".to_string(),
+                ));
             }
+            request.network_check_timeout(network_check_timeout as u32);
         }
         if let Some(http_total_timeout) = timeout.http_total_timeout {
-            if http_total_timeout >= MIN_HTTP_TOTAL_TIMEOUT
-                && http_total_timeout <= MAX_HTTP_TOTAL_TIMEOUT
+            if http_total_timeout < MIN_HTTP_TOTAL_TIMEOUT
+                || http_total_timeout > MAX_HTTP_TOTAL_TIMEOUT
             {
-                request.http_total_timeout(http_total_timeout as u32);
+                return Err(BusinessError::new(
+                    401,
+                    "httpTotalTimeout out of range".to_string(),
+                ));
             }
+            request.http_total_timeout(http_total_timeout as u32);
         }
     }
 
@@ -434,7 +446,7 @@ pub fn set_global_retry_options(
                 if v < MIN_RETRY_COUNT || v > MAX_RETRY_COUNT {
                     return Err(BusinessError::new(
                         401,
-                        "maxRetryCount out of range [0, 10]".to_string(),
+                        "maxRetryCount out of range".to_string(),
                     ));
                 }
                 v
@@ -459,7 +471,7 @@ pub fn set_global_timeout_options(
                 if v < MIN_NETWORK_CHECK_TIMEOUT || v > MAX_NETWORK_CHECK_TIMEOUT {
                     return Err(BusinessError::new(
                         401,
-                        "networkCheckTimeout out of range [0, 20]".to_string(),
+                        "networkCheckTimeout out of range".to_string(),
                     ));
                 }
                 v
@@ -474,7 +486,7 @@ pub fn set_global_timeout_options(
                 if v < MIN_HTTP_TOTAL_TIMEOUT || v > MAX_HTTP_TOTAL_TIMEOUT {
                     return Err(BusinessError::new(
                         401,
-                        "httpTotalTimeout out of range [1, u32::MAX/1000]".to_string(),
+                        "httpTotalTimeout out of range".to_string(),
                     ));
                 }
                 v
