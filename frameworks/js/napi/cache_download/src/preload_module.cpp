@@ -450,7 +450,7 @@ napi_value download(napi_env env, napi_callback_info info)
     GetCacheStrategy(env, args[1], isUpdate);
     // 参数校验：超出范围抛出错误
     if (!SetOptionsRetry(env, args[1], options)) {
-        ThrowError(env, E_PARAMETER_CHECK, "maxRetryCount out of range [0, 10]");
+        ThrowError(env, E_PARAMETER_CHECK, "maxRetryCount out of range");
         return nullptr;
     }
     if (!SetOptionsTimeout(env, args[1], options)) {
@@ -761,7 +761,7 @@ napi_value setGlobalRetryOptions(napi_env env, napi_callback_info info)
 
     if (!ParseNumberField(env, args[0], "maxRetryCount", {MIN_RETRY_COUNT, MAX_RETRY_COUNT},
         retryOptions.maxRetryCount)) {
-        ThrowError(env, E_PARAMETER_CHECK, "maxRetryCount type error or out of range [0, 10]");
+        ThrowError(env, E_PARAMETER_CHECK, "maxRetryCount type error or out of range");
         return nullptr;
     }
 
@@ -792,7 +792,7 @@ napi_value setGlobalTimeoutOptions(napi_env env, napi_callback_info info)
 
     if (!ParseNumberField(env, args[0], "networkCheckTimeout", {MIN_NETWORK_CHECK_TIMEOUT, MAX_NETWORK_CHECK_TIMEOUT},
         timeoutOptions.networkCheckTimeout)) {
-        ThrowError(env, E_PARAMETER_CHECK, "networkCheckTimeout type error or out of range [0, 20]");
+        ThrowError(env, E_PARAMETER_CHECK, "networkCheckTimeout type error or out of range");
         return nullptr;
     }
 
