@@ -65,7 +65,10 @@
         "resource_management",
         "i18n",
         "bundle_framework",
-        "runtime_core"
+        "runtime_core",
+        "ets_frontend",
+        "input",
+        "selinux_adapter"
       ],
       "third_party": []
     },
