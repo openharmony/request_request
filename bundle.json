@@ -66,9 +66,7 @@
         "i18n",
         "bundle_framework",
         "runtime_core",
-        "ets_frontend",
-        "input",
-        "selinux_adapter"
+        "ets_frontend"
       ],
       "third_party": []
     },
