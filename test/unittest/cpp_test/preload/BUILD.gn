@@ -45,7 +45,6 @@ ohos_unittest("preload_test") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "rust_cxx:cxx_cppdeps",
-    "selinux_adapter:librestorecon",
   ]
 }
 

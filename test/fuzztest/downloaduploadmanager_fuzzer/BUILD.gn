@@ -67,7 +67,6 @@ ohos_fuzztest("DownloadUploadManagerFuzzTest") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
-    "input:libmmi-client",
     "ipc:ipc_single",
     "napi:ace_napi",
     "relational_store:native_dataability",

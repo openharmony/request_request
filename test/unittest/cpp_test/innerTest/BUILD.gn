@@ -81,7 +81,6 @@ ohos_unittest("innerTest") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "selinux_adapter:librestorecon",
     "storage_service:storage_manager_acl",
   ]
 }
