@@ -495,10 +495,6 @@ RetError CJRequestImpl::FailedOn(std::string taskId, int64_t callback)
 {
     REQUEST_HILOGD("[CJRequestImpl] FailedOn start");
     RetError ret{};
-    if (callback == 0) {
-        REQUEST_HILOGE("[CJRequestImpl] callback is 0");
-        return Convert2RetErr(ExceptionErrorCode::E_PARAMETER_CHECK);
-    }
     CJRequestTask *task = CJRequestTask::FindTaskById(taskId);
     if (task == nullptr) {
         REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}s.", taskId.c_str());
@@ -518,10 +514,6 @@ RetError CJRequestImpl::FailedOff(std::string taskId, int64_t callback)
 {
     REQUEST_HILOGD("[CJRequestImpl] FailedOff start");
     RetError ret{};
-    if (callback == 0) {
-        REQUEST_HILOGE("[CJRequestImpl] callback is 0");
-        return Convert2RetErr(ExceptionErrorCode::E_PARAMETER_CHECK);
-    }
     CJRequestTask *task = CJRequestTask::FindTaskById(taskId);
     if (task == nullptr) {
         REQUEST_HILOGE("[CJRequestImpl] Fail to find task, id:%{public}s.", taskId.c_str());
