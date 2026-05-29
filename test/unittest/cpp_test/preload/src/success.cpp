@@ -34,7 +34,7 @@
 using namespace testing::ext;
 using namespace OHOS::Request;
 
-constexpr size_t SLEEP_INTERVAL = 100;
+constexpr size_t SLEEP_INTERVAL = 1000;
 constexpr size_t FETCH_INTERVAL = 5;
 static std::string TEST_URL_0 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/"
                                 "test.txt";
@@ -76,7 +76,8 @@ void DownloadSuccessTest(std::string url, uint64_t size)
     EXPECT_FALSE(handle->IsFinish());
     EXPECT_EQ(handle->GetState(), PreloadState::RUNNING);
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
     EXPECT_FALSE(flagF->load());
@@ -141,7 +142,8 @@ HWTEST_F(PreloadSuccess, OnSuccessAddCallback, TestSize.Level1)
 
     auto handle_1 = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback_1));
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
 
@@ -175,7 +177,8 @@ HWTEST_F(PreloadSuccess, OnSuccessCache, TestSize.Level1)
 
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
 
@@ -248,7 +251,8 @@ HWTEST_F(PreloadSuccess, PreloadSslTypeTls, TestSize.Level1)
 
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback), std::move(options));
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
     EXPECT_FALSE(flagF->load());
@@ -285,7 +289,8 @@ HWTEST_F(PreloadSuccess, PreloadSslTypeDefault, TestSize.Level1)
 
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback), std::move(options));
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
     EXPECT_FALSE(flagF->load());
@@ -323,7 +328,8 @@ HWTEST_F(PreloadSuccess, PreloadSslTypeBadCa, TestSize.Level1)
 
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback), std::move(options));
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
     EXPECT_FALSE(flagF->load());

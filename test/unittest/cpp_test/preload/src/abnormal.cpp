@@ -36,7 +36,7 @@ static std::string TEST_URL_0 = "https://www.gitee.com/tiga-ultraman/downloadTes
                                 "test.txt";
 static std::string TEST_URL_1 = "https://www.gitee.com/fqwert/aaaaaa";
 
-constexpr size_t SLEEP_INTERVAL = 100;
+constexpr size_t SLEEP_INTERVAL = 1000;
 constexpr size_t ABNORMAL_INTERVAL = 24;
 
 class PreloadAbnormal : public testing::Test {
@@ -145,7 +145,8 @@ HWTEST_F(PreloadAbnormal, SuccessBlockCallbackTest, TestSize.Level1)
     auto &[flagS, flagF, flagC, flagP, callback] = test;
     Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
 
@@ -186,7 +187,8 @@ HWTEST_F(PreloadAbnormal, FailBlockCallbackTest, TestSize.Level1)
     auto &[flagS, flagF, flagC, flagP, callback] = test;
     Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
 
@@ -226,7 +228,8 @@ HWTEST_F(PreloadAbnormal, CancelBlockCallbackTest, TestSize.Level1)
     handle->Cancel();
     handle_1->Cancel();
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
@@ -266,7 +269,8 @@ HWTEST_F(PreloadAbnormal, ProgressBlockCallbackTest, TestSize.Level1)
     auto &[flagS, flagF, flagC, flagP, callback] = test;
     auto handle_1 = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
