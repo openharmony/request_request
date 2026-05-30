@@ -154,32 +154,45 @@ mod ut_wrapper {
             headers: vec!["Content-Type", "application/json"],
             ssl_type: "TLS",
             ca_path: "/etc/ssl/certs",
+            max_retry: 5,
+            network_check_timeout: 10,
+            http_total_timeout: 30,
         };
 
         assert_eq!(options.headers.len(), 2);
         assert_eq!(options.ssl_type, "TLS");
         assert_eq!(options.ca_path, "/etc/ssl/certs");
+        assert_eq!(options.max_retry, 5);
+        assert_eq!(options.network_check_timeout, 10);
+        assert_eq!(options.http_total_timeout, 30);
     }
 
     // @tc.name: ut_ffi_predownload_options_empty
-    // @tc.desc: Test FfiPredownloadOptions with empty values
+    // @tc.desc: Test FfiPredownloadOptions with empty values and default sentinel
     // @tc.precon: NA
-    // @tc.step: 1. Create FfiPredownloadOptions with empty values
-    // @tc.expect: Empty options are valid
+    // @tc.step: 1. Create FfiPredownloadOptions with empty values and sentinel values
+    // @tc.expect: Empty options and sentinel values are valid
     // @tc.type: FUNC
     // @tc.require: issueNumber
     // @tc.level: Level 2
     #[test]
     fn ut_ffi_predownload_options_empty() {
+        // Sentinel values (usize::MAX and u32::MAX) indicate "use global default"
         let options = ffi::FfiPredownloadOptions {
             headers: vec![],
             ssl_type: "",
             ca_path: "",
+            max_retry: usize::MAX,
+            network_check_timeout: u32::MAX,
+            http_total_timeout: u32::MAX,
         };
 
         assert!(options.headers.is_empty());
         assert!(options.ssl_type.is_empty());
         assert!(options.ca_path.is_empty());
+        assert_eq!(options.max_retry, usize::MAX);
+        assert_eq!(options.network_check_timeout, u32::MAX);
+        assert_eq!(options.http_total_timeout, u32::MAX);
     }
 
     // @tc.name: ut_ffi_predownload_options_multiple_headers
@@ -203,10 +216,38 @@ mod ut_wrapper {
             ],
             ssl_type: "",
             ca_path: "",
+            max_retry: usize::MAX,  // Use global default
+            network_check_timeout: u32::MAX,  // Use global default
+            http_total_timeout: u32::MAX,  // Use global default
         };
 
         assert_eq!(options.headers.len(), 6);
         assert_eq!(options.headers[0], "Content-Type");
         assert_eq!(options.headers[1], "application/json");
+    }
+
+    // @tc.name: ut_ffi_predownload_options_task_level_config
+    // @tc.desc: Test FfiPredownloadOptions with task-level retry/timeout config
+    // @tc.precon: NA
+    // @tc.step: 1. Create FfiPredownloadOptions with task-level config
+    // @tc.expect: Task-level config values are stored correctly
+    // @tc.type: FUNC
+    // @tc.require: issueNumber
+    // @tc.level: Level 0
+    #[test]
+    fn ut_ffi_predownload_options_task_level_config() {
+        // Task-level configuration overrides global defaults
+        let options = ffi::FfiPredownloadOptions {
+            headers: vec!["Accept", "application/json"],
+            ssl_type: "TLS",
+            ca_path: "",
+            max_retry: 7,  // Override global default (3)
+            network_check_timeout: 15,  // Override global default (20)
+            http_total_timeout: 90,  // Override global default (60)
+        };
+
+        assert_eq!(options.max_retry, 7);
+        assert_eq!(options.network_check_timeout, 15);
+        assert_eq!(options.http_total_timeout, 90);
     }
 }

@@ -452,6 +452,181 @@ fn ut_download_request_ssl_type() {
     assert_eq!(request.ssl_type, Some("TLS"));
 }
 
+// @tc.name: ut_download_request_max_retry
+// @tc.desc: Test DownloadRequest set max_retry
+// @tc.precon: NA
+// @tc.step: 1. Create a DownloadRequest object.
+//           2. Call the max_retry function to set the max_retry
+//           3. Check whether max_retry is set
+// @tc.expect: The max_retry is set successfully
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 1
+#[test]
+fn ut_download_request_max_retry() {
+    let mut request = DownloadRequest::new(TEST_URL);
+    request.max_retry(5);
+    assert_eq!(request.max_retry, Some(5));
+}
+
+// @tc.name: ut_download_request_network_check_timeout
+// @tc.desc: Test DownloadRequest set network_check_timeout
+// @tc.precon: NA
+// @tc.step: 1. Create a DownloadRequest object.
+//           2. Call the network_check_timeout function to set the timeout
+//           3. Check whether network_check_timeout is set
+// @tc.expect: The network_check_timeout is set successfully
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 1
+#[test]
+fn ut_download_request_network_check_timeout() {
+    let mut request = DownloadRequest::new(TEST_URL);
+    request.network_check_timeout(10);
+    assert_eq!(request.network_check_timeout, Some(10));
+}
+
+// @tc.name: ut_download_request_http_total_timeout
+// @tc.desc: Test DownloadRequest set http_total_timeout
+// @tc.precon: NA
+// @tc.step: 1. Create a DownloadRequest object.
+//           2. Call the http_total_timeout function to set the timeout
+//           3. Check whether http_total_timeout is set
+// @tc.expect: The http_total_timeout is set successfully
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 1
+#[test]
+fn ut_download_request_http_total_timeout() {
+    let mut request = DownloadRequest::new(TEST_URL);
+    request.http_total_timeout(90);
+    assert_eq!(request.http_total_timeout, Some(90));
+}
+
+// @tc.name: ut_download_request_all_options
+// @tc.desc: Test DownloadRequest with all retry/timeout options set
+// @tc.precon: NA
+// @tc.step: 1. Create a DownloadRequest object.
+//           2. Set all retry/timeout options using builder methods
+//           3. Verify all options are set correctly
+// @tc.expect: All options are set correctly
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 1
+#[test]
+fn ut_download_request_all_options() {
+    let mut request = DownloadRequest::new(TEST_URL);
+    request.max_retry(7);
+    request.network_check_timeout(15);
+    request.http_total_timeout(120);
+
+    assert_eq!(request.max_retry, Some(7));
+    assert_eq!(request.network_check_timeout, Some(15));
+    assert_eq!(request.http_total_timeout, Some(120));
+}
+
+// @tc.name: ut_set_global_retry_options
+// @tc.desc: Test CacheDownloadService set_global_retry_options
+// @tc.precon: NA
+// @tc.step: 1. Get CacheDownloadService instance.
+//           2. Call set_global_retry_options with value 5
+//           3. Call get_global_max_retry to verify
+//           4. Restore to default value (1)
+// @tc.expect: Global max retry is set to 5
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 0
+#[test]
+fn ut_set_global_retry_options() {
+    CacheDownloadService::get_instance().set_global_retry_options(5);
+    let max_retry = CacheDownloadService::get_instance().get_global_max_retry();
+    assert_eq!(max_retry, 5);
+    // Restore to default
+    CacheDownloadService::get_instance().set_global_retry_options(1);
+}
+
+// @tc.name: ut_set_global_retry_options_boundary
+// @tc.desc: Test CacheDownloadService set_global_retry_options with boundary values
+// @tc.precon: NA
+// @tc.step: 1. Get CacheDownloadService instance.
+//           2. Call set_global_retry_options with value 10 (max)
+//           3. Call set_global_retry_options with value 0 (min)
+//           4. Verify both values are set correctly
+//           5. Restore to default value (1)
+// @tc.expect: Boundary values are set correctly
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 1
+#[test]
+fn ut_set_global_retry_options_boundary() {
+    // Test max value
+    CacheDownloadService::get_instance().set_global_retry_options(10);
+    let max_retry = CacheDownloadService::get_instance().get_global_max_retry();
+    assert_eq!(max_retry, 10);
+
+    // Test min value
+    CacheDownloadService::get_instance().set_global_retry_options(0);
+    let max_retry = CacheDownloadService::get_instance().get_global_max_retry();
+    assert_eq!(max_retry, 0);
+
+    // Restore to default
+    CacheDownloadService::get_instance().set_global_retry_options(1);
+}
+
+// @tc.name: ut_set_global_timeout_options
+// @tc.desc: Test CacheDownloadService set_global_timeout_options
+// @tc.precon: NA
+// @tc.step: 1. Get CacheDownloadService instance.
+//           2. Call set_global_timeout_options with network=10, http=30
+//           3. Call getters to verify values
+//           4. Restore to default values (20, 60)
+// @tc.expect: Global timeout options are set correctly
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 0
+#[test]
+fn ut_set_global_timeout_options() {
+    CacheDownloadService::get_instance().set_global_timeout_options(10, 30);
+    let network_timeout = CacheDownloadService::get_instance().get_global_network_check_timeout();
+    let http_timeout = CacheDownloadService::get_instance().get_global_http_total_timeout();
+    assert_eq!(network_timeout, 10);
+    assert_eq!(http_timeout, 30);
+    // Restore to default
+    CacheDownloadService::get_instance().set_global_timeout_options(20, 60);
+}
+
+// @tc.name: ut_set_global_timeout_options_boundary
+// @tc.desc: Test CacheDownloadService set_global_timeout_options with boundary values
+// @tc.precon: NA
+// @tc.step: 1. Get CacheDownloadService instance.
+//           2. Call set_global_timeout_options with boundary values
+//           3. Verify values are set correctly (clamped if out of range)
+//           4. Restore to default values (20, 60)
+// @tc.expect: Boundary values are handled correctly
+// @tc.type: FUNC
+// @tc.require: issueNumber
+// @tc.level: Level 1
+#[test]
+fn ut_set_global_timeout_options_boundary() {
+    // Test network check timeout max value (20)
+    CacheDownloadService::get_instance().set_global_timeout_options(20, 60);
+    let network_timeout = CacheDownloadService::get_instance().get_global_network_check_timeout();
+    assert_eq!(network_timeout, 20);
+
+    // Test network check timeout min value (0)
+    CacheDownloadService::get_instance().set_global_timeout_options(0, 60);
+    let network_timeout = CacheDownloadService::get_instance().get_global_network_check_timeout();
+    assert_eq!(network_timeout, 0);
+
+    // Test http total timeout min value (1)
+    CacheDownloadService::get_instance().set_global_timeout_options(20, 1);
+    let http_timeout = CacheDownloadService::get_instance().get_global_http_total_timeout();
+    assert_eq!(http_timeout, 1);
+
+    // Restore to default
+    CacheDownloadService::get_instance().set_global_timeout_options(20, 60);
+}
+
 // @tc.name: ut_remove_file_cache
 // @tc.desc: Test removing file cache
 // @tc.precon: NA

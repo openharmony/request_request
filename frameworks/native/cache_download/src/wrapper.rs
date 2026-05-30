@@ -248,6 +248,18 @@ impl CacheDownloadService {
             request.ca_path(options.ca_path);
         }
 
+        // Add task-level retry/timeout configuration if provided
+        // usize::MAX and u32::MAX are sentinel values meaning "use global default"
+        if options.max_retry != usize::MAX {
+            request.max_retry(options.max_retry);
+        }
+        if options.network_check_timeout != u32::MAX {
+            request.network_check_timeout(options.network_check_timeout);
+        }
+        if options.http_total_timeout != u32::MAX {
+            request.http_total_timeout(options.http_total_timeout);
+        }
+
         // Perform preload and convert the result to C++ format
         match self.preload(request, Box::new(callback), update, Downloader::Netstack) {
             Some(handle) => ffi::ShareTaskHandle(Box::new(handle)),
@@ -295,10 +307,21 @@ fn set_file_cache_path(path: String) {
 #[cxx::bridge(namespace = "OHOS::Request")]
 pub(crate) mod ffi {
     /// C++ download options passed to the preload method
+    ///
+    /// Task-level configuration fields:
+    /// - max_retry: Maximum retry count (0-10), usize::MAX means use global default
+    /// - network_check_timeout: Network check timeout in seconds (0-20), u32::MAX means use global default
+    /// - http_total_timeout: HTTP total timeout in seconds (min 1), u32::MAX means use global default
     struct FfiPredownloadOptions<'a> {
         headers: Vec<&'a str>,
         ssl_type: &'a str,
         ca_path: &'a str,
+        /// Maximum retry count for this task. usize::MAX means use global default.
+        max_retry: usize,
+        /// Network check timeout in seconds. u32::MAX means use global default.
+        network_check_timeout: u32,
+        /// HTTP total timeout in seconds. u32::MAX means use global default.
+        http_total_timeout: u32,
     }
 
     // Rust functions and types exposed to C++
@@ -350,6 +373,14 @@ pub(crate) mod ffi {
         fn contains(self: &CacheDownloadService, url: &str) -> bool;
         fn clear_memory_cache(self: &CacheDownloadService);
         fn clear_file_cache(self: &CacheDownloadService);
+
+        // Global configuration methods
+        fn set_global_retry_options(self: &CacheDownloadService, max_retry: usize);
+        fn set_global_timeout_options(
+            self: &CacheDownloadService,
+            network_check_timeout: u32,
+            http_total_timeout: u32,
+        );
 
         fn cancel(self: &mut TaskHandle);
         fn task_id(self: &TaskHandle) -> String;

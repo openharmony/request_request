@@ -81,6 +81,12 @@ pub struct CacheDownloadService {
     /// Registrar for network state observation and notifications.
     net_registrar: NetRegistrar,
     restore_finished: Arc<AtomicBool>,
+    /// Global retry configuration: maximum retry count (default: 3)
+    global_max_retry: Mutex<usize>,
+    /// Global timeout configuration: network check timeout in seconds (default: 20)
+    global_network_check_timeout: Mutex<u32>,
+    /// Global timeout configuration: HTTP total timeout in seconds (default: 60)
+    global_http_total_timeout: Mutex<u32>,
 }
 
 /// Builder-style request for configuring downloads.
@@ -96,6 +102,12 @@ pub struct DownloadRequest<'a> {
     pub ssl_type: Option<&'a str>,
     /// Optional path to CA certificates.
     pub ca_path: Option<&'a str>,
+    /// Optional maximum retry count (overrides global setting)
+    pub max_retry: Option<usize>,
+    /// Optional network check timeout in seconds (overrides global setting)
+    pub network_check_timeout: Option<u32>,
+    /// Optional HTTP total timeout in seconds (overrides global setting)
+    pub http_total_timeout: Option<u32>,
 }
 
 impl<'a> DownloadRequest<'a> {
@@ -115,6 +127,9 @@ impl<'a> DownloadRequest<'a> {
             headers: None,
             ssl_type: None,
             ca_path: None,
+            max_retry: None,
+            network_check_timeout: None,
+            http_total_timeout: None,
         }
     }
 
@@ -162,6 +177,48 @@ impl<'a> DownloadRequest<'a> {
         self.ca_path = Some(ca_path);
         self
     }
+
+    /// Sets the maximum retry count for the download request.
+    ///
+    /// This overrides the global retry configuration for this specific task.
+    ///
+    /// # Parameters
+    /// - `max_retry`: Maximum number of retry attempts (0-10)
+    ///
+    /// # Returns
+    /// A mutable reference to self for method chaining
+    pub fn max_retry(&mut self, max_retry: usize) -> &mut Self {
+        self.max_retry = Some(max_retry);
+        self
+    }
+
+    /// Sets the network check timeout for the download request.
+    ///
+    /// This overrides the global timeout configuration for this specific task.
+    ///
+    /// # Parameters
+    /// - `timeout`: Network availability check timeout in seconds (0-20)
+    ///
+    /// # Returns
+    /// A mutable reference to self for method chaining
+    pub fn network_check_timeout(&mut self, timeout: u32) -> &mut Self {
+        self.network_check_timeout = Some(timeout);
+        self
+    }
+
+    /// Sets the HTTP total timeout for the download request.
+    ///
+    /// This overrides the global timeout configuration for this specific task.
+    ///
+    /// # Parameters
+    /// - `timeout`: Complete HTTP request-response cycle timeout in seconds (minimum 1)
+    ///
+    /// # Returns
+    /// A mutable reference to self for method chaining
+    pub fn http_total_timeout(&mut self, timeout: u32) -> &mut Self {
+        self.http_total_timeout = Some(timeout);
+        self
+    }
 }
 
 impl CacheDownloadService {
@@ -176,6 +233,9 @@ impl CacheDownloadService {
             info_mgr: Arc::new(DownloadInfoMgr::new()),
             net_registrar: NetRegistrar::new(),
             restore_finished: Arc::new(AtomicBool::new(false)),
+            global_max_retry: Mutex::new(1),
+            global_network_check_timeout: Mutex::new(20),
+            global_http_total_timeout: Mutex::new(60),
         }
     }
 
@@ -459,6 +519,64 @@ impl CacheDownloadService {
             .collect::<HashSet<_>>();
         self.cache_manager.clear_file_cache(&running_tasks);
         info!("clear file cache");
+    }
+
+    /// Sets global retry options for all tasks.
+    ///
+    /// # Parameters
+    /// - `max_retry`: Maximum retry count (default: 3, min: 0, max: 10)
+    pub fn set_global_retry_options(&self, max_retry: usize) {
+        let max_retry = if max_retry > 10 { 10 } else { max_retry };
+        *self.global_max_retry.lock().unwrap() = max_retry;
+        info!("set global max retry to {}", max_retry);
+    }
+
+    /// Sets global timeout options for all tasks.
+    ///
+    /// # Parameters
+    /// - `network_check_timeout`: Network check timeout in seconds (default: 20, min: 0, max: 20)
+    /// - `http_total_timeout`: HTTP total timeout in seconds (default: 60, min: 1)
+    pub fn set_global_timeout_options(&self, network_check_timeout: u32, http_total_timeout: u32) {
+        let network_check_timeout = if network_check_timeout > 20 {
+            20
+        } else {
+            network_check_timeout
+        };
+        let http_total_timeout = if http_total_timeout < 1 {
+            60
+        } else {
+            http_total_timeout
+        };
+        *self.global_network_check_timeout.lock().unwrap() = network_check_timeout;
+        *self.global_http_total_timeout.lock().unwrap() = http_total_timeout;
+        info!(
+            "set global timeout: network_check={}, http_total={}",
+            network_check_timeout, http_total_timeout
+        );
+    }
+
+    /// Gets global retry options.
+    ///
+    /// # Returns
+    /// Maximum retry count
+    pub fn get_global_max_retry(&self) -> usize {
+        *self.global_max_retry.lock().unwrap()
+    }
+
+    /// Gets global network check timeout.
+    ///
+    /// # Returns
+    /// Network check timeout in seconds
+    pub fn get_global_network_check_timeout(&self) -> u32 {
+        *self.global_network_check_timeout.lock().unwrap()
+    }
+
+    /// Gets global HTTP total timeout.
+    ///
+    /// # Returns
+    /// HTTP total timeout in seconds
+    pub fn get_global_http_total_timeout(&self) -> u32 {
+        *self.global_http_total_timeout.lock().unwrap()
     }
 
     /// Fetches content from cache with callback notification.

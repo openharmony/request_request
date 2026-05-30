@@ -179,6 +179,18 @@ TaskBuilder &TaskBuilder::setExtras(const std::map<std::string, std::string> &ex
     return *this;
 }
 
+TaskBuilder &TaskBuilder::setTimeout(const Timeout &timeout)
+{
+    this->config.timeout = timeout;
+    return *this;
+}
+
+TaskBuilder &TaskBuilder::setMinSpeed(const MinSpeed &minSpeed)
+{
+    this->config.minSpeed = minSpeed;
+    return *this;
+}
+
 std::pair<Config, ExceptionErrorCode> TaskBuilder::build()
 {
     if (!this->checkAction()) {

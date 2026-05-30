@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,12 +16,14 @@
 #ifndef OH_CJ_REQUEST_TASK_H
 #define OH_CJ_REQUEST_TASK_H
 
+#include <atomic>
 #include <cstdint>
 #include <map>
 #include <mutex>
 #include <vector>
 
 #include "ability_context.h"
+#include "cj_failed_listener.h"
 #include "cj_notify_data_listener.h"
 #include "cj_request_ffi.h"
 #include "cj_response_listener.h"
@@ -42,14 +44,17 @@ public:
 
     static ExceptionError Remove(const std::string &tid);
     static ExceptionError Touch(const std::string &tid, TaskInfo &task, const std::string &token = "null");
+    static ExceptionError Show(const std::string &tid, TaskInfo &task);
     static ExceptionError Search(const Filter &filter, std::vector<std::string> &tids);
 
     std::recursive_mutex listenerMutex_;
     std::map<SubscribeType, std::shared_ptr<CJNotifyDataListener>> notifyDataListenerMap_;
     std::shared_ptr<CJResponseListener> responseListener_;
+    std::shared_ptr<CJFailedListener> failedListener_;
 
     Config config_;
     std::string taskId_{};
+    std::atomic<bool> skipPermissionCheck{true};
 
     static std::mutex taskMutex_;
     static std::map<std::string, CJRequestTask *> taskMap_;
@@ -62,23 +67,29 @@ public:
 
     static std::mutex pathMutex_;
     static std::map<std::string, int32_t> pathMap_;
+    static std::map<std::string, std::tuple<bool, bool, uint32_t>> pathMapV2_;
     static void AddPathMap(const std::string &filepath, const std::string &baseDir);
     static void RemovePathMap(const std::string &filepath);
+    static void RemovePathMapSince20(const std::string &filepath);
     static void ResetDirAccess(const std::string &filepath);
     static void RemoveDirsPermission(const std::vector<std::string> &dirs);
 
     static bool register_;
     static void RegisterForegroundResume();
 
-    static bool SetPathPermission(const std::string &filepath);
+    static bool SetPathPermission(const std::string &filepath, bool needWritePermission = true);
+    static bool SetPathPermissionSince20(const std::string &filepath, bool needWritePermission);
     static bool SetDirsPermission(std::vector<std::string> &dirs);
-
+    static bool AddOnePathToMap(const std::string &path, bool isFile, bool needWritePermission = true);
+    static bool SubOnePathToMap(const std::string &path, bool isFile);
     std::string GetTidStr() const;
     void SetTid();
 
     ExceptionError Create(OHOS::AbilityRuntime::Context *context, Config &config);
-    ExceptionError On(std::string type, std::string &taskId, void *callback);
-    ExceptionError Off(std::string event, CFunc callback);
+    ExceptionError On(std::string type, std::string &taskId, int64_t callback);
+    ExceptionError Off(std::string event, int64_t callback);
+    ExceptionError OnFailed(std::string &taskId, int64_t callback);
+    ExceptionError OffFailed(int64_t callback);
 
     static void ReloadListener();
 

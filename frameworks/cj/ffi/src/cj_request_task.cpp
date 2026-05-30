@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,8 @@
 #include <regex>
 #include <string>
 #include <sys/stat.h>
+#include <tuple>
+#include <utility>
 #include "application_context.h"
 #include "cj_app_state_callback.h"
 #include "cj_application_context.h"
@@ -51,6 +53,7 @@ std::map<std::string, CJRequestTask *> CJRequestTask::taskMap_;
 
 std::mutex CJRequestTask::pathMutex_;
 std::map<std::string, int32_t> CJRequestTask::pathMap_;
+std::map<std::string, std::tuple<bool, bool, uint32_t>> CJRequestTask::pathMapV2_;
 
 bool CJRequestTask::register_ = false;
 
@@ -58,11 +61,16 @@ static constexpr int ACL_SUCC = 0;
 static const std::string SA_PERMISSION_RWX = "g:3815:rwx";
 static const std::string SA_PERMISSION_X = "g:3815:x";
 static const std::string SA_PERMISSION_CLEAN = "g:3815:---";
+static const std::string SA_PERMISSION_U_RW = "u:3815:rw";
+static const std::string SA_PERMISSION_U_R = "u:3815:r";
+static const std::string SA_PERMISSION_U_X = "u:3815:x";
+static const std::string SA_PERMISSION_U_CLEAN = "u:3815:---";
 
 CJRequestTask::CJRequestTask()
 {
     config_.version = Version::API10;
     config_.action = Action::ANY;
+    skipPermissionCheck = true;
     REQUEST_HILOGD("construct CJRequestTask()");
 }
 
@@ -114,18 +122,16 @@ CJRequestTask *CJRequestTask::ClearTaskMap(const std::string &key)
     return task;
 }
 
-bool CJRequestTask::SetPathPermission(const std::string &filepath)
+bool CJRequestTask::SetPathPermission(const std::string &filepath, bool needWritePermission)
 {
-    std::string baseDir;
     if (CheckApiVersionAfter19()) {
-        if (!CJInitialize::CheckBelongAppBaseDir(filepath, baseDir)) {
-            return false;
-        }
-    } else {
-        if (!CJInitialize::GetBaseDir(baseDir) || filepath.find(baseDir) == std::string::npos) {
-            REQUEST_HILOGE("File dir not found.");
-            return false;
-        }
+        return SetPathPermissionSince20(filepath, needWritePermission);
+    }
+
+    std::string baseDir;
+    if (!CJInitialize::GetBaseDir(baseDir) || filepath.find(baseDir) == std::string::npos) {
+        REQUEST_HILOGE("File dir not found.");
+        return false;
     }
 
     AddPathMap(filepath, baseDir);
@@ -144,6 +150,108 @@ bool CJRequestTask::SetPathPermission(const std::string &filepath)
     if (AclSetAccess(filepath, SA_PERMISSION_RWX) != ACL_SUCC) {
         REQUEST_HILOGE("AclSetAccess Child Dir Failed.");
         return false;
+    }
+    return true;
+}
+
+// "/A/B/C" -> ["/A", "/A/B", "/A/B/C"]
+static std::vector<std::string> SplitPath(const std::string &path)
+{
+    std::vector<std::string> result;
+    if (path.empty() || path[0] != '/') {
+        return result;
+    }
+
+    result.reserve(std::count(path.begin(), path.end(), '/') + 1);
+    std::string currentPath;
+    size_t pos = 1;
+    while (pos < path.size()) {
+        size_t nextPos = path.find('/', pos);
+        if (nextPos == std::string::npos) {
+            nextPos = path.size();
+        }
+        if (nextPos > pos) {
+            currentPath += ("/" + path.substr(pos, nextPos - pos));
+            result.emplace_back(currentPath);
+        }
+        pos = nextPos + 1;
+    }
+    return result;
+}
+
+// ["/A", "/A/B", "/A/B/C"] -> [("/A", false), ("/A/B", false), ("/A/B/C", true)]
+static std::vector<std::pair<std::string, bool>> SelectPath(const std::vector<std::string> &paths)
+{
+    std::vector<std::pair<std::string, bool>> result;
+    if (paths.empty()) {
+        return result;
+    }
+
+    for (const auto &elem : paths) {
+        if ((elem.find(AREA1) == 0) || elem.find(AREA2) == 0 || elem.find(AREA5) == 0) {
+            result.emplace_back(elem, false);
+        }
+    }
+
+    if (!result.empty()) {
+        result.back().second = true;
+    }
+    return result;
+}
+
+static bool AddAcl(const std::string &path, bool isFile, bool needWritePermission)
+{
+    std::string entry;
+    if (isFile) {
+        if (needWritePermission) {
+            entry = SA_PERMISSION_U_RW;
+        } else {
+            entry = SA_PERMISSION_U_R;
+        }
+    } else {
+        entry = SA_PERMISSION_U_X;
+    }
+    if (AclSetAccess(path, entry) != ACL_SUCC) {
+        REQUEST_HILOGE("AddAcl failed: %{public}s", path.c_str());
+        return false;
+    }
+    return true;
+}
+
+static bool SubAcl(const std::string &path)
+{
+    if (AclSetAccess(path, SA_PERMISSION_U_CLEAN) != ACL_SUCC) {
+        REQUEST_HILOGE("SubAcl failed: %{public}s", path.c_str());
+        return false;
+    }
+    return true;
+}
+
+static void RollbackPaths(const std::vector<std::pair<std::string, bool>> &paths)
+{
+    for (auto &path : paths) {
+        if (!CJRequestTask::SubOnePathToMap(path.first, path.second)) {
+            REQUEST_HILOGE("RollbackPaths SubOnePathToMap failed: %{public}s", path.first.c_str());
+        }
+    }
+}
+
+bool CJRequestTask::SetPathPermissionSince20(const std::string &filepath, bool needWritePermission)
+{
+    std::vector<std::pair<std::string, bool>> paths = SelectPath(SplitPath(filepath));
+    if (paths.empty()) {
+        REQUEST_HILOGE("No valid path in AREA.");
+        return false;
+    }
+
+    std::vector<std::pair<std::string, bool>> completedPaths;
+    completedPaths.reserve(paths.size());
+    for (auto &elem : paths) {
+        if (!AddOnePathToMap(elem.first, elem.second, needWritePermission)) {
+            RollbackPaths(completedPaths);
+            return false;
+        }
+        completedPaths.emplace_back(elem);
     }
     return true;
 }
@@ -177,7 +285,7 @@ bool CJRequestTask::SetDirsPermission(std::vector<std::string> &dirs)
                 REQUEST_HILOGD("File add OTH access Failed.");
             }
             REQUEST_HILOGD("current filePath is %{public}s", newfilePath.c_str());
-            if (!CJRequestTask::SetPathPermission(newfilePath)) {
+            if (!CJRequestTask::SetPathPermission(newfilePath, false)) {
                 REQUEST_HILOGE("Set path permission fail.");
                 return false;
             }
@@ -218,6 +326,11 @@ void CJRequestTask::ResetDirAccess(const std::string &filepath)
 
 void CJRequestTask::RemovePathMap(const std::string &filepath)
 {
+    if (CheckApiVersionAfter19()) {
+        RemovePathMapSince20(filepath);
+        return;
+    }
+
     std::string baseDir;
     if (!CJInitialize::GetBaseDir(baseDir) || filepath.find(baseDir) == std::string::npos) {
         REQUEST_HILOGE("File dir not found.");
@@ -243,6 +356,20 @@ void CJRequestTask::RemovePathMap(const std::string &filepath)
             }
         }
         childDir = parentDir;
+    }
+}
+
+void CJRequestTask::RemovePathMapSince20(const std::string &filepath)
+{
+    std::vector<std::pair<std::string, bool>> paths = SelectPath(SplitPath(filepath));
+    if (paths.empty()) {
+        return;
+    }
+
+    for (auto &elem : paths) {
+        if (!SubOnePathToMap(elem.first, elem.second)) {
+            REQUEST_HILOGE("RemovePathMap SubOnePathToMap failed: %{public}s", elem.first.c_str());
+        }
     }
 }
 
@@ -349,6 +476,17 @@ ExceptionError CJRequestTask::Touch(const std::string &tid, TaskInfo &task, cons
     return err;
 }
 
+ExceptionError CJRequestTask::Show(const std::string &tid, TaskInfo &task)
+{
+    ExceptionError err;
+
+    int32_t result = RequestManager::GetInstance()->Show(tid, task);
+    if (result != ExceptionErrorCode::E_OK) {
+        return ConvertError(result);
+    }
+    return err;
+}
+
 ExceptionError CJRequestTask::Search(const Filter &filter, std::vector<std::string> &tids)
 {
     ExceptionError err;
@@ -371,7 +509,7 @@ void CJRequestTask::ReloadListener()
     }
 }
 
-ExceptionError CJRequestTask::On(std::string type, std::string &taskId, void *callback)
+ExceptionError CJRequestTask::On(std::string type, std::string &taskId, int64_t callback)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task on, seq: %{public}d", seq);
@@ -384,6 +522,7 @@ ExceptionError CJRequestTask::On(std::string type, std::string &taskId, void *ca
         return err;
     }
 
+    void *cb = reinterpret_cast<void *>(callback);
     if (subscribeType == SubscribeType::RESPONSE) {
         {
             std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
@@ -391,15 +530,14 @@ ExceptionError CJRequestTask::On(std::string type, std::string &taskId, void *ca
                 responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
             }
         }
-        responseListener_->AddListener(CJLambda::Create((void (*)(CResponse progress))callback), callback);
+        responseListener_->AddListener(CJLambda::Create((void (*)(CResponse progress))cb), cb);
     } else {
         std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
         auto listener = notifyDataListenerMap_.find(subscribeType);
         if (listener == notifyDataListenerMap_.end()) {
             notifyDataListenerMap_[subscribeType] = std::make_shared<CJNotifyDataListener>(GetTidStr(), subscribeType);
         }
-        notifyDataListenerMap_[subscribeType]->AddListener(CJLambda::Create((void (*)(CProgress progress))callback),
-            (CFunc)callback);
+        notifyDataListenerMap_[subscribeType]->AddListener(CJLambda::Create((void (*)(CProgress progress))cb), cb);
     }
 
     REQUEST_HILOGI("End task on event %{public}s successfully, seq: %{public}d, tid: %{public}s", type.c_str(), seq,
@@ -408,7 +546,7 @@ ExceptionError CJRequestTask::On(std::string type, std::string &taskId, void *ca
     return err;
 }
 
-ExceptionError CJRequestTask::Off(std::string event, CFunc callback)
+ExceptionError CJRequestTask::Off(std::string event, int64_t callback)
 {
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin task off, seq: %{public}d", seq);
@@ -421,6 +559,7 @@ ExceptionError CJRequestTask::Off(std::string event, CFunc callback)
         return err;
     }
 
+    CFunc cb = reinterpret_cast<CFunc>(callback);
     if (subscribeType == SubscribeType::RESPONSE) {
         {
             std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
@@ -428,14 +567,53 @@ ExceptionError CJRequestTask::Off(std::string event, CFunc callback)
                 responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
             }
         }
-        responseListener_->RemoveListener((CFunc)callback);
+        responseListener_->RemoveListener(cb);
     } else {
         std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
         if (notifyDataListenerMap_.find(subscribeType) == notifyDataListenerMap_.end()) {
             notifyDataListenerMap_[subscribeType] = std::make_shared<CJNotifyDataListener>(GetTidStr(), subscribeType);
         }
-        notifyDataListenerMap_[subscribeType]->RemoveListener((CFunc)callback);
+        notifyDataListenerMap_[subscribeType]->RemoveListener(cb);
     }
+    return err;
+}
+
+ExceptionError CJRequestTask::OnFailed(std::string &taskId, int64_t callback)
+{
+    int32_t seq = RequestManager::GetInstance()->GetNextSeq();
+    REQUEST_HILOGI("Begin task on failed, seq: %{public}d", seq);
+
+    ExceptionError err;
+    std::shared_ptr<CJFailedListener> failedListener;
+    {
+        std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
+        if (failedListener_ == nullptr) {
+            failedListener_ = std::make_shared<CJFailedListener>(GetTidStr());
+        }
+        failedListener = failedListener_;
+    }
+    void *cb = reinterpret_cast<void *>(callback);
+    failedListener->AddListener(CJLambda::Create((void (*)(int32_t))cb), cb);
+
+    REQUEST_HILOGI("End task on failed successfully, seq: %{public}d, tid: %{public}s", seq, GetTidStr().c_str());
+    return err;
+}
+
+ExceptionError CJRequestTask::OffFailed(int64_t callback)
+{
+    int32_t seq = RequestManager::GetInstance()->GetNextSeq();
+    REQUEST_HILOGI("Begin task off failed, seq: %{public}d", seq);
+
+    ExceptionError err;
+    std::shared_ptr<CJFailedListener> failedListener;
+    {
+        std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
+        if (failedListener_ == nullptr) {
+            failedListener_ = std::make_shared<CJFailedListener>(GetTidStr());
+        }
+        failedListener = failedListener_;
+    }
+    failedListener->RemoveListener(reinterpret_cast<CFunc>(callback));
     return err;
 }
 
@@ -460,10 +638,60 @@ void CJRequestTask::ClearTaskTemp(const std::string &tid, bool isRmFiles, bool i
         for (auto &file : task->config_.files) {
             RemovePathMap(file.uri);
         }
+        task->skipPermissionCheck = false;
     }
     if (isRmCertsAcls) {
         RemoveDirsPermission(task->config_.certsPath);
     }
+}
+
+bool CJRequestTask::AddOnePathToMap(const std::string &path, bool isFile, bool needWritePermission)
+{
+    std::lock_guard<std::mutex> lockGuard(pathMutex_);
+    auto it = pathMapV2_.find(path);
+    if (it == pathMapV2_.end()) {
+        if (!AddAcl(path, isFile, needWritePermission)) {
+            return false;
+        }
+        pathMapV2_.emplace(path, std::tuple(isFile, needWritePermission, 1));
+    } else {
+        auto &[iFile, hasWritePermission, count] = it->second;
+        bool newHasWrite = hasWritePermission || needWritePermission;
+        if (!AddAcl(path, isFile, newHasWrite)) {
+            return false;
+        }
+        iFile = isFile;
+        hasWritePermission = newHasWrite;
+        count++;
+    }
+    return true;
+}
+
+bool CJRequestTask::SubOnePathToMap(const std::string &path, bool isFile)
+{
+    std::lock_guard<std::mutex> lockGuard(pathMutex_);
+    auto it = pathMapV2_.find(path);
+    if (it == pathMapV2_.end()) {
+        REQUEST_HILOGE("SubOnePathToMap path not found: %{public}s", path.c_str());
+        return false;
+    }
+    auto &[iFile, hasWritePermission, count] = it->second;
+    if (iFile != isFile) {
+        REQUEST_HILOGE("SubOnePathToMap path changed: %{public}s", path.c_str());
+    }
+    if (count <= 0) {
+        REQUEST_HILOGE("SubOnePathToMap count is 0: %{public}s", path.c_str());
+        SubAcl(path);
+        pathMapV2_.erase(it);
+        return false;
+    }
+    count--;
+    if (count == 0) {
+        bool ret = SubAcl(path);
+        pathMapV2_.erase(it);
+        return ret;
+    }
+    return true;
 }
 
 } // namespace OHOS::CJSystemapi::Request

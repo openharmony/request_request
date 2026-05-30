@@ -38,7 +38,7 @@ cfg_netstack! {
     use crate::download::netstack;
 }
 
-use crate::services::{DownloadRequest, PreloadCallback};
+use crate::services::{CacheDownloadService, DownloadRequest, PreloadCallback};
 
 /// Enum representing available download backends.
 ///
@@ -348,6 +348,16 @@ where
         handle.callbacks.lock().unwrap().push_back(callback);
     }
 
+    // Get config from request or use global defaults
+    let service = CacheDownloadService::get_instance();
+    let max_retry = request.max_retry.or(Some(service.get_global_max_retry()));
+    let network_check_timeout = request
+        .network_check_timeout
+        .or(Some(service.get_global_network_check_timeout()));
+    let http_total_timeout = request
+        .http_total_timeout
+        .or(Some(service.get_global_http_total_timeout()));
+
     let callback = PrimeCallback::new(
         task_id,
         cache_manager,
@@ -355,6 +365,7 @@ where
         handle.state_flag(),
         handle.callbacks(),
         seq,
+        super::callback::TaskConfig::new(max_retry, network_check_timeout, http_total_timeout),
     );
     downloader(request, callback, info_mgr).map(move |command| {
         handle.set_handle(command);
