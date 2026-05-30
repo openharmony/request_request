@@ -23,7 +23,10 @@ config("download_interfaces_kits_napi_config") {
   ]
 
   cflags_cc = [ "-fno-exceptions" ]
-  ldflags = [ "-Wl,--exclude-libs=ALL" ]
+  ldflags = [
+    "-Wl,--exclude-libs=ALL",
+    "-Wl,--gc-sections",
+  ]
   cflags = [
     "-fdata-sections",
     "-ffunction-sections",

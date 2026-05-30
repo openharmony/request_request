@@ -102,6 +102,14 @@ config("preload_native_config") {
     "${target_gen_dir}/src",
     "../../../interfaces/inner_kits/cache_download/native/include",
   ]
+  cflags = [
+    "-Os",
+    "-fdata-sections",
+    "-ffunction-sections",
+  ]
+  ldflags = [
+    "-Wl,--gc-sections",
+  ]
 }
 
 ohos_shared_library("preload_native") {
