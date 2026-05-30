@@ -17,6 +17,7 @@
 
 #include <fcntl.h>
 
+#include <cerrno>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
@@ -803,10 +804,17 @@ FormItem Convert2RequestData(napi_env env, napi_value jsRequestData)
 bool IsPathValid(const std::string &filePath)
 {
     auto path = filePath.substr(0, filePath.rfind('/'));
-    char resolvedPath[PATH_MAX + 1] = { 0 };
-    if (path.length() > PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr
-        || strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
+    if (path.length() > PATH_MAX) {
         REQUEST_HILOGE("invalid file path!");
+        return false;
+    }
+    char resolvedPath[PATH_MAX + 1] = { 0 };
+    if (realpath(path.c_str(), resolvedPath) == nullptr) {
+        REQUEST_HILOGE("realpath failed, errno: %{public}d", errno);
+        return false;
+    }
+    if (strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
+        REQUEST_HILOGE("resolved path mismatch!");
         return false;
     }
     return true;
@@ -850,7 +858,10 @@ void ReadBytesFromFile(const std::string &filePath, std::vector<uint8_t> &fileDa
 void RemoveFile(const std::string &filePath)
 {
     auto removeFile = [filePath]() -> void {
-        std::remove(filePath.c_str());
+        int ret = std::remove(filePath.c_str());
+        if (ret != 0) {
+            REQUEST_HILOGW("Remove file failed, filePath: %{public}s, errno: %{public}d", filePath.c_str(), errno);
+        }
         return;
     };
     ffrt::submit(removeFile, {}, {}, ffrt::task_attr().name("Os_Request_Rm").qos(ffrt::qos_default));
