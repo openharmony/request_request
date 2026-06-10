@@ -30,6 +30,14 @@ ohos_static_library("request_utf8_utils") {
 
   sources = [ "src/utf8_utils.cpp" ]
 
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+  ]
+  ldflags = [
+    "-Wl,--gc-sections",
+  ]
+
   subsystem_name = "request"
   part_name = "request"
 }

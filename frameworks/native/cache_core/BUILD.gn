@@ -46,6 +46,15 @@ ohos_static_library("cache_core_cxx") {
   ]
   deps = [ ":cache_core_cxx_gen" ]
 
+  cflags = [
+    "-Os",
+    "-fdata-sections",
+    "-ffunction-sections",
+  ]
+  ldflags = [
+    "-Wl,--gc-sections",
+  ]
+
   subsystem_name = "request"
   part_name = "request"
 }

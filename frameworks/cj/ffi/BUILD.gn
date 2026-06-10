@@ -26,9 +26,13 @@ ohos_shared_library("cj_request_ffi") {
 
   cflags_cc = [ "-fno-exceptions" ]
   cflags = [
+    "-Os",
     "-fdata-sections",
     "-ffunction-sections",
     "-fvisibility=hidden",
+  ]
+  ldflags = [
+    "-Wl,--gc-sections",
   ]
 
   include_dirs = [

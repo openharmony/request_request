@@ -36,6 +36,14 @@ config("download_server_cxx_config") {
     "${target_gen_dir}/src",
     "../common/sys_event/include",
   ]
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fvisibility=hidden",
+  ]
+  ldflags = [
+    "-Wl,--gc-sections",
+  ]
 }
 
 ohos_static_library("download_server_cxx") {

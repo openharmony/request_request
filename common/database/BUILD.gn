@@ -45,6 +45,15 @@ ohos_static_library("database_rs_cxx") {
 
   deps = [ ":database_rs_cxx_gen" ]
 
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fvisibility=hidden",
+  ]
+  ldflags = [
+    "-Wl,--gc-sections",
+  ]
+
   subsystem_name = "request"
   part_name = "request"
 }

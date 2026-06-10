@@ -20,6 +20,13 @@ config("request_action_config") {
     "../request/include",
     "../../../common/include",
   ]
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+  ]
+  ldflags = [
+    "-Wl,--gc-sections",
+  ]
 }
 
 ohos_shared_library("request_action") {

@@ -20,6 +20,14 @@ config("request_sysevent_config") {
     "${target_gen_dir}/src",
     "../include",
   ]
+  cflags = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fvisibility=hidden",
+  ]
+  ldflags = [
+    "-Wl,--gc-sections",
+  ]
 }
 
 ohos_static_library("request_sysevent") {
