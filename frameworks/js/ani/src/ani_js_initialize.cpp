@@ -14,6 +14,7 @@
  */
 #include "ani_js_initialize.h"
 #include "ani_task.h"
+#include <cerrno>
 #include <fcntl.h>
 #include <securec.h>
 #include <sys/stat.h>
@@ -42,6 +43,24 @@ static constexpr uint32_t MAX_UPLOAD_ON15_FILES = 100;
 
 using namespace OHOS::AniUtil;
 namespace OHOS::Request {
+
+static std::string GetErrnoAppendMessage(int32_t errNum)
+{
+    switch (errNum) {
+        case ENOENT:
+            return ", File not found";
+        case EACCES:
+            return ", Permission denied";
+        case EISDIR:
+            return ", Path is a directory, not a file";
+        case ENOSPC:
+            return ", Insufficient storage space on device";
+        case EROFS:
+            return ", Read-only file system";
+        default:
+            return "";
+    }
+}
 bool IsPathValid(const std::string &filePath)
 {
     auto path = filePath.substr(0, filePath.rfind('/'));
@@ -154,7 +173,8 @@ bool JsInitialize::CheckUploadBodyFiles(const std::string &filePath, Config &con
         FILE *bodyFile = fopen(path.c_str(), "w+");
         if (bodyFile == NULL) {
             error.code = E_FILE_IO;
-            error.errInfo = "UploadBodyFiles failed to open file errno " + std::to_string(errno);
+            error.errInfo = "UploadBodyFiles failed to open file errno " + std::to_string(errno)
+                + GetErrnoAppendMessage(errno);
             SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_00, config.bundleName, "", error.errInfo);
             return false;
         }
@@ -205,7 +225,7 @@ bool JsInitialize::GetFdDownload(const std::string &path, const Config &config, 
     if (JsInitialize::FindDir(path)) {
         if (config.firstInit && !config.overwrite) {
             error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
-            error.errInfo = "GetFd File exists and other error";
+            error.errInfo = "GetFd File exists and other error, set overwrite=true to replace";
             SysEventLog::SendSysEventLog(STATISTIC_EVENT, APP_ERROR_00, config.bundleName, "", error.errInfo);
             return false;
         }
@@ -226,7 +246,8 @@ bool JsInitialize::GetFdDownload(const std::string &path, const Config &config, 
 
     if (file == NULL) {
         error.code = E_FILE_IO;
-        error.errInfo = "GetFd failed to open file errno " + std::to_string(errno);
+        error.errInfo = "GetFd failed to open file errno " + std::to_string(errno)
+            + GetErrnoAppendMessage(errno);
         SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_00, config.bundleName, "", error.errInfo);
         return false;
     }
@@ -272,7 +293,8 @@ bool JsInitialize::GetFdUpload(const std::string &path, const Config &config, Ex
     FILE *file = fopen(path.c_str(), "r");
     if (file == NULL) {
         error.code = config.version == Version::API10 ? E_FILE_IO : E_FILE_PATH;
-        error.errInfo = "GetFd failed to open file errno " + std::to_string(errno);
+        error.errInfo = "GetFd failed to open file errno " + std::to_string(errno)
+            + GetErrnoAppendMessage(errno);
         SysEventLog::SendSysEventLog(FAULT_EVENT, STANDARD_FAULT_00, config.bundleName, "", error.errInfo);
         return false;
     }
@@ -368,7 +390,8 @@ bool JsInitialize::CheckUserFileSpec(const std::shared_ptr<OHOS::AbilityRuntime:
     if (file.fd < 0) {
         REQUEST_HILOGE("Failed to open user file, fd: %{public}d", file.fd);
         error.code = E_FILE_IO;
-        error.errInfo = "Failed to open user file";
+        error.errInfo = "Failed to open user file, errno " + std::to_string(errno)
+            + GetErrnoAppendMessage(errno);
         SysEventLog::SendSysEventLog(FAULT_EVENT, ABMS_FAULT_09, config.bundleName, "", error.errInfo);
         return false;
     }
@@ -434,7 +457,7 @@ bool JsInitialize::CheckUploadFileSpec(const std::shared_ptr<OHOS::AbilityRuntim
     }
     if (!AniTask::SetPathPermission(file.uri)) {
         error.code = E_FILE_IO;
-        error.errInfo = "set path permission fail";
+        error.errInfo = "set path permission fail, please check file access permissions";
         return false;
     }
     StandardizeFileSpec(file);
@@ -467,7 +490,7 @@ bool JsInitialize::CheckDownloadFile(
     }
     if (!AniTask::SetPathPermission(config.saveas)) {
         error.code = E_FILE_IO;
-        error.errInfo = "set path permission fail, download";
+        error.errInfo = "set path permission fail, download, please check file access permissions";
         return false;
     }
     return true;

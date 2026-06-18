@@ -23,6 +23,7 @@ use std::path::PathBuf;
 use ani_rs::business_error::BusinessError;
 use ani_rs::objects::{AniObject, AniRef};
 use ani_rs::AniEnv;
+use request_client::check::file::DownloadPathError;
 use request_client::client::error::CreateTaskError;
 use request_client::RequestClient;
 use request_core::config::{TaskConfig, Version};
@@ -52,11 +53,32 @@ pub fn check_config(
 
     match RequestClient::get_instance().check_config(context, seq, config) {
         Ok(()) => Ok(seq as i64),
-        Err(CreateTaskError::DownloadPath(_)) => {
-            return Err(BusinessError::new(
-                13400001,
-                "Invalid file or file system error.".to_string(),
-            ))
+        Err(CreateTaskError::DownloadPath(err)) => {
+            let message = match err {
+                DownloadPathError::EmptyPath => {
+                    "Invalid file or file system error, File path is empty".to_string()
+                }
+                DownloadPathError::TooLongPath => {
+                    "Invalid file or file system error, File path exceeds maximum allowed length".to_string()
+                }
+                DownloadPathError::BundleNameNotMap => {
+                    "Invalid file or file system error, File path bundle name does not match the application".to_string()
+                }
+                DownloadPathError::AlreadyExists => {
+                    "Invalid file or file system error, File already exists, set overwrite=true to replace".to_string()
+                }
+                DownloadPathError::CreateFile(e) => {
+                    format!("Invalid file or file system error, Failed to create file: {}", e)
+                }
+                DownloadPathError::SetPermission(e) => {
+                    format!("Invalid file or file system error, Failed to set file permissions: {}", e)
+                }
+                DownloadPathError::AclAccess(e) => {
+                    format!("Invalid file or file system error, ACL permission denied: {}", e)
+                }
+                _ => "Invalid file or file system error.".to_string(),
+            };
+            return Err(BusinessError::new(13400001, message))
         }
         Err(CreateTaskError::Code(code)) => {
             return Err(BusinessError::new(code, "Upload failed.".to_string()))
@@ -108,11 +130,32 @@ pub fn upload_file(env: &AniEnv, context: AniRef, seq: i64) -> Result<UploadTask
         Ok(task_id) => UploadTask {
             task_id: task_id.to_string(),
         },
-        Err(CreateTaskError::DownloadPath(_)) => {
-            return Err(BusinessError::new(
-                13400001,
-                "Invalid file or file system error.".to_string(),
-            ))
+        Err(CreateTaskError::DownloadPath(err)) => {
+            let message = match err {
+                DownloadPathError::EmptyPath => {
+                    "Invalid file or file system error, File path is empty".to_string()
+                }
+                DownloadPathError::TooLongPath => {
+                    "Invalid file or file system error, File path exceeds maximum allowed length".to_string()
+                }
+                DownloadPathError::BundleNameNotMap => {
+                    "Invalid file or file system error, File path bundle name does not match the application".to_string()
+                }
+                DownloadPathError::AlreadyExists => {
+                    "Invalid file or file system error, File already exists, set overwrite=true to replace".to_string()
+                }
+                DownloadPathError::CreateFile(e) => {
+                    format!("Invalid file or file system error, Failed to create file: {}", e)
+                }
+                DownloadPathError::SetPermission(e) => {
+                    format!("Invalid file or file system error, Failed to set file permissions: {}", e)
+                }
+                DownloadPathError::AclAccess(e) => {
+                    format!("Invalid file or file system error, ACL permission denied: {}", e)
+                }
+                _ => "Invalid file or file system error.".to_string(),
+            };
+            return Err(BusinessError::new(13400001, message))
         }
         Err(CreateTaskError::Code(code)) => {
             return Err(BusinessError::new(code, "Upload failed.".to_string()))
