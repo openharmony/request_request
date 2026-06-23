@@ -117,11 +117,34 @@ pub fn check_config(env: &AniEnv, context: AniRef, config: Config) -> Result<i64
             // Handle specific error types and return appropriate business errors
             match e {
                 CreateTaskError::DownloadPath(err) => {
-                    let (code, message) = match err {
-                        DownloadPathError::InvalidPath => (401, "Invalid Path"),
-                        _ => (13400001, "Invalid file or file system error."),
+                    let (code, message): (i32, String) = match err {
+                        DownloadPathError::InvalidPath => (401, "Invalid Path".to_string()),
+                        DownloadPathError::EmptyPath => {
+                            (13400001, "Invalid file or file system error, File path is empty".to_string())
+                        }
+                        DownloadPathError::TooLongPath => {
+                            (13400001, "Invalid file or file system error, File path exceeds maximum allowed length".to_string())
+                        }
+                        DownloadPathError::BundleNameNotMap => (
+                            13400001,
+                            "Invalid file or file system error, File path bundle name does not match the application".to_string(),
+                        ),
+                        DownloadPathError::AlreadyExists => {
+                            (13400001, "Invalid file or file system error, File already exists, set overwrite=true to replace".to_string())
+                        }
+                        DownloadPathError::CreateFile(e) => {
+                            (13400001, format!("Invalid file or file system error, Failed to create file: {}", e))
+                        }
+                        DownloadPathError::SetPermission(e) => (
+                            13400001,
+                            format!("Invalid file or file system error, Failed to set file permissions: {}", e),
+                        ),
+                        DownloadPathError::AclAccess(e) => (
+                            13400001,
+                            format!("Invalid file or file system error, ACL permission denied: {}", e),
+                        ),
                     };
-                    Err(BusinessError::new_static(code, message))
+                    Err(BusinessError::new(code, message))
                 }
                 CreateTaskError::Code(code) => {
                     Err(BusinessError::new_static(code, "Create Task Failed"))
@@ -184,11 +207,34 @@ pub fn create(env: &AniEnv, context: AniRef, seq: i64) -> Result<String, Busines
             // Handle specific error types and return appropriate business errors
             match e {
                 CreateTaskError::DownloadPath(err) => {
-                    let (code, message) = match err {
-                        DownloadPathError::InvalidPath => (401, "Invalid Path"),
-                        _ => (13400001, "Invalid file or file system error."),
+                    let (code, message): (i32, String) = match err {
+                        DownloadPathError::InvalidPath => (401, "Invalid Path".to_string()),
+                        DownloadPathError::EmptyPath => {
+                            (13400001, "Invalid file or file system error, File path is empty".to_string())
+                        }
+                        DownloadPathError::TooLongPath => {
+                            (13400001, "Invalid file or file system error, File path exceeds maximum allowed length".to_string())
+                        }
+                        DownloadPathError::BundleNameNotMap => (
+                            13400001,
+                            "Invalid file or file system error, File path bundle name does not match the application".to_string(),
+                        ),
+                        DownloadPathError::AlreadyExists => {
+                            (13400001, "Invalid file or file system error, File already exists, set overwrite=true to replace".to_string())
+                        }
+                        DownloadPathError::CreateFile(e) => {
+                            (13400001, format!("Invalid file or file system error, Failed to create file: {}", e))
+                        }
+                        DownloadPathError::SetPermission(e) => (
+                            13400001,
+                            format!("Invalid file or file system error, Failed to set file permissions: {}", e),
+                        ),
+                        DownloadPathError::AclAccess(e) => (
+                            13400001,
+                            format!("Invalid file or file system error, ACL permission denied: {}", e),
+                        ),
                     };
-                    Err(BusinessError::new_static(code, message))
+                    Err(BusinessError::new(code, message))
                 }
                 CreateTaskError::Code(code) => {
                     Err(BusinessError::new_static(code, "Create Task Failed"))
