@@ -49,6 +49,8 @@ ohos_shared_library("requestmodule_ani") {
     "storage_service:storage_manager_acl",
   ]
 
+  branch_protector_ret = "pac_ret"
+  stack_protector_ret = true
   sanitize = {
     integer_overflow = true
     ubsan = true

@@ -40,6 +40,7 @@ ohos_static_library("request_sysevent") {
     debug = false
   }
   stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
 
   sources = [ "src/sys_event.cpp" ]
 
