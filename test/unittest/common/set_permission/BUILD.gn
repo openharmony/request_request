@@ -22,6 +22,8 @@ config("common_perm_config") {
 }
 
 ohos_static_library("common_permission") {
+  branch_protector_ret = "pac_ret"
+  stack_protector_ret = true
   sanitize = {
     integer_overflow = true
     ubsan = true

@@ -21,6 +21,8 @@ rust_cxx("request_application_cxx_gen") {
 }
 
 ohos_static_library("request_application_cxx") {
+  branch_protector_ret = "pac_ret"
+  stack_protector_ret = true
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -99,6 +101,8 @@ rust_cxx("request_data_ability_cxx_gen") {
 }
 
 ohos_static_library("request_data_ability_cxx") {
+  branch_protector_ret = "pac_ret"
+  stack_protector_ret = true
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -181,6 +185,8 @@ rust_cxx("request_utils_cxx_gen") {
 }
 
 ohos_static_library("request_utils_cxx") {
+  branch_protector_ret = "pac_ret"
+  stack_protector_ret = true
   sanitize = {
     integer_overflow = true
     ubsan = true

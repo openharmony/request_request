@@ -113,6 +113,8 @@ config("preload_native_config") {
 }
 
 ohos_shared_library("preload_native") {
+  branch_protector_ret = "pac_ret"
+  stack_protector_ret = true
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -150,6 +152,8 @@ ohos_shared_library("preload_native") {
 }
 
 ohos_static_library("preload_native_static") {
+  branch_protector_ret = "pac_ret"
+  stack_protector_ret = true
   sanitize = {
     integer_overflow = true
     ubsan = true

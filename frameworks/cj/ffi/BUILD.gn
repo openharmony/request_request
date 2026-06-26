@@ -23,6 +23,7 @@ ohos_shared_library("cj_request_ffi") {
     debug = false
   }
   stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
 
   cflags_cc = [ "-fno-exceptions" ]
   cflags = [

@@ -21,6 +21,7 @@ ohos_static_library("request_test") {
     cfi_cross_dso = true
     debug = false
   }
+  branch_protector_ret = "pac_ret"
   stack_protector_ret = true
 
   include_dirs = [ "include" ]
