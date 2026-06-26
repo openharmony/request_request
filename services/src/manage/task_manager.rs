@@ -38,7 +38,8 @@ use super::events::{
     QueryEvent, ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent,
 };
 use crate::config::{Action, Mode};
-use crate::database::clear_database_part;
+use crate::database::clear_database_by_state;
+use crate::database::monitor_database;
 use crate::error::ErrorCode;
 use crate::info::{State, TaskInfo};
 use crate::manage::app_state::AppUninstallSubscriber;
@@ -456,6 +457,41 @@ impl TaskManager {
         self.scheduler.restore_all_tasks();
     }
 
+    /// Performs database maintenance including monitoring metrics and cleaning
+    /// up old tasks based on state-based retention policies.
+    ///
+    /// # Returns
+    ///
+    /// Returns `true` if maintenance completed successfully, `false` if there are
+    /// running tasks or pending events during cleanup.
+    fn database_maintenance(&mut self) -> bool {
+        // Step 1: Monitor database metrics (report if baseline exceeded)
+        monitor_database();
+
+        // Step 2: Clear old tasks by state-based retention policy
+        const PRE_COUNT: usize = 1000;
+        const TIMES: usize = 10;
+        for _i in 0..TIMES {
+            let remain = match clear_database_by_state(PRE_COUNT) {
+                Ok(r) => r,
+                Err(_) => {
+                    error!("Database cleanup failed");
+                    break;
+                }
+            };
+            if !remain {
+                break;
+            }
+            if self.check_any_tasks() {
+                return false;
+            }
+        }
+
+        // Step 3: Clear group notification info
+        NotificationDispatcher::get_instance().clear_group_info();
+        true
+    }
+
     /// Checks if there are any running tasks or pending events.
     ///
     /// Used before unloading the service to ensure all tasks are completed and
@@ -493,19 +529,9 @@ impl TaskManager {
             return false;
         }
 
-        const TIMES: usize = 10;
-        const PRE_COUNT: usize = 1000;
-
-        for _i in 0..TIMES {
-            let remain = clear_database_part(PRE_COUNT).unwrap_or(false);
-            if self.check_any_tasks() {
-                return false;
-            }
-            if !remain {
-                break;
-            }
+        if !self.database_maintenance() {
+            return false;
         }
-        NotificationDispatcher::get_instance().clear_group_info();
 
         const REQUEST_SERVICE_ID: i32 = 3706;
         const ONE_MONTH: i64 = 30 * 24 * 60 * 60 * 1000;
