@@ -26,11 +26,29 @@ const DB_SIZE_BASELINE: u64 = 10 * 1024 * 1024;
 /// Number of top bundles to report.
 const TOP_BUNDLE_COUNT: usize = 5;
 
+/// Database file sizes for main, WAL, and SHM files.
+#[derive(Debug, Default)]
+pub(crate) struct DbFileSize {
+    /// Main database file size in bytes.
+    pub(crate) main_size: u64,
+    /// WAL file size in bytes.
+    pub(crate) wal_size: u64,
+    /// SHM file size in bytes.
+    pub(crate) shm_size: u64,
+}
+
+impl DbFileSize {
+    /// Returns the total size of all database files.
+    pub(crate) fn total(&self) -> u64 {
+        self.main_size + self.wal_size + self.shm_size
+    }
+}
+
 /// Database monitoring result containing metrics information.
 #[derive(Debug, Default)]
 pub(crate) struct DbMonitorResult {
-    /// Database file size in bytes.
-    pub(crate) db_size: u64,
+    /// Database file sizes (main, WAL, SHM).
+    pub(crate) db_file_size: DbFileSize,
     /// Total number of records in the task table.
     pub(crate) total_records: u64,
     /// Distribution of tasks by state.
@@ -58,21 +76,31 @@ pub(crate) fn monitor_database() {
     // Report only if database size exceeds baseline
     if !result.size_exceeded {
         debug!(
-            "Database metrics normal: size={} bytes",
-            result.db_size
+            "Database metrics normal: main={} wal={} shm={} total={} bytes",
+            result.db_file_size.main_size,
+            result.db_file_size.wal_size,
+            result.db_file_size.shm_size,
+            result.db_file_size.total()
         );
         return;
     }
 
     info!(
-        "Database metrics exceeded baseline: size={} bytes (baseline={})",
-        result.db_size, DB_SIZE_BASELINE
+        "Database metrics exceeded baseline: main={} wal={} shm={} total={} bytes (baseline={})",
+        result.db_file_size.main_size,
+        result.db_file_size.wal_size,
+        result.db_file_size.shm_size,
+        result.db_file_size.total(),
+        DB_SIZE_BASELINE
     );
 
     // Write the system event
     let extra_info = format!(
-        "db_size={},records={},size_exceeded={},state_dist={},top_bundles={}",
-        result.db_size,
+        "main_size={},wal_size={},shm_size={},total_size={},records={},size_exceeded={},state_dist={},top_bundles={}",
+        result.db_file_size.main_size,
+        result.db_file_size.wal_size,
+        result.db_file_size.shm_size,
+        result.db_file_size.total(),
         result.total_records,
         result.size_exceeded,
         format_state_distribution(&result.state_distribution),
@@ -87,7 +115,7 @@ pub(crate) fn monitor_database() {
 ///
 /// `Some(DbMonitorResult)` if metrics were successfully collected, `None` otherwise.
 fn collect_db_metrics() -> Option<DbMonitorResult> {
-    let db_size = match get_db_size() {
+    let db_file_size = match get_db_size() {
         Some(size) => size,
         None => {
             error!("Failed to get database size");
@@ -95,12 +123,12 @@ fn collect_db_metrics() -> Option<DbMonitorResult> {
         }
     };
 
-    let size_exceeded = db_size > DB_SIZE_BASELINE;
+    let size_exceeded = db_file_size.total() > DB_SIZE_BASELINE;
 
     // Only collect additional metrics if baseline is exceeded
     if !size_exceeded {
         return Some(DbMonitorResult {
-            db_size,
+            db_file_size,
             total_records: 0,
             state_distribution: Vec::new(),
             top_bundles: Vec::new(),
@@ -120,7 +148,7 @@ fn collect_db_metrics() -> Option<DbMonitorResult> {
     let top_bundles = get_top_bundles();
 
     Some(DbMonitorResult {
-        db_size,
+        db_file_size,
         total_records,
         state_distribution,
         top_bundles,
@@ -128,38 +156,44 @@ fn collect_db_metrics() -> Option<DbMonitorResult> {
     })
 }
 
-/// Gets the database file size.
+/// Gets the database file sizes (main, WAL, SHM).
 ///
 /// # Returns
 ///
-/// `Some(u64)` with the file size in bytes, or `None` if the file doesn't exist or size cannot be determined.
-fn get_db_size() -> Option<u64> {
+/// `Some(DbFileSize)` with the file sizes in bytes, or `None` if the main file doesn't exist.
+fn get_db_size() -> Option<DbFileSize> {
     let db_path = super::DB_PATH;
 
-    let mut total_size = 0u64;
-
     // Main database file
-    match std::fs::metadata(db_path) {
-        Ok(metadata) => total_size += metadata.len(),
+    let main_size = match std::fs::metadata(db_path) {
+        Ok(metadata) => metadata.len(),
         Err(e) => {
             error!("Failed to get database metadata: {}", e);
             return None;
         }
-    }
+    };
 
     // WAL file
     let wal_path = format!("{}-wal", db_path);
-    if let Ok(metadata) = std::fs::metadata(wal_path) {
-        total_size += metadata.len();
-    }
+    let wal_size = if let Ok(metadata) = std::fs::metadata(wal_path) {
+        metadata.len()
+    } else {
+        0
+    };
 
     // SHM file
     let shm_path = format!("{}-shm", db_path);
-    if let Ok(metadata) = std::fs::metadata(shm_path) {
-        total_size += metadata.len();
-    }
+    let shm_size = if let Ok(metadata) = std::fs::metadata(shm_path) {
+        metadata.len()
+    } else {
+        0
+    };
 
-    Some(total_size)
+    Some(DbFileSize {
+        main_size,
+        wal_size,
+        shm_size,
+    })
 }
 
 /// Gets the total record count from the request_task table.
