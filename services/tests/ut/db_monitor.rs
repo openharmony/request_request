@@ -120,7 +120,9 @@ fn ut_db_monitor_format_top_bundles_multiple() {
 #[test]
 fn ut_db_monitor_result_default() {
     let result = DbMonitorResult::default();
-    assert_eq!(result.db_size, 0);
+    assert_eq!(result.db_file_size.main_size, 0);
+    assert_eq!(result.db_file_size.wal_size, 0);
+    assert_eq!(result.db_file_size.shm_size, 0);
     assert_eq!(result.total_records, 0);
     assert!(result.state_distribution.is_empty());
     assert!(result.top_bundles.is_empty());
