@@ -134,6 +134,8 @@ use crate::{check, Callback};
 pub struct RequestClient<'a> {
     /// Listener for task status updates and events
     listener: Observer,
+    /// Registry of tasks created by this client, keyed by sequence number and
+    /// task ID.
     pub task_manager: NativeTaskManager,
     /// Proxy for communicating with the download service
     proxy: &'a RequestProxy,
@@ -179,6 +181,18 @@ impl<'a> RequestClient<'a> {
         })
     }
 
+    /// Validates a task config, applies file permissions, and stores the task in
+    /// the native registry under the given sequence number without sending it to
+    /// the service.
+    ///
+    /// # Arguments
+    /// * `context` - Application context used for path permission checks.
+    /// * `seq` - Request sequence number used as the local registry key.
+    /// * `config` - Task configuration to validate and register.
+    ///
+    /// # Returns
+    /// `Ok(())` if the config is valid and registered, or a `CreateTaskError`
+    /// on validation or permission failure.
     pub fn check_config(
         &self,
         context: Context,
@@ -312,6 +326,14 @@ impl<'a> RequestClient<'a> {
         }
     }
 
+    /// Retrieves the configuration of a task from the service.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task to fetch.
+    /// * `token` - Optional access token for authorization.
+    ///
+    /// # Returns
+    /// The task configuration on success, or an error code on failure.
     pub fn get_task(&self, task_id: i64, token: Option<String>) -> Result<TaskConfig, i32> {
         self.proxy.get_task(task_id, token)
     }
@@ -384,6 +406,13 @@ impl<'a> RequestClient<'a> {
         self.proxy.set_max_speed(task_id, speed)
     }
 
+    /// Queries the MIME type of a task's downloaded content.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task to query.
+    ///
+    /// # Returns
+    /// The MIME type string on success, or an error code on failure.
     pub fn query_mime_type(&self, task_id: i64) -> Result<String, i32> {
         self.proxy.query_mime_type(task_id)
     }
@@ -432,14 +461,37 @@ impl<'a> RequestClient<'a> {
         self.proxy.search(keyword)
     }
 
+    /// Touches a task to keep it alive, returning its current information.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task to touch.
+    /// * `token` - Access token authorizing the operation.
+    ///
+    /// # Returns
+    /// The task information on success, or an error code on failure.
     pub fn touch(&self, task_id: i64, token: String) -> Result<TaskInfo, i32> {
         self.proxy.touch(task_id, token)
     }
 
+    /// Queries the current information of a task.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task to query.
+    ///
+    /// # Returns
+    /// The task information on success, or an error code on failure.
     pub fn query(&self, task_id: i64) -> Result<TaskInfo, i32> {
         self.proxy.query(task_id)
     }
 
+    /// Creates a task group with the given gauge and notification settings.
+    ///
+    /// # Arguments
+    /// * `gauge` - Optional gauge flag for the group.
+    /// * `notification` - Notification configuration for the group.
+    ///
+    /// # Returns
+    /// The created group ID on success, or an error code on failure.
     pub fn create_group(
         &self,
         gauge: Option<bool>,
@@ -448,10 +500,25 @@ impl<'a> RequestClient<'a> {
         self.proxy.create_group(gauge, notification)
     }
 
+    /// Attaches a set of tasks to an existing task group.
+    ///
+    /// # Arguments
+    /// * `group_id` - ID of the group to attach tasks to.
+    /// * `task_ids` - IDs of the tasks to attach.
+    ///
+    /// # Returns
+    /// `Ok(())` on success, or an error code on failure.
     pub fn attach_group(&self, group_id: String, task_ids: Vec<String>) -> Result<(), i32> {
         self.proxy.attach_group(group_id, task_ids)
     }
 
+    /// Deletes a task group.
+    ///
+    /// # Arguments
+    /// * `group_id` - ID of the group to delete.
+    ///
+    /// # Returns
+    /// `Ok(())` on success, or an error code on failure.
     pub fn delete_group(&self, group_id: String) -> Result<(), i32> {
         self.proxy.delete_group(group_id)
     }

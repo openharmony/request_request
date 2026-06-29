@@ -79,6 +79,12 @@ fn ParseGid(gid: &str) -> Result<(), BusinessError> {
     Ok(())
 }
 
+/// Validates the notification configuration for a task group.
+///
+/// # Returns
+///
+/// * `Ok(())` if the configuration is valid
+/// * `Err(BusinessError)` if `visibility` is not 1, 2, or 3
 #[ani_rs::native]
 pub fn check_group_config(env: &AniEnv, config: GroupConfig) -> Result<(), BusinessError> {
     if let Some(visibility) = config.notification.visibility {
@@ -93,6 +99,12 @@ pub fn check_group_config(env: &AniEnv, config: GroupConfig) -> Result<(), Busin
     Ok(())
 }
 
+/// Creates a new task group and returns its group ID.
+///
+/// # Returns
+///
+/// * `Ok(String)` containing the new group ID
+/// * `Err(BusinessError)` if title/text validation or group creation fails
 #[ani_rs::native]
 pub fn create_group(env: &AniEnv, mut config: GroupConfig) -> Result<String, BusinessError> {
     ParseTitleText(&config.notification.title, &config.notification.text)?;
@@ -117,6 +129,12 @@ pub fn create_group(env: &AniEnv, mut config: GroupConfig) -> Result<String, Bus
         .map_err(|e| BusinessError::new_static(e, "Failed to create group"))
 }
 
+/// Attaches a list of tasks to an existing task group.
+///
+/// # Returns
+///
+/// * `Ok(())` if the tasks were successfully attached
+/// * `Err(BusinessError)` if the group ID is empty or attachment fails
 #[ani_rs::native]
 pub fn attach_group(gid: String, tids: Vec<String>) -> Result<(), BusinessError> {
     ParseGid(&gid)?;
@@ -125,6 +143,12 @@ pub fn attach_group(gid: String, tids: Vec<String>) -> Result<(), BusinessError>
         .map_err(|e| BusinessError::new_static(e, "Failed to attach group"))
 }
 
+/// Deletes an existing task group.
+///
+/// # Returns
+///
+/// * `Ok(())` if the group was successfully deleted
+/// * `Err(BusinessError)` if the group ID is empty or deletion fails
 #[ani_rs::native]
 pub fn delete_group(gid: String) -> Result<(), BusinessError> {
     ParseGid(&gid)?;

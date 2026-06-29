@@ -96,7 +96,9 @@ pub enum SubscribeType {
     Resume,
     /// HTTP response has been received.
     Response,
+    /// A fault has occurred on the task.
     FaultOccur,
+    /// The task has entered a waiting state.
     Wait,
     /// Marker for the end of the enum.
     Butt,
@@ -126,20 +128,32 @@ impl From<u32> for SubscribeType {
     }
 }
 
+/// Coarse fault category for a failed task, derived from a finer-grained `Reason`.
 #[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
 pub enum Faults {
+    /// Fault that does not fit any other category.
     Others = 0xFF,
+    /// Network connection was disconnected.
     Disconnected = 0x00,
+    /// Operation timed out.
     Timeout = 0x10,
+    /// Protocol-level error.
     Protocol = 0x20,
+    /// Invalid request parameter.
     Param = 0x30,
+    /// File system input/output error.
     Fsio = 0x40,
+    /// Domain name resolution error.
     Dns = 0x50,
+    /// TCP-level error.
     Tcp = 0x60,
+    /// SSL/TLS-level error.
     Ssl = 0x70,
+    /// Redirect handling error.
     Redirect = 0x80,
+    /// Transfer speed fell below the configured minimum.
     LowSpeed = 0x90,
 }
 
@@ -186,39 +200,72 @@ impl From<Reason> for Faults {
     }
 }
 
+/// Fine-grained reason describing why a task stopped, paused, or waited.
 #[derive(Debug, Copy, Clone)]
 pub enum Reason {
+    /// Task completed successfully.
     ReasonOk = 0,
+    /// Task has been running for over one month.
     TaskSurvivalOneMonth,
+    /// Task has been waiting for network for over one day.
     WaittingNetworkOneDay,
+    /// Task was superseded by a newer front-task.
     StoppedNewFrontTask,
+    /// Running task count reached the configured limit.
     RunningTaskMeetLimits,
+    /// Task was stopped by an explicit user operation.
     UserOperation,
+    /// Owning application moved to background or was terminated.
     AppBackgroundOrTerminate,
+    /// Device is offline with no network.
     NetworkOffline,
+    /// Current network type is not supported for the task.
     UnsupportedNetworkType,
+    /// HTTP client could not be built.
     BuildClientFailed,
+    /// HTTP request could not be built.
     BuildRequestFailed,
+    /// File size could not be determined.
     GetFilesizeFailed,
+    /// Continuous task execution timed out.
     ContinuousTaskTimeout,
+    /// Connection error occurred.
     ConnectError,
+    /// Generic request error.
     RequestError,
+    /// Upload file error occurred.
     UploadFileError,
+    /// Redirect handling error.
     RedirectError,
+    /// Protocol-level error.
     ProtocolError,
+    /// Input/output error.
     IoError,
+    /// Range request is not supported.
     UnsupportRangeRequest,
+    /// Error that does not match any specific reason.
     OthersError,
+    /// Account was stopped.
     AccountStopped,
+    /// Network changed during the task.
     NetworkChanged,
+    /// Domain name resolution failed.
     DNS,
+    /// TCP-level error.
     TCP,
+    /// SSL/TLS-level error.
     SSL,
+    /// Insufficient storage space.
     InsufficientSpace,
+    /// Network is not available for the application.
     NetworkApp,
+    /// Network is not available for the account.
     NetworkAccount,
+    /// Application is not available for the account.
     AppAccount,
+    /// Neither network, application, nor account is available.
     NetworkAppAccount,
+    /// Transfer speed fell below the configured minimum.
     LowSpeed,
 }
 
@@ -262,24 +309,36 @@ impl From<u32> for Reason {
     }
 }
 
+/// Notification payload describing a fault that occurred on a task.
 #[derive(Debug)]
 pub struct FaultOccur {
+    /// Identifier of the task that faulted.
     pub task_id: i32,
+    /// Subscription type that triggered the notification.
     pub subscribe_type: SubscribeType,
+    /// Coarse category of the fault.
     pub faults: Faults,
 }
 
+/// Notification payload describing a task entering a waiting state.
 pub struct Wait {
+    /// Identifier of the task that is waiting.
     pub task_id: i32,
+    /// Reason the task is waiting.
     pub waiting_reason: WaitingReason,
 }
 
+/// Reason a task has entered a waiting state.
 #[derive(Copy, Clone)]
 #[repr(u32)]
 pub enum WaitingReason {
+    /// Task queue is full.
     TASK_QUEUE_FULL = 0x00,
+    /// Current network does not match the task requirements.
     NETWORK_NOT_MATCH = 0x01,
+    /// Owning application is in the background.
     APP_BACKGROUND = 0x02,
+    /// User is inactive.
     USER_INACTIVATED = 0x03,
 }
 
@@ -295,6 +354,7 @@ impl From<u32> for WaitingReason {
     }
 }
 
+/// HTTP response received for a task.
 #[derive(Debug)]
 pub struct Response {
     /// Unique identifier of the task associated with this response.
@@ -337,6 +397,7 @@ pub struct Progress {
     pub sizes: Vec<i64>,
     /// Additional progress-related metadata.
     pub extras: HashMap<String, String>,
+    /// Raw bytes of the response body received so far.
     pub body_bytes: Vec<u8>,
 }
 

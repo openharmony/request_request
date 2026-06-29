@@ -135,6 +135,8 @@ impl FileCaches {
     }
 }
 
+/// Manages the on-disk file cache, tracking cached tasks and serializing file
+/// operations against them.
 pub struct FileManager {
     pub(crate) caches: Mutex<FileCaches>,
 
@@ -147,6 +149,7 @@ pub struct FileManager {
 }
 
 impl FileManager {
+    /// Creates a new, empty file manager.
     pub fn new() -> Self {
         Self {
             caches: Mutex::new(FileCaches::new()),
@@ -155,6 +158,11 @@ impl FileManager {
         }
     }
 
+    /// Updates the total file cache size limit, evicting cached tasks that no
+    /// longer fit.
+    ///
+    /// # Arguments
+    /// * `size` - New total file cache size limit in bytes.
     pub fn set_file_cache_size(&self, size: u64) {
         let mut caches = self.caches.lock().unwrap();
         caches.change_total_size(size);
@@ -281,6 +289,7 @@ impl FileManager {
         })
     }
 
+    /// Removes a task's cache entry and deletes its cached file from disk.
     pub fn remove(&self, task_id: &TaskId) {
         self.backup_rams.lock().unwrap().remove(task_id);
         let mut caches = self.caches.lock().unwrap();
@@ -372,12 +381,14 @@ impl FileManager {
     }
 }
 
+/// A task together with the queue of pending serialized file operations for it.
 pub struct OperatingTask {
     pub(crate) task_id: TaskId,
     pub(crate) operations: Arc<Mutex<VecDeque<Arc<NotifyCondition>>>>,
 }
 
 impl OperatingTask {
+    /// Creates a new operating task bound to the given operation queue.
     pub fn new(task_id: TaskId, operations: Arc<Mutex<VecDeque<Arc<NotifyCondition>>>>) -> Self {
         Self {
             task_id,
@@ -385,11 +396,14 @@ impl OperatingTask {
         }
     }
 
+    /// Returns the task ID this operating task refers to.
     pub fn task_id(&self) -> &TaskId {
         &self.task_id
     }
 }
 
+/// Handle returned when enqueueing a file operation, indicating whether this
+/// operation runs first and holding the condition used to wait for its turn.
 pub struct NotifyHandle {
     is_first: bool,
     handle: Arc<NotifyCondition>,
@@ -405,25 +419,35 @@ impl Clone for NotifyHandle {
 }
 
 impl NotifyHandle {
+    /// Creates a new notify handle.
+    ///
+    /// # Arguments
+    /// * `is_first` - Whether the associated operation is first in the queue.
+    /// * `handle` - Condition variable used to await the operation's turn.
     pub fn new(is_first: bool, handle: Arc<NotifyCondition>) -> NotifyHandle {
         Self { is_first, handle }
     }
 
+    /// Returns whether the associated operation is first in the queue.
     pub fn is_first(&self) -> bool {
         self.is_first
     }
 
+    /// Returns the underlying notify condition used to wait for the turn.
     pub fn handle(&self) -> &Arc<NotifyCondition> {
         &self.handle
     }
 }
 
+/// Condition variable guarding a single-shot go-ahead signal used to serialize
+/// file operations for a task.
 pub struct NotifyCondition {
     available: Mutex<bool>,
     condvar: Condvar,
 }
 
 impl NotifyCondition {
+    /// Creates a new condition that is initially not signaled.
     pub fn new() -> Self {
         Self {
             available: Mutex::new(false),
@@ -431,6 +455,7 @@ impl NotifyCondition {
         }
     }
 
+    /// Blocks until the condition has been signaled, then resets it.
     pub fn wait(&self) {
         let mut available = self.available.lock().unwrap();
         while !*available {
@@ -439,6 +464,7 @@ impl NotifyCondition {
         *available = false;
     }
 
+    /// Signals the condition, waking one waiting operation.
     pub fn notify(&self) {
         *(self.available.lock().unwrap()) = true;
         self.condvar.notify_one();
@@ -641,6 +667,13 @@ impl CacheManager {
         self.file_manager.clear_file_cache(running_tasks);
     }
 
+    /// Reads a task's cached file into RAM without inserting it into the cache.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task whose local file should be read.
+    ///
+    /// # Returns
+    /// `Some` with the loaded RAM cache on success, or `None` on read failure.
     pub fn read_task_local_file(&'static self, task_id: &TaskId) -> Option<RamCache> {
         FileCache::read_but_not_cache(task_id, self).ok()
     }
@@ -711,6 +744,11 @@ impl CacheManager {
     }
 }
 
+/// Enqueues a file operation for a task and returns a handle for awaiting its
+/// turn.
+///
+/// The first operation queued is marked as ready to run; subsequent operations
+/// must wait to be signaled by the preceding one.
 pub fn send_operation_message(task: &OperatingTask) -> NotifyHandle {
     let pair = Arc::new(NotifyCondition::new());
     let pair2 = pair.clone();
@@ -723,6 +761,8 @@ pub fn send_operation_message(task: &OperatingTask) -> NotifyHandle {
     NotifyHandle::new(is_first, pair2)
 }
 
+/// Removes a task's cached file, waiting for prior operations on the same task
+/// to finish first.
 pub fn execute_file_remove(task: OperatingTask, notify: &NotifyHandle) {
     let is_first = notify.is_first();
     let pair = notify.handle();
@@ -735,6 +775,16 @@ pub fn execute_file_remove(task: OperatingTask, notify: &NotifyHandle) {
     notify_next_operation(task);
 }
 
+/// Reads a task's cached file into RAM, waiting for prior operations on the
+/// same task to finish first.
+///
+/// # Arguments
+/// * `task` - Operating task identifying the file to read.
+/// * `notify` - Handle controlling turn ordering.
+/// * `handle` - Cache manager used to load the RAM cache.
+///
+/// # Returns
+/// The loaded RAM cache, or an I/O error on failure.
 pub fn execute_file_read(
     task: OperatingTask,
     notify: &NotifyHandle,
@@ -752,6 +802,8 @@ pub fn execute_file_read(
     ram
 }
 
+/// Writes a RAM cache to a task's cached file, waiting for prior operations on
+/// the same task to finish first.
 pub fn execute_file_write(task: OperatingTask, ram: Arc<RamCache>, notify: &NotifyHandle) {
     let is_first = notify.is_first();
     let pair = notify.handle();
@@ -768,6 +820,8 @@ pub fn execute_file_write(task: OperatingTask, ram: Arc<RamCache>, notify: &Noti
     notify_next_operation(task);
 }
 
+/// Completes the current operation for a task and wakes the next queued
+/// operation, if any.
 pub fn notify_next_operation(task: OperatingTask) {
     let mut operations = task.operations.lock().unwrap();
     operations.pop_front();

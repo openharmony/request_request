@@ -15,6 +15,10 @@ use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;
 
+/// Verifier for the access token of a task config.
+///
+/// On API10, when a token is provided its length must stay within the allowed
+/// range.
 pub struct TokenVerifier {}
 
 impl ConfigVerifier for TokenVerifier {

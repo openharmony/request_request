@@ -286,6 +286,16 @@ pub fn set_file_cache_size(size: i64) -> Result<(), BusinessError> {
     Ok(())
 }
 
+/// Retrieves download information for the resource at the given URL.
+///
+/// Returns `None` when no cached entry exists for the URL. Requires the
+/// `GET_NETWORK_INFO` permission.
+///
+/// # Returns
+///
+/// * `Ok(Some(DownloadInfo))` with the collected download information
+/// * `Ok(None)` if no information is available for the URL
+/// * `Err(BusinessError)` on permission denial or an invalid URL
 #[ani_rs::native]
 pub fn get_download_info(url: String) -> Result<Option<DownloadInfo>, BusinessError> {
     if !has_get_network_info_permission() {
@@ -310,6 +320,12 @@ pub fn get_download_info(url: String) -> Result<Option<DownloadInfo>, BusinessEr
     Ok(info)
 }
 
+/// Sets the maximum number of download info entries retained.
+///
+/// # Returns
+///
+/// * `Ok(())` if the list size was successfully updated
+/// * `Err(BusinessError)` if the size is negative or exceeds the maximum
 #[ani_rs::native]
 pub fn set_download_info_list_size(size: i64) -> Result<(), BusinessError> {
     if (size > MAX_INFO_LIST_SIZE as i64) {
@@ -366,6 +382,7 @@ pub fn clear_file_cache() -> Result<(), BusinessError> {
     Ok(())
 }
 
+/// Registers a callback invoked when the download for `url` succeeds.
 #[ani_rs::native]
 pub fn on_download_success(
     env: &AniEnv,
@@ -378,6 +395,7 @@ pub fn on_download_success(
     Ok(())
 }
 
+/// Registers a callback invoked when the download for `url` fails.
 #[ani_rs::native]
 pub fn on_download_error(
     env: &AniEnv,
@@ -390,6 +408,10 @@ pub fn on_download_error(
     Ok(())
 }
 
+/// Unregisters a success callback for the given URL.
+///
+/// When `success_callback` is `None`, all success callbacks for the URL are
+/// removed.
 #[ani_rs::native]
 pub fn off_download_success(
     env: &AniEnv,
@@ -404,6 +426,9 @@ pub fn off_download_success(
     Ok(())
 }
 
+/// Unregisters an error callback for the given URL.
+///
+/// When `err_callback` is `None`, all error callbacks for the URL are removed.
 #[ani_rs::native]
 pub fn off_download_error(
     env: &AniEnv,
@@ -432,17 +457,25 @@ fn check_url_length(url: &str) -> Result<(), BusinessError> {
     Ok(())
 }
 
+/// Sets global retry options for all subsequent cache downloads.
+///
+/// Falls back to a default retry count when `options` is `None`.
+///
+/// # Returns
+///
+/// * `Ok(())` if the options were applied
+/// * `Err(BusinessError)` if `maxRetryCount` is out of the allowed range
 #[ani_rs::native]
 pub fn set_global_retry_options(
     options: Option<crate::bridge::RetryOptions>,
 ) -> Result<(), BusinessError> {
-    // 参数缺失时使用默认值
+    // Use default value when the parameter is missing
     let max_retry_count = match options {
         None => DEFAULT_MAX_RETRY_COUNT,
         Some(o) => match o.max_retry_count {
             None => DEFAULT_MAX_RETRY_COUNT,
             Some(v) => {
-                // 参数范围校验
+                // Validate parameter range
                 if v < MIN_RETRY_COUNT || v > MAX_RETRY_COUNT {
                     return Err(BusinessError::new(
                         401,
@@ -457,17 +490,26 @@ pub fn set_global_retry_options(
     Ok(())
 }
 
+/// Sets global timeout options for all subsequent cache downloads.
+///
+/// Falls back to default timeout values when `options` or its fields are
+/// `None`.
+///
+/// # Returns
+///
+/// * `Ok(())` if the options were applied
+/// * `Err(BusinessError)` if a timeout value is out of the allowed range
 #[ani_rs::native]
 pub fn set_global_timeout_options(
     options: Option<crate::bridge::TimeoutOptions>,
 ) -> Result<(), BusinessError> {
-    // 参数缺失时使用默认值
+    // Use default value when the parameter is missing
     let network_check_timeout = match options {
         None => DEFAULT_NETWORK_CHECK_TIMEOUT,
         Some(ref o) => match o.network_check_timeout {
             None => DEFAULT_NETWORK_CHECK_TIMEOUT,
             Some(v) => {
-                // 参数范围校验
+                // Validate parameter range
                 if v < MIN_NETWORK_CHECK_TIMEOUT || v > MAX_NETWORK_CHECK_TIMEOUT {
                     return Err(BusinessError::new(
                         401,

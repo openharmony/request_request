@@ -25,12 +25,14 @@ use preload_native_rlib::{CacheDownloadError, PreloadCallback, RamCache};
 
 use crate::bridge::{DownloadError, ErrorCode};
 
+/// Holds the success and error callbacks registered for a single download URL.
 pub struct CallbackUnit {
     error_callbacks: Mutex<Vec<GlobalRefCallback<(DownloadError,)>>>,
     success_callbacks: Mutex<Vec<GlobalRefCallback<()>>>,
 }
 
 impl CallbackUnit {
+    /// Creates an empty callback unit with no registered callbacks.
     pub fn new() -> Self {
         Self {
             error_callbacks: Mutex::new(Vec::new()),
@@ -38,6 +40,7 @@ impl CallbackUnit {
         }
     }
 
+    /// Adds a success callback, ignoring duplicates.
     pub fn add_success_callback(&self, callback: GlobalRefCallback<()>) {
         let mut cbs = self.success_callbacks.lock().unwrap();
         for cb in cbs.iter() {
@@ -48,6 +51,7 @@ impl CallbackUnit {
         cbs.push(callback);
     }
 
+    /// Adds an error callback, ignoring duplicates.
     pub fn add_error_callback(&self, callback: GlobalRefCallback<(DownloadError,)>) {
         let mut cbs = self.error_callbacks.lock().unwrap();
         for cb in cbs.iter() {
@@ -58,6 +62,7 @@ impl CallbackUnit {
         cbs.push(callback);
     }
 
+    /// Removes a specific success callback, or clears all when `None`.
     pub fn remove_success_callback(&self, callback: Option<GlobalRefCallback<()>>) {
         let mut cbs = self.success_callbacks.lock().unwrap();
         if let Some(callback) = callback {
@@ -67,6 +72,7 @@ impl CallbackUnit {
         }
     }
 
+    /// Removes a specific error callback, or clears all when `None`.
     pub fn remove_error_callback(&self, callback: Option<GlobalRefCallback<(DownloadError,)>>) {
         let mut cbs = self.error_callbacks.lock().unwrap();
         if let Some(callback) = callback {
@@ -76,6 +82,7 @@ impl CallbackUnit {
         }
     }
 
+    /// Invokes all registered success callbacks.
     pub fn call_success_callbacks(&self) {
         let cbs = self.success_callbacks.lock().unwrap().clone();
         for cb in cbs.iter() {
@@ -83,6 +90,7 @@ impl CallbackUnit {
         }
     }
 
+    /// Invokes all registered error callbacks with the given error.
     pub fn call_error_callbacks(&self, error: DownloadError) {
         let cbs = self.error_callbacks.lock().unwrap().clone();
         for cb in cbs.iter() {
@@ -91,11 +99,14 @@ impl CallbackUnit {
     }
 }
 
+/// Adapter that forwards native preload completion/failure events to the
+/// per-URL callbacks managed by `CallbackManager`.
 pub struct CallbackWrapper {
     url: String,
 }
 
 impl CallbackWrapper {
+    /// Creates a callback wrapper bound to the given download URL.
     pub fn new(url: String) -> Self {
         Self { url }
     }
@@ -112,22 +123,26 @@ impl PreloadCallback for CallbackWrapper {
     }
 }
 
+/// Singleton registry mapping download URLs to their callback units.
 pub struct CallbackManager {
     callbacks: Mutex<HashMap<String, Arc<CallbackUnit>>>,
 }
 
 impl CallbackManager {
+    /// Creates an empty callback manager.
     pub fn new() -> Self {
         Self {
             callbacks: Mutex::new(HashMap::new()),
         }
     }
 
+    /// Returns the singleton instance of the callback manager.
     pub fn get_instance() -> &'static CallbackManager {
         static INSTANCE: OnceLock<CallbackManager> = OnceLock::new();
         INSTANCE.get_or_init(|| CallbackManager::new())
     }
 
+    /// Triggers all success callbacks registered for the given URL.
     pub fn call_success_callbacks(&self, url: &str) {
         let callbacks = self.callbacks.lock().unwrap();
         if let Some(unit) = callbacks.get(url) {
@@ -137,6 +152,7 @@ impl CallbackManager {
         }
     }
 
+    /// Triggers all error callbacks registered for the given URL.
     pub fn call_error_callbacks(&self, url: &str, error: DownloadError) {
         let callbacks = self.callbacks.lock().unwrap();
         if let Some(unit) = callbacks.get(url) {
@@ -146,6 +162,7 @@ impl CallbackManager {
         }
     }
 
+    /// Registers a success callback for the given URL.
     pub fn register_success_callback(&self, url: &str, callback: GlobalRefCallback<()>) {
         let mut callbacks = self.callbacks.lock().unwrap();
         let unit = callbacks
@@ -156,6 +173,7 @@ impl CallbackManager {
         unit.add_success_callback(callback);
     }
 
+    /// Registers an error callback for the given URL.
     pub fn register_error_callback(
         &self,
         url: &str,
@@ -170,6 +188,7 @@ impl CallbackManager {
         unit.add_error_callback(callback);
     }
 
+    /// Unregisters a success callback for the given URL, or all when `None`.
     pub fn unregister_success_callback(&self, url: &str, callback: Option<GlobalRefCallback<()>>) {
         let mut callbacks = self.callbacks.lock().unwrap();
         if let Some(unit) = callbacks.get_mut(url) {
@@ -180,6 +199,7 @@ impl CallbackManager {
         }
     }
 
+    /// Unregisters an error callback for the given URL, or all when `None`.
     pub fn unregister_error_callback(
         &self,
         url: &str,

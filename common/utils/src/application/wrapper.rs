@@ -22,6 +22,7 @@
 use cxx::SharedPtr;
 pub use ffi::*;
 
+/// Returns the system cache directory path, or `None` when it is unavailable.
 #[inline]
 pub fn get_cache_dir() -> Option<String> {
     let res = GetCacheDir();

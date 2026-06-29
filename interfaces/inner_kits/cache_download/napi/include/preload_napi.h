@@ -23,6 +23,16 @@
 #include "napi/native_common.h"
 #include "request_preload.h"
 namespace OHOS::Request {
+/**
+ * @brief Convert the C++ download statistics object to an ArkTS/JS napi_value.
+ *
+ * Serializes the CppDownloadInfo collected by the Preload module (DNS,
+ * connection, durations, resource size, etc.) into an externally readable JS
+ * object, returned to the application layer by the NAPI interface.
+ * @param env napi calling environment.
+ * @param result Download statistics to convert.
+ * @return The converted napi_value object.
+ */
 napi_value BuildDownloadInfo(napi_env env, const CppDownloadInfo &result);
 } // namespace OHOS::Request
 #endif

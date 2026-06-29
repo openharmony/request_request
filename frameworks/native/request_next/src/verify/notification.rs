@@ -15,6 +15,10 @@ use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;
 
+/// Verifier for the notification configuration of a task config.
+///
+/// Validates notification title and text lengths, the want agent, and the
+/// visibility setting on API10.
 pub struct NotificationVerifier {}
 
 impl ConfigVerifier for NotificationVerifier {

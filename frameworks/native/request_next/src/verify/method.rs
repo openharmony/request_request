@@ -15,6 +15,9 @@ use request_core::config::{Action, TaskConfig};
 
 use crate::verify::ConfigVerifier;
 
+/// Verifier for the HTTP method of a task config.
+///
+/// Downloads accept only `GET` or `POST`; uploads accept only `PUT` or `POST`.
 pub struct MethodVerifier {}
 
 impl ConfigVerifier for MethodVerifier {

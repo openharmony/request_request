@@ -182,6 +182,7 @@ impl From<RequestData> for FormItem {
     }
 }
 
+/// State of an individual upload sub-task reported back to the caller.
 #[ani_rs::ani(path = "@ohos.request.request.TaskStateInner")]
 #[derive(Clone)]
 pub struct TaskState {

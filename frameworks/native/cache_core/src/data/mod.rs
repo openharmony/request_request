@@ -18,10 +18,12 @@ mod space;
 pub mod observer;
 
 pub(crate) use file::{get_cached_files_info, FileCache, FileCacheInfo};
+/// Re-exports of the file cache store directory types and initialization helpers.
 pub use file::{
     get_curr_store_dir, init_curr_store_dir, init_history_store_dir, is_history_init, FileStoreDir,
     HistoryDir,
 };
+/// Re-export of the in-memory RAM cache type.
 pub use ram::RamCache;
 pub(crate) use space::SpaceManager;
 

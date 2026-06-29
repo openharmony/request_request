@@ -13,6 +13,7 @@
 
 use crate::wrapper::SHA256;
 
+/// Computes the SHA-256 digest of `input` and returns it as a hex string.
 pub fn sha256(input: &str) -> String {
     SHA256(input)
 }

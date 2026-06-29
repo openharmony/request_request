@@ -15,6 +15,9 @@ use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;
 
+/// Verifier for the description field of a task config.
+///
+/// On API10 the description length must not exceed the maximum allowed length.
 pub struct DescriptionVerifier {}
 
 impl ConfigVerifier for DescriptionVerifier {

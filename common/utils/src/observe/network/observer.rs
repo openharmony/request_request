@@ -13,9 +13,18 @@
 
 use super::wrapper::ffi::NetInfo;
 
+/// Observer for receiving network state change notifications.
+///
+/// Implementors are notified when a network becomes available or is lost,
+/// and when the capabilities of a network change. All methods have default
+/// no-op implementations, so implementors only need to override the events
+/// they care about.
 #[allow(unused)]
 pub trait Observer: Send + Sync {
+    /// Called when the network identified by `net_id` becomes available.
     fn net_available(&self, net_id: i32) {}
+    /// Called when the network identified by `net_id` is lost.
     fn net_lost(&self, net_id: i32) {}
+    /// Called when the capabilities of the network identified by `net_id` change.
     fn net_capability_changed(&self, net_id: i32, net_info: &NetInfo) {}
 }

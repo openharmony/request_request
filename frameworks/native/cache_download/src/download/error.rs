@@ -117,6 +117,10 @@ impl CacheDownloadError {
         self.kind.clone() as i32
     }
 
+    /// Returns the categorized error kind.
+    ///
+    /// # Returns
+    /// A clone of the error kind.
     pub fn kind(&self) -> ErrorKind {
         self.kind.clone()
     }

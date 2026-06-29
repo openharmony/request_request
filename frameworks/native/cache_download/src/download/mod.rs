@@ -30,5 +30,6 @@ cfg_ylong! {
 pub(crate) mod common;
 mod error;
 
+/// Re-export of the cache download error type and its error kind enum.
 pub use error::{CacheDownloadError, ErrorKind};
 pub(crate) mod task;

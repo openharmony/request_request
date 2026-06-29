@@ -142,9 +142,25 @@ pub trait Callback {
     /// Called when HTTP headers are received but before the response body
     /// starts downloading.
     fn on_header_receive(&self, progress: &Progress) {}
+    /// Called when a task enters a fault state.
+    ///
+    /// # Parameters
+    /// * `faults` - Fault information describing the abnormal state.
     fn on_fault(&self, faults: Faults) {}
+    /// Called when an upload completes for a batch of task states.
+    ///
+    /// # Parameters
+    /// * `task_states` - Final states of the uploaded tasks.
     fn on_complete_upload(&self, task_states: Vec<TaskState>) {}
+    /// Called when an upload fails for a batch of task states.
+    ///
+    /// # Parameters
+    /// * `task_states` - States of the tasks at the time of failure.
     fn on_fail_upload(&self, task_states: Vec<TaskState>) {}
+    /// Called when a task transitions to a waiting state.
+    ///
+    /// # Parameters
+    /// * `waiting_reason` - Reason the task is waiting.
     fn on_wait(&self, waiting_reason: WaitingReason) {}
 }
 
@@ -379,6 +395,14 @@ impl Observer {
         self.callbacks.lock().unwrap().remove(&task_id);
     }
 
+    /// Resolves the file path for an incoming header notification based on the
+    /// task's multipart configuration and the notification index.
+    ///
+    /// Looks up the registered task config, selects the matching body file path,
+    /// and writes it back into the notification data.
+    ///
+    /// # Arguments
+    /// * `notify_data` - Notification data whose file path is filled in.
     pub fn process_header_receive(notify_data: &mut NotifyData) {
         let mut index = notify_data.progress.index as usize;
         let mut file_path = String::new();

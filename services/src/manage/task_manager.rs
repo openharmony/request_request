@@ -61,17 +61,21 @@ const CLEAR_INTERVAL: u64 = 30 * 60;
 /// initialization.
 const RESTORE_ALL_TASKS_INTERVAL: u64 = 10;
 
-// TaskManager 的初始化逻辑：
+// TaskManager initialization logic:
 //
-// 首先确定任务的来源：1）来自应用的任务 2）数据库中未完成的任务。
-// 其次确定 SA 拉起的时机：1）WIFI 连接拉起 SA 2）应用拉起 SA
+// First determine the source of tasks: 1) tasks from applications 2) unfinished
+// tasks in the database.
+// Second determine when the SA is brought up: 1) WIFI connection brings up the
+// SA 2) an application brings up the SA
 
-// Qos schedule 逻辑步骤：
-// 1. SA 启动时，从数据库中将存在 Waiting + QosWaiting 的任务（Qos
-//    信息）及应用信息取出，存放到 Qos 结构中排序，此时触发一次初始的任务加载。
-// 2. 当新任务添加到 SA 侧\网络状态变化\前后台状态变化时，更新并排序
-//    Qos，触发任务加载，把可执行任务加载到内存中处理，
-//    或是把不可执行任务返回数据库中。
+// Qos schedule logic steps:
+// 1. When the SA starts, take out the tasks in Waiting + QosWaiting state (Qos
+//    information) and their application information from the database, put them
+//    into the Qos structure for sorting, which triggers an initial task load.
+// 2. When a new task is added on the SA side \ network state changes \
+//    foreground / background state changes, update and sort Qos, trigger a task
+//    load, load executable tasks into memory for processing, or return
+//    non-executable tasks to the database.
 
 pub(crate) struct TaskManager {
     /// Handles task scheduling and execution
