@@ -15,6 +15,9 @@ use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;
 
+/// Verifier for the proxy configuration of a task config.
+///
+/// Validates the proxy URL length, scheme, and port on API10.
 pub struct ProxyVerifier {}
 
 impl ConfigVerifier for ProxyVerifier {

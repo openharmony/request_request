@@ -482,6 +482,7 @@ pub fn off_events(env: &AniEnv, this: DownloadTask, event: String) -> Result<(),
     Ok(())
 }
 
+/// Registers a progress callback for an upload task.
 #[ani_rs::native]
 pub fn on_progress_uploadtask(
     env: &AniEnv,
@@ -513,6 +514,9 @@ pub fn on_progress_uploadtask(
     Ok(())
 }
 
+/// Registers an event callback for an upload task.
+///
+/// Supported `event` values are `"complete"` and `"fail"`.
 #[ani_rs::native]
 pub fn on_event_uploadtask(
     env: &AniEnv,
@@ -572,6 +576,7 @@ pub fn on_event_uploadtask(
     Ok(())
 }
 
+/// Unregisters a progress callback for an upload task.
 #[ani_rs::native]
 pub fn off_progress_uploadtask(
     env: &AniEnv,
@@ -588,6 +593,9 @@ pub fn off_progress_uploadtask(
     Ok(())
 }
 
+/// Unregisters an event callback for an upload task.
+///
+/// Supported `event` values are `"complete"` and `"fail"`.
 #[ani_rs::native]
 pub fn off_event_uploadtask(
     env: &AniEnv,
@@ -619,6 +627,7 @@ pub fn off_event_uploadtask(
     Ok(())
 }
 
+/// Registers a callback for HTTP response headers received during an upload.
 #[ani_rs::native]
 pub fn on_header_receive(
     env: &AniEnv,
@@ -650,6 +659,7 @@ pub fn on_header_receive(
     Ok(())
 }
 
+/// Unregisters a header-receive callback for an upload task.
 #[ani_rs::native]
 pub fn off_header_receive(
     env: &AniEnv,
@@ -847,7 +857,7 @@ impl request_client::Callback for CallbackColl {
         let mut headers = progress.extras.clone();
         let body_bytes = &progress.body_bytes;
         let body_value = match String::from_utf8(body_bytes.clone()) {
-            Ok(s) => s, // 合法 UTF-8，直接用字符串
+            Ok(s) => s, // Valid UTF-8, use the string directly
             Err(_) => {
                 let hex = body_bytes
                     .iter()

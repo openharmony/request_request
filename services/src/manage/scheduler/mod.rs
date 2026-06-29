@@ -51,20 +51,25 @@ use crate::utils::get_current_timestamp;
 
 const MILLISECONDS_IN_ONE_MONTH: u64 = 30 * 24 * 60 * 60 * 1000;
 
-// Scheduler 的基本处理逻辑如下：
-// 1. Scheduler 维护一个当前所有 运行中 和
-//    待运行的任务优先级队列（scheduler.qos），
-// 该队列仅保存任务的优先级信息和基础信息，当环境发生变化时，
-// 将该优先级队列重新排序，并得到一系列优先级调节指令（QosChange），
-// 这些指令的作用是指引运行队列将满足优先级排序的任务变为运行状态。
+// The basic processing logic of the Scheduler is as follows:
+// 1. The Scheduler maintains a priority queue of all currently running and
+//    pending tasks (scheduler.qos).
+// This queue only stores the priority information and basic information of
+// tasks. When the environment changes, this priority queue is re-sorted,
+// yielding a series of priority-adjustment directives (QosChange). The purpose
+// of these directives is to guide the running queue to turn the tasks that
+// satisfy the priority ordering into the running state.
 //
-// 2. 得到指令后，将该指令作用于任务队列（scheduler.queue）。
-// 任务队列保存当前正在运行的任务列表（scheduler.queue.running），
-// 所以运行队列根据指令的内容， 将指令引导的那些任务置于运行任务列表，
-// 并调节速率。对于那些当前正在执行，但此时又未得到运行权限的任务，
-// 我们将其修改为Waiting状态，运行任务队列就更新完成了。
+// 2. After obtaining the directives, apply them to the task queue
+//    (scheduler.queue).
+// The task queue holds the list of currently running tasks
+// (scheduler.queue.running), so the running queue, according to the content of
+// the directives, places the tasks guided by the directives into the running
+// task list and adjusts the rate. For those tasks that are currently executing
+// but have not obtained running permission at this point, we change them to the
+// Waiting state, and the running task queue is then updated.
 //
-// 注意：未处于运行状态中的任务不会停留在内存中。
+// Note: Tasks that are not in the running state will not remain in memory.
 
 pub(crate) struct Scheduler {
     /// Quality of Service manager for task prioritization.

@@ -263,6 +263,9 @@ pub fn on_response_event(
     Ok(())
 }
 
+/// Registers a callback for task fault events.
+///
+/// Only the `"faultOccur"` event is supported.
 #[ani_rs::native]
 pub fn on_fault_event(
     env: &AniEnv,
@@ -302,6 +305,9 @@ pub fn on_fault_event(
     Ok(())
 }
 
+/// Registers a callback for task waiting events.
+///
+/// Only the `"wait"` event is supported.
 #[ani_rs::native]
 pub fn on_wait_event(
     env: &AniEnv,
@@ -344,6 +350,10 @@ pub fn on_wait_event(
     Ok(())
 }
 
+/// Unregisters a specific callback for a task event.
+///
+/// Supported `event` values are `"completed"`, `"pause"`, `"failed"`,
+/// `"remove"`, `"progress"`, and `"resume"`.
 #[ani_rs::native]
 pub fn off_event(
     env: &AniEnv,
@@ -392,6 +402,9 @@ pub fn off_event(
     Ok(())
 }
 
+/// Unregisters a specific response callback for a task.
+///
+/// Only the `"response"` event is supported.
 #[ani_rs::native]
 pub fn off_response_event(
     env: &AniEnv,
@@ -414,6 +427,9 @@ pub fn off_response_event(
     Ok(())
 }
 
+/// Unregisters a specific fault callback for a task.
+///
+/// Only the `"faultOccur"` event is supported.
 #[ani_rs::native]
 pub fn off_fault_event(
     env: &AniEnv,
@@ -436,6 +452,9 @@ pub fn off_fault_event(
     Ok(())
 }
 
+/// Unregisters a specific wait callback for a task.
+///
+/// Only the `"wait"` event is supported.
 #[ani_rs::native]
 pub fn off_wait_event(
     env: &AniEnv,
@@ -458,6 +477,11 @@ pub fn off_wait_event(
     Ok(())
 }
 
+/// Unregisters all callbacks of a given event type for a task.
+///
+/// Supported `event` values include `"completed"`, `"pause"`, `"failed"`,
+/// `"remove"`, `"progress"`, `"resume"`, `"faultOccur"`, `"response"`, and
+/// `"wait"`.
 #[ani_rs::native]
 pub fn off_events(
     env: &AniEnv,
@@ -518,6 +542,7 @@ pub fn off_events(
     Ok(())
 }
 
+/// Collection of callbacks for the various events a task can emit.
 pub struct CallbackColl {
     /// Callbacks to be executed on progress updates.
     on_progress: Mutex<Vec<GlobalRefCallback<(bridge::Progress,)>>>,

@@ -205,8 +205,11 @@ pub struct Notification<'local> {
     /// Optional text content for the notification.
     pub text: Option<String>,
     // pub disable: Option<bool>,
+    /// Optional flag to disable the notification.
     pub disable: Option<bool>,
+    /// Optional visibility level of the notification.
     pub visibility: Option<i32>,
+    /// Optional Want agent invoked when the notification is tapped.
     pub want_agent: Option<AniObject<'local>>,
 }
 
@@ -223,10 +226,16 @@ impl From<Notification<'_>> for request_core::config::Notification {
     }
 }
 
+/// Minimum-speed constraint for a task.
+///
+/// A task is considered to have failed when its speed stays below `speed` for
+/// at least `duration` seconds.
 #[derive(Clone, Serialize)]
 #[ani_rs::ani]
 pub struct MinSpeed {
+    /// Minimum acceptable speed in bytes per second.
     pub speed: i64,
+    /// Time window in seconds during which the speed must stay below `speed`.
     pub duration: i32,
 }
 
@@ -248,10 +257,13 @@ impl From<request_core::config::MinSpeed> for MinSpeed {
     }
 }
 
+/// Timeout configuration for a task.
 #[derive(Clone, Serialize)]
 #[ani_rs::ani]
 pub struct Timeout {
+    /// Optional connection establishment timeout in seconds.
     connection_timeout: Option<i32>,
+    /// Optional overall request timeout in seconds.
     total_timeout: Option<i32>,
 }
 
@@ -273,6 +285,7 @@ impl From<request_core::config::Timeout> for Timeout {
     }
 }
 
+/// Represents the body data of a request task.
 #[derive(Clone, Serialize, Deserialize)]
 pub enum Data {
     /// String data type.
@@ -337,7 +350,9 @@ pub struct Config<'local> {
     pub multipart: Option<bool>,
     /// Optional notification details.
     pub notification: Option<Notification<'local>>,
+    /// Optional minimum-speed constraint.
     pub min_speed: Option<MinSpeed>,
+    /// Optional timeout configuration.
     pub timeout: Option<Timeout>,
 }
 
@@ -529,6 +544,7 @@ impl From<request_core::info::WaitingReason> for WaitingReason {
     }
 }
 
+/// Filter criteria for searching tasks.
 #[ani_rs::ani(path = "@ohos.request.request.agent.FilterInner")]
 pub struct Filter {
     /// Optional bundle name filter.
@@ -678,6 +694,7 @@ impl From<&request_core::info::Response> for HttpResponse {
 pub struct Task<'local> {
     /// Task ID.
     pub tid: String,
+    /// Configuration used to create the task.
     pub config: Config<'local>,
 }
 
@@ -777,7 +794,7 @@ impl From<Config<'_>> for TaskConfig {
                 for form_item in form_items_data {
                     match form_item.value {
                         Value::S(s) => {
-                            // String 类型的 value，添加到 form_items
+                            // String-typed value, add to form_items
                             form_items.push(request_core::config::FormItem {
                                 name: form_item.name,
                                 value: s,

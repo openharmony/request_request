@@ -68,10 +68,15 @@ pub struct TaskConfig {
     pub certs_path: Vec<String>,
     /// Common task configuration parameters.
     pub common_data: CommonTaskConfig,
+    /// File path or URI where the response should be saved.
     pub saveas: String,
+    /// Whether to overwrite an existing file at the save path.
     pub overwrite: bool,
+    /// Notification configuration for the task.
     pub notification: Notification,
+    /// Minimum transfer speed threshold for the task.
     pub min_speed: MinSpeed,
+    /// Timeout configuration for the task.
     pub timeout: Timeout,
 }
 
@@ -203,36 +208,43 @@ impl TaskConfigBuilder {
         self
     }
 
+    /// Sets the HTTP method for the request.
     pub fn method(&mut self, method: String) -> &mut Self {
         self.method = Some(method);
         self
     }
 
+    /// Sets the index of the file to process within a multi-file task.
     pub fn index(&mut self, index: i32) -> &mut Self {
         self.index = Some(index);
         self
     }
 
+    /// Sets the starting byte offset for a range request.
     pub fn begins(&mut self, begins: i64) -> &mut Self {
         self.begins = Some(begins);
         self
     }
 
+    /// Sets the ending byte offset for a range request.
     pub fn ends(&mut self, ends: i64) -> &mut Self {
         self.ends = Some(ends);
         self
     }
 
+    /// Sets the file specifications for upload tasks.
     pub fn files(&mut self, files: Vec<FileSpec>) -> &mut Self {
         self.files = Some(files);
         self
     }
 
+    /// Sets the form data items for multi-part requests.
     pub fn data(&mut self, data: Vec<FormItem>) -> &mut Self {
         self.data = Some(data);
         self
     }
 
+    /// Sets the action (download or upload) for the task.
     pub fn action(&mut self, action: Action) -> &mut Self {
         self.action = action;
         self
@@ -243,11 +255,13 @@ impl TaskConfigBuilder {
     //     self
     // }
 
+    /// Sets the minimum transfer speed threshold for the task.
     pub fn min_speed(&mut self, min_speed: MinSpeed) -> &mut Self {
         self.min_speed = Some(min_speed);
         self
     }
 
+    /// Sets the timeout configuration for the task.
     pub fn timeout(&mut self, timeout: Timeout) -> &mut Self {
         self.timeout = Some(timeout);
         self
@@ -578,14 +592,18 @@ impl From<i32> for NetworkConfig {
 /// task min speed
 #[derive(Copy, Clone, Debug, Default)]
 pub struct MinSpeed {
+    /// Minimum allowed transfer speed, in bytes per second.
     pub speed: i64,
+    /// How long the speed may stay below `speed` before the task fails, in seconds.
     pub duration: i64,
 }
 
 /// task Timeout
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Timeout {
+    /// Maximum time allowed for establishing the connection, in seconds.
     pub connection_timeout: u64,
+    /// Maximum total time allowed for the task, in seconds.
     pub total_timeout: u64,
 }
 
@@ -797,15 +815,22 @@ impl ipc::parcel::Deserialize for TaskConfig {
     }
 }
 
+/// Notification configuration shown for a task.
 #[derive(Clone, Debug)]
 pub struct Notification {
+    /// Title displayed in the notification.
     pub title: Option<String>,
+    /// Body text displayed in the notification.
     pub text: Option<String>,
+    /// Whether the notification is disabled.
     pub disable: Option<bool>,
+    /// Visibility level of the notification.
     pub visibility: Option<i32>,
+    /// Serialized want agent invoked when the notification is tapped.
     pub want_agent: Option<String>,
 }
 
+/// Configuration for a grouped set of tasks.
 #[derive(Clone, Debug)]
 pub struct GroupConfig {
     /// Optional gauge flag for the group.

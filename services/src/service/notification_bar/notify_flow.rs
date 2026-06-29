@@ -186,6 +186,11 @@ impl GroupProgress {
     }
 }
 
+/// Progress update payload for a single task's notification bar item.
+///
+/// Carries the task identity and progress snapshot used to render a progress
+/// notification, including file name, processed/total bytes, and for multi-file
+/// uploads the current file index within the file set.
 #[derive(Clone, Debug)]
 pub struct ProgressNotify {
     /// Action type (download or upload)

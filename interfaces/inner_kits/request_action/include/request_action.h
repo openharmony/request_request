@@ -27,37 +27,164 @@ namespace OHOS::Request {
 static const std::string DOWNLOAD_PERMISSION = "ohos.permission.DOWNLOAD_SESSION_MANAGER";
 static const std::string UPLOAD_PERMISSION = "ohos.permission.UPLOAD_SESSION_MANAGER";
 
+/**
+ * @brief External action execution entry of the request service (singleton).
+ *
+ * After permission verification and path standardization, it forwards single
+ * and batch task operations from the upper layer to RequestManager for
+ * execution. It is the unified action contract exposed by inner_kits.
+ */
 class RequestAction {
 public:
+    /**
+     * @brief Get the reference to the RequestAction singleton.
+     * @return Const reference to the singleton, unique within the process.
+     */
     static const std::unique_ptr<RequestAction> &GetInstance();
+    /**
+     * @brief Create a single task and return its task ID.
+     * @param builder Task builder with the configuration already assembled.
+     * @param tid [out] Outputs the unique identifier of the newly created task.
+     * @return 0 on success, other values are error codes.
+     */
     int32_t Create(TaskBuilder &builder, std::string &tid);
+    /**
+     * @brief Start the specified task.
+     * @param tid Target task ID.
+     * @return 0 on success, other values are error codes.
+     */
     int32_t Start(const std::string &tid);
+    /**
+     * @brief Stop the specified task (stop transfer but keep the task record).
+     * @param tid Target task ID.
+     * @return 0 on success, other values are error codes.
+     */
     int32_t Stop(const std::string &tid);
+    /**
+     * @brief Query task information and verify the access token.
+     * @param tid Target task ID.
+     * @param token Access token held by the caller, used for authentication.
+     * @param info [out] Outputs the current task information.
+     * @return 0 on success, other values are error codes.
+     */
     int32_t Touch(const std::string &tid, const std::string &token, TaskInfo &info);
+    /**
+     * @brief Query task information (without token verification).
+     * @param tid Target task ID.
+     * @param info [out] Outputs the current task information.
+     * @return 0 on success, other values are error codes.
+     */
     int32_t Show(const std::string &tid, TaskInfo &info);
+    /**
+     * @brief Pause the specified task.
+     * @param tid Target task ID.
+     * @return 0 on success, other values are error codes.
+     */
     int32_t Pause(const std::string &tid);
+    /**
+     * @brief Remove the specified task and its associated resources.
+     * @param tid Target task ID.
+     * @return 0 on success, other values are error codes.
+     */
     int32_t Remove(const std::string &tid);
+    /**
+     * @brief Resume a paused or stopped task.
+     * @param tid Target task ID.
+     * @return 0 on success, other values are error codes.
+     */
     int32_t Resume(const std::string &tid);
+    /**
+     * @brief Set the maximum transfer rate of a single task.
+     * @param tid Target task ID.
+     * @param maxSpeed Maximum rate in bytes per second; 0 means no limit.
+     * @return 0 on success, other values are error codes.
+     */
     int32_t SetMaxSpeed(const std::string &tid, const int64_t maxSpeed);
 
+    /**
+     * @brief Create tasks in batch.
+     * @param builders Collection of task builders to be created.
+     * @param rets [out] Outputs the creation result of each task.
+     * @return Overall error code; per-task results are in rets.
+     */
     ExceptionErrorCode CreateTasks(std::vector<TaskBuilder> &builders, std::vector<TaskRet> &rets);
+    /**
+     * @brief Start tasks in batch.
+     * @param tids Collection of task IDs to be started.
+     * @param rets [out] Outputs the error code for each task ID.
+     * @return Overall error code.
+     */
     ExceptionErrorCode StartTasks(
         const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
+    /**
+     * @brief Stop tasks in batch.
+     * @param tids Collection of task IDs to be stopped.
+     * @param rets [out] Outputs the error code for each task ID.
+     * @return Overall error code.
+     */
     ExceptionErrorCode StopTasks(
         const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
+    /**
+     * @brief Resume tasks in batch.
+     * @param tids Collection of task IDs to be resumed.
+     * @param rets [out] Outputs the error code for each task ID.
+     * @return Overall error code.
+     */
     ExceptionErrorCode ResumeTasks(
         const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
+    /**
+     * @brief Remove tasks in batch.
+     * @param tids Collection of task IDs to be removed.
+     * @param rets [out] Outputs the error code for each task ID.
+     * @return Overall error code.
+     */
     ExceptionErrorCode RemoveTasks(
         const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
+    /**
+     * @brief Pause tasks in batch.
+     * @param tids Collection of task IDs to be paused.
+     * @param rets [out] Outputs the error code for each task ID.
+     * @return Overall error code.
+     */
     ExceptionErrorCode PauseTasks(
         const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
+    /**
+     * @brief Query task information in batch.
+     * @param tids Collection of task IDs to be queried.
+     * @param rets [out] Outputs the task information result for each task ID.
+     * @return Overall error code.
+     */
     ExceptionErrorCode ShowTasks(
         const std::vector<std::string> &tids, std::unordered_map<std::string, TaskInfoRet> &rets);
+    /**
+     * @brief Query task information in batch and verify access tokens.
+     * @param tidTokens Collection of task ID and token pairs to be queried.
+     * @param rets [out] Outputs the task information result for each task ID.
+     * @return Overall error code.
+     */
     ExceptionErrorCode TouchTasks(
         const std::vector<TaskIdAndToken> &tidTokens, std::unordered_map<std::string, TaskInfoRet> &rets);
+    /**
+     * @brief Set the maximum transfer rate of tasks in batch.
+     * @param speedConfig Collection of rate configs for tasks to be rate-limited.
+     * @param rets [out] Outputs the error code for each task ID.
+     * @return Overall error code.
+     */
     ExceptionErrorCode SetMaxSpeeds(
         const std::vector<SpeedConfig> &speedConfig, std::unordered_map<std::string, ExceptionErrorCode> &rets);
+    /**
+     * @brief Set the running mode of a task (foreground/background, etc.).
+     * @param tid Target task ID.
+     * @param mode Target running mode.
+     * @return Overall error code.
+     */
     ExceptionErrorCode SetMode(std::string &tid, Mode mode);
+    /**
+     * @brief Disable task notifications in batch.
+     * @param tids Collection of task IDs whose notifications are to be disabled.
+     * @param rets [out] Outputs the error code for each task ID.
+     * @return Overall error code.
+     */
     ExceptionErrorCode DisableTaskNotification(
         const std::vector<std::string> &tids, std::unordered_map<std::string, ExceptionErrorCode> &rets);
 

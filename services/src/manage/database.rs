@@ -624,12 +624,13 @@ impl RequestDb {
         client_manager: &ClientManagerEntry,
         upload_resume: bool,
     ) -> Result<Arc<RequestTask>, ErrorCode> {
-        // If this task exists in `user_file_map`，get it from this map.
+        // If this task exists in `user_file_map`, get it from this map.
         if let Some(task) = self.user_file_tasks.lock().unwrap().get(&task_id) {
             return Ok(task.clone());
         }
 
-        // 此处需要根据 task_id 从数据库构造指定的任务。
+        // Here we need to construct the specified task from the database based on
+        // task_id.
         let config = match self.get_task_config(task_id) {
             Some(config) => config,
             None => return Err(ErrorCode::TaskNotFound),

@@ -36,6 +36,12 @@ use crate::api9::bridge::DownloadInfo;
 use crate::constant::*;
 use crate::seq::TaskSeq;
 
+/// Validates a download configuration and allocates a task sequence ID.
+///
+/// # Returns
+///
+/// * `Ok(i64)` containing the generated sequence ID on success
+/// * `Err(BusinessError)` if the configuration or download path is invalid
 #[ani_rs::native]
 pub fn check_config(
     env: &AniEnv,

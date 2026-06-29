@@ -16,6 +16,10 @@ use request_core::config::TaskConfig;
 
 use crate::verify::ConfigVerifier;
 
+/// Verifier for the request URL of a task config.
+///
+/// Checks that the URL length is within the limit and that its scheme matches
+/// the cleartext traffic policy of the host.
 pub struct UrlVerifier {}
 
 impl ConfigVerifier for UrlVerifier {

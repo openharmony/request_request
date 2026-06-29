@@ -25,6 +25,10 @@ const SA_PERMISSION_RWX: &str = "g:3815:rwx";
 const SA_PERMISSION_X: &str = "g:3815:x";
 const SA_PERMISSION_CLEAN: &str = "g:3815:---";
 
+/// Manages file access permissions for task paths.
+///
+/// Tracks how many live tokens reference each granted path and revokes the
+/// underlying ACL permission once the last token for a path is dropped.
 pub struct PermissionManager {
     paths: Mutex<HashMap<String, i32>>,
     granter: Box<dyn Granter>,
@@ -135,11 +139,16 @@ impl Granter for AclGranter {
     }
 }
 
+/// RAII handle for a granted file permission.
+///
+/// Dropping the token revokes the permission for its path through the
+/// `PermissionManager`, once no other tokens reference the same path.
 pub struct PermissionToken {
     path: PathBuf,
 }
 
 impl PermissionToken {
+    /// Creates a new permission token for the given path.
     pub fn new(path: PathBuf) -> Self {
         Self { path }
     }

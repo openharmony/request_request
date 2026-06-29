@@ -35,6 +35,12 @@ use crate::api9::bridge::{DownloadInfo, UploadConfig, UploadTask};
 use crate::constant::*;
 use crate::seq::TaskSeq;
 
+/// Validates an upload configuration and allocates a task sequence ID.
+///
+/// # Returns
+///
+/// * `Ok(i64)` containing the generated sequence ID on success
+/// * `Err(BusinessError)` if the configuration or file path is invalid
 #[ani_rs::native]
 pub fn check_config(
     env: &AniEnv,

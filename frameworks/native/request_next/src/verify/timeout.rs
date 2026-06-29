@@ -18,6 +18,10 @@ use crate::verify::ConfigVerifier;
 const MIN_TIMEOUT: u64 = 1;
 const MAX_TIMEOUT: u64 = 604800;
 
+/// Verifier for the timeout configuration of a task config.
+///
+/// Ensures the connection timeout and total timeout stay within the allowed
+/// bounds.
 pub struct TimeoutVerifier {}
 
 impl ConfigVerifier for TimeoutVerifier {

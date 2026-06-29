@@ -90,6 +90,12 @@ pub fn check_token(token: String) -> Result<(), BusinessError> {
     Ok(())
 }
 
+/// Validates an API 10 task configuration and allocates a sequence ID.
+///
+/// # Returns
+///
+/// * `Ok(i64)` containing the generated sequence ID on success
+/// * `Err(BusinessError)` if the configuration or download path is invalid
 #[ani_rs::native]
 pub fn check_config(env: &AniEnv, context: AniRef, config: Config) -> Result<i64, BusinessError> {
     let context = AniObject::from(context);

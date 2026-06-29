@@ -69,12 +69,12 @@ void SetOptionsHeaders(napi_env env, napi_value arg, std::unique_ptr<PreloadOpti
 void SetOptionsSslType(napi_env env, napi_value arg, std::unique_ptr<PreloadOptions> &options)
 {
     napi_value napiSslType = GetNamedProperty(env, arg, "sslType");
-    // undefined/null 视为缺失，使用默认值
+    // Treat undefined/null as missing and use the default value
     if (IsValueMissingOrSkipped(env, napiSslType)) {
         options->sslType = SslType::DEFAULT;
         return;
     }
-    // 类型必须是 string
+    // The type must be string
     if (GetValueType(env, napiSslType) != napi_string) {
         options->sslType = SslType::DEFAULT;
         return;
@@ -92,12 +92,12 @@ void SetOptionsSslType(napi_env env, napi_value arg, std::unique_ptr<PreloadOpti
 void GetCacheStrategy(napi_env env, napi_value arg, bool &isUpdate)
 {
     napi_value napiCacheStrategy = GetNamedProperty(env, arg, "cacheStrategy");
-    // undefined/null 视为缺失，使用默认值
+    // Treat undefined/null as missing and use the default value
     if (IsValueMissingOrSkipped(env, napiCacheStrategy)) {
         isUpdate = true;
         return;
     }
-    // 类型必须是 number
+    // The type must be number
     if (GetValueType(env, napiCacheStrategy) != napi_number) {
         isUpdate = true;
         return;

@@ -19,13 +19,33 @@
 
 #include "visibility.h"
 namespace OHOS::Request {
+/**
+ * @brief Observer interface for changes in the number of running tasks.
+ *
+ * External modules implement this interface and register it via
+ * SubscribeRunningTaskCount. The callback is invoked when the number of
+ * running tasks in the request service changes.
+ */
 class IRunningTaskObserver {
 public:
     virtual ~IRunningTaskObserver() = default;
+    /**
+     * @brief Callback for running task count updates.
+     * @param count Total number of tasks currently in the running state.
+     */
     virtual void OnRunningTaskCountUpdate(int count) = 0;
 };
 
+/**
+ * @brief Subscribe to running task count change events.
+ * @param ob Observer instance, must not be null.
+ * @return 0 on success, other values are error codes.
+ */
 REQUEST_API int32_t SubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob);
+/**
+ * @brief Unsubscribe from running task count change events.
+ * @param ob Previously registered observer instance; passing an unregistered instance is a no-op.
+ */
 REQUEST_API void UnsubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob);
 
 } // namespace OHOS::Request

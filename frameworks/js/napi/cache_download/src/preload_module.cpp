@@ -448,7 +448,7 @@ napi_value download(napi_env env, napi_callback_info info)
     }
     bool isUpdate = true;
     GetCacheStrategy(env, args[1], isUpdate);
-    // 参数校验：超出范围抛出错误
+    // Parameter validation: throw an error when out of range
     if (!SetOptionsRetry(env, args[1], options)) {
         ThrowError(env, E_PARAMETER_CHECK, "maxRetryCount out of range");
         return nullptr;

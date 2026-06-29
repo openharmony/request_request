@@ -15,6 +15,9 @@ use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;
 
+/// Verifier for the form items of a task config.
+///
+/// On API9 the `form_items` field must not be empty for upload actions.
 pub struct FormItemVerifier {}
 
 impl ConfigVerifier for FormItemVerifier {

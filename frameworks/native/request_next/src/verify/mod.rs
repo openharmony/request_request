@@ -31,11 +31,16 @@ use std::sync::OnceLock;
 
 use request_core::config::TaskConfig;
 
+/// Aggregator that runs all registered config verifiers against a task config.
 pub struct TaskConfigVerifier {
     verifiers: Vec<Box<dyn ConfigVerifier>>,
 }
 
 impl TaskConfigVerifier {
+    /// Runs every registered verifier against the given config.
+    ///
+    /// # Returns
+    /// `Ok(())` if all verifiers pass, or the first error code on failure.
     pub fn verify(&self, config: &TaskConfig) -> Result<(), i32> {
         for verifier in &self.verifiers {
             verifier.verify(config)?;
@@ -43,6 +48,8 @@ impl TaskConfigVerifier {
         Ok(())
     }
 
+    /// Returns the shared singleton verifier instance, initializing it with the
+    /// full set of field verifiers on first access.
     pub fn get_instance() -> &'static Self {
         static INSTANCE: OnceLock<TaskConfigVerifier> = OnceLock::new();
         INSTANCE.get_or_init(|| TaskConfigVerifier {

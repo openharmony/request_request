@@ -43,11 +43,13 @@ pub fn is_stage_context(env: &AniEnv, ani_object: &AniObject) -> bool {
     unsafe { IsStageContext(env, ani_object) }
 }
 
+/// Stage context that wraps the underlying C++ context shared pointer.
 pub struct Context {
     /// Inner C++ context shared pointer
     pub inner: SharedPtr<wrapper::Context>,
 }
 
+/// Categorizes the type of an application bundle.
 pub enum BundleType {
     /// Standard application bundle
     App = 0,
@@ -61,6 +63,7 @@ pub enum BundleType {
     AppPlugin,
 }
 
+/// Application-level information retrieved from a context.
 pub struct ApplicationInfo {
     /// The type of the application bundle
     pub bundle_type: BundleType,
@@ -121,10 +124,17 @@ impl Context {
         wrapper::ContextGetBaseDir(&self.inner)
     }
 
+    /// Retrieves the bundle type of the application associated with this context.
     pub fn get_bundle_type(&self) -> BundleType {
         wrapper::BundleType(&self.inner.GetApplicationInfo()).into()
     }
 
+    /// Serializes the want agent represented by the given animation object into a string.
+    ///
+    /// # Safety
+    ///
+    /// This function performs pointer casting and calls an unsafe C function.
+    /// The caller must ensure that the provided environment and object are valid.
     pub fn stringfy_want_agent(env: &AniEnv, ani_object: &AniObject) -> String {
         unsafe {
             let env = env as *const AniEnv as *mut AniEnv as *mut *mut wrapper::AniEnv;

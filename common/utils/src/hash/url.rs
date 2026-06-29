@@ -16,6 +16,7 @@ cfg_not_ohos! {
     use std::hash::{Hash, Hasher};
 }
 
+/// Computes a non-cryptographic hash of `url` using the default hasher (non-OpenHarmony build).
 #[cfg(not(feature = "ohos"))]
 pub fn url_hash(url: &str) -> String {
     let mut hasher = DefaultHasher::new();
@@ -23,6 +24,7 @@ pub fn url_hash(url: &str) -> String {
     hasher.finish().to_string()
 }
 
+/// Computes a SHA-256 hash of `url` (OpenHarmony build).
 #[cfg(feature = "ohos")]
 pub fn url_hash(url: &str) -> String {
     super::sha256::sha256(url)
