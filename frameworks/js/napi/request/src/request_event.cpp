@@ -296,12 +296,13 @@ SubscribeType RequestEvent::StringToSubscribeType(const std::string &type, Versi
 
 NotifyData RequestEvent::BuildNotifyData(const std::shared_ptr<TaskInfo> &taskInfo)
 {
-    NotifyData notifyData;
-    notifyData.progress = taskInfo->progress;
-    notifyData.action = taskInfo->action;
-    notifyData.version = taskInfo->version;
-    notifyData.mode = taskInfo->mode;
-    notifyData.taskStates = taskInfo->taskStates;
+    NotifyData notifyData{
+        .progress = taskInfo->progress,
+        .action = taskInfo->action,
+        .version = taskInfo->version,
+        .mode = taskInfo->mode,
+        .taskStates = taskInfo->taskStates,
+    };
     return notifyData;
 }
 

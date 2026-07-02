@@ -425,9 +425,7 @@ void CUrlAdp::NotifyAPI5(FileData *fData, std::string &headers)
 {
     if (fData->httpCode == HTTP_SUCCESS) {
         if (fData->adp->fileDatas_.size() == fData->fileIndex && fData->adp->config_->fsuccess != nullptr) {
-            UploadResponse resData;
-            resData.headers = headers;
-            resData.code = fData->httpCode;
+            UploadResponse resData{ .code = fData->httpCode, .data = {}, .headers = headers };
             fData->adp->config_->fsuccess(resData);
         }
     } else {
