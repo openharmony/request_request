@@ -1146,6 +1146,11 @@ void JsTask::RemoveTaskContext(const std::string &tid)
     DeleteContextTaskRef(context);
 }
 
+// Release the strong reference (taskRef) to the JS Task object on the JS thread.
+// The lifetime of `data` is managed by the asynchronous callback and relies on the
+// NAPI event loop dispatching it normally. In abnormal cases the callback may not run
+// and `data` would leak; this is acceptable since the function is only called during
+// task cleanup.
 void JsTask::DeleteContextTaskRef(std::shared_ptr<ContextInfo> context)
 {
     ContextCallbackData *data = new ContextCallbackData();
