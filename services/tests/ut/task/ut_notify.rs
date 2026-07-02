@@ -12,6 +12,7 @@
 // limitations under the License.
 
 use super::*;
+use crate::task::http_error_registry::*;
 use crate::task::notify::*;
 use crate::task::config::{Action, Version};
 use crate::task::info::State;
@@ -659,4 +660,80 @@ fn ut_each_file_status_unicode_path() {
     }];
     let result = EachFileStatus::create_each_file_status(&file_specs, 0, Reason::Default);
     assert_eq!(result[0].path, "/tmp/测试文件.txt");
+}
+
+// @tc.name: ut_http_status_reason_phrase_known_codes
+// @tc.desc: Test http_status_reason_phrase with known HTTP status codes
+// @tc.precon: NA
+// @tc.step: 1. Call http_status_reason_phrase with various known codes
+// @tc.expect: Returns correct canonical reason phrases
+// @tc.type: FUNC
+// @tc.require: issue#ICOHJ2
+// @tc.level: Level 1
+#[test]
+fn ut_http_status_reason_phrase_known_codes() {
+    assert_eq!(http_status_reason_phrase(301), "Moved Permanently");
+    assert_eq!(http_status_reason_phrase(404), "Not Found");
+    assert_eq!(http_status_reason_phrase(408), "Request Timeout");
+    assert_eq!(http_status_reason_phrase(500), "Internal Server Error");
+    assert_eq!(http_status_reason_phrase(502), "Bad Gateway");
+    assert_eq!(http_status_reason_phrase(503), "Service Unavailable");
+}
+
+// @tc.name: ut_http_status_reason_phrase_unknown_code
+// @tc.desc: Test http_status_reason_phrase with an unknown status code
+// @tc.precon: NA
+// @tc.step: 1. Call http_status_reason_phrase with code 999
+// @tc.expect: Returns "Unknown"
+// @tc.type: FUNC
+// @tc.require: issue#ICOHJ2
+// @tc.level: Level 1
+#[test]
+fn ut_http_status_reason_phrase_unknown_code() {
+    assert_eq!(http_status_reason_phrase(999), "Unknown");
+}
+
+// @tc.name: ut_set_take_http_status_code
+// @tc.desc: Test set_http_status_code and take_http_status_code round-trip
+// @tc.precon: NA
+// @tc.step: 1. Set a code for a task_id
+//           2. Take the code for the same task_id
+// @tc.expect: Returns the set code
+// @tc.type: FUNC
+// @tc.require: issue#ICOHJ2
+// @tc.level: Level 1
+#[test]
+fn ut_set_take_http_status_code() {
+    set_http_status_code(999001, 404);
+    assert_eq!(take_http_status_code(999001), 404);
+}
+
+// @tc.name: ut_take_http_status_code_not_set
+// @tc.desc: Test take_http_status_code when no code was set
+// @tc.precon: NA
+// @tc.step: 1. Take the code for a task_id that was never set
+// @tc.expect: Returns 0
+// @tc.type: FUNC
+// @tc.require: issue#ICOHJ2
+// @tc.level: Level 1
+#[test]
+fn ut_take_http_status_code_not_set() {
+    assert_eq!(take_http_status_code(999002), 0);
+}
+
+// @tc.name: ut_take_http_status_code_consumed
+// @tc.desc: Test that take_http_status_code consumes the entry after reading
+// @tc.precon: NA
+// @tc.step: 1. Set a code for a task_id
+//           2. Take it once (should return the code)
+//           3. Take it again (should return 0)
+// @tc.expect: First take returns the code, second take returns 0
+// @tc.type: FUNC
+// @tc.require: issue#ICOHJ2
+// @tc.level: Level 1
+#[test]
+fn ut_take_http_status_code_consumed() {
+    set_http_status_code(999003, 500);
+    assert_eq!(take_http_status_code(999003), 500);
+    assert_eq!(take_http_status_code(999003), 0);
 }
