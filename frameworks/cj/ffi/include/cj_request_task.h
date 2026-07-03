@@ -37,7 +37,7 @@ using OHOS::Request::Filter;
 using OHOS::Request::SubscribeType;
 using OHOS::Request::TaskInfo;
 
-class CJRequestTask {
+class CJRequestTask : public std::enable_shared_from_this<CJRequestTask> {
 public:
     CJRequestTask();
     ~CJRequestTask();
@@ -57,12 +57,12 @@ public:
     std::atomic<bool> skipPermissionCheck{true};
 
     static std::mutex taskMutex_;
-    static std::map<std::string, CJRequestTask *> taskMap_;
-    static void AddTaskMap(const std::string &key, CJRequestTask *task);
-    static CJRequestTask *FindTaskById(std::string &taskId);
+    static std::map<std::string, std::shared_ptr<CJRequestTask>> taskMap_;
+    static void AddTaskMap(const std::string &key, std::shared_ptr<CJRequestTask> task);
+    static std::shared_ptr<CJRequestTask> FindTaskById(const std::string &taskId);
     static ExceptionError GetTask(OHOS::AbilityRuntime::Context *context, std::string &taskId, std::string &token,
                                   Config &config);
-    static CJRequestTask *ClearTaskMap(const std::string &key);
+    static void ClearTaskMap(const std::string &key);
     static void ClearTaskTemp(const std::string &tid, bool isRmFiles, bool isRmAcls, bool isRmCertsAcls);
 
     static std::mutex pathMutex_;

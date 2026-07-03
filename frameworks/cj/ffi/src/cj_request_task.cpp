@@ -49,7 +49,7 @@ using OHOS::Request::Version;
 using OHOS::StorageDaemon::AclSetAccess;
 
 std::mutex CJRequestTask::taskMutex_;
-std::map<std::string, CJRequestTask *> CJRequestTask::taskMap_;
+std::map<std::string, std::shared_ptr<CJRequestTask>> CJRequestTask::taskMap_;
 
 std::mutex CJRequestTask::pathMutex_;
 std::map<std::string, int32_t> CJRequestTask::pathMap_;
@@ -90,36 +90,34 @@ void CJRequestTask::SetTid()
     tid_ = taskId_;
 }
 
-void CJRequestTask::AddTaskMap(const std::string &key, CJRequestTask *task)
+void CJRequestTask::AddTaskMap(const std::string &key, std::shared_ptr<CJRequestTask> task)
 {
     std::lock_guard<std::mutex> lockGuard(CJRequestTask::taskMutex_);
-    CJRequestTask::taskMap_[key] = task;
+    CJRequestTask::taskMap_[key] = std::move(task);
 }
 
-CJRequestTask *CJRequestTask::FindTaskById(std::string &taskId)
-{
-    CJRequestTask *task = nullptr;
-    {
-        std::lock_guard<std::mutex> lockGuard(CJRequestTask::taskMutex_);
-        auto item = CJRequestTask::taskMap_.find(taskId);
-        if (item == CJRequestTask::taskMap_.end()) {
-            return nullptr;
-        }
-        task = item->second;
-    }
-    return task;
-}
-
-CJRequestTask *CJRequestTask::ClearTaskMap(const std::string &key)
+std::shared_ptr<CJRequestTask> CJRequestTask::FindTaskById(const std::string &taskId)
 {
     std::lock_guard<std::mutex> lockGuard(CJRequestTask::taskMutex_);
-    auto it = taskMap_.find(key);
-    if (it == taskMap_.end()) {
+    auto item = CJRequestTask::taskMap_.find(taskId);
+    if (item == CJRequestTask::taskMap_.end()) {
         return nullptr;
     }
-    auto task = it->second;
-    taskMap_.erase(it);
-    return task;
+    return item->second;
+}
+
+void CJRequestTask::ClearTaskMap(const std::string &key)
+{
+    std::shared_ptr<CJRequestTask> task;
+    {
+        std::lock_guard<std::mutex> lockGuard(CJRequestTask::taskMutex_);
+        auto it = taskMap_.find(key);
+        if (it == taskMap_.end()) {
+            return;
+        }
+        task = it->second;
+        taskMap_.erase(it);
+    }
 }
 
 bool CJRequestTask::SetPathPermission(const std::string &filepath, bool needWritePermission)
@@ -427,7 +425,7 @@ ExceptionError CJRequestTask::Create(Context *context, Config &config)
         RequestManager::GetInstance()->AddListener(GetTidStr(), SubscribeType::REMOVE,
             notifyDataListenerMap_[SubscribeType::REMOVE]);
     }
-    AddTaskMap(GetTidStr(), this);
+    AddTaskMap(GetTidStr(), shared_from_this());
 
     return err;
 }
@@ -439,7 +437,7 @@ ExceptionError CJRequestTask::GetTask(OHOS::AbilityRuntime::Context *context, st
     int32_t seq = RequestManager::GetInstance()->GetNextSeq();
     REQUEST_HILOGI("Begin get task, seq: %{public}d", seq);
 
-    CJRequestTask *task = CJRequestTask::FindTaskById(taskId);
+    auto task = CJRequestTask::FindTaskById(taskId);
     if (task != nullptr) {
         if (task->config_.token != token) {
             return ConvertError(ExceptionErrorCode::E_TASK_NOT_FOUND);

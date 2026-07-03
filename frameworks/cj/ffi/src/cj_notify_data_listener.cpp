@@ -56,7 +56,7 @@ bool CJNotifyDataListener::IsHeaderReceive(const std::shared_ptr<NotifyData> &no
 
 void CJNotifyDataListener::ProcessHeaderReceive(const std::shared_ptr<NotifyData> &notifyData)
 {
-    CJRequestTask *task = nullptr;
+    std::shared_ptr<CJRequestTask> task;
     {
         std::lock_guard<std::mutex> lockGuard(CJRequestTask::taskMutex_);
         auto item = CJRequestTask::taskMap_.find(std::to_string(notifyData->taskId));

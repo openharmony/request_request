@@ -31,10 +31,13 @@ void CJAppStateCallback::OnAbilityForeground(const int64_t &ability)
     if (RequestManager::GetInstance()->IsSaReady()) {
         return;
     }
-    for (auto task = CJRequestTask::taskMap_.begin(); task != CJRequestTask::taskMap_.end(); ++task) {
-        if (task->second->config_.mode == Mode::FOREGROUND) {
-            ffrt::submit([]() mutable { RequestManager::GetInstance()->LoadRequestServer(); });
-            return;
+    {
+        std::lock_guard<std::mutex> lockGuard(CJRequestTask::taskMutex_);
+        for (auto &item : CJRequestTask::taskMap_) {
+            if (item.second->config_.mode == Mode::FOREGROUND) {
+                ffrt::submit([]() mutable { RequestManager::GetInstance()->LoadRequestServer(); });
+                return;
+            }
         }
     }
     if (!CJRequestTask::register_) {
