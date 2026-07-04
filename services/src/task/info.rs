@@ -244,13 +244,28 @@ impl TaskInfo {
     }
 
     /// Creates a list of `EachFileStatus` objects representing the status of
-    /// each file.
+    /// each file. When the task failed due to a protocol error, the message
+    /// is enriched with the specific HTTP status code.
     pub(crate) fn build_each_file_status(&self) -> Vec<EachFileStatus> {
-        EachFileStatus::create_each_file_status(
+        let mut statuses = EachFileStatus::create_each_file_status(
             &self.file_specs,
             self.progress.common_data.index,
             self.common_data.reason.into(),
-        )
+        );
+        let reason = Reason::from(self.common_data.reason);
+        if reason == Reason::ProtocolError {
+            let http_code = super::http_error_registry::take_http_status_code(self.common_data.task_id);
+            if http_code > 0 {
+                let phrase = super::http_error_registry::http_status_reason_phrase(http_code);
+                let detailed = format!("Http protocol error: {} {}", http_code, phrase);
+                for s in &mut statuses {
+                    if s.reason == Reason::ProtocolError {
+                        s.message = detailed.clone();
+                    }
+                }
+            }
+        }
+        statuses
     }
 
     /// Builds a `NotifyData` object for status notifications.

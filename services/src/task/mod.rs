@@ -26,6 +26,7 @@ pub mod info;
 // Internal modules for task implementation
 pub(crate) mod download; // Download task handling
 pub(crate) mod files; // File management utilities
+pub(crate) mod http_error_registry; // HTTP error code registry for protocol errors
 pub(crate) mod notify; // Notification and event handling
 mod operator; // Task operation implementations
 pub(crate) mod reason; // Error and state reason codes

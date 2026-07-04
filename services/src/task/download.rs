@@ -291,6 +291,10 @@ pub(crate) async fn download_inner(
                 || (status_code.as_u16() != 408 && status_code.is_client_error())
                 || status_code.is_redirection()
             {
+                super::http_error_registry::set_http_status_code(
+                    task.conf.common_data.task_id,
+                    status_code.as_u16(),
+                );
                 return Err(TaskError::Failed(Reason::ProtocolError));
             }
 
@@ -302,6 +306,10 @@ pub(crate) async fn download_inner(
                     return Err(TaskError::Waiting(TaskPhase::NeedRetry));
                 } else {
                     // Too many timeout retries, consider it a failure
+                    super::http_error_registry::set_http_status_code(
+                        task.conf.common_data.task_id,
+                        408,
+                    );
                     return Err(TaskError::Failed(Reason::ProtocolError));
                 }
             } else {
