@@ -29,6 +29,7 @@ use request_core::filter::SearchFilter;
 use request_utils::context::Context;
 
 use crate::api10::bridge::{Config, Filter, Task, TaskInfo};
+use crate::api10::callback::CallbackManager;
 use crate::constant::*;
 use crate::seq::TaskSeq;
 
@@ -319,7 +320,9 @@ pub fn remove(id: String) -> Result<(), BusinessError> {
     })?;
     RequestClient::get_instance()
         .remove(task_id)
-        .map_err(|e| BusinessError::new_static(e, "Failed to remove task"))
+        .map_err(|e| BusinessError::new_static(e, "Failed to remove task"))?;
+    CallbackManager::get_instance().remove_task(task_id);
+    Ok(())
 }
 
 /// Shows detailed information about a task with the specified ID.
