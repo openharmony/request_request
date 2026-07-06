@@ -39,8 +39,16 @@ const CREATE_GROUP_CONTENT_TABLE: &str =
 const GROUP_CONFIG_TABLE_ADD_DISPLAY: &str = 
     "ALTER TABLE group_notification_config ADD COLUMN display BOOLEAN DEFAULT TRUE";
 
-const GROUP_CONFIG_TABLE_ADD_VISIBILITY: &str = 
+const GROUP_CONFIG_TABLE_ADD_VISIBILITY: &str =
     "ALTER TABLE group_notification_config ADD COLUMN visibility INTEGER";
+
+// Add a uid column to group_notification_config to record the creator UID of
+// each notification group. Operations with cross-UID side effects such as
+// attach_group / delete_group verify group ownership against it, preventing a
+// low-privilege app from binding its own task to another group's id and
+// reusing that group's notification configuration.
+const GROUP_CONFIG_TABLE_ADD_UID: &str =
+    "ALTER TABLE group_notification_config ADD COLUMN uid INTEGER";
 
 const TASK_CONTENT_TABLE_ADD_VISIBILITY: &str = 
     "ALTER TABLE task_notification_content ADD COLUMN visibility INTEGER";
@@ -173,6 +181,18 @@ impl NotificationDb {
             );
         } else {
             debug!("Successfully added want_agent column to group_notification_content table");
+        }
+
+        // Add uid column to group_notification_config table for group owner tracking
+        if let Err(e) = self.inner.execute(GROUP_CONFIG_TABLE_ADD_UID, ()) {
+            error!("Failed to add uid column to group_notification_config table: {}", e);
+            sys_event!(
+                ExecFault,
+                DfxCode::RDB_FAULT_04,
+                &format!("Failed to add uid column to group_notification_config table: {}", e)
+            );
+        } else {
+            debug!("Successfully added uid column to group_notification_config table");
         }
     }
 
@@ -531,14 +551,16 @@ impl NotificationDb {
     }
 
     /// Updates or inserts configuration for a notification group.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `group_id` - The ID of the group to update
     /// * `gauge` - Whether to display a progress gauge
     /// * `ctime` - Creation timestamp for the group
     /// * `display` - Whether to display notifications for this group
     /// * `visibility` - Visibility settings for the group notifications
+    /// * `uid` - The UID of the group owner (creator). On conflict the owner is
+    ///   preserved — a later caller cannot overwrite another UID's group ownership.
     pub(crate) fn update_group_config(
         &self,
         group_id: u32,
@@ -546,14 +568,40 @@ impl NotificationDb {
         ctime: u64,
         display: bool,
         visibility: u32,
+        uid: u64,
     ) {
         if let Err(e) = self.inner.execute(
-            "INSERT INTO group_notification_config (group_id, gauge, attach_able, ctime, display, visibility) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(group_id) DO UPDATE SET gauge = excluded.gauge , ctime = excluded.ctime, display = excluded.display, visibility = excluded.visibility",
-            (group_id, gauge, true, ctime, display, visibility),
+            "INSERT INTO group_notification_config (group_id, gauge, attach_able, ctime, display, visibility, uid) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(group_id) DO UPDATE SET gauge = excluded.gauge , ctime = excluded.ctime, display = excluded.display, visibility = excluded.visibility",
+            (group_id, gauge, true, ctime, display, visibility, uid),
         ) {
             error!("Failed to update {} notification: {}", group_id, e);
             sys_event!(ExecFault, DfxCode::RDB_FAULT_04, &format!("Failed to update {} notification: {}", group_id, e));
         }
+    }
+
+    /// Queries the owner UID of a notification group.
+    ///
+    /// # Arguments
+    ///
+    /// * `group_id` - The ID of the group whose owner to retrieve
+    ///
+    /// # Returns
+    ///
+    /// * `Some(u64)` - The UID of the group owner if the group exists and has an owner recorded
+    /// * `None` - If the group doesn't exist or the owner column is NULL (legacy rows
+    ///   created before owner tracking was introduced)
+    pub(crate) fn query_group_owner(&self, group_id: u32) -> Option<u64> {
+        let mut set = match self.inner.query::<Option<u64>>(
+            "SELECT uid FROM group_notification_config where group_id = ?",
+            group_id,
+        ) {
+            Ok(set) => set,
+            Err(e) => {
+                error!("Failed to query group {} owner: {}", group_id, e);
+                return None;
+            }
+        };
+        set.next().flatten()
     }
 
     /// Checks if a group exists in the database.

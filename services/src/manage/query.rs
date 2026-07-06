@@ -26,6 +26,7 @@ use crate::manage::database::RequestDb;
 use crate::service::permission::ManagerPermission;
 use crate::task::config::TaskConfig;
 use crate::task::info::{State, TaskInfo};
+use crate::utils::is_valid_bundle_name;
 
 /// Retrieves a task configuration by ID and token.
 ///
@@ -236,6 +237,10 @@ impl RequestDb {
     ///
     /// Returns a vector of task IDs that match the bundle and filter criteria.
     pub(crate) fn system_search_task(&self, filter: TaskFilter, bundle_name: String) -> Vec<u32> {
+        if bundle_name != "*" && !is_valid_bundle_name(&bundle_name) {
+            error!("system_search_task: invalid bundle name {}", bundle_name);
+            return vec![];
+        }
         let mut sql = "SELECT task_id from request_task WHERE ".to_string();
         if bundle_name != "*" {
             sql.push_str(&format!("bundle = '{}' AND ", bundle_name));

@@ -16,7 +16,7 @@ mod permission;
 use std::collections::HashMap;
 use std::fs::{self, File, OpenOptions};
 use std::os::unix::fs::PermissionsExt;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::io::IntoRawFd;
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 
@@ -298,11 +298,11 @@ impl FileManager {
                 .create(true)
                 .truncate(true)
                 .open(file_uri)
-                .map_err(|_| {
-                    error!("open fail");
+                .map_err(|e| {
+                    error!("open fail: {}", e);
                     13400001
                 })?
-                .as_raw_fd();
+                .into_raw_fd();
             let file_name = config
                 .saveas
                 .clone()

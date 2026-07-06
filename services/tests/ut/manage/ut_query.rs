@@ -140,4 +140,16 @@ fn ut_search_system() {
     };
     let res = db.system_search_task(filter, "*".to_string());
     assert_eq!(res, vec![task_id as u32]);
+
+    // Invalid bundle names should not trigger SQL injection or return results.
+    let filter = TaskFilter {
+        before: get_current_timestamp() as i64,
+        after: get_current_timestamp() as i64 - 200,
+        state: State::Any.repr,
+        action: Action::Any.repr,
+        mode: Mode::Any.repr,
+    };
+    let malicious = "com.ohos' OR '1'='1".to_string();
+    let res = db.system_search_task(filter, malicious);
+    assert_eq!(res, vec![]);
 }

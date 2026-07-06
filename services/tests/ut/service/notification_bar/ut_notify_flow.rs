@@ -21,6 +21,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 const TEST_TITLE: &str = "test_title";
 const TEST_TEXT: &str = "test_text";
 const TEST_WANT_AGENT: &str = "test_want_agent";
+// Test group owner UID; written into the owner field via update_group_config.
+const TEST_UID: u64 = 1000;
 
 // @tc.name: ut_notify_flow_group
 // @tc.desc: Test group progress calculation and state updates
@@ -245,7 +247,7 @@ fn ut_group_visibility_progress() {
         .as_millis() as u64;
 
     // Setup group with progress visibility true
-    db.update_group_config(group_id, true, _current_time, true, 0b10); // PROGRESS bit set
+    db.update_group_config(group_id, true, _current_time, true, 0b10, TEST_UID); // PROGRESS bit set
     db.update_task_group(task_id, group_id);
 
     // Test with progress visibility true
@@ -263,7 +265,7 @@ fn ut_group_visibility_progress() {
     assert!(content.is_some());
 
     // Update group progress visibility to false
-    db.update_group_config(group_id, false, _current_time, true, 0b00); // No bits set
+    db.update_group_config(group_id, false, _current_time, true, 0b00, TEST_UID); // No bits set
     // Verify visibility is updated in database
     assert!(!db.is_progress_visible_from_group(group_id));
 
@@ -299,7 +301,7 @@ fn ut_group_visibility_completion() {
         .as_millis() as u64;
 
     // Setup group with completion visibility true and not attachable
-    db.update_group_config(group_id, true, _current_time, true, 0b01); // COMPLETION bit set
+    db.update_group_config(group_id, true, _current_time, true, 0b01, TEST_UID); // COMPLETION bit set
     db.disable_attach_group(group_id);
     db.update_task_group(task_id, group_id);
 
@@ -323,7 +325,7 @@ fn ut_group_visibility_completion() {
     assert!(content.is_some());
 
     // Update group completion visibility to false
-    db.update_group_config(group_id, true, _current_time, true, 0b00); // No bits set
+    db.update_group_config(group_id, true, _current_time, true, 0b00, TEST_UID); // No bits set
 
     let content = flow.publish_completed_notify(&info);
     assert!(content.is_none());

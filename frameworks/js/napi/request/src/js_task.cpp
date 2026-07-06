@@ -421,7 +421,16 @@ void JsTask::GetTaskExecution(std::shared_ptr<ContextInfo> context)
         std::string tid = context->tid;
         auto it = taskContextMap_.find(tid);
         if (it != taskContextMap_.end() && it->second->task != nullptr) {
-            context->config = it->second->config;
+            // The fast path must also enforce the token capability: the cached
+            // task's token must match the caller-supplied token before the
+            // existing Request object is handed back. Otherwise a known tid alone
+            // is enough to retrieve another task's query/pause/resume/remove
+            // capabilities without a valid token.
+            if (it->second->task->config_.token != context->token) {
+                context->innerCode_ = E_TASK_NOT_FOUND;
+                return;
+            }
+            context->config = it->second->task->config_;
             return;
         }
     }

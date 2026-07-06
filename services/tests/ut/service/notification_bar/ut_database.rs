@@ -14,11 +14,13 @@
 use ylong_runtime::fastrand::fast_random;
 
 use super::*;
-use crate::service::notification_bar::NotificationConfig;
+use crate::service::notification_bar::{NotificationConfig, NotificationDispatcher};
 use std::time::{SystemTime, UNIX_EPOCH};
 const TEST_TITLE: &str = "田文镜";
 const TEST_TEXT: &str = "我XXX";
 const TEST_WANT_AGENT: &str = "wantAgent";
+// Test group owner UID; written into the owner field via update_group_config.
+const TEST_UID: u64 = 1000;
 
 // @tc.name: ut_notify_database_query_tasks
 // @tc.desc: Test querying tasks in a notification group
@@ -150,14 +152,79 @@ fn ut_notify_database_group_config() {
     let group_id = fast_random() as u32;
 
     assert!(!db.contains_group(group_id));
-    db.update_group_config(group_id, true, 0, false, 0b01);
+    db.update_group_config(group_id, true, 0, false, 0b01, TEST_UID);
     assert!(db.contains_group(group_id));
     assert!(db.is_gauge(group_id));
     assert!(db.attach_able(group_id));
-    db.update_group_config(group_id, false, 0, false, 0b01);
+    db.update_group_config(group_id, false, 0, false, 0b01, TEST_UID);
     db.disable_attach_group(group_id);
     assert!(!db.attach_able(group_id));
     assert!(!db.is_gauge(group_id));
+}
+
+// @tc.name: ut_notify_database_group_owner
+// @tc.desc: Test group owner tracking for cross-UID attach/delete protection
+// @tc.precon: NA
+// @tc.step: 1. Create a NotificationDb instance
+//           2. Generate a random group ID
+//           3. Update group config with TEST_UID as owner
+//           4. Verify query_group_owner returns the recorded owner
+//           5. Verify a different UID does not match the recorded owner
+//           6. Verify a non-existent group returns None
+// @tc.expect: Only the creator UID is reported as owner; others mismatch
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
+#[test]
+fn ut_notify_database_group_owner() {
+    let db = NotificationDb::new();
+    let group_id = fast_random() as u32;
+
+    db.update_group_config(group_id, true, 0, false, 0b01, TEST_UID);
+    // The creator UID must match.
+    assert_eq!(db.query_group_owner(group_id), Some(TEST_UID));
+    // A different UID must not match; cross-UID operations are rejected.
+    assert_ne!(db.query_group_owner(group_id), Some(TEST_UID + 1));
+    // A non-existent group returns None.
+    let absent_id = fast_random() as u32;
+    assert_eq!(db.query_group_owner(absent_id), None);
+}
+
+// @tc.name: ut_notify_database_group_owner_legacy
+// @tc.desc: Test check_group_owner compatibility for legacy NULL-owner rows
+//           and rejection of non-existent groups
+// @tc.precon: NA
+// @tc.step: 1. Create a NotificationDb instance and acquire the dispatcher
+//           2. Insert a group row with NULL uid, simulating upgrade data
+//           3. Verify query_group_owner returns None but contains_group is true
+//           4. Verify check_group_owner allows any UID for the legacy row
+//           5. Verify check_group_owner rejects a non-existent group
+// @tc.expect: Legacy NULL-owner rows remain usable by any caller; absent
+//             groups are rejected
+// @tc.type: FUNC
+// @tc.require: issues#ICN16H
+#[test]
+fn ut_notify_database_group_owner_legacy() {
+    let db = NotificationDb::new();
+    let dispatcher = NotificationDispatcher::get_instance();
+    let group_id = fast_random() as u32;
+
+    // Simulate a group created before upgrade: uid column is NULL (legacy data
+    // predating owner tracking).
+    let _ = db.inner.execute(
+        "INSERT INTO group_notification_config (group_id, gauge, attach_able, ctime, display, visibility, uid) VALUES (?, 0, 1, 0, 1, 0, NULL)",
+        group_id,
+    );
+    // Legacy row: owner is absent but the group exists -> any UID is allowed.
+    assert_eq!(db.query_group_owner(group_id), None);
+    assert!(db.contains_group(group_id));
+    assert!(dispatcher.check_group_owner(group_id, TEST_UID));
+    assert!(dispatcher.check_group_owner(group_id, TEST_UID + 1));
+
+    // Non-existent group: owner absent and group missing -> rejected.
+    let absent_id = fast_random() as u32;
+    assert_eq!(db.query_group_owner(absent_id), None);
+    assert!(!db.contains_group(absent_id));
+    assert!(!dispatcher.check_group_owner(absent_id, TEST_UID));
 }
 
 // @tc.name: ut_clear_task_info
@@ -217,7 +284,7 @@ fn ut_clear_group_info() {
     let group_id = fast_random() as u32;
     let task_id = fast_random() as u32;
     db.update_group_customized_notification(group_id, None, None, None);
-    db.update_group_config(group_id, true, 0, false, 0b01);
+    db.update_group_config(group_id, true, 0, false, 0b01, TEST_UID);
     db.update_task_group(task_id, group_id);
 
     assert!(db.query_group_customized_notification(group_id).is_some());
@@ -255,13 +322,13 @@ fn ut_clear_group_info_a_week_ago() {
     let task_id = fast_random() as u32;
 
     db.update_group_customized_notification(group_id, None, None, None);
-    db.update_group_config(group_id, true, current_time, false, 0b01);
+    db.update_group_config(group_id, true, current_time, false, 0b01, TEST_UID);
 
     db.clear_group_info_a_week_ago();
     assert!(db.query_group_customized_notification(group_id).is_some());
     assert!(db.contains_group(group_id));
 
-    db.update_group_config(group_id, true, a_week_ago, false, 0b01);
+    db.update_group_config(group_id, true, a_week_ago, false, 0b01, TEST_UID);
     db.update_task_group(task_id, group_id);
     db.clear_group_info_a_week_ago();
     assert!(db.query_group_customized_notification(group_id).is_some());
@@ -342,19 +409,19 @@ fn ut_notify_database_visibility() {
     assert!(db.is_completion_visible(task_id));
     assert!(db.is_progress_visible(task_id));
 
-    db.update_group_config(group_id, true, _current_time, true, 0b00);
+    db.update_group_config(group_id, true, _current_time, true, 0b00, TEST_UID);
     assert!(db.is_completion_visible_from_group(group_id));
     assert!(db.is_progress_visible_from_group(group_id));
 
-    db.update_group_config(group_id, true, _current_time, true, 0b01);
+    db.update_group_config(group_id, true, _current_time, true, 0b01, TEST_UID);
     assert!(db.is_completion_visible_from_group(group_id));
     assert!(!db.is_progress_visible_from_group(group_id));
 
-    db.update_group_config(group_id, true, _current_time, true, 0b10);
+    db.update_group_config(group_id, true, _current_time, true, 0b10, TEST_UID);
     assert!(!db.is_completion_visible_from_group(group_id));
     assert!(db.is_progress_visible_from_group(group_id));
 
-    db.update_group_config(group_id, true, _current_time, true, 0b11);
+    db.update_group_config(group_id, true, _current_time, true, 0b11, TEST_UID);
     assert!(db.is_completion_visible_from_group(group_id));
     assert!(db.is_progress_visible_from_group(group_id));
 }
