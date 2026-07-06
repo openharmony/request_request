@@ -64,7 +64,7 @@ std::map<std::string, CJRequestEvent::Event> CJRequestEvent::requestEvent_ = {
     {FUNCTION_STOP, CJRequestEvent::StopExec},
 };
 
-ExceptionErrorCode CJRequestEvent::Exec(std::string execType, const CJRequestTask *task)
+ExceptionErrorCode CJRequestEvent::Exec(std::string execType, const std::shared_ptr<CJRequestTask> &task)
 {
     auto handle = requestEvent_.find(execType);
     if (handle == requestEvent_.end()) {
@@ -74,7 +74,7 @@ ExceptionErrorCode CJRequestEvent::Exec(std::string execType, const CJRequestTas
     return (ExceptionErrorCode)handle->second(task);
 }
 
-ExceptionErrorCode CJRequestEvent::StartExec(const CJRequestTask *task)
+ExceptionErrorCode CJRequestEvent::StartExec(const std::shared_ptr<CJRequestTask> &task)
 {
     REQUEST_HILOGD("RequestEvent::StartExec in");
     Config config = task->config_;
@@ -96,7 +96,7 @@ ExceptionErrorCode CJRequestEvent::StartExec(const CJRequestTask *task)
 
     std::string tid = task->GetTidStr();
     {
-        CJRequestTask *foundTask = CJRequestTask::FindTaskById(tid);
+        auto foundTask = CJRequestTask::FindTaskById(tid);
         if (foundTask == nullptr) {
             REQUEST_HILOGE("Start task not found %{public}s.", tid.c_str());
             return ExceptionErrorCode::E_TASK_STATE;
@@ -106,17 +106,17 @@ ExceptionErrorCode CJRequestEvent::StartExec(const CJRequestTask *task)
     return (ExceptionErrorCode)RequestManager::GetInstance()->Start(tid);
 }
 
-ExceptionErrorCode CJRequestEvent::StopExec(const CJRequestTask *task)
+ExceptionErrorCode CJRequestEvent::StopExec(const std::shared_ptr<CJRequestTask> &task)
 {
     return (ExceptionErrorCode)RequestManager::GetInstance()->Stop(task->GetTidStr());
 }
 
-ExceptionErrorCode CJRequestEvent::PauseExec(const CJRequestTask *task)
+ExceptionErrorCode CJRequestEvent::PauseExec(const std::shared_ptr<CJRequestTask> &task)
 {
     return (ExceptionErrorCode)RequestManager::GetInstance()->Pause(task->GetTidStr(), Version::API10);
 }
 
-ExceptionErrorCode CJRequestEvent::ResumeExec(const CJRequestTask *task)
+ExceptionErrorCode CJRequestEvent::ResumeExec(const std::shared_ptr<CJRequestTask> &task)
 {
     return (ExceptionErrorCode)RequestManager::GetInstance()->Resume(task->GetTidStr());
 }
