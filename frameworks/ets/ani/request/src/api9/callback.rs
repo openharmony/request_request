@@ -898,4 +898,8 @@ impl CallbackManager {
             tasks: Mutex::new(HashMap::new()),
         })
     }
+
+    pub fn remove_task(&self, task_id: i64) {
+        self.tasks.lock().unwrap().remove(&task_id);
+    }
 }
