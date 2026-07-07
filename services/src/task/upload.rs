@@ -512,6 +512,12 @@ impl RequestTask {
     ///
     /// `true` if preparation succeeded for all files, `false` otherwise.
     async fn prepare_batch_upload(&self, start: usize, size: usize) -> bool {
+        // Guard against invalid parameters to prevent out-of-bounds panic
+        if size == 0 || start >= size {
+            error!("task {} invalid upload batch params, start: {}, size: {}", self.task_id(), start, size);
+            return false;
+        }
+
         let mut current_index = 0;
 
         // Determine current position and reset progress if needed

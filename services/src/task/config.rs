@@ -631,7 +631,12 @@ impl Deserialize for TaskConfig {
     fn deserialize(parcel: &mut ipc::parcel::MsgParcel) -> ipc::IpcResult<Self> {
         // Read primitive configuration values
         let action: u32 = parcel.read()?;
-        let action: Action = Action::from(action as u8);
+        // Only Download and Upload are valid task actions.
+        // Action::Any is only for query/filter semantics and must not reach task construction.
+        let action = Action::from(action as u8);
+        if action != Action::Download && action != Action::Upload {
+            return Err(ipc::IpcStatusCode::Failed);
+        }
         let version: u32 = parcel.read()?;
         let version: Version = Version::from(version as u8);
         let mode: u32 = parcel.read()?;

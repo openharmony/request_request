@@ -269,7 +269,8 @@ pub(crate) fn serialize_task_info(tf: TaskInfo, reply: &mut MsgParcel) -> IpcRes
     reply.write(&(tf.progress.common_data.state as u32))?;
     let index = tf.progress.common_data.index;
     reply.write(&(index as u32))?;
-    reply.write(&(tf.progress.processed[index] as u64))?;
+    let processed_value = tf.progress.processed.get(index).copied().unwrap_or(0);
+    reply.write(&(processed_value as u64))?;
     reply.write(&(tf.progress.common_data.total_processed as u64))?;
     reply.write(&(tf.progress.sizes))?;
 
