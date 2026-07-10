@@ -254,9 +254,9 @@ pub(crate) fn string_to_hashmap(str: &mut str) -> HashMap<String, String> {
         return map;
     }
     for item in str.split("\r\n") {
-        // Panics if the item doesn't contain exactly one tab character
-        let (k, v) = item.split_once('\t').unwrap();
-        map.insert(k.into(), v.into());
+        if let Some((k, v)) = item.split_once('\t') {
+            map.insert(k.into(), v.into());
+        }
     }
     map
 }
