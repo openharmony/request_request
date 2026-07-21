@@ -136,7 +136,9 @@ HWTEST_F(PreloadCancel, OnCancelAddCallback_0, TestSize.Level1)
 
     auto handle_1 = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback_1));
     handle->Cancel();
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load()) ||
+        !(flagC_1->load() || flagF_1->load() || flagS_1->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
 
@@ -183,7 +185,9 @@ HWTEST_F(PreloadCancel, OnCancelAddCallback_1, TestSize.Level1)
     handle->Cancel();
     handle_1->Cancel();
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load()) ||
+        !(flagC_1->load() || flagF_1->load() || flagS_1->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
@@ -231,7 +235,9 @@ HWTEST_F(PreloadCancel, OnCancelAddCallback_2, TestSize.Level1)
 
     auto handle_1 = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback_1));
 
-    while (!handle_1->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle_1->IsFinish() || !(flagC->load() || flagF->load() || flagS->load()) ||
+        !(flagC_1->load() || flagF_1->load() || flagS_1->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
 
@@ -277,7 +283,8 @@ HWTEST_F(PreloadCancel, Cancel_WhenUrlIsInvalidUtf8, TestSize.Level1)
 
     Preload::GetInstance()->Cancel(invalidUtf8Url);
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
 
@@ -316,7 +323,8 @@ HWTEST_F(PreloadCancel, Remove_WhenUrlIsInvalidUtf8, TestSize.Level1)
 
     Preload::GetInstance()->Remove(invalidUtf8Url);
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
 

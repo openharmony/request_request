@@ -37,7 +37,7 @@
 using namespace testing::ext;
 using namespace OHOS::Request;
 
-constexpr size_t SLEEP_INTERVAL = 100;
+constexpr size_t SLEEP_INTERVAL = 1000;
 static std::string TEST_URL_0 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/test.txt";
 constexpr uint64_t TEST_SIZE_0 = 1042003;
 constexpr uint64_t INFO_SIZE_0 = 2;
@@ -332,7 +332,7 @@ HWTEST_F(PreloadGetInfo, HttpFailCallbackInfo, TestSize.Level1)
     EXPECT_FALSE(handle->IsFinish());
     EXPECT_EQ(handle->GetState(), PreloadState::RUNNING);
 
-    size_t counter = 100;
+    size_t counter = 10;
 
     while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
