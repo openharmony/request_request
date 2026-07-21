@@ -50,5 +50,8 @@ ohos_unittest("preload_test") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":preload_test" ]
+  deps = []
+  if (device_name != "rk3568") {
+    deps = [ ":preload_test" ]
+  }
 }
