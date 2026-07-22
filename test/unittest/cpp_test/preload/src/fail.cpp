@@ -55,7 +55,7 @@ static std::string TEST_URL_0 = "https://127.3.1.123";
 static std::string TEST_URL_1 = "https://www.gitee.com/fqwert/aaaaa";
 static std::string TEST_URL_2 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/"
                                 "test.txt";
-constexpr size_t SLEEP_INTERVAL = 100;
+constexpr size_t SLEEP_INTERVAL = 1000;
 
 void DownloadFailTest(std::string url)
 {
@@ -68,9 +68,11 @@ void DownloadFailTest(std::string url)
     EXPECT_FALSE(handle->IsFinish());
     EXPECT_EQ(handle->GetState(), PreloadState::RUNNING);
 
-    while (!handle->IsFinish()) {
+    size_t counter = 30;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
+
     EXPECT_TRUE(flagF->load());
     EXPECT_FALSE(flagS->load());
     EXPECT_FALSE(flagC->load());
@@ -131,7 +133,9 @@ HWTEST_F(PreloadFail, OnFailAddCallback, TestSize.Level1)
 
     auto handle_1 = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback_1));
 
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle_1->IsFinish() || !(flagC->load() || flagF->load() || flagS->load()) ||
+        !(flagC_1->load() || flagF_1->load() || flagS_1->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
 
@@ -171,7 +175,8 @@ HWTEST_F(PreloadFail, OnFailTlcpNoCaPath, TestSize.Level1)
     auto &[flagS, flagF, flagC, flagP, callback] = test;
 
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback), std::move(options));
-    while (!handle->IsFinish()) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
     }
 

@@ -34,7 +34,7 @@
 using namespace testing::ext;
 using namespace OHOS::Request;
 
-constexpr size_t SLEEP_INTERVAL = 100;
+constexpr size_t SLEEP_INTERVAL = 1000;
 static std::string TEST_URL_0 = "https://www.gitee.com/tiga-ultraman/downloadTests/releases/download/v1.01/"
                                 "test.txt";
 
@@ -78,10 +78,9 @@ HWTEST_F(PreloadClearCache, ClearFileCacheTest, TestSize.Level1)
     auto &[flagS, flagF, flagC, flagP, callback] = test;
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
 
-    size_t times = 100;
-    while (!handle->IsFinish() && times > 0) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
-        times--;
     }
     EXPECT_TRUE(flagS->load());
     EXPECT_NE(Preload::GetInstance()->fetch(url), std::nullopt);
@@ -114,10 +113,9 @@ HWTEST_F(PreloadClearCache, ClearMemoryCacheTest, TestSize.Level1)
     TestCallback test;
     auto &[flagS, flagF, flagC, flagP, callback] = test;
     auto handle = Preload::GetInstance()->load(url, std::make_unique<PreloadCallback>(callback));
-    size_t times = 100;
-    while (!handle->IsFinish() && times > 0) {
+    size_t counter = 10;
+    while ((!handle->IsFinish() || !(flagC->load() || flagF->load() || flagS->load())) && counter-- > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
-        times--;
     }
     EXPECT_TRUE(flagS->load());
     EXPECT_NE(Preload::GetInstance()->fetch(url), std::nullopt);
