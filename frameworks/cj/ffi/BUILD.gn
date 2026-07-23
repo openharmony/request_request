@@ -70,6 +70,7 @@ ohos_shared_library("cj_request_ffi") {
     "storage_service:storage_manager_acl",
     "hisysevent:libhisysevent",
     "app_file_service:fileuri_native",
+    "node:node_header_notice",
   ]
 
   sources = [
