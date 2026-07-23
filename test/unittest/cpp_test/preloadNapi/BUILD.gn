@@ -52,6 +52,7 @@ ohos_unittest("preload_napi_test") {
     "ipc:ipc_single",
     "napi:ace_napi",
     "rust_cxx:cxx_cppdeps",
+    "node:node_header_notice",
   ]
 }
 

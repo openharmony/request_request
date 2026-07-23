@@ -58,6 +58,7 @@ ohos_shared_library("preload_napi") {
     "ipc:ipc_single",
     "napi:ace_napi",
     "rust_cxx:cxx_cppdeps",
+    "node:node_header_notice",
   ]
 
   subsystem_name = "request"
