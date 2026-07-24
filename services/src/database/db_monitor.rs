@@ -55,6 +55,8 @@ pub(crate) struct DbMonitorResult {
     pub(crate) state_distribution: Vec<(State, u64)>,
     /// Top bundles by task count.
     pub(crate) top_bundles: Vec<(String, u64)>,
+    /// Maximum token length in the task table.
+    pub(crate) max_token_len: u64,
     /// Whether the database size exceeds baseline.
     pub(crate) size_exceeded: bool,
 }
@@ -96,7 +98,7 @@ pub(crate) fn monitor_database() {
 
     // Write the system event
     let extra_info = format!(
-        "main_size={},wal_size={},shm_size={},total_size={},records={},size_exceeded={},state_dist={},top_bundles={}",
+        "main_size={},wal_size={},shm_size={},total_size={},records={},size_exceeded={},state_dist={},top_bundles={},max_token_len={}",
         result.db_file_size.main_size,
         result.db_file_size.wal_size,
         result.db_file_size.shm_size,
@@ -104,7 +106,8 @@ pub(crate) fn monitor_database() {
         result.total_records,
         result.size_exceeded,
         format_state_distribution(&result.state_distribution),
-        format_top_bundles(&result.top_bundles)
+        format_top_bundles(&result.top_bundles),
+        result.max_token_len
     );
     isys_fault(DfxCode::SA_FAULT_02, extra_info.as_str());
 }
@@ -132,6 +135,7 @@ fn collect_db_metrics() -> Option<DbMonitorResult> {
             total_records: 0,
             state_distribution: Vec::new(),
             top_bundles: Vec::new(),
+            max_token_len: 0,
             size_exceeded,
         });
     }
@@ -146,12 +150,20 @@ fn collect_db_metrics() -> Option<DbMonitorResult> {
 
     let state_distribution = get_state_distribution();
     let top_bundles = get_top_bundles();
+    let max_token_len = match get_max_token_len() {
+        Some(len) => len,
+        None => {
+            error!("Failed to get max token length");
+            return None;
+        }
+    };
 
     Some(DbMonitorResult {
         db_file_size,
         total_records,
         state_distribution,
         top_bundles,
+        max_token_len,
         size_exceeded,
     })
 }
@@ -211,6 +223,27 @@ fn get_total_record_count() -> Option<u64> {
     };
 
     count.next()
+}
+
+/// Gets the maximum token length from the request_task table.
+///
+/// # Returns
+///
+/// `Some(u64)` with the maximum token length, or `None` if the query failed.
+/// Returns 0 when the table is empty or all tokens are NULL/empty.
+fn get_max_token_len() -> Option<u64> {
+    let mut len = match REQUEST_DB.query::<u64>(
+        "SELECT COALESCE(MAX(LENGTH(token)), 0) FROM request_task",
+        (),
+    ) {
+        Ok(rows) => rows,
+        Err(e) => {
+            error!("Failed to query max token length: {}", e);
+            return None;
+        }
+    };
+
+    len.next()
 }
 
 /// Gets the distribution of tasks by state.

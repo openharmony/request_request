@@ -34,7 +34,6 @@ const DB_PATH: &str = if cfg!(test) {
 };
 
 const MILLIS_IN_A_WEEK: u64 = 7 * 24 * 60 * 60 * 1000;
-const MILLIS_IN_TWO_DAYS: u64 = 2 * 24 * 60 * 60 * 1000;
 const MILLIS_IN_ONE_DAY: u64 = 24 * 60 * 60 * 1000;
 
 pub(crate) static REQUEST_DB: LazyLock<RdbStore<'static>> = LazyLock::new(|| {
@@ -62,10 +61,10 @@ pub(crate) fn clear_database_by_state(pre_count: usize) -> Result<bool, ()> {
 
     let mut any_remain = false;
 
-    // Clear Removed tasks older than 1 day
+    // Clear Removed tasks immediately (no retention threshold)
     let removed_ids = match REQUEST_DB.query::<u32>(
-        "SELECT task_id FROM request_task WHERE state = ? AND mtime < ? LIMIT ?",
-        (State::Removed.repr as u64, current_time - MILLIS_IN_ONE_DAY, pre_count as u64),
+        "SELECT task_id FROM request_task WHERE state = ? LIMIT ?",
+        (State::Removed.repr as u64, pre_count as u64),
     ) {
         Ok(rows) => rows.collect::<Vec<_>>(),
         Err(e) => {
@@ -79,17 +78,17 @@ pub(crate) fn clear_database_by_state(pre_count: usize) -> Result<bool, ()> {
     }
 
     for task_id in removed_ids {
-        debug!("clear removed task {} info for have been overdue for more than a day.", task_id);
+        debug!("clear removed task {} info for have been in removed state.", task_id);
         if let Err(e) = REQUEST_DB.execute("DELETE from request_task WHERE task_id = ?", task_id) {
             error!("Failed to clear removed task {} info: {}", task_id, e);
         }
         NotificationDispatcher::get_instance().clear_task_info(task_id);
     }
 
-    // Clear Completed tasks older than 2 days
+    // Clear Completed tasks older than 1 day
     let completed_ids = match REQUEST_DB.query::<u32>(
         "SELECT task_id FROM request_task WHERE state = ? AND mtime < ? LIMIT ?",
-        (State::Completed.repr as u64, current_time - MILLIS_IN_TWO_DAYS, pre_count as u64),
+        (State::Completed.repr as u64, current_time - MILLIS_IN_ONE_DAY, pre_count as u64),
     ) {
         Ok(rows) => rows.collect::<Vec<_>>(),
         Err(e) => {
@@ -103,7 +102,7 @@ pub(crate) fn clear_database_by_state(pre_count: usize) -> Result<bool, ()> {
     }
 
     for task_id in completed_ids {
-        debug!("clear completed task {} info for have been overdue for more than two days.", task_id);
+        debug!("clear completed task {} info for have been overdue for more than a day.", task_id);
         if let Err(e) = REQUEST_DB.execute("DELETE from request_task WHERE task_id = ?", task_id) {
             error!("Failed to clear completed task {} info: {}", task_id, e);
         }
