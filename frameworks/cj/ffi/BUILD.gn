@@ -71,6 +71,7 @@ ohos_shared_library("cj_request_ffi") {
     "hisysevent:libhisysevent",
     "app_file_service:fileuri_native",
     "node:node_header_notice",
+    "bounds_checking_function:libsec_shared",
   ]
 
   sources = [

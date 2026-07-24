@@ -31,6 +31,7 @@
     ],
     "deps": {
       "components": [
+        "bounds_checking_function",
         "rust_cxx",
         "ylong_runtime",
         "ylong_http",
