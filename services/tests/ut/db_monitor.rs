@@ -126,5 +126,6 @@ fn ut_db_monitor_result_default() {
     assert_eq!(result.total_records, 0);
     assert!(result.state_distribution.is_empty());
     assert!(result.top_bundles.is_empty());
+    assert_eq!(result.max_token_len, 0);
     assert!(!result.size_exceeded);
 }

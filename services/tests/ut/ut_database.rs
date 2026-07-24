@@ -14,6 +14,9 @@
 use super::*;
 use crate::tests::lock_database;
 
+/// Two days in milliseconds (test-local constant).
+const MILLIS_IN_TWO_DAYS: u64 = 2 * 24 * 60 * 60 * 1000;
+
 // @tc.name: ut_clear_database_test
 // @tc.desc: Test the functionality of clearing expired tasks from database
 // @tc.precon: NA
@@ -84,12 +87,12 @@ fn clear_database_test() {
 }
 
 // @tc.name: ut_clear_database_by_state_removed_tasks
-// @tc.desc: Test clearing Removed tasks older than 1 day
+// @tc.desc: Test clearing Removed tasks immediately regardless of age
 // @tc.precon: NA
 // @tc.step: 1. Create test table with Removed tasks of different ages
 //           2. Call clear_database_by_state
-//           3. Verify only old Removed tasks are removed
-// @tc.expect: Removed tasks older than 1 day are removed, newer ones remain
+//           3. Verify all Removed tasks are removed
+// @tc.expect: Removed tasks are removed immediately regardless of age
 // @tc.type: FUNC
 // @tc.require: issue#ICOHJ2
 #[test]
@@ -119,7 +122,7 @@ fn ut_clear_database_by_state_removed_tasks() {
     REQUEST_DB
         .execute(sql, (old_task_id, two_days_ago, State::Removed.repr as u64))
         .unwrap();
-    // Recent Removed task (less than 1 day)
+    // Recent Removed task (less than 1 day) - also cleared now since Removed tasks are cleared immediately
     REQUEST_DB
         .execute(
             sql,
@@ -135,17 +138,18 @@ fn ut_clear_database_by_state_removed_tasks() {
         .unwrap()
         .collect();
 
+    // All Removed tasks are cleared immediately regardless of age
     assert!(!query.contains(&old_task_id));
-    assert!(query.contains(&recent_task_id));
+    assert!(!query.contains(&recent_task_id));
 }
 
 // @tc.name: ut_clear_database_by_state_completed_tasks
-// @tc.desc: Test clearing Completed tasks older than 2 days
+// @tc.desc: Test clearing Completed tasks older than 1 day
 // @tc.precon: NA
 // @tc.step: 1. Create test table with Completed tasks of different ages
 //           2. Call clear_database_by_state
 //           3. Verify only old Completed tasks are removed
-// @tc.expect: Completed tasks older than 2 days are removed, newer ones remain
+// @tc.expect: Completed tasks older than 1 day are removed, newer ones remain
 // @tc.type: FUNC
 // @tc.require: issue#ICOHJ2
 #[test]
@@ -157,8 +161,8 @@ fn ut_clear_database_by_state_completed_tasks() {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_millis() as u64;
-    let three_days_ago = current_time - MILLIS_IN_TWO_DAYS - MILLIS_IN_ONE_DAY;
-    let one_day_ago = current_time - MILLIS_IN_ONE_DAY;
+    let two_days_ago = current_time - MILLIS_IN_TWO_DAYS;
+    let half_day_ago = current_time - MILLIS_IN_ONE_DAY / 2;
 
     REQUEST_DB
         .execute(
@@ -171,18 +175,18 @@ fn ut_clear_database_by_state_completed_tasks() {
     let recent_task_id = fast_random() as u32;
 
     let sql = "INSERT INTO request_task (task_id, mtime, state) VALUES (?, ?, ?)";
-    // Old Completed task (older than 2 days)
+    // Old Completed task (older than 1 day)
     REQUEST_DB
         .execute(
             sql,
-            (old_task_id, three_days_ago, State::Completed.repr as u64),
+            (old_task_id, two_days_ago, State::Completed.repr as u64),
         )
         .unwrap();
-    // Recent Completed task (less than 2 days)
+    // Recent Completed task (less than 1 day)
     REQUEST_DB
         .execute(
             sql,
-            (recent_task_id, one_day_ago, State::Completed.repr as u64),
+            (recent_task_id, half_day_ago, State::Completed.repr as u64),
         )
         .unwrap();
 
@@ -316,14 +320,14 @@ fn ut_clear_database_by_state_mixed_states() {
     let recent_running_id = fast_random() as u32;
 
     let sql = "INSERT INTO request_task (task_id, mtime, state) VALUES (?, ?, ?)";
-    // Old Removed (should be cleaned - > 1 day)
+    // Old Removed (should be cleaned - immediately)
     REQUEST_DB
         .execute(
             sql,
             (old_removed_id, two_weeks_ago, State::Removed.repr as u64),
         )
         .unwrap();
-    // Old Completed (should be cleaned - > 2 days)
+    // Old Completed (should be cleaned - > 1 day)
     REQUEST_DB
         .execute(
             sql,
@@ -348,7 +352,7 @@ fn ut_clear_database_by_state_mixed_states() {
             (old_running_id, two_weeks_ago, State::Running.repr as u64),
         )
         .unwrap();
-    // Recent Removed (should remain - < 1 day)
+    // Recent Removed (should be cleaned - removed immediately regardless of age)
     REQUEST_DB
         .execute(
             sql,
@@ -379,7 +383,7 @@ fn ut_clear_database_by_state_mixed_states() {
     assert!(!query.contains(&old_completed_id));
     assert!(!query.contains(&old_failed_id));
     assert!(!query.contains(&old_running_id));
-    assert!(query.contains(&recent_removed_id));
+    assert!(!query.contains(&recent_removed_id));
     assert!(query.contains(&recent_running_id));
 }
 
