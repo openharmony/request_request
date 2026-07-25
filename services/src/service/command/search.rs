@@ -12,30 +12,32 @@
 // limitations under the License.
 
 //! Task search functionality for download tasks.
-//! 
+//!
 //! This module provides methods to search for tasks based on various criteria,
-//! including time ranges, states, actions, and modes, with different permission levels.
+//! including time ranges, states, actions, and modes, with different permission
+//! levels.
 
 use ipc::parcel::MsgParcel;
-use ipc::IpcResult;
+use ipc::{IpcResult, IpcStatusCode};
 
 use crate::manage::query::{self, SearchMethod, TaskFilter};
 use crate::service::RequestServiceStub;
-use crate::utils::is_system_api;
+use crate::utils::{is_system_api, is_valid_bundle_name};
 
 impl RequestServiceStub {
     /// Searches for tasks based on specified filters and permission level.
     ///
     /// # Arguments
     ///
-    /// * `data` - Message parcel containing search parameters: bundle name, time range,
-    ///   state, action, and mode
+    /// * `data` - Message parcel containing search parameters: bundle name,
+    ///   time range, state, action, and mode
     /// * `reply` - Message parcel to write the search results to
     ///
     /// # Returns
     ///
     /// * `Ok(())` - If the search operation completed successfully
-    /// * `Err(_)` - If there was an error reading from or writing to the message parcels
+    /// * `Err(_)` - If there was an error reading from or writing to the
+    ///   message parcels
     ///
     /// # Notes
     ///
@@ -49,6 +51,10 @@ impl RequestServiceStub {
         // Determine search method based on API type (system or user)
         let method = if is_system_api() {
             debug!("Service system api search: bundle name is {}", bundle);
+            if !is_valid_bundle_name(&bundle) {
+                error!("Service system api search: invalid bundle name {}", bundle);
+                return Err(IpcStatusCode::Failed);
+            }
             SearchMethod::System(bundle)
         } else {
             let uid = ipc::Skeleton::calling_uid();
@@ -61,15 +67,15 @@ impl RequestServiceStub {
         debug!("Service search: before is {}", before);
         let after: i64 = data.read()?;
         debug!("Service search: after is {}", after);
-        
+
         // Read task state filter
         let state: u32 = data.read()?;
         debug!("Service search: state is {}", state);
-        
+
         // Read task action filter
         let action: u32 = data.read()?;
         debug!("Service search: action is {}", action);
-        
+
         // Read task mode filter
         let mode: u32 = data.read()?;
         debug!("Service search: mode is {}", mode);
@@ -86,10 +92,10 @@ impl RequestServiceStub {
         // Perform the search operation
         let ids = query::search(filter, method);
         debug!("End Service search ok: search task ids is {:?}", ids);
-        
+
         // Send the count of results first
         reply.write(&(ids.len() as u32))?;
-        
+
         // Send each task ID as a string
         for it in ids.iter() {
             reply.write(&(it.to_string()))?;

@@ -451,6 +451,31 @@ pub(crate) fn is_called_by_hap() -> bool {
     ffi::IsCalledByHAP(token_id)
 }
 
+/// Validates a bundle name according to the OpenHarmony bundle name
+/// specification.
+///
+/// A valid bundle name may only contain alphanumeric characters, underscores,
+/// and dots. The special value `"*"` is accepted as a wildcard meaning "all
+/// bundles".
+///
+/// # Parameters
+///
+/// * `name` - The bundle name to validate
+///
+/// # Returns
+///
+/// Returns `true` if the name is valid, otherwise `false`.
+pub(crate) fn is_valid_bundle_name(name: &str) -> bool {
+    if name.is_empty() {
+        return false;
+    }
+    if name == "*" {
+        return true;
+    }
+    name.chars()
+        .all(|c| c.is_alphanumeric() || c == '.' || c == '_')
+}
+
 /// CXX FFI bridge to C++ utilities.
 ///
 /// This module defines the interface to C++ utility functions used throughout
@@ -500,4 +525,32 @@ mod ffi {
 #[cfg(test)]
 mod ut_mod {
     include!("../../tests/ut/utils/ut_mod.rs");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // @tc.name: ut_is_valid_bundle_name
+    // @tc.desc: Test bundle name validation helper
+    // @tc.precon: NA
+    // @tc.step: 1. Call is_valid_bundle_name with valid and invalid names
+    // @tc.expect: Valid names return true, invalid names return false
+    // @tc.type: FUNC
+    #[test]
+    fn ut_is_valid_bundle_name() {
+        assert!(is_valid_bundle_name("com.ohos.app"));
+        assert!(is_valid_bundle_name("com_ohos_app"));
+        assert!(is_valid_bundle_name("app123"));
+        assert!(is_valid_bundle_name("a.b_c.1"));
+        assert!(is_valid_bundle_name("*"));
+
+        assert!(!is_valid_bundle_name(""));
+        assert!(!is_valid_bundle_name("com'ohos"));
+        assert!(!is_valid_bundle_name("com ohos"));
+        assert!(!is_valid_bundle_name("com\nohos"));
+        assert!(!is_valid_bundle_name("com--ohos"));
+        assert!(!is_valid_bundle_name("com@ohos"));
+        assert!(!is_valid_bundle_name("com/ohos"));
+    }
 }

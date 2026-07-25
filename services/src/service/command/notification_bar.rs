@@ -89,8 +89,11 @@ impl RequestServiceStub {
 
         let visibility = data.read()?;
 
+        // Record the caller UID as the group owner; attach_group / delete_group
+        // verify ownership against it later.
+        let uid = ipc::Skeleton::calling_uid();
         let new_group_id = NotificationDispatcher::get_instance().create_group(
-            gauge, title, text, want_agent, disable, visibility);
+            gauge, title, text, want_agent, disable, visibility, uid);
         reply.write(&new_group_id.to_string())?;
         Ok(())
     }
