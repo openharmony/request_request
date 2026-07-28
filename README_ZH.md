@@ -62,8 +62,8 @@ libcurl: 封装libcurl接口完成上传。
 
 -   如需使用request服务，需要申请如下权限：
     -   ohos.permission.INTERNET
-    -   ohos.permission.WRITE_MEDIA
-    -   ohos.permission.READ_MEDIA
+    -   ohos.permission.WRITE_IMAGEVIDEO
+    -   ohos.permission.READ_IMAGEVIDEO
 -   request数据单元为文件形式，其余数据形式需要调用者自行封装为文件路径。
 -   request服务不提供完整的HTTP/HTTPS SDK接口，只是HTTP/HTTPS SDK 的用户，如需此接口推荐使用[NetStack](https://gitcode.com/openharmony/communication_netstack)。
 -   下载服务器需要支持HTTP协议的head方法，能够通过Content-length获取下载数据大小，否则下载任务失败。

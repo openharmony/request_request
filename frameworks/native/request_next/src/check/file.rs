@@ -246,8 +246,12 @@ pub fn set_file_permission(path: &PathBuf, context: &Context) -> Result<(), Down
         .open(&path)
         .map_err(|e| DownloadPathError::CreateFile(e))?;
 
-    // Set read/write/execute permissions for all users
-    let perm = fs::Permissions::from_mode(0o777);
+    // Restrict to owner+group read/write only (no access for others).
+    // The service account (g:3815) accesses the file via the ACL entry set
+    // below, not via the other permission bits. POSIX ACL mask is bound to the
+    // group class of the mode: 0o660 keeps the mask at rw so the g:3815:rwx
+    // entry stays effective for SA read/write, while closing world access.
+    let perm = fs::Permissions::from_mode(0o660);
     if let Err(e) = fs::set_permissions(&path, perm) {
         return Err(DownloadPathError::SetPermission(e));
     }
@@ -265,7 +269,7 @@ pub fn set_file_permission(path: &PathBuf, context: &Context) -> Result<(), Down
         if let Err(e) =
             storage::acl_set_access(&path_clone.to_string_lossy().to_string(), SA_PERMISSION_X)
         {
-            info!("");
+            error!("set acl x failed: {:?}", e);
         }
         path_clone.pop();
     }

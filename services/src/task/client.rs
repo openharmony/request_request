@@ -169,8 +169,8 @@ pub(crate) fn build_client(
     if config.bundle_type == ATOMIC_SERVICE {
         let domain_type = action_to_domain_type(config.common_data.action);
         info!(
-            "ApiPolicy Domain check, tid {}, bundle {}, domain_type {}, url {}",
-            config.common_data.task_id, &config.bundle, &domain_type, &config.url
+            "ApiPolicy Domain check, tid {}, bundle {}, domain_type {}",
+            config.common_data.task_id, &config.bundle, &domain_type
         );
 
         #[cfg(feature = "oh")]
@@ -178,15 +178,15 @@ pub(crate) fn build_client(
             if !is_accessed {
                 // Log policy violation and return error
                 error!(
-                    "Intercept request by domain check, tid {}, bundle {}, domain_type {}, url {}",
-                    config.common_data.task_id, &config.bundle, &domain_type, &config.url
+                    "Intercept request by domain check, tid {}, bundle {}, domain_type {}",
+                    config.common_data.task_id, &config.bundle, &domain_type
                 );
                 sys_event!(
                     ExecFault,
                     DfxCode::URL_POLICY_FAULT_00,
                     &format!(
-                    "Intercept request by domain check, tid {}, bundle {}, domain_type {}, url {}",
-                config.common_data.task_id, &config.bundle, &domain_type, &config.url)
+                    "Intercept request by domain check, tid {}, bundle {}, domain_type {}",
+                config.common_data.task_id, &config.bundle, &domain_type)
                 );
 
                 // Wrap the HttpClientError in a Box to fit the function's return type
@@ -198,8 +198,8 @@ pub(crate) fn build_client(
             }
         } else {
             info!(
-                "Intercept request by domain check, tid {}, domain_type {}, url {}",
-                config.common_data.task_id, &domain_type, &config.url
+                "Intercept request by domain check, tid {}, domain_type {}",
+                config.common_data.task_id, &domain_type
             );
         }
 
@@ -520,8 +520,8 @@ impl Interceptor for DomainInterceptor {
 
         // Log the domain check attempt
         info!(
-            "ApiPolicy Domain check redirect, bundle {}, domain_type {}, url {}",
-            &self.app_id, &self.domain_type, &url
+            "ApiPolicy Domain check redirect, bundle {}, domain_type {}",
+            &self.app_id, &self.domain_type
         );
 
         // Check if the URL is allowed by domain policy, defaulting to true if check

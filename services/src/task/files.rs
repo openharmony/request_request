@@ -14,7 +14,16 @@
 use std::fs::{File, OpenOptions};
 use std::io;
 use std::os::fd::FromRawFd;
+use std::os::unix::fs::OpenOptionsExt;
 use std::sync::{Arc, Mutex};
+
+// Linux open(2) flag bits used to harden sandbox file opens. Defined here as
+// raw constants so we avoid pulling in the libc crate just for two flags.
+// O_NOFOLLOW: reject the final path component when it is a symlink, preventing
+//   an attacker-controlled sandbox from redirecting an open to a victim file.
+// O_CLOEXEC:  close the descriptor on exec to avoid leaking it to children.
+const O_NOFOLLOW: i32 = 0o400_000;
+const O_CLOEXEC: i32 = 0o2_000_000;
 
 use crate::error::{ErrorCode, ServiceError};
 use crate::manage::account;
@@ -183,7 +192,10 @@ fn open_body_files(config: &TaskConfig) -> Result<Files, ServiceError> {
 /// Opens a file in read-write mode at the specified path.
 ///
 /// Converts the provided path using the UID and bundle name, then opens the
-/// file with read and append permissions.
+/// file with read and append permissions. `O_NOFOLLOW` is applied so that a
+/// trailing symlink is rejected; this prevents an attacker-controlled sandbox
+/// subtree from redirecting the open to a file outside the caller's sandbox.
+/// Note that intermediate directory symlinks are still followed.
 ///
 /// # Errors
 /// Returns an `io::Error` if the file cannot be opened.
@@ -192,6 +204,7 @@ fn open_file_readwrite(uid: u64, bundle_name: &str, path: &str) -> io::Result<Fi
         OpenOptions::new()
             .read(true)
             .append(true)
+            .custom_flags(O_NOFOLLOW | O_CLOEXEC)
             .open(convert_path(uid, bundle_name, path)),
         "open_file_readwrite failed"
     ))
@@ -200,7 +213,10 @@ fn open_file_readwrite(uid: u64, bundle_name: &str, path: &str) -> io::Result<Fi
 /// Opens a file in read-only mode at the specified path.
 ///
 /// Converts the provided path using the UID and bundle name, then opens the
-/// file with read-only permissions.
+/// file with read-only permissions. `O_NOFOLLOW` is applied so that a trailing
+/// symlink is rejected; this prevents an attacker-controlled sandbox subtree
+/// from redirecting the open to a file outside the caller's sandbox. Note that
+/// intermediate directory symlinks are still followed.
 ///
 /// # Errors
 /// Returns an `io::Error` if the file cannot be opened.
@@ -208,6 +224,7 @@ fn open_file_readonly(uid: u64, bundle_name: &str, path: &str) -> io::Result<Fil
     Ok(cvt_res_error!(
         OpenOptions::new()
             .read(true)
+            .custom_flags(O_NOFOLLOW | O_CLOEXEC)
             .open(convert_path(uid, bundle_name, path)),
         "open_file_readonly failed"
     ))

@@ -20,10 +20,29 @@ use request_utils::storage;
 
 use crate::file::FileManager;
 
-// todo
-const SA_PERMISSION_RWX: &str = "g:3815:rwx";
+// ACL entries for the service account (SA, gid 3815). Files get a user entry
+// (u:3815:rw) so the SA can read/write without depending on the group/ACL
+// mask; directories on the traversal chain only need execute (g:3815:x).
+const SA_PERMISSION_U_RW: &str = "u:3815:rw";
 const SA_PERMISSION_X: &str = "g:3815:x";
 const SA_PERMISSION_CLEAN: &str = "g:3815:---";
+const SA_PERMISSION_U_CLEAN: &str = "u:3815:---";
+
+// Application private storage base directories. Only segments under one of
+// these roots are granted ACL access; system directories are never touched.
+const AREA1: &str = "/data/storage/el1/base";
+const AREA2: &str = "/data/storage/el2/base";
+const AREA5: &str = "/data/storage/el5/base";
+
+/// Returns whether `path` is equal to or located beneath an application base
+/// directory (boundary-aware to avoid ".../base" vs ".../baseball" collisions).
+fn belongs_to_app_base_dir(path: &str) -> bool {
+    is_under_or_equal(path, AREA1) || is_under_or_equal(path, AREA2) || is_under_or_equal(path, AREA5)
+}
+
+fn is_under_or_equal(path: &str, root: &str) -> bool {
+    path == root || (path.starts_with(root) && path.as_bytes().get(root.len()) == Some(&b'/'))
+}
 
 /// Manages file access permissions for task paths.
 ///
@@ -54,24 +73,16 @@ impl PermissionManager {
         // The permission for the entire path as a file will be set after the loop.
         // Redundant permission setting operations are performed here to ensure that
         // some permissions are not lost in concurrent scenarios.
-        while path_clone.pop() && path_clone.to_string_lossy().to_string().len() >= 10 {
-            debug!("Current path: {:?}", path_clone);
+        while path_clone.pop() {
             let temp_path = path_clone.to_string_lossy().to_string();
+            // Only grant traversal access on segments inside an application base
+            // directory; never touch system directories such as "/" or "/data".
+            if !belongs_to_app_base_dir(&temp_path) {
+                break;
+            }
 
             if let Err(e) = self.granter.grant(&temp_path, SA_PERMISSION_X) {
-                // for path in &completed_path {
-                //     if let Some(count) = paths.get_mut(path) {
-                //         *count -= 1;
-                //         if *count == 0 {
-                //             info!("drop, path: {}", path);
-                //             self.granter.grant(path, SA_PERMISSION_CLEAN);
-                //             paths.remove(path);
-                //         }
-                //     }
-                // }
-                // todo
                 debug!("grant path: {}, error: {}", temp_path, e);
-                // return Err(13400001);
             }
             match paths.entry(temp_path.clone()) {
                 Entry::Occupied(mut entry) => {
@@ -87,7 +98,7 @@ impl PermissionManager {
         debug!("Setting ACL access for path: {:?}", path);
         if let Err(e) = self
             .granter
-            .grant(&path.to_string_lossy().to_string(), SA_PERMISSION_RWX)
+            .grant(&path.to_string_lossy().to_string(), SA_PERMISSION_U_RW)
         {
             error!(
                 "grant file: {}, error: {}",
@@ -110,19 +121,22 @@ impl PermissionManager {
     pub(crate) fn revoke(&self, path: &PathBuf) {
         let mut paths = self.paths.lock().unwrap();
         let mut path_clone = path.clone();
+        let mut is_file = true;
         while true {
             let temp_path = path_clone.to_string_lossy().to_string();
             if let Some(count) = paths.get_mut(&temp_path) {
                 *count -= 1;
                 if *count == 0 {
                     info!("revoke, path: {}", temp_path);
-                    self.granter.grant(&temp_path, SA_PERMISSION_CLEAN);
+                    let clean = if is_file { SA_PERMISSION_U_CLEAN } else { SA_PERMISSION_CLEAN };
+                    self.granter.grant(&temp_path, clean);
                     paths.remove(&temp_path);
                 }
             }
             if !path_clone.pop() {
                 break;
             }
+            is_file = false;
         }
     }
 }
