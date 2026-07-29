@@ -117,6 +117,14 @@ inline int32_t Execute(RdbStore &store, const rust::str sql, const std::unique_p
     return store.Execute(std::string(sql), *args).first;
 }
 
+// ExecuteSql bypasses Execute's column-count check (which rejects multi-column PRAGMA
+// statements like `PRAGMA wal_checkpoint(RESTART)`), so it is the right path for PRAGMAs
+// whose result rows are not needed. No bind args are needed for such statements.
+inline int32_t ExecuteSql(RdbStore &store, const rust::str sql)
+{
+    return store.ExecuteSql(std::string(sql));
+}
+
 inline std::shared_ptr<ResultSet> Query(
     RdbStore &store, const rust::str sql, const std::unique_ptr<std::vector<ValueObject>> args)
 {

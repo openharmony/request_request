@@ -493,6 +493,10 @@ impl TaskManager {
 
         // Step 3: Clear group notification info
         NotificationDispatcher::get_instance().clear_group_info();
+
+        // Step 4: Checkpoint the WAL after all cleanup so deleted pages are merged back into
+        // the main DB and the -wal file is reset, rather than accumulating across cycles.
+        crate::database::checkpoint_wal();
         true
     }
 
