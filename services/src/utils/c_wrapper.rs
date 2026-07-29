@@ -47,7 +47,8 @@ impl ToString for CStringWrapper {
             return String::new();
         }
         let bytes = unsafe { slice::from_raw_parts(self.c_str as *const u8, self.len as usize) };
-        let str = unsafe { String::from_utf8_unchecked(bytes.to_vec()) };
+        let str = String::from_utf8(bytes.to_vec())
+            .unwrap_or_else(|_| String::from_utf8_lossy(bytes).into_owned());
         #[cfg(feature = "oh")]
         unsafe {
             DeleteChar(self.c_str)

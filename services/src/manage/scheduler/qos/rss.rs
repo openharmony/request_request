@@ -84,8 +84,7 @@ impl RssCapacity {
             4 => Self::LEVEL4,
             5 => Self::LEVEL5,
             6 => Self::LEVEL6,
-            7 => Self::LEVEL7,
-            _ => unreachable!(),
+            _ => Self::LEVEL7,
         }
     }
 

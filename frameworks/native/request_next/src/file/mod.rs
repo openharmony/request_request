@@ -213,7 +213,7 @@ impl FileManager {
                 }
             };
 
-            if let Err(e) = fs::set_permissions(&path, fs::Permissions::from_mode(0o666)) {
+            if let Err(e) = fs::set_permissions(&path, fs::Permissions::from_mode(0o644)) {
                 error!("body chmod fail: {}", e);
             }
 
@@ -558,7 +558,7 @@ impl FileManager {
                 13400001
             })?;
 
-        if let Err(_) = fs::set_permissions(&path, fs::Permissions::from_mode(0o666)) {
+        if let Err(_) = fs::set_permissions(&path, fs::Permissions::from_mode(0o644)) {
             error!("permission fail");
             return Err(13400001);
         }

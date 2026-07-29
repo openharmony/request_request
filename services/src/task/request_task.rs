@@ -956,15 +956,15 @@ fn check_file_specs(file_specs: &[FileSpec]) -> bool {
 
 fn check_path(path: &str) -> bool {
     if !check_standardized_path(path) {
-        error!("File path err - path: {}", path);
+        error!("File path err");
         return false;
     }
     if !belong_app_base(path) {
-        error!("File path invalid - path: {}", path);
+        error!("File path invalid");
         sys_event!(
             ExecFault,
             DfxCode::TASK_FAULT_09,
-            &format!("File path invalid - path: {}", path)
+            "File path invalid"
         );
         return false;
     }
@@ -989,6 +989,10 @@ pub(crate) fn check_config(
     total_timeout: u64,
     #[cfg(feature = "oh")] system: SystemConfig,
 ) -> Result<(AttachedFiles, Client), ErrorCode> {
+    if !matches!(config.common_data.action, Action::Download | Action::Upload) {
+        error!("check_config failed: invalid action {:?}", config.common_data.action);
+        return Err(ErrorCode::ParameterCheck);
+    }
     if !check_file_specs(&config.file_specs) {
         return Err(ErrorCode::Other);
     }
