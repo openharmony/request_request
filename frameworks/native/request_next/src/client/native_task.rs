@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! In-process native task registry.
+//!
+//! Maps request sequence numbers and service-assigned task IDs to their
+//! `NativeTask` entries along with the granted permission tokens.
+
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 

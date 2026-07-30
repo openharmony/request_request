@@ -11,6 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Notification configuration validation for task configuration.
+//!
+//! Validates notification title and text lengths, the want agent, and the visibility setting on API10.
+
 use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;

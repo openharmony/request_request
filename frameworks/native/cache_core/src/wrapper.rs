@@ -54,9 +54,9 @@ pub(crate) mod ffi {
         /// manages raw pointers internally. Proper lifetime management of the callback
         /// is required.
         ///
-        /// # Parameters
-        /// - `target`: Path to the directory to monitor
-        /// - `callback`: Rebuilder instance to handle directory events
+        /// # Arguments
+        /// * `target` - Path to the directory to monitor
+        /// * `callback` - Rebuilder instance to handle directory events
         ///
         /// # Returns
         /// A unique pointer to the created DirectoryMonitor instance
@@ -72,8 +72,8 @@ pub(crate) mod ffi {
         /// This function is marked unsafe because it calls into C++ code that may
         /// have side effects or thread safety considerations.
         ///
-        /// # Parameters
-        /// - `monitor`: Pin reference to the directory monitor instance
+        /// # Arguments
+        /// * `monitor` - Pin reference to the directory monitor instance
         fn StartObserve(monitor: Pin<&mut DirectoryMonitor>);
     }
 }

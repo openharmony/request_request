@@ -110,8 +110,8 @@ impl RustDownloadInfo {
 
     /// Creates a new `RustDownloadInfo` from a `DownloadInfo`.
     ///
-    /// # Parameters
-    /// - `info`: The download information to wrap.
+    /// # Arguments
+    /// * `info` - The download information to wrap.
     ///
     /// # Returns
     /// A new `RustDownloadInfo` instance.

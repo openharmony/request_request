@@ -56,9 +56,9 @@ unsafe impl Send for PreloadProgressCallbackWrapper {}
 impl FfiCallback {
     /// Creates a new FfiCallback from C++ callback pointers.
     ///
-    /// # Parameters
-    /// - `callback`: C++ callback for completion events
-    /// - `progress_callback`: C++ callback for progress events
+    /// # Arguments
+    /// * `callback` - C++ callback for completion events
+    /// * `progress_callback` - C++ callback for progress events
     ///
     /// # Returns
     /// A new FfiCallback instance configured with the provided callbacks
@@ -86,8 +86,8 @@ pub struct RustData {
 impl RustData {
     /// Creates a new RustData wrapper.
     ///
-    /// # Parameters
-    /// - `data`: Shared reference to the cached data
+    /// # Arguments
+    /// * `data` - Shared reference to the cached data
     fn new(data: Arc<RamCache>) -> Self {
         Self { data }
     }
@@ -107,9 +107,9 @@ impl PreloadCallback for FfiCallback {
     /// Converts the Rust cached data into a C++ compatible format and invokes
     /// the C++ OnSuccess callback.
     ///
-    /// # Parameters
-    /// - `data`: The downloaded content in RAM cache
-    /// - `task_id`: Identifier for the completed task
+    /// # Arguments
+    /// * `data` - The downloaded content in RAM cache
+    /// * `task_id` - Identifier for the completed task
     fn on_success(&mut self, data: Arc<RamCache>, task_id: &str) {
         if self.callback.is_null() {
             return;
@@ -124,9 +124,9 @@ impl PreloadCallback for FfiCallback {
     /// Converts the Rust error into a C++ compatible format and invokes
     /// the C++ OnFail callback.
     ///
-    /// # Parameters
-    /// - `error`: The error that caused the failure
-    /// - `task_id`: Identifier for the failed task
+    /// # Arguments
+    /// * `error` - The error that caused the failure
+    /// * `task_id` - Identifier for the failed task
     fn on_fail(&mut self, error: CacheDownloadError, info: RustDownloadInfo, task_id: &str) {
         if self.callback.is_null() {
             return;
@@ -151,9 +151,9 @@ impl PreloadCallback for FfiCallback {
     /// buffering updates to avoid overwhelming the C++ side with too many
     /// rapid progress events.
     ///
-    /// # Parameters
-    /// - `progress`: Number of bytes downloaded so far
-    /// - `total`: Total number of bytes to download
+    /// # Arguments
+    /// * `progress` - Number of bytes downloaded so far
+    /// * `total` - Total number of bytes to download
     fn on_progress(&mut self, progress: u64, total: u64) {
         if self.progress_callback.is_null() {
             return;
@@ -210,12 +210,12 @@ impl CacheDownloadService {
     /// Translates C++ download options and callbacks into the Rust equivalents,
     /// then invokes the underlying preload method.
     ///
-    /// # Parameters
-    /// - `url`: URL to download
-    /// - `callback`: C++ callback for completion events
-    /// - `progress_callback`: C++ callback for progress events
-    /// - `update`: Whether to update existing cached content
-    /// - `options`: Additional download options from C++
+    /// # Arguments
+    /// * `url` - URL to download
+    /// * `callback` - C++ callback for completion events
+    /// * `progress_callback` - C++ callback for progress events
+    /// * `update` - Whether to update existing cached content
+    /// * `options` - Additional download options from C++
     ///
     /// # Returns
     /// A C++ shared pointer to a PreloadHandle if successful, null otherwise
@@ -296,8 +296,8 @@ fn cache_download_service() -> *const CacheDownloadService {
 
 /// Sets the file cache path and registers it for observation.
 ///
-/// # Parameters
-/// - `path`: The file path to set for the cache
+/// # Arguments
+/// * `path` - The file path to set for the cache
 fn set_file_cache_path(path: String) {
     observe_image_file_delete(path);
 }
@@ -309,9 +309,9 @@ pub(crate) mod ffi {
     /// C++ download options passed to the preload method
     ///
     /// Task-level configuration fields:
-    /// - max_retry: Maximum retry count (0-10), usize::MAX means use global default
-    /// - network_check_timeout: Network check timeout in seconds (0-20), u32::MAX means use global default
-    /// - http_total_timeout: HTTP total timeout in seconds (min 1), u32::MAX means use global default
+    /// * `max_retry` - Maximum retry count (0-10), usize::MAX means use global default
+    /// * `network_check_timeout` - Network check timeout in seconds (0-20), u32::MAX means use global default
+    /// * `http_total_timeout` - HTTP total timeout in seconds (min 1), u32::MAX means use global default
     struct FfiPredownloadOptions<'a> {
         headers: Vec<&'a str>,
         ssl_type: &'a str,

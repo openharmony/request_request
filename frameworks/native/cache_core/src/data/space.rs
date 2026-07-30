@@ -31,8 +31,8 @@ pub(crate) struct SpaceManager {
 impl SpaceManager {
     /// Creates a new resource manager with the specified capacity.
     ///
-    /// # Parameters
-    /// - `capacity`: Total available capacity in bytes
+    /// # Arguments
+    /// * `capacity` - Total available capacity in bytes
     ///
     /// # Returns
     /// A new SpaceManager instance with the specified capacity and zero used
@@ -49,8 +49,8 @@ impl SpaceManager {
     /// Checks if the requested size can be allocated without exceeding total
     /// capacity. If successful, updates the used capacity and returns true.
     ///
-    /// # Parameters
-    /// - `apply_size`: Amount of space to allocate in bytes
+    /// # Arguments
+    /// * `apply_size` - Amount of space to allocate in bytes
     ///
     /// # Returns
     /// `true` if allocation succeeded, `false` if insufficient capacity
@@ -66,16 +66,16 @@ impl SpaceManager {
     ///
     /// Decreases the used capacity by the specified amount.
     ///
-    /// # Parameters
-    /// - `size`: Amount of space to release in bytes
+    /// # Arguments
+    /// * `size` - Amount of space to release in bytes
     pub(crate) fn release(&mut self, size: u64) {
         self.used_capacity -= size;
     }
 
     /// Updates the total capacity of the resource manager.
     ///
-    /// # Parameters
-    /// - `size`: New total capacity in bytes
+    /// # Arguments
+    /// * `size` - New total capacity in bytes
     pub(crate) fn change_total_size(&mut self, size: u64) {
         self.total_capacity = size;
     }

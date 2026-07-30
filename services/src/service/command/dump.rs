@@ -44,9 +44,9 @@ impl RequestServiceStub {
     /// # Notes
     ///
     /// Ignores all file I/O errors silently. Supports the following argument patterns:
-    /// - `-h`: Display help message
-    /// - `-t`: Dump summary information for all tasks
-    /// - `-t [taskid]`: Dump detailed information for a specific task
+    /// * `-h` - Display help message
+    /// * `-t` - Dump summary information for all tasks
+    /// * `-t [taskid]` - Dump detailed information for a specific task
     pub(crate) fn dump(&self, mut file: File, args: Vec<String>) -> IpcResult<()> {
         info!("Service dump");
 

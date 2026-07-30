@@ -66,15 +66,15 @@ pub(crate) struct DownloadTask {
 impl DownloadTask {
     /// Creates a new download task with the specified parameters.
     ///
-    /// # Parameters
-    /// - `task_id`: Unique identifier for the download task.
-    /// - `cache_manager`: Reference to the cache manager for storing downloaded
+    /// # Arguments
+    /// * `task_id` - Unique identifier for the download task.
+    /// * `cache_manager` - Reference to the cache manager for storing downloaded
     ///   content.
-    /// - `info_mgr`: Manager for download information.
-    /// - `request`: Download request configuration.
-    /// - `callback`: Callback for download events.
-    /// - `downloader`: Type of download backend to use.
-    /// - `seq`: Sequence number for task ordering.
+    /// * `info_mgr` - Manager for download information.
+    /// * `request` - Download request configuration.
+    /// * `callback` - Callback for download events.
+    /// * `downloader` - Type of download backend to use.
+    /// * `seq` - Sequence number for task ordering.
     ///
     /// # Returns
     /// A new `DownloadTask` if creation was successful, otherwise `None`.
@@ -140,8 +140,8 @@ impl DownloadTask {
 
     /// Attempts to add a callback to the task.
     ///
-    /// # Parameters
-    /// - `callback`: Callback to add to the task.
+    /// # Arguments
+    /// * `callback` - Callback to add to the task.
     ///
     /// # Returns
     /// `Ok(())` if the callback was successfully added, otherwise returns the
@@ -174,8 +174,8 @@ pub struct TaskHandle {
 impl TaskHandle {
     /// Creates a new task handle with the specified task ID.
     ///
-    /// # Parameters
-    /// - `task_id`: Unique identifier for the task.
+    /// # Arguments
+    /// * `task_id` - Unique identifier for the task.
     pub(crate) fn new(task_id: TaskId) -> Self {
         Self {
             state: Arc::new(AtomicUsize::new(INIT)),
@@ -251,8 +251,8 @@ impl TaskHandle {
 
     /// Attempts to add a callback to the task if it hasn't finished.
     ///
-    /// # Parameters
-    /// - `callback`: Callback to add to the task.
+    /// # Arguments
+    /// * `callback` - Callback to add to the task.
     ///
     /// # Returns
     /// `Ok(())` if the callback was successfully added, otherwise returns the
@@ -303,8 +303,8 @@ impl TaskHandle {
 
     /// Sets the underlying download handle.
     ///
-    /// # Parameters
-    /// - `handle`: The download handle to set.
+    /// # Arguments
+    /// * `handle` - The download handle to set.
     #[inline]
     fn set_handle(&mut self, handle: Arc<dyn CommonHandle>) {
         self.handle = Some(handle);
@@ -315,18 +315,18 @@ impl TaskHandle {
 /// downloader.
 ///
 /// # Type Parameters
-/// - `F`: Type of the downloader function that performs the actual download
+/// * `F` - Type of the downloader function that performs the actual download
 ///   operation.
 ///
-/// # Parameters
-/// - `task_id`: Unique identifier for the download task.
-/// - `cache_manager`: Reference to the cache manager for storing downloaded
+/// # Arguments
+/// * `task_id` - Unique identifier for the download task.
+/// * `cache_manager` - Reference to the cache manager for storing downloaded
 ///   content.
-/// - `info_mgr`: Manager for download information.
-/// - `request`: Download request configuration.
-/// - `callback`: Optional callback for download events.
-/// - `downloader`: Function that performs the actual download operation.
-/// - `seq`: Sequence number for task ordering.
+/// * `info_mgr` - Manager for download information.
+/// * `request` - Download request configuration.
+/// * `callback` - Optional callback for download events.
+/// * `downloader` - Function that performs the actual download operation.
+/// * `seq` - Sequence number for task ordering.
 ///
 /// # Returns
 /// A new `TaskHandle` if the download operation was successfully started,

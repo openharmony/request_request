@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! API level 9 request ANI implementation.
+//!
+//! Aggregates the bridge, callback, download, and upload submodules that
+//! back the API 9 `@ohos.request` surface exposed through ANI.
+
 mod bridge;
 pub mod callback;
 pub mod download;

@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Core request service crate.
+//!
+//! Aggregates the request subsystem's configuration types, error codes,
+//! file handling, filters, runtime info, and external interfaces.
+
 pub mod config;
 pub mod error_code;
 pub mod file;

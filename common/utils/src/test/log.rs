@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Test logging initialization helpers.
+//!
+//! Provides an `init` function that configures a timestamped logger for
+//! host-side tests, and a no-op implementation for OHOS targets.
+
 #[cfg(not(feature = "ohos"))]
 pub fn init() {
     let _ = env_logger::builder()

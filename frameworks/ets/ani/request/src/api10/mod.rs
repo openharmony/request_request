@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! API level 10 request ANI implementation.
+//!
+//! Aggregates the agent, bridge, callback, notification, and task submodules
+//! that back the API 10 `@ohos.request` surface exposed through ANI.
+
 pub mod agent;
 mod bridge;
 pub mod callback;

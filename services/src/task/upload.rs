@@ -783,15 +783,15 @@ where
 /// # Errors
 ///
 /// Returns specific error reasons based on the failure type:
-/// - `BuildRequestFailed`: If request construction fails
-/// - `ProtocolError`: For server errors, most client errors, or redirections
-/// - `ContinuousTaskTimeout`: For request timeouts
+/// * `BuildRequestFailed` - If request construction fails
+/// * `ProtocolError` - For server errors, most client errors, or redirections
+/// * `ContinuousTaskTimeout` - For request timeouts
 /// - `RequestError`, `RedirectError`: For specific HTTP errors
 /// - `Dns`, `Ssl`, `Tcp`: For network connection errors
-/// - `LowSpeed`: For slow transfer rates
-/// - `InsufficientSpace`: For storage space issues
-/// - `UserAbort`: When upload is cancelled by user
-/// - `OthersError`: For other miscellaneous errors
+/// * `LowSpeed` - For slow transfer rates
+/// * `InsufficientSpace` - For storage space issues
+/// * `UserAbort` - When upload is cancelled by user
+/// * `OthersError` - For other miscellaneous errors
 async fn upload_one_file_inner<F>(
     task: Arc<RequestTask>,
     index: usize,

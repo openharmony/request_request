@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Filesystem directory and file helpers for the dir operation test crate.
+//!
+//! Provides simple existence checks and create/remove operations on
+//! directories and files used by the unit-test dir operation FFI wrapper.
+
 use std::fs;
 use std::path::{Path, PathBuf};
 

@@ -65,10 +65,10 @@ impl RamCache {
     /// manager. If allocation fails, the cache will be created without
     /// reserved memory.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task associated with this cache
-    /// - `handle`: Reference to the cache manager
-    /// - `size`: Optional size hint for memory allocation
+    /// # Arguments
+    /// * `task_id` - ID of the task associated with this cache
+    /// * `handle` - Reference to the cache manager
+    /// * `size` - Optional size hint for memory allocation
     ///
     /// # Returns
     /// A new RamCache instance with the specified parameters
@@ -197,8 +197,8 @@ impl Write for RamCache {
     ///
     /// Delegates to the underlying Vec<u8> implementation.
     ///
-    /// # Parameters
-    /// - `buf`: Buffer containing the data to write
+    /// # Arguments
+    /// * `buf` - Buffer containing the data to write
     ///
     /// # Returns
     /// Number of bytes written on success, or an error

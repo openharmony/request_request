@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Shared procedural macros for the request service.
+//!
+//! Provides `cfg_oh`/`cfg_not_oh` for feature-gated conditional compilation,
+//! `cvt_res_error` for error logging and early-return propagation, and
+//! `sys_event` for dispatching diagnostic system events.
+
 macro_rules! cfg_oh {
     ($($item:item)*) => {
         $(

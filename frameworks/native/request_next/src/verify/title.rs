@@ -11,6 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Title field verifier for task configs.
+//!
+//! On API10 the title length must not exceed the maximum allowed length.
+
 use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;

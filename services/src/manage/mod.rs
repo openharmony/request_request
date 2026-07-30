@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Task management subsystem module root.
+//!
+//! Aggregates the core management modules: account, app state, database,
+//! events, query, network, scheduler, task manager, notifier, and system
+//! configuration, re-exporting `TaskManager` and `SystemConfigManager`.
+
 cfg_oh! {
     pub(crate) mod config;
     pub(crate) use config::{SystemConfig, SystemConfigManager};

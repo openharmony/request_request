@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Access token verifier for task configs.
+//!
+//! On API10, when a token is provided its length must stay within the
+//! allowed range.
+
 use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;

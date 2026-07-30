@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! System common event subscription via C++ FFI.
+//!
+//! Provides `subscribe_common_event` together with the `EventHandler`,
+//! `Want`, and `CommonEventSubscriber` types that bridge Rust callbacks to
+//! the C++ common event service through a cxx bridge.
+
 use std::fmt::Display;
 
 use cxx::UniquePtr;
@@ -27,8 +33,8 @@ pub struct EventHandler {
 impl EventHandler {
     /// Creates a new event handler wrapping the provided subscriber.
     ///
-    /// # Parameters
-    /// - `inner`: Boxed `CommonEventSubscriber` implementation to handle
+    /// # Arguments
+    /// * `inner` - Boxed `CommonEventSubscriber` implementation to handle
     ///   events.
     ///
     /// # Returns
@@ -45,10 +51,10 @@ impl EventHandler {
 pub trait CommonEventSubscriber {
     /// Called when a subscribed event is received.
     ///
-    /// # Parameters
-    /// - `code`: Event code indicating the event type.
-    /// - `data`: Additional string data associated with the event.
-    /// - `want`: Container for event parameters and extra data.
+    /// # Arguments
+    /// * `code` - Event code indicating the event type.
+    /// * `data` - Additional string data associated with the event.
+    /// * `want` - Container for event parameters and extra data.
     fn on_receive_event(&self, code: i32, data: String, want: Want);
 }
 
@@ -56,10 +62,10 @@ impl EventHandler {
     /// Handles events received from C++ by converting to Rust types and
     /// delegating.
     ///
-    /// # Parameters
-    /// - `code`: Event code from C++.
-    /// - `data`: Event data from C++.
-    /// - `want`: C++ `WantWrapper` to be wrapped in a Rust `Want`.
+    /// # Arguments
+    /// * `code` - Event code from C++.
+    /// * `data` - Event data from C++.
+    /// * `want` - C++ `WantWrapper` to be wrapped in a Rust `Want`.
     #[inline]
     fn on_receive_event(&self, code: i32, data: String, want: UniquePtr<WantWrapper>) {
         // Convert C++ WantWrapper to Rust Want before passing to subscriber
@@ -78,8 +84,8 @@ pub struct Want {
 impl Want {
     /// Creates a new Rust Want wrapper from a C++ WantWrapper.
     ///
-    /// # Parameters
-    /// - `inner`: Unique pointer to C++ WantWrapper to wrap.
+    /// # Arguments
+    /// * `inner` - Unique pointer to C++ WantWrapper to wrap.
     ///
     /// # Returns
     /// A new `Want` instance.
@@ -90,8 +96,8 @@ impl Want {
 
     /// Retrieves an integer parameter from the event.
     ///
-    /// # Parameters
-    /// - `key`: The parameter name to retrieve.
+    /// # Arguments
+    /// * `key` - The parameter name to retrieve.
     ///
     /// # Returns
     /// The integer value if found, or `None` if not found (indicated by -1).
@@ -135,9 +141,9 @@ impl Display for Want {
 ///
 /// Registers a handler to receive notifications when specific events occur.
 ///
-/// # Parameters
-/// - `events`: List of event names to subscribe to.
-/// - `handler`: Event handler implementing `CommonEventSubscriber`.
+/// # Arguments
+/// * `events` - List of event names to subscribe to.
+/// * `handler` - Event handler implementing `CommonEventSubscriber`.
 ///
 /// # Returns
 /// - `Ok(())` on successful subscription.

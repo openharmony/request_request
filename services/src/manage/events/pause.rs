@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Task pause operation.
+//!
+//! Implements `TaskManager::pause`, delegating to the scheduler to pause a
+//! running or queued task identified by uid and task id.
+
 use crate::error::ErrorCode;
 use crate::manage::TaskManager;
 

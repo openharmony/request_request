@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Task config verification module.
+//!
+//! Aggregates field-level verifiers (url, method, file_spec, form_item,
+//! index, title, data, proxy, token, description, notification, min_speed,
+//! timeout) and runs them against a task config.
+
 mod data;
 mod description;
 mod file_spec;

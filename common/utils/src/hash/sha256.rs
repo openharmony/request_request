@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! SHA-256 hashing utility.
+//!
+//! Wraps the platform SHA-256 implementation and returns the digest of a
+//! string input as a lowercase hex string.
+
 use crate::wrapper::SHA256;
 
 /// Computes the SHA-256 digest of `input` and returns it as a hex string.

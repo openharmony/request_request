@@ -38,8 +38,8 @@ pub(crate) struct NotificationConfig {
     pub(crate) disable: bool,
     /// Bitmask controlling which notification elements are visible.
     /// 
-    /// - 0b01: Controls visibility of completion status
-    /// - 0b10: Controls visibility of progress information
+    /// * `0b01` - Controls visibility of completion status
+    /// * `0b10` - Controls visibility of progress information
     pub(crate) visibility: u32,
 }
 

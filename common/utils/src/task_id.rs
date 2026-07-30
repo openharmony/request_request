@@ -53,7 +53,7 @@ pub struct TaskId {
 impl TaskId {
     /// Creates a new task ID from an existing hash string.
     ///
-    /// # Parameters
+    /// # Arguments
     ///
     /// * `hash` - The hash string to use as the task identifier
     ///
@@ -79,7 +79,7 @@ impl TaskId {
     /// Uses the `url_hash` function to generate a hash from the provided URL
     /// string.
     ///
-    /// # Parameters
+    /// # Arguments
     ///
     /// * `url` - The URL string to hash for task identification
     ///

@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Hashing utilities for the request common utils.
+//!
+//! Aggregates the `sha256` module (OpenHarmony only) and the cross-platform
+//! `url` module, re-exporting `url_hash` for hashing URL strings.
+
 cfg_ohos! {
     mod sha256;
 }

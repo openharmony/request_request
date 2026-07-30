@@ -85,8 +85,8 @@ impl RequestProxy {
     ///
     /// # Returns
     /// A `Result` containing either:
-    /// - `Ok(Arc<RemoteObj>)`: The remote service object for making IPC calls
-    /// - `Err(i32)`: Error code if the service could not be accessed
+    /// * `Ok(Arc<RemoteObj>)` - The remote service object for making IPC calls
+    /// * `Err(i32)` - Error code if the service could not be accessed
     ///
     /// # Errors
     /// - Returns `EXCEPTION_SERVICE` if the service is not available or cannot

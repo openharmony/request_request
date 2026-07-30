@@ -11,4 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Observation abstractions for the common-utils crate.
+//!
+//! Exposes the `network` submodule, which wraps the native network
+//! connectivity service to deliver network state change notifications.
+
 pub mod network;

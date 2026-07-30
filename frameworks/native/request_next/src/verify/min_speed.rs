@@ -11,6 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Minimum speed threshold validation for task configuration.
+//!
+//! Ensures both the minimum speed value and its duration are non-negative.
+
 use request_core::config::TaskConfig;
 
 use crate::verify::ConfigVerifier;

@@ -37,7 +37,7 @@ use request_core::info::{
 /// from the download service.
 ///
 /// # Type Parameters
-/// - `'a`: Lifetime of the referenced byte slice
+/// * `'a` - Lifetime of the referenced byte slice
 pub struct UdsSer<'a> {
     /// Internal byte buffer containing the data to be deserialized
     inner: &'a [u8],
@@ -46,8 +46,8 @@ pub struct UdsSer<'a> {
 impl UdsSer<'_> {
     /// Creates a new `UdsSer` instance with the provided byte buffer.
     ///
-    /// # Parameters
-    /// - `inner`: Byte buffer containing serialized data to be deserialized
+    /// # Arguments
+    /// * `inner` - Byte buffer containing serialized data to be deserialized
     ///
     /// # Returns
     /// A new `UdsSer` instance ready to deserialize data
@@ -72,7 +72,7 @@ impl UdsSer<'_> {
     /// buffer.
     ///
     /// # Type Parameters
-    /// - `S`: Type implementing the `Serialize` trait to deserialize
+    /// * `S` - Type implementing the `Serialize` trait to deserialize
     ///
     /// # Returns
     /// Deserialized value of type `S`
@@ -104,8 +104,8 @@ impl UdsSer<'_> {
 pub trait Serialize {
     /// Reads and deserializes a value from the provided `UdsSer` instance.
     ///
-    /// # Parameters
-    /// - `ser`: Mutable reference to the `UdsSer` instance containing the
+    /// # Arguments
+    /// * `ser` - Mutable reference to the `UdsSer` instance containing the
     ///   serialized data
     ///
     /// # Returns
@@ -214,6 +214,10 @@ impl Serialize for SubscribeType {
     }
 }
 
+/// Deserializes a `FaultOccur` from the binary stream.
+///
+/// Reads the task id, subscribe type, and fault reason sequentially and
+/// assembles them into a `FaultOccur` notification.
 impl Serialize for FaultOccur {
     fn read(ser: &mut UdsSer) -> Self {
         // let task_id = ser.read::<i32>() as i64;
@@ -228,6 +232,9 @@ impl Serialize for FaultOccur {
     }
 }
 
+/// Deserializes a `Reason` enum from the binary stream.
+///
+/// Reads a u32 value and converts it to the corresponding `Reason` variant.
 impl Serialize for Reason {
     fn read(ser: &mut UdsSer) -> Self {
         let reason: u32 = ser.read();
@@ -235,6 +242,10 @@ impl Serialize for Reason {
     }
 }
 
+/// Deserializes a `Wait` from the binary stream.
+///
+/// Reads the task id and waiting reason sequentially and assembles them into
+/// a `Wait` notification.
 impl Serialize for Wait {
     fn read(ser: &mut UdsSer) -> Self {
         let task_id = ser.read::<i32>();
@@ -246,6 +257,10 @@ impl Serialize for Wait {
     }
 }
 
+/// Deserializes a `WaitingReason` enum from the binary stream.
+///
+/// Reads a u32 value and converts it to the corresponding `WaitingReason`
+/// variant.
 impl Serialize for WaitingReason {
     fn read(ser: &mut UdsSer) -> Self {
         let waiting_reason: u32 = ser.read();

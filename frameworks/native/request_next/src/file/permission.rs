@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! File access permission management via ACLs.
+//!
+//! Tracks reference counts per granted path and revokes the underlying
+//! ACL entry once the last `PermissionToken` for a path is dropped.
+
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::path::PathBuf;

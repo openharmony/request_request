@@ -33,8 +33,8 @@ impl RequestProxy {
     /// Sends a request to the download service to create a new task based on
     /// the provided `TaskConfig`. Returns the unique task ID if successful.
     ///
-    /// # Parameters
-    /// - `config`: The task configuration containing download parameters
+    /// # Arguments
+    /// * `config` - The task configuration containing download parameters
     ///
     /// # Returns
     /// - `Ok(i64)` with the task ID if the task was created successfully
@@ -95,8 +95,8 @@ impl RequestProxy {
 
     /// Starts a download task identified by the given task ID.
     ///
-    /// # Parameters
-    /// - `task_id`: The unique identifier of the task to start
+    /// # Arguments
+    /// * `task_id` - The unique identifier of the task to start
     ///
     /// # Returns
     /// - `Ok(())` if the task started successfully
@@ -147,8 +147,8 @@ impl RequestProxy {
 
     /// Pauses a running download task.
     ///
-    /// # Parameters
-    /// - `task_id`: The unique identifier of the task to pause
+    /// # Arguments
+    /// * `task_id` - The unique identifier of the task to pause
     ///
     /// # Returns
     /// - `Ok(())` if the task was paused successfully
@@ -203,8 +203,8 @@ impl RequestProxy {
 
     /// Resumes a paused download task.
     ///
-    /// # Parameters
-    /// - `task_id`: The unique identifier of the task to resume
+    /// # Arguments
+    /// * `task_id` - The unique identifier of the task to resume
     ///
     /// # Returns
     /// - `Ok(())` if the task was resumed successfully
@@ -261,8 +261,8 @@ impl RequestProxy {
 
     /// Removes a download task from the system.
     ///
-    /// # Parameters
-    /// - `task_id`: The unique identifier of the task to remove
+    /// # Arguments
+    /// * `task_id` - The unique identifier of the task to remove
     ///
     /// # Returns
     /// - `Ok(())` if the task was removed successfully
@@ -320,8 +320,8 @@ impl RequestProxy {
 
     /// Stops a download task.
     ///
-    /// # Parameters
-    /// - `task_id`: The unique identifier of the task to stop
+    /// # Arguments
+    /// * `task_id` - The unique identifier of the task to stop
     ///
     /// # Returns
     /// - `Ok(())` if the task was stopped successfully
@@ -375,9 +375,9 @@ impl RequestProxy {
 
     /// Sets the maximum download speed for a task.
     ///
-    /// # Parameters
-    /// - `task_id`: The unique identifier of the task
-    /// - `speed`: The maximum speed limit to set
+    /// # Arguments
+    /// * `task_id` - The unique identifier of the task
+    /// * `speed` - The maximum speed limit to set
     ///
     /// # Returns
     /// - `Ok(())` if the speed limit was set successfully

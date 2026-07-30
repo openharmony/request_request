@@ -10,6 +10,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+//! Network observation bindings and registration.
+//!
+//! Aggregates the `observer` trait, the `register` `NetRegistrar` for
+//! (un)registering observers with the native net manager, and the `wrapper`
+//! FFI types (`NetBearType`, `NetCap`, `NetInfo`).
+
 mod observer;
 mod register;
 mod wrapper;

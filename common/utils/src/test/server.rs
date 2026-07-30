@@ -11,6 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Minimal HTTP test server.
+//!
+//! Spawns a local TCP listener on an OS-assigned port and dispatches the
+//! incoming request lines to a caller-supplied handler, then replies with
+//! a fixed `200 OK` response. Used by integration tests that need a real
+//! network endpoint to exercise download/upload logic.
+
 use std::io::{BufRead, BufReader, Lines, Write};
 use std::net::{TcpListener, TcpStream};
 

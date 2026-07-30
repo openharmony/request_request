@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! ETS-facing type bridge for the cache download ANI crate.
+//!
+//! Defines the ANI-mapped enums and structs (options, download info, errors)
+//! exposed to ETS, and converts between native cache download types and these
+//! ETS-facing representations.
+
 use std::collections::HashMap;
 
 use preload_native_rlib::{CacheDownloadError, ErrorKind};

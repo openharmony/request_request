@@ -37,6 +37,8 @@ const DEFAULT_RAM_CACHE_SIZE: u64 = 1024 * 1024 * 20;
 /// Default maximum size for file-based cache storage (100MB).
 const DEFAULT_FILE_CACHE_SIZE: u64 = 1024 * 1024 * 100;
 
+/// Container holding the file-backed caches, their space budget, and the
+/// per-task queues of pending serialized file operations.
 pub(crate) struct FileCaches {
     /// File-based cache storage using LRU eviction policy
     pub(crate) files: LRUCache<TaskId, Arc<Mutex<FileCache>>>,
@@ -44,10 +46,12 @@ pub(crate) struct FileCaches {
     /// Manages file cache resource allocation and capacity
     pub(crate) file_space: SpaceManager,
 
+    /// Per-task queues of pending file operations used to serialize access.
     pub(crate) operations: HashMap<TaskId, Arc<Mutex<VecDeque<Arc<NotifyCondition>>>>>,
 }
 
 impl FileCaches {
+    /// Creates an empty `FileCaches` with the default file cache size budget.
     pub(crate) fn new() -> Self {
         Self {
             files: LRUCache::new(),
@@ -56,6 +60,14 @@ impl FileCaches {
         }
     }
 
+    /// Removes a task's file cache entry and releases its occupied space.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task whose file cache should be removed.
+    ///
+    /// # Returns
+    /// `Some(OperatingTask)` if an entry was removed, `None` if the task was
+    /// not cached.
     pub(crate) fn remove(&mut self, task_id: &TaskId) -> Option<OperatingTask> {
         if let Some(file_cache) = self.files.remove(task_id) {
             self.file_space.release(file_cache.lock().unwrap().size());
@@ -66,14 +78,27 @@ impl FileCaches {
         }
     }
 
+    /// Updates the total file cache capacity limit.
+    ///
+    /// # Arguments
+    /// * `size` - New total file cache size limit in bytes.
     pub(crate) fn change_total_size(&mut self, size: u64) {
         self.file_space.change_total_size(size);
     }
 
+    /// Returns whether a file cache entry exists for the given task.
     pub(crate) fn contains(&self, task_id: &TaskId) -> bool {
         self.files.contains_key(task_id)
     }
 
+    /// Attempts to restore a file cache entry from persisted info.
+    ///
+    /// # Arguments
+    /// * `info` - Metadata of the cache file to restore.
+    ///
+    /// # Returns
+    /// `true` if the entry was restored or already present, `false` if there
+    /// was insufficient space to restore it.
     pub(crate) fn try_restore_file(&mut self, info: &FileCacheInfo) -> bool {
         if self.files.contains_key(info.task_id()) {
             return true;
@@ -92,6 +117,15 @@ impl FileCaches {
         false
     }
 
+    /// Attempts to reserve the requested cache size, evicting LRU entries as
+    /// needed.
+    ///
+    /// # Arguments
+    /// * `apply` - Amount of space to reserve in bytes.
+    ///
+    /// # Returns
+    /// A tuple of whether the allocation succeeded and the list of operating
+    /// tasks evicted to free space.
     pub(crate) fn try_apply_size(&mut self, apply: u64) -> (bool, Vec<OperatingTask>) {
         let mut removed = Vec::new();
         if apply > MAX_CACHE_SIZE {
@@ -120,10 +154,15 @@ impl FileCaches {
         }
     }
 
+    /// Returns the task IDs of all currently cached file entries.
     pub(crate) fn task_ids(&self) -> Vec<TaskId> {
         self.files.keys().cloned().collect()
     }
 
+    /// Returns the operation queue for a task, creating one if absent.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task whose operation queue to retrieve.
     pub(crate) fn get_operations(
         &mut self,
         task_id: &TaskId,
@@ -138,6 +177,7 @@ impl FileCaches {
 /// Manages the on-disk file cache, tracking cached tasks and serializing file
 /// operations against them.
 pub struct FileManager {
+    /// File cache entries together with their space manager and operation queues.
     pub(crate) caches: Mutex<FileCaches>,
 
     /// Ensures each file-to-RAM update is performed only once
@@ -178,6 +218,10 @@ impl FileManager {
         }
     }
 
+    /// Removes file cache entries for tasks that are not currently running.
+    ///
+    /// # Arguments
+    /// * `running_tasks` - Task IDs that are still running and must be kept.
     pub(crate) fn clear_file_cache(&self, running_tasks: &HashSet<TaskId>) {
         let mut caches = self.caches.lock().unwrap();
         let mut remove_handles = vec![];
@@ -195,11 +239,20 @@ impl FileManager {
         }
     }
 
+    /// Returns whether the task has a file cache entry or a backup RAM entry.
     pub(crate) fn contains(&self, task_id: &TaskId) -> bool {
         self.caches.lock().unwrap().contains(task_id)
             || self.backup_rams.lock().unwrap().contains_key(task_id)
     }
 
+    /// Loads a task's RAM cache from its file cache, with retry handling.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task to load.
+    /// * `handle` - Cache manager used to populate the RAM cache.
+    ///
+    /// # Returns
+    /// `Some(Arc<RamCache>)` if loaded successfully, `None` otherwise.
     pub(crate) fn update_ram_from_file(
         &'static self,
         task_id: &TaskId,
@@ -218,6 +271,16 @@ impl FileManager {
         }
     }
 
+    /// Inner implementation of `update_ram_from_file` using a `OnceLock` to
+    /// ensure the file is loaded only once.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task to load.
+    /// * `retry` - Set to `true` by this call when the caller should retry.
+    /// * `handle` - Cache manager used to populate the RAM cache.
+    ///
+    /// # Returns
+    /// `Some(Arc<RamCache>)` if loaded successfully, `None` otherwise.
     pub(crate) fn update_ram_from_file_inner(
         &'static self,
         task_id: &TaskId,
@@ -301,6 +364,10 @@ impl FileManager {
         self.update_from_file_once.lock().unwrap().remove(task_id);
     }
 
+    /// Removes a task's cached file from disk if it is not in the file cache.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task whose disk file should be removed.
     pub(crate) fn try_remove_from_disk(&'static self, task_id: &TaskId) {
         let mut caches = self.caches.lock().unwrap();
         if caches.contains(task_id) {
@@ -312,6 +379,14 @@ impl FileManager {
         execute_file_remove(operating_task, &notify);
     }
 
+    /// Attempts to restore a file cache entry, removing the disk file on
+    /// failure.
+    ///
+    /// # Arguments
+    /// * `info` - Metadata of the cache file to restore.
+    ///
+    /// # Returns
+    /// `true` if restored successfully, `false` otherwise.
     pub(crate) fn try_restore_file(&self, info: &FileCacheInfo) -> bool {
         let mut cache = self.caches.lock().unwrap();
         let success = cache.try_restore_file(info);
@@ -329,6 +404,14 @@ impl FileManager {
         success
     }
 
+    /// Persists a RAM cache to disk by spawning a background file write.
+    ///
+    /// Stores a backup RAM copy and evicts entries as needed to fit the new
+    /// file cache entry.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task whose cache should be persisted.
+    /// * `cache` - RAM cache to write to disk.
     pub(super) fn update_file_cache(&'static self, task_id: TaskId, cache: Arc<RamCache>) {
         // Remove any existing update operation for this task
         self.update_from_file_once.lock().unwrap().remove(&task_id);
@@ -383,7 +466,9 @@ impl FileManager {
 
 /// A task together with the queue of pending serialized file operations for it.
 pub struct OperatingTask {
+    /// ID of the task this operating task refers to.
     pub(crate) task_id: TaskId,
+    /// Queue of pending serialized file operations for the task.
     pub(crate) operations: Arc<Mutex<VecDeque<Arc<NotifyCondition>>>>,
 }
 
@@ -405,11 +490,14 @@ impl OperatingTask {
 /// Handle returned when enqueueing a file operation, indicating whether this
 /// operation runs first and holding the condition used to wait for its turn.
 pub struct NotifyHandle {
+    /// Whether the associated operation is first in the queue and may run now.
     is_first: bool,
+    /// Condition variable used to await the operation's turn.
     handle: Arc<NotifyCondition>,
 }
 
 impl Clone for NotifyHandle {
+    /// Clones the notify handle, preserving the `is_first` flag.
     fn clone(&self) -> Self {
         Self {
             is_first: self.is_first,
@@ -442,7 +530,9 @@ impl NotifyHandle {
 /// Condition variable guarding a single-shot go-ahead signal used to serialize
 /// file operations for a task.
 pub struct NotifyCondition {
+    /// Whether the go-ahead signal has been set.
     available: Mutex<bool>,
+    /// Condvar used to block until the signal is set.
     condvar: Condvar,
 }
 
@@ -523,8 +613,8 @@ impl CacheManager {
     /// Adjusts the total capacity for in-memory caching and triggers cache
     /// eviction if the new size requires releasing resources.
     ///
-    /// # Parameters
-    /// - `size`: New maximum RAM cache size in bytes
+    /// # Arguments
+    /// * `size` - New maximum RAM cache size in bytes
     pub fn set_ram_cache_size(&self, size: u64) {
         self.ram_handle.lock().unwrap().change_total_size(size);
         CacheManager::apply_cache(&self.ram_handle, &self.rams, 0);
@@ -535,8 +625,8 @@ impl CacheManager {
     /// Adjusts the total capacity for file-based caching and triggers cache
     /// eviction if the new size requires releasing resources.
     ///
-    /// # Parameters
-    /// - `size`: New maximum file cache size in bytes
+    /// # Arguments
+    /// * `size` - New maximum file cache size in bytes
     pub fn set_file_cache_size(&self, size: u64) {
         self.file_manager.set_file_cache_size(size);
     }
@@ -547,8 +637,8 @@ impl CacheManager {
     /// sorts them by modification time, and returns an iterator over the task
     /// IDs.
     ///
-    /// # Parameters
-    /// - `path`: Path to the directory to scan
+    /// # Arguments
+    /// * `path` - Path to the directory to scan
     ///
     /// # Returns
     /// Iterator over task IDs of valid cache files
@@ -574,8 +664,8 @@ impl CacheManager {
     /// backup RAM cache, and falling back to loading from file cache if
     /// necessary.
     ///
-    /// # Parameters
-    /// - `task_id`: The task ID to fetch
+    /// # Arguments
+    /// * `task_id` - The task ID to fetch
     ///
     /// # Returns
     /// `Some(Arc<RamCache>)` if found, `None` otherwise
@@ -593,8 +683,8 @@ impl CacheManager {
     /// primary RAM cache), and clears any pending file-to-RAM update
     /// operations for the task.
     ///
-    /// # Parameters
-    /// - `task_id`: The task ID to remove
+    /// # Arguments
+    /// * `task_id` - The task ID to remove
     pub fn remove(&self, task_id: TaskId) {
         self.file_manager.remove(&task_id);
         self.rams.lock().unwrap().remove(&task_id);
@@ -605,8 +695,8 @@ impl CacheManager {
     /// Checks all cache storage types (file, backup RAM, and primary RAM
     /// cache).
     ///
-    /// # Parameters
-    /// - `task_id`: The task ID to check
+    /// # Arguments
+    /// * `task_id` - The task ID to check
     ///
     /// # Returns
     /// `true` if the task ID exists in any cache, `false` otherwise
@@ -619,8 +709,8 @@ impl CacheManager {
     /// First checks the primary RAM cache, then the backup RAM cache, and
     /// finally attempts to load from file cache if necessary.
     ///
-    /// # Parameters
-    /// - `task_id`: The task ID to retrieve
+    /// # Arguments
+    /// * `task_id` - The task ID to retrieve
     ///
     /// # Returns
     /// `Some(Arc<RamCache>)` if found through any cache source, `None`
@@ -678,6 +768,11 @@ impl CacheManager {
         FileCache::read_but_not_cache(task_id, self).ok()
     }
 
+    /// Forwards a RAM cache to the file manager for disk persistence.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task whose cache should be persisted.
+    /// * `cache` - RAM cache to write to disk.
     pub(super) fn update_file_cache(&'static self, task_id: TaskId, cache: Arc<RamCache>) {
         self.file_manager.update_file_cache(task_id, cache);
     }
@@ -687,8 +782,8 @@ impl CacheManager {
     /// Reads data from the file cache and loads it into RAM, with retry logic
     /// to handle concurrent access scenarios.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task to update
+    /// # Arguments
+    /// * `task_id` - ID of the task to update
     ///
     /// # Returns
     /// `Some(Arc<RamCache>)` if successful, `None` if the file doesn't exist or
@@ -704,12 +799,12 @@ impl CacheManager {
     /// space is freed or all entries have been evicted.
     ///
     /// # Type Parameters
-    /// - `T`: The cache value type, can be either `RamCache` or `FileCache`
+    /// * `T` - The cache value type, can be either `RamCache` or `FileCache`
     ///
-    /// # Parameters
-    /// - `handle`: Resource manager controlling the cache capacity
-    /// - `caches`: LRU cache to potentially evict entries from
-    /// - `size`: Amount of space to allocate in bytes
+    /// # Arguments
+    /// * `handle` - Resource manager controlling the cache capacity
+    /// * `caches` - LRU cache to potentially evict entries from
+    /// * `size` - Amount of space to allocate in bytes
     ///
     /// # Returns
     /// `true` if allocation succeeded, `false` if insufficient space even after
@@ -734,6 +829,10 @@ impl CacheManager {
         }
     }
 
+    /// Inserts or refreshes a RAM cache entry under its task ID.
+    ///
+    /// # Arguments
+    /// * `cache` - RAM cache to insert into the primary RAM cache.
     pub(crate) fn update_ram_cache(&'static self, cache: Arc<RamCache>) {
         let task_id = cache.task_id().clone();
 

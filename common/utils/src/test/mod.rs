@@ -11,5 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Shared test utilities for the common-utils crate.
+//!
+//! Aggregates the `log` (logger initialization) and `server` (HTTP test
+//! server) helper submodules used across host-side unit tests.
+
 pub mod log;
 pub mod server;

@@ -63,7 +63,7 @@ fn has_get_network_info_permission() -> bool {
 /// Creates a new download request, configures it with any provided headers, and
 /// submits it to the cache download service for preloading.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `url` - The URL of the resource to download
 /// * `options` - Configuration options for the download, including optional
@@ -186,7 +186,7 @@ pub fn download(url: String, options: CacheDownloadOptions) -> Result<(), Busine
 ///
 /// Sends a cancel request to the cache download service for the specified URL.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `url` - The URL of the resource download to cancel
 ///
@@ -220,7 +220,7 @@ pub fn cancel(url: String) -> Result<(), BusinessError> {
 ///
 /// Configures the RAM cache size for the cache download service.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `size` - The maximum size of the memory cache in bytes
 ///
@@ -255,7 +255,7 @@ pub fn set_memory_cache_size(size: i64) -> Result<(), BusinessError> {
 ///
 /// Configures the file system cache size for the cache download service.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `size` - The maximum size of the file cache in bytes
 ///

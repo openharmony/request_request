@@ -90,8 +90,8 @@ impl RequestProxy {
     ///
     /// Registers to receive status updates for the specified task ID.
     ///
-    /// # Parameters
-    /// - `task_id`: The unique identifier of the task to subscribe to, as a
+    /// # Arguments
+    /// * `task_id` - The unique identifier of the task to subscribe to, as a
     ///   string
     ///
     /// # Returns
@@ -150,8 +150,8 @@ impl RequestProxy {
     /// Cancels the registration to receive status updates for the specified
     /// task ID.
     ///
-    /// # Parameters
-    /// - `task_id`: The unique identifier of the task to unsubscribe from
+    /// # Arguments
+    /// * `task_id` - The unique identifier of the task to unsubscribe from
     ///
     /// # Returns
     /// - `Ok(())` if unsubscription was successful

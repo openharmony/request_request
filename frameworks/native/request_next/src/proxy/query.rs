@@ -34,8 +34,8 @@ use crate::proxy::{RequestProxy, SERVICE_TOKEN};
 impl RequestProxy {
     /// Queries basic information about a specific download task.
     ///
-    /// # Parameters
-    /// - `task_id`: Unique identifier of the task to query
+    /// # Arguments
+    /// * `task_id` - Unique identifier of the task to query
     ///
     /// # Returns
     /// - `Ok(())` on success
@@ -68,8 +68,8 @@ impl RequestProxy {
 
     /// Queries the MIME type of a specific download task.
     ///
-    /// # Parameters
-    /// - `task_id`: Unique identifier of the task to query
+    /// # Arguments
+    /// * `task_id` - Unique identifier of the task to query
     ///
     /// # Returns
     /// A `Result` containing either:
@@ -117,8 +117,8 @@ impl RequestProxy {
 
     /// Retrieves detailed information about a specific download task.
     ///
-    /// # Parameters
-    /// - `task_id`: Unique identifier of the task to retrieve
+    /// # Arguments
+    /// * `task_id` - Unique identifier of the task to retrieve
     ///
     /// # Returns
     /// A `Result` containing either:
@@ -171,9 +171,9 @@ impl RequestProxy {
 
     /// Updates the last access time of a download task.
     ///
-    /// # Parameters
-    /// - `task_id`: Unique identifier of the task to update
-    /// - `token`: Authentication token for accessing the task
+    /// # Arguments
+    /// * `task_id` - Unique identifier of the task to update
+    /// * `token` - Authentication token for accessing the task
     ///
     /// # Returns
     /// - `Ok(())` on success
@@ -210,8 +210,8 @@ impl RequestProxy {
 
     /// Searches for download tasks based on specified filter criteria.
     ///
-    /// # Parameters
-    /// - `filter`: Search criteria to filter tasks by bundle name, time range,
+    /// # Arguments
+    /// * `filter` - Search criteria to filter tasks by bundle name, time range,
     ///   state, action, and mode
     ///
     /// # Returns
@@ -311,9 +311,9 @@ impl RequestProxy {
 
     /// Retrieves a download task with authentication.
     ///
-    /// # Parameters
-    /// - `task_id`: Unique identifier of the task to retrieve
-    /// - `token`: Authentication token for accessing the task
+    /// # Arguments
+    /// * `task_id` - Unique identifier of the task to retrieve
+    /// * `token` - Authentication token for accessing the task
     ///
     /// # Returns
     /// - `Ok(())` on success

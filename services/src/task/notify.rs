@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Task notification data structures.
+//!
+//! Defines `NotifyData`, `Progress`, `EachFileStatus`, `SubscribeType`, and
+//! related types used to report task progress, file status, and lifecycle
+//! events to subscribed clients.
+
 use std::collections::HashMap;
 
 use super::config::{Action, Version};
@@ -118,10 +124,10 @@ impl EachFileStatus {
     /// Assigns the provided reason to files at or after the specified index,
     /// and `Reason::Default` to files before the index.
     ///
-    /// # Parameters
-    /// - `file_specs`: List of file specifications to create statuses for
-    /// - `index`: Starting index for applying the provided reason
-    /// - `reason`: Reason to apply to files at or after the index
+    /// # Arguments
+    /// * `file_specs` - List of file specifications to create statuses for
+    /// * `index` - Starting index for applying the provided reason
+    /// * `reason` - Reason to apply to files at or after the index
     pub(crate) fn create_each_file_status(
         file_specs: &[FileSpec],
         index: usize,
@@ -148,8 +154,8 @@ impl Progress {
     /// Initializes all files to have processed 0 bytes and sets the state to
     /// `State::Initialized`.
     ///
-    /// # Parameters
-    /// - `sizes`: List of file sizes in bytes (-1 indicates unknown size)
+    /// # Arguments
+    /// * `sizes` - List of file sizes in bytes (-1 indicates unknown size)
     pub(crate) fn new(sizes: Vec<i64>) -> Self {
         let len = sizes.len();
         Progress {

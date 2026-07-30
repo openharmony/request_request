@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! File handle management for network tasks.
+//!
+//! Opens and manages the upload/download files and body files attached to a
+//! task, resolves sandbox paths from UID and bundle name, and provides
+//! thread-safe access to file handles via `Arc<Mutex<File>>`.
+
 use std::fs::{File, OpenOptions};
 use std::io;
 use std::os::fd::FromRawFd;

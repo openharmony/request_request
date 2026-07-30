@@ -11,6 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Request URL validation for task configuration.
+//!
+//! Checks the URL length limit and that its scheme matches the cleartext traffic policy.
+
 use cxx::let_cxx_string;
 use request_core::config::TaskConfig;
 

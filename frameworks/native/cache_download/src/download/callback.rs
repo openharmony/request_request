@@ -85,12 +85,16 @@ pub(crate) struct PrimeCallback {
 
 /// Restricts the frequency of progress updates.
 struct ProgressRestriction {
+    /// Last reported downloaded byte position.
     processed: u64,
+    /// Counter used to throttle progress notifications.
     count: usize,
+    /// Whether any data has been received yet for this task.
     data_receive: bool,
 }
 
 impl ProgressRestriction {
+    /// Creates a new progress restriction with zeroed counters.
     fn new() -> Self {
         Self {
             processed: 0,
@@ -123,22 +127,27 @@ impl PrimeCallback {
         }
     }
 
+    /// Marks the task state as running.
     pub(crate) fn set_running(&self) {
         self.state.store(RUNNING, Ordering::Release);
     }
 
+    /// Returns a clone of the task identifier.
     pub(crate) fn task_id(&self) -> TaskId {
         self.task_id.clone()
     }
 
+    /// Returns the configured maximum retry count, if any.
     pub(crate) fn max_retry(&self) -> Option<usize> {
         self.config.max_retry
     }
 
+    /// Returns the configured network check timeout in seconds, if any.
     pub(crate) fn network_check_timeout(&self) -> Option<u32> {
         self.config.network_check_timeout
     }
 
+    /// Returns the configured HTTP total timeout in seconds, if any.
     pub(crate) fn http_total_timeout(&self) -> Option<u32> {
         self.config.http_total_timeout
     }
@@ -152,11 +161,11 @@ impl PrimeCallback {
     /// progress before calling each callback's success method.
     ///
     /// # Type Parameters
-    /// - `R`: Type implementing `CommonResponse` containing the HTTP status
+    /// * `R` - Type implementing `CommonResponse` containing the HTTP status
     ///   code
     ///
-    /// # Parameters
-    /// - `response`: Response object containing the status code
+    /// # Arguments
+    /// * `response` - Response object containing the status code
     pub(crate) fn common_success<R>(&mut self, response: R)
     where
         R: CommonResponse,
@@ -196,10 +205,10 @@ impl PrimeCallback {
     /// callbacks of the failure with the appropriate error information.
     ///
     /// # Type Parameters
-    /// - `E`: Type implementing `CommonError` containing error information
+    /// * `E` - Type implementing `CommonError` containing error information
     ///
-    /// # Parameters
-    /// - `error`: Error object containing the failure details
+    /// # Arguments
+    /// * `error` - Error object containing the failure details
     pub(crate) fn common_fail<E>(&mut self, error: E, info: DownloadInfo)
     where
         E: CommonError,
@@ -257,11 +266,11 @@ impl PrimeCallback {
     /// reporting progress when the download has advanced and at a limited
     /// frequency.
     ///
-    /// # Parameters
-    /// - `dl_total`: Total number of bytes to download
-    /// - `dl_now`: Current number of bytes downloaded
-    /// - `_ul_total`: Total number of bytes to upload (unused in downloads)
-    /// - `_ul_now`: Current number of bytes uploaded (unused in downloads)
+    /// # Arguments
+    /// * `dl_total` - Total number of bytes to download
+    /// * `dl_now` - Current number of bytes downloaded
+    /// * `_ul_total` - Total number of bytes to upload (unused in downloads)
+    /// * `_ul_now` - Current number of bytes uploaded (unused in downloads)
     pub(crate) fn common_progress(
         &mut self,
         dl_total: u64,
@@ -304,11 +313,11 @@ impl PrimeCallback {
     /// handler.
     ///
     /// # Type Parameters
-    /// - `F`: Function type that returns the content length when called
+    /// * `F` - Function type that returns the content length when called
     ///
-    /// # Parameters
-    /// - `data`: Buffer containing the received data
-    /// - `content_length`: Function that returns the total content length if
+    /// # Arguments
+    /// * `data` - Buffer containing the received data
+    /// * `content_length` - Function that returns the total content length if
     ///   available
     pub(crate) fn common_data_receive<F>(&mut self, data: &[u8], content_length: F)
     where

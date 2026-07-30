@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Data storage backends for the cache core.
+//!
+//! Aggregates the file, ram, space, and observer submodules, and re-exports
+//! the file cache, RAM cache, space manager, and store directory helpers.
+
 mod file;
 mod ram;
 mod space;

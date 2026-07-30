@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Hitrace timing adapter.
+//!
+//! Exposes a `Trace` guard that starts a trace span on construction and
+//! automatically finishes it when dropped, simplifying scoped performance
+//! tracing across the request service.
+
 /// Hitrace adapter which provides timing capability.
 ///
 /// The timing will end automatically when the structure drops. Users should

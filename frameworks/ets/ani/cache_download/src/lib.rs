@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! ANI crate for the ETS cache download API.
+//!
+//! This is the crate root for the `@ohos.request.cacheDownload` ANI module,
+//! aggregating the bridge, cache_download, and callback submodules and
+//! registering the ETS-facing constructor entry points.
+
 mod bridge;
 mod cache_download;
 pub(crate) mod callback;
