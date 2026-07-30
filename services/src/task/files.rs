@@ -19,15 +19,20 @@
 
 use std::fs::{File, OpenOptions};
 use std::io;
-use std::os::fd::FromRawFd;
+use std::os::fd::{AsRawFd, FromRawFd};
 use std::os::unix::fs::OpenOptionsExt;
 use std::sync::{Arc, Mutex};
 
-// Linux open(2) flag bits used to harden sandbox file opens. Defined here as
-// raw constants so we avoid pulling in the libc crate just for two flags.
-// O_NOFOLLOW: reject the final path component when it is a symlink, preventing
-//   an attacker-controlled sandbox from redirecting an open to a victim file.
+// Linux open(2) flag bits (see <fcntl.h>) used to harden sandbox file opens.
+// Defined as raw constants so we avoid pulling in the libc crate just for
+// flags.
+// O_NOFOLLOW: reject the final path component when it is a symlink.
 // O_CLOEXEC:  close the descriptor on exec to avoid leaking it to children.
+// Intermediate directory symlinks are still followed by open(2), so every
+// opened file is additionally verified against the app base directory via
+// `/proc/self/fd` (see verify_within_base). Checking after the open is
+// race-free: the descriptor pins the file, so swapping in a symlink
+// afterwards cannot redirect it.
 const O_NOFOLLOW: i32 = 0o400_000;
 const O_CLOEXEC: i32 = 0o2_000_000;
 
@@ -198,20 +203,24 @@ fn open_body_files(config: &TaskConfig) -> Result<Files, ServiceError> {
 /// Opens a file in read-write mode at the specified path.
 ///
 /// Converts the provided path using the UID and bundle name, then opens the
-/// file with read and append permissions. `O_NOFOLLOW` is applied so that a
-/// trailing symlink is rejected; this prevents an attacker-controlled sandbox
-/// subtree from redirecting the open to a file outside the caller's sandbox.
-/// Note that intermediate directory symlinks are still followed.
+/// file with read and append permissions. `O_NOFOLLOW` rejects a trailing
+/// symlink, and the opened file is verified to still lie under the app base
+/// directory (see [`verify_within_base`]), so neither a trailing symlink nor
+/// a symlinked intermediate directory inside the attacker-controlled sandbox
+/// subtree can redirect the open to a file outside the caller's sandbox.
 ///
 /// # Errors
-/// Returns an `io::Error` if the file cannot be opened.
+/// Returns an `io::Error` if the file cannot be opened or fails the sandbox
+/// check.
 fn open_file_readwrite(uid: u64, bundle_name: &str, path: &str) -> io::Result<File> {
+    let (base, full) = app_base_and_path(uid, bundle_name, path)?;
+    let file = OpenOptions::new()
+        .read(true)
+        .append(true)
+        .custom_flags(O_NOFOLLOW | O_CLOEXEC)
+        .open(full)?;
     Ok(cvt_res_error!(
-        OpenOptions::new()
-            .read(true)
-            .append(true)
-            .custom_flags(O_NOFOLLOW | O_CLOEXEC)
-            .open(convert_path(uid, bundle_name, path)),
+        verify_within_base(&base, file),
         "open_file_readwrite failed"
     ))
 }
@@ -219,21 +228,79 @@ fn open_file_readwrite(uid: u64, bundle_name: &str, path: &str) -> io::Result<Fi
 /// Opens a file in read-only mode at the specified path.
 ///
 /// Converts the provided path using the UID and bundle name, then opens the
-/// file with read-only permissions. `O_NOFOLLOW` is applied so that a trailing
-/// symlink is rejected; this prevents an attacker-controlled sandbox subtree
-/// from redirecting the open to a file outside the caller's sandbox. Note that
-/// intermediate directory symlinks are still followed.
+/// file with read-only permissions. `O_NOFOLLOW` rejects a trailing symlink,
+/// and the opened file is verified to still lie under the app base directory
+/// (see [`verify_within_base`]), so neither a trailing symlink nor a
+/// symlinked intermediate directory inside the attacker-controlled sandbox
+/// subtree can redirect the open to a file outside the caller's sandbox.
 ///
 /// # Errors
-/// Returns an `io::Error` if the file cannot be opened.
+/// Returns an `io::Error` if the file cannot be opened or fails the sandbox
+/// check.
 fn open_file_readonly(uid: u64, bundle_name: &str, path: &str) -> io::Result<File> {
+    let (base, full) = app_base_and_path(uid, bundle_name, path)?;
+    let file = OpenOptions::new()
+        .read(true)
+        .custom_flags(O_NOFOLLOW | O_CLOEXEC)
+        .open(full)?;
     Ok(cvt_res_error!(
-        OpenOptions::new()
-            .read(true)
-            .custom_flags(O_NOFOLLOW | O_CLOEXEC)
-            .open(convert_path(uid, bundle_name, path)),
+        verify_within_base(&base, file),
         "open_file_readonly failed"
     ))
+}
+
+/// Splits a caller-supplied path into the app base directory and the fully
+/// converted absolute path beneath it.
+///
+/// The base is everything up to and including the `<uuid>/base/<bundle>`
+/// component produced by [`convert_path`]. Components above the base are
+/// system-controlled and trusted; components below it live in the app sandbox
+/// and are attacker-controlled, so the opened file must be verified against
+/// the base (see [`verify_within_base`]).
+///
+/// # Errors
+/// Returns an `io::Error` if the converted path is not anchored in the app
+/// base directory.
+fn app_base_and_path(uid: u64, bundle_name: &str, path: &str) -> io::Result<(String, String)> {
+    let converted = convert_path(uid, bundle_name, path);
+    let marker = format!("{}/base/{}", get_uuid_from_uid(uid), bundle_name);
+    match converted.find(&marker) {
+        Some(pos) => {
+            let end = pos + marker.len();
+            Ok((converted[..end].to_string(), converted))
+        }
+        None => Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "path is not anchored in the app base directory",
+        )),
+    }
+}
+
+/// Verifies that an already-opened file lies strictly under the app base
+/// directory, returning it unchanged on success.
+///
+/// The check compares the canonicalized base against the real path of the
+/// opened descriptor obtained from `/proc/self/fd`. Verifying after the open
+/// (instead of canonicalizing the path before it) is what makes this safe:
+/// the descriptor pins the file, so an attacker swapping a sandbox directory
+/// for a symlink after the check cannot redirect an already opened file.
+///
+/// # Errors
+/// Returns an `io::Error` if the base directory cannot be canonicalized, the
+/// descriptor's real path cannot be read, or the file escaped the base.
+fn verify_within_base(base: &str, file: File) -> io::Result<File> {
+    let real_base = std::fs::canonicalize(base)?;
+    let real_file = std::fs::read_link(format!("/proc/self/fd/{}", file.as_raw_fd()))?;
+    // `Path::starts_with` compares whole components, so a sibling directory
+    // whose name merely shares a prefix (e.g. "base2") does not pass.
+    if real_file != real_base && real_file.starts_with(&real_base) {
+        Ok(file)
+    } else {
+        Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "file escaped the app base directory",
+        ))
+    }
 }
 
 /// Converts a relative path to an absolute path based on the user and bundle.
@@ -409,5 +476,206 @@ impl Files {
     /// allowing thread-safe access to the file.
     pub(crate) fn get(&self, index: usize) -> Option<Arc<Mutex<File>>> {
         self.0.get(index).cloned()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fs;
+    use std::io::{Read, Write};
+    use std::os::unix::fs::symlink;
+
+    use super::*;
+
+    const ELOOP: i32 = 40;
+
+    /// Temporary directory that is removed when dropped.
+    struct TestDir(String);
+
+    impl TestDir {
+        fn new(name: &str) -> Self {
+            let dir =
+                std::env::temp_dir().join(format!("files_ut_{}_{}", std::process::id(), name));
+            let _ = fs::remove_dir_all(&dir);
+            fs::create_dir_all(&dir).unwrap();
+            TestDir(dir.to_string_lossy().into_owned())
+        }
+
+        fn base(&self) -> String {
+            format!("{}/base", self.0)
+        }
+    }
+
+    impl Drop for TestDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    /// Opens `path` exactly like `open_file_readwrite`, then verifies it.
+    fn open_verified(base: &str, path: &str) -> io::Result<File> {
+        let file = OpenOptions::new()
+            .read(true)
+            .append(true)
+            .custom_flags(O_NOFOLLOW | O_CLOEXEC)
+            .open(path)?;
+        verify_within_base(base, file)
+    }
+
+    // @tc.name: app_base_and_path_anchors_at_bundle_dir
+    // @tc.desc: Test that app_base_and_path anchors the base at the bundle dir
+    // @tc.precon: NA
+    // @tc.step: 1. Call app_base_and_path with a standard sandbox path
+    // @tc.expect: Base is the <uuid>/base/<bundle> dir, full path is under it
+    // @tc.type: FUNC
+    #[test]
+    fn app_base_and_path_anchors_at_bundle_dir() {
+        let (base, full) = app_base_and_path(
+            200001,
+            "com.example.app",
+            "/data/storage/el2/base/files/a.txt",
+        )
+        .unwrap();
+        assert_eq!(base, "/data/app/el2/1/base/com.example.app");
+        assert_eq!(full, "/data/app/el2/1/base/com.example.app/files/a.txt");
+    }
+
+    // @tc.name: app_base_and_path_rejects_unanchored_path
+    // @tc.desc: Test that app_base_and_path rejects paths outside the sandbox
+    // @tc.precon: NA
+    // @tc.step: 1. Call app_base_and_path with a path lacking the base anchor
+    // @tc.expect: Returns an InvalidInput error
+    // @tc.type: FUNC
+    #[test]
+    fn app_base_and_path_rejects_unanchored_path() {
+        assert!(app_base_and_path(200001, "com.example.app", "/etc/passwd").is_err());
+    }
+
+    // @tc.name: regular_file_under_base_passes
+    // @tc.desc: Test that a regular file under the base dir opens and verifies
+    // @tc.precon: NA
+    // @tc.step: 1. Create a file under base 2. Open and verify it
+    // @tc.expect: Open succeeds and file content is readable
+    // @tc.type: FUNC
+    #[test]
+    fn regular_file_under_base_passes() {
+        let dir = TestDir::new("regular");
+        let base = dir.base();
+        fs::create_dir_all(format!("{}/files", base)).unwrap();
+        fs::write(format!("{}/files/a.txt", base), b"hello").unwrap();
+
+        let mut file = open_verified(&base, &format!("{}/files/a.txt", base)).unwrap();
+        let mut content = String::new();
+        file.read_to_string(&mut content).unwrap();
+        assert_eq!(content, "hello");
+    }
+
+    // @tc.name: append_mode_writes_at_end
+    // @tc.desc: Test that append mode keeps existing content and appends
+    // @tc.precon: NA
+    // @tc.step: 1. Create a file with content 2. Open in append mode and write
+    // @tc.expect: New data is appended after the existing content
+    // @tc.type: FUNC
+    #[test]
+    fn append_mode_writes_at_end() {
+        let dir = TestDir::new("append");
+        let base = dir.base();
+        fs::create_dir_all(&base).unwrap();
+        fs::write(format!("{}/a.txt", base), b"ab").unwrap();
+
+        let mut file = open_verified(&base, &format!("{}/a.txt", base)).unwrap();
+        file.write_all(b"cd").unwrap();
+        drop(file);
+        assert_eq!(fs::read(format!("{}/a.txt", base)).unwrap(), b"abcd");
+    }
+
+    // @tc.name: intermediate_symlink_is_rejected
+    // @tc.desc: Test that an intermediate symlink cannot redirect the open
+    // @tc.precon: NA
+    // @tc.step: 1. Plant a symlink dir under base 2. Open a file through it
+    // @tc.expect: Fails with PermissionDenied after post-open verification
+    // @tc.type: FUNC
+    #[test]
+    fn intermediate_symlink_is_rejected() {
+        let dir = TestDir::new("intermediate_symlink");
+        let base = dir.base();
+        let outside = format!("{}/outside", dir.0);
+        fs::create_dir_all(&base).unwrap();
+        fs::create_dir_all(&outside).unwrap();
+        fs::write(format!("{}/secret.txt", outside), b"secret").unwrap();
+        symlink(&outside, format!("{}/link", base)).unwrap();
+
+        let err = open_verified(&base, &format!("{}/link/secret.txt", base)).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::PermissionDenied);
+    }
+
+    // @tc.name: trailing_symlink_is_rejected
+    // @tc.desc: Test that a trailing symlink is rejected by O_NOFOLLOW
+    // @tc.precon: NA
+    // @tc.step: 1. Plant a symlink file under base 2. Open it
+    // @tc.expect: Open fails with ELOOP
+    // @tc.type: FUNC
+    #[test]
+    fn trailing_symlink_is_rejected() {
+        let dir = TestDir::new("trailing_symlink");
+        let base = dir.base();
+        fs::create_dir_all(&base).unwrap();
+        fs::write(format!("{}/real.txt", dir.0), b"real").unwrap();
+        symlink(format!("{}/real.txt", dir.0), format!("{}/link.txt", base)).unwrap();
+
+        let err = open_verified(&base, &format!("{}/link.txt", base)).unwrap_err();
+        assert_eq!(err.raw_os_error(), Some(ELOOP));
+    }
+
+    // @tc.name: dotdot_escape_is_rejected
+    // @tc.desc: Test that a '..' component escaping the base dir is rejected
+    // @tc.precon: NA
+    // @tc.step: 1. Open a file above base via a '..' component
+    // @tc.expect: Fails with PermissionDenied after post-open verification
+    // @tc.type: FUNC
+    #[test]
+    fn dotdot_escape_is_rejected() {
+        let dir = TestDir::new("dotdot");
+        let base = dir.base();
+        fs::create_dir_all(&base).unwrap();
+        fs::write(format!("{}/outside.txt", dir.0), b"x").unwrap();
+
+        let err = open_verified(&base, &format!("{}/../outside.txt", base)).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::PermissionDenied);
+    }
+
+    // @tc.name: sibling_directory_with_shared_prefix_is_rejected
+    // @tc.desc: Test that a sibling dir sharing a name prefix is rejected
+    // @tc.precon: NA
+    // @tc.step: 1. Open a file under a sibling dir named '<base>2'
+    // @tc.expect: Fails with PermissionDenied (component-wise comparison)
+    // @tc.type: FUNC
+    #[test]
+    fn sibling_directory_with_shared_prefix_is_rejected() {
+        let dir = TestDir::new("prefix_sibling");
+        let base = dir.base();
+        fs::create_dir_all(&base).unwrap();
+        fs::create_dir_all(format!("{}/base2", dir.0)).unwrap();
+        fs::write(format!("{}/base2/evil.txt", dir.0), b"x").unwrap();
+
+        let err = open_verified(&base, &format!("{}/base2/evil.txt", dir.0)).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::PermissionDenied);
+    }
+
+    // @tc.name: base_directory_itself_is_rejected
+    // @tc.desc: Test that the base directory itself does not pass verification
+    // @tc.precon: NA
+    // @tc.step: 1. Open the base directory 2. Verify it
+    // @tc.expect: Fails with PermissionDenied (must lie strictly under base)
+    // @tc.type: FUNC
+    #[test]
+    fn base_directory_itself_is_rejected() {
+        let dir = TestDir::new("base_itself");
+        let base = dir.base();
+        fs::create_dir_all(&base).unwrap();
+
+        let file = File::open(&base).unwrap();
+        let err = verify_within_base(&base, file).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::PermissionDenied);
     }
 }
