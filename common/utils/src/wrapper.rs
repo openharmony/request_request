@@ -131,7 +131,7 @@ mod ffi {
 
         /// Computes the SHA-256 hash of an input string.
         ///
-        /// # Parameters
+        /// # Arguments
         ///
         /// * `input` - The string to hash
         ///
@@ -146,7 +146,7 @@ mod ffi {
         ///
         /// This function is unsafe because it works with raw pointers that must be valid.
         ///
-        /// # Parameters
+        /// # Arguments
         ///
         /// * `env` - Pointer to the animation environment
         /// * `ani_object` - Pointer to the animation object
@@ -165,7 +165,7 @@ mod ffi {
         /// This function is unsafe because it works with raw pointers that must be valid
         /// and may modify the environment pointer.
         ///
-        /// # Parameters
+        /// # Arguments
         ///
         /// * `env` - Double pointer to the animation environment
         /// * `ani_object` - Pointer to the animation object
@@ -180,7 +180,7 @@ mod ffi {
 
         /// Gets the bundle name from the context.
         ///
-        /// # Parameters
+        /// # Arguments
         ///
         /// * `context` - Shared pointer to the context
         ///
@@ -191,7 +191,7 @@ mod ffi {
 
         /// Gets the cache directory path from the context.
         ///
-        /// # Parameters
+        /// # Arguments
         ///
         /// * `context` - Shared pointer to the context
         ///
@@ -202,7 +202,7 @@ mod ffi {
 
         /// Gets the base directory path from the context.
         ///
-        /// # Parameters
+        /// # Arguments
         ///
         /// * `context` - Shared pointer to the context
         ///
@@ -213,7 +213,7 @@ mod ffi {
 
         /// Gets the bundle type from application info.
         ///
-        /// # Parameters
+        /// # Arguments
         ///
         /// * `application_info` - Shared pointer to the application info
         ///
@@ -243,7 +243,7 @@ mod ffi {
 
         /// Sets access control entries for a target file.
         ///
-        /// # Parameters
+        /// # Arguments
         ///
         /// * `targetFile` - Path to the file
         /// * `entryTxt` - ACL entry string
@@ -256,7 +256,7 @@ mod ffi {
 
         /// Sets default access control entries for a target file.
         ///
-        /// # Parameters
+        /// # Arguments
         ///
         /// * `targetFile` - Path to the file
         /// * `entryTxt` - Default ACL entry string
@@ -285,7 +285,7 @@ mod ffi {
 ///
 /// Uses the HiLog system to print log messages with the specified level, domain, tag, and format.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `level` - The log level (DEBUG, INFO, WARN, ERROR, FATAL)
 /// * `domain` - The log domain ID

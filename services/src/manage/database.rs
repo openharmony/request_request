@@ -11,6 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Persistent storage for request tasks.
+//!
+//! `RequestDb` wraps the relational database (C++ `RequestDataBase` on-device
+//! or an in-memory rusqlite connection off-device) and provides task insert,
+//! query, update, and removal operations plus an in-memory cache of tasks
+//! that reference user files.
+
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::mem::MaybeUninit;
@@ -37,15 +44,36 @@ use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::utils::{call_once, get_current_timestamp, hashmap_to_string};
 
+/// Persistent store backing request tasks.
+///
+/// Wraps the on-device relational database (C++ `RequestDataBase`) or an
+/// off-device in-memory rusqlite connection, and exposes insert/query/update/
+/// remove operations. Also keeps an in-memory cache of tasks that reference
+/// user files so they can be retrieved without rebuilding them from disk.
 pub(crate) struct RequestDb {
+    /// Cache of tasks that hold user file handles, keyed by task id. These
+    /// tasks must stay alive in memory (rather than being reconstructed from
+    /// the database on demand) because their file descriptors cannot be
+    /// persisted.
     user_file_tasks: Mutex<HashMap<u32, Arc<RequestTask>>>,
+    /// On-device handle to the C++ `RequestDataBase` instance.
     #[cfg(feature = "oh")]
     pub(crate) inner: *mut RequestDataBase,
+    /// Off-device rusqlite connection used for host-side testing.
     #[cfg(not(feature = "oh"))]
     pub(crate) inner: Connection,
 }
 
 impl RequestDb {
+    /// Returns the process-wide singleton database instance.
+    ///
+    /// Initializes the on-device `RequestDataBase` against the encrypted
+    /// service database on first use (or an unencrypted test database when
+    /// built under `cfg(test)`) and caches it in a `static` for subsequent
+    /// callers.
+    ///
+    /// # Returns
+    /// A reference to the lazily initialized `RequestDb` singleton.
     #[cfg(feature = "oh")]
     pub(crate) fn get_instance() -> &'static Self {
         static mut DB: MaybeUninit<RequestDb> = MaybeUninit::uninit();
@@ -69,6 +97,10 @@ impl RequestDb {
         unsafe { DB.assume_init_mut() }
     }
 
+    /// Off-device (rusqlite) counterpart of [`get_instance`](Self::get_instance).
+    ///
+    /// Initializes an in-memory SQLite connection and creates the
+    /// `request_task` table, used for host-side unit tests.
     #[cfg(not(feature = "oh"))]
     pub(crate) fn get_instance() -> &'static Self {
         static mut DATABASE: MaybeUninit<RequestDb> = MaybeUninit::uninit();
@@ -88,6 +120,20 @@ impl RequestDb {
         unsafe { DATABASE.assume_init_ref() }
     }
 
+    /// Executes a raw SQL statement with no return rows.
+    ///
+    /// Delegates to the C++ `RequestDataBase::ExecuteSql` and reports a DFX
+    /// fault when the underlying call fails.
+    ///
+    /// # Arguments
+    /// * `sql` - The SQL statement to execute.
+    ///
+    /// # Returns
+    /// `Ok(())` on success.
+    ///
+    /// # Errors
+    /// Returns `Err(ret)` carrying the non-zero error code returned by the
+    /// underlying database engine when the statement fails.
     #[cfg(feature = "oh")]
     pub(crate) fn execute(&self, sql: &str) -> Result<(), i32> {
         let ret = unsafe { Pin::new_unchecked(&mut *self.inner).ExecuteSql(sql) };
@@ -104,6 +150,10 @@ impl RequestDb {
         }
     }
 
+    /// Off-device (rusqlite) counterpart of [`execute`](Self::execute).
+    ///
+    /// Runs the statement through the rusqlite connection and maps the
+    /// sqlite error to its integer code.
     #[cfg(not(feature = "oh"))]
     pub(crate) fn execute(&self, sql: &str) -> Result<(), i32> {
         let res = self.inner.execute(sql, ());
@@ -119,6 +169,20 @@ impl RequestDb {
         })
     }
 
+    /// Runs a SQL query whose result column is a single integer and returns
+    /// the values as a vector.
+    ///
+    /// Each `i64` value returned by the C++ engine is converted to `T` via
+    /// `TryFrom`; conversion failures fall back to `T::default()` and emit a
+    /// DFX fault rather than propagating the error. Engine-level failures are
+    /// logged but still return whatever partial rows were collected.
+    ///
+    /// # Arguments
+    /// * `sql` - The SQL query to run; the first column of each row is read.
+    ///
+    /// # Returns
+    /// The collected (and converted) values. The vector may be empty when the
+    /// query matches no rows or when the engine reports an error.
     #[cfg(feature = "oh")]
     pub(crate) fn query_integer<T: TryFrom<i64> + Default>(&self, sql: &str) -> Vec<T>
     where
@@ -152,6 +216,10 @@ impl RequestDb {
         v
     }
 
+    /// Off-device (rusqlite) counterpart of [`query_integer`](Self::query_integer).
+    ///
+    /// Uses rusqlite's `prepare`/`query_map` instead of the C++ engine;
+    /// conversion failures still fall back to `T::default()`.
     #[cfg(not(feature = "oh"))]
     pub(crate) fn query_integer<T: TryFrom<i64> + Default>(&self, sql: &str) -> Vec<T>
     where
@@ -165,6 +233,15 @@ impl RequestDb {
             .collect()
     }
 
+    /// Checks whether a task with the given id exists in the database.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task id to look up.
+    ///
+    /// # Returns
+    /// `true` when exactly one matching row exists. Returns `false` (and emits
+    /// a DFX fault) when the underlying query returns no rows, indicating a
+    /// database error.
     pub(crate) fn contains_task(&self, task_id: u32) -> bool {
         let sql = format!(
             "SELECT COUNT(*) FROM request_task WHERE task_id = {}",
@@ -184,6 +261,17 @@ impl RequestDb {
         }
     }
 
+    /// Queries the token id associated with a task.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task id to look up.
+    ///
+    /// # Returns
+    /// The task's token id on success.
+    ///
+    /// # Errors
+    /// Returns `Err(-1)` when the query yields no rows (task missing or
+    /// database error), after emitting a DFX fault.
     pub(crate) fn query_task_token_id(&self, task_id: u32) -> Result<u64, i32> {
         let sql = format!(
             "SELECT token_id FROM request_task WHERE task_id = {}",
@@ -203,6 +291,21 @@ impl RequestDb {
         }
     }
 
+    /// Inserts a task record into the database.
+    ///
+    /// Skips the insert (and returns `false`) when a row with the same task id
+    /// already exists. Otherwise serializes the task config and task info into
+    /// their C structs and persists them via `RecordRequestTask`. Tasks that
+    /// reference user files are additionally cached in `user_file_tasks` so
+    /// their file descriptors remain accessible.
+    ///
+    /// # Arguments
+    /// * `task` - The task to persist. Ownership is moved into the cache when
+    ///   the task references user files.
+    ///
+    /// # Returns
+    /// `true` when the task was newly inserted, `false` when it already
+    /// existed.
     #[cfg(feature = "oh")]
     pub(crate) fn insert_task(&self, task: RequestTask) -> bool {
         let task_id = task.task_id();
@@ -236,6 +339,10 @@ impl RequestDb {
         true
     }
 
+    /// Off-device (rusqlite) counterpart of [`insert_task`](Self::insert_task).
+    ///
+    /// Builds and runs an explicit `INSERT OR REPLACE` SQL statement against
+    /// the in-memory connection instead of going through the C struct FFI.
     #[cfg(not(feature = "oh"))]
     pub(crate) fn insert_task(&self, task: RequestTask) -> bool {
         use crate::task::reason::Reason;
@@ -298,12 +405,28 @@ impl RequestDb {
         true
     }
 
+    /// Removes a task from the in-memory user-file cache.
+    ///
+    /// Called after a task referencing user files has completed, so its
+    /// in-memory handle can be dropped.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task id to evict from the cache.
     pub(crate) fn remove_user_file_task(&self, task_id: u32) {
         let mut task_map = self.user_file_tasks.lock().unwrap();
         task_map.remove(&task_id);
         debug!("Remove completed user file task, task_id: {}", task_id);
     }
 
+    /// Updates a task's progress in the database.
+    ///
+    /// No-op when the task no longer exists. Otherwise serializes the progress
+    /// (sizes, processed, extras) into the C update struct and forwards it to
+    /// `UpdateRequestTask`.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task to update.
+    /// * `update_info` - The new progress to persist.
     #[cfg(feature = "oh")]
     pub(crate) fn update_task(&self, task_id: u32, update_info: UpdateInfo) {
         debug!("Update task in database, task_id: {}", task_id);
@@ -318,11 +441,21 @@ impl RequestDb {
         debug!("Update task in database, ret is {}", ret);
     }
 
+    /// Updates a task's modification time.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task to update.
+    /// * `task_time` - The new modification timestamp.
     pub(crate) fn update_task_time(&self, task_id: u32, task_time: u64) {
         let ret = unsafe { UpdateRequestTaskTime(task_id, task_time) };
         debug!("Update task time in database, ret is {}", ret);
     }
 
+    /// Marks stale waiting records as failed.
+    ///
+    /// Transitions tasks still in the `Waiting` state with the `Default`
+    /// reason into the `Failed` state, so that records left over from a
+    /// previous process lifetime are not resumed.
     pub(crate) fn clear_invalid_records(&self) {
         let sql = format!(
             "UPDATE request_task SET state = {} WHERE state = {} AND reason = {}",
@@ -333,11 +466,25 @@ impl RequestDb {
         let _ = self.execute(&sql);
     }
 
+    /// Queries the owning uid of a task.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task id to look up.
+    ///
+    /// # Returns
+    /// `Some(uid)` when the task exists, `None` otherwise.
     pub(crate) fn query_task_uid(&self, task_id: u32) -> Option<u64> {
         let sql = format!("SELECT uid FROM request_task WHERE task_id = {}", task_id);
         self.query_integer(&sql).first().copied()
     }
 
+    /// Queries the action (upload/download) of a task.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task id to look up.
+    ///
+    /// # Returns
+    /// `Some(action)` when the task exists, `None` otherwise.
     pub(crate) fn query_task_action(&self, task_id: u32) -> Option<Action> {
         let sql = format!(
             "SELECT action FROM request_task WHERE task_id = {}",
@@ -348,6 +495,10 @@ impl RequestDb {
         })
     }
 
+    /// Off-device (rusqlite) counterpart of [`update_task`](Self::update_task).
+    ///
+    /// Issues an `UPDATE` SQL statement directly instead of going through the
+    /// C struct FFI.
     #[cfg(not(feature = "oh"))]
     pub(crate) fn update_task(&self, task_id: u32, update_info: UpdateInfo) {
         if !self.contains_task(task_id) {
@@ -361,6 +512,12 @@ impl RequestDb {
         self.execute(&sql).unwrap();
     }
 
+    /// Updates a task's state and reason and refreshes its modification time.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task to update.
+    /// * `state` - The new task state.
+    /// * `reason` - The reason for the state transition.
     pub(crate) fn update_task_state(&self, task_id: u32, state: State, reason: Reason) {
         let sql = format!(
             "UPDATE request_task SET state = {}, mtime = {}, reason = {} WHERE task_id = {}",
@@ -372,6 +529,11 @@ impl RequestDb {
         let _ = self.execute(&sql);
     }
 
+    /// Updates the max speed limit of a task.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task to update.
+    /// * `max_speed` - The new max speed in bytes per second.
     pub(crate) fn update_task_max_speed(&self, task_id: u32, max_speed: i64) {
         let sql = format!(
             "UPDATE request_task SET max_speed = {} WHERE task_id = {}",
@@ -380,6 +542,11 @@ impl RequestDb {
         let _ = self.execute(&sql);
     }
 
+    /// Persists the per-file sizes vector of a task.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task to update.
+    /// * `sizes` - The new sizes, one entry per file.
     pub(crate) fn update_task_sizes(&self, task_id: u32, sizes: &Vec<i64>) {
         let sql = format!(
             "UPDATE request_task SET sizes = '{:?}' WHERE task_id = {}",
@@ -388,6 +555,17 @@ impl RequestDb {
         let _ = self.execute(&sql);
     }
 
+    /// Loads a task's runtime info from the database.
+    ///
+    /// Retrieves the C `CTaskInfo` via `GetTaskInfo`, converts it to a Rust
+    /// `TaskInfo`, and frees the C allocation before returning.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task to load.
+    ///
+    /// # Returns
+    /// `Some(info)` when the task exists, `None` when the engine returns a null
+    /// pointer (task not found).
     #[cfg(feature = "oh")]
     pub(crate) fn get_task_info(&self, task_id: u32) -> Option<TaskInfo> {
         debug!("Get task info from database");
@@ -402,6 +580,13 @@ impl RequestDb {
         Some(task_info)
     }
 
+    /// Queries the total processed bytes of a task.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task id to look up.
+    ///
+    /// # Returns
+    /// `Some(bytes)` when the task exists, `None` otherwise.
     pub(crate) fn query_task_total_processed(&self, task_id: u32) -> Option<i64> {
         let sql = format!(
             "SELECT total_processed FROM request_task WHERE task_id = {}",
@@ -410,6 +595,13 @@ impl RequestDb {
         self.query_integer(&sql).first().copied()
     }
 
+    /// Queries the state byte of a task.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task id to look up.
+    ///
+    /// # Returns
+    /// `Some(state)` when the task exists, `None` otherwise.
     pub(crate) fn query_task_state(&self, task_id: u32) -> Option<u8> {
         let sql = format!("SELECT state FROM request_task WHERE task_id = {}", task_id);
         self.query_integer(&sql)
@@ -417,6 +609,11 @@ impl RequestDb {
             .map(|state: &i32| *state as u8)
     }
 
+    /// Off-device (rusqlite) counterpart of [`get_task_info`](Self::get_task_info).
+    ///
+    /// Reads the relevant columns directly via SQL rather than through the C
+    /// FFI; several `TaskInfo` fields not stored in the host-side schema are
+    /// populated with defaults.
     #[cfg(not(feature = "oh"))]
     pub(crate) fn get_task_info(&self, task_id: u32) -> Option<TaskInfo> {
         use crate::info::CommonTaskInfo;
@@ -459,6 +656,17 @@ impl RequestDb {
         row.next().map(|info| info.unwrap())
     }
 
+    /// Loads a task's configuration from the database.
+    ///
+    /// Retrieves the C `CTaskConfig` via `QueryTaskConfig`, converts it to a
+    /// Rust `TaskConfig`, and frees the C allocation before returning. Emits a
+    /// DFX fault when the task cannot be found.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task to load.
+    ///
+    /// # Returns
+    /// `Some(config)` when the task exists, `None` otherwise.
     #[cfg(feature = "oh")]
     pub(crate) fn get_task_config(&self, task_id: u32) -> Option<TaskConfig> {
         debug!("query single task config in database");
@@ -478,6 +686,10 @@ impl RequestDb {
         }
     }
 
+    /// Off-device (rusqlite) counterpart of [`get_task_config`](Self::get_task_config).
+    ///
+    /// Reads the stored columns via SQL; fields not present in the host-side
+    /// schema are filled with defaults.
     #[cfg(not(feature = "oh"))]
     pub(crate) fn get_task_config(&self, task_id: u32) -> Option<TaskConfig> {
         use crate::config::{Action, CommonTaskConfig, NetworkConfig};
@@ -534,6 +746,16 @@ impl RequestDb {
         row.next().map(|config| config.unwrap())
     }
 
+    /// Loads the QoS-relevant fields of a single task.
+    ///
+    /// Queries `action`, `mode`, `state`, and `priority` for the given task
+    /// via the C++ `GetTaskQosInfo` helper.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task to query.
+    ///
+    /// # Returns
+    /// `Some(info)` when the engine returns success, `None` otherwise.
     #[cfg(feature = "oh")]
     pub(crate) fn get_task_qos_info(&self, task_id: u32) -> Option<TaskQosInfo> {
         #[cfg(feature = "oh")]
@@ -559,6 +781,9 @@ impl RequestDb {
         }
     }
 
+    /// Off-device (rusqlite) counterpart of [`get_task_qos_info`](Self::get_task_qos_info).
+    ///
+    /// Issues the same SQL via rusqlite and returns the first matching row.
     #[cfg(not(feature = "oh"))]
     pub(crate) fn get_task_qos_info(&self, task_id: u32) -> Option<TaskQosInfo> {
         let sql = format!(
@@ -580,6 +805,18 @@ impl RequestDb {
         rows.next().map(|info| info.unwrap())
     }
 
+    /// Runs a QoS-info query that may return multiple rows.
+    ///
+    /// Used by [`get_app_task_qos_infos`](Self::get_app_task_qos_infos) to
+    /// enumerate the scheduling-relevant fields of every task owned by an app.
+    ///
+    /// # Arguments
+    /// * `sql` - The SQL query selecting `task_id, action, mode, state,
+    ///   priority`.
+    ///
+    /// # Returns
+    /// All matching rows; an empty vector when nothing matches or the engine
+    /// reports an error.
     pub(crate) fn get_app_task_qos_infos_inner(&self, sql: &str) -> Vec<TaskQosInfo> {
         #[cfg(feature = "oh")]
         {
@@ -605,6 +842,16 @@ impl RequestDb {
         }
     }
 
+    /// Enumerates the active QoS-relevant tasks for an app.
+    ///
+    /// Selects tasks owned by `uid` that are waiting (blocked by running-task
+    /// limits), running, or retrying, so the scheduler can rank them.
+    ///
+    /// # Arguments
+    /// * `uid` - The owning app uid.
+    ///
+    /// # Returns
+    /// QoS info for each matching task; empty when there are none.
     pub(crate) fn get_app_task_qos_infos(&self, uid: u64) -> Vec<TaskQosInfo> {
         let sql = format!(
             "SELECT task_id, action, mode, state, priority FROM request_task WHERE uid = {} AND ((state = {} AND reason = {}) OR state = {} OR state = {})",
@@ -617,6 +864,28 @@ impl RequestDb {
         self.get_app_task_qos_infos_inner(&sql)
     }
 
+    /// Retrieves a task handle, reconstructing it from the database if needed.
+    ///
+    /// Returns the cached `Arc<RequestTask>` directly when the task references
+    /// user files and is still held in `user_file_tasks`. Otherwise loads the
+    /// task config and info from the database and rebuilds a `RequestTask`
+    /// via `new_by_info`. A task whose persisted state is `Removed` is treated
+    /// as invalid.
+    ///
+    /// # Arguments
+    /// * `task_id` - The task to retrieve.
+    /// * `system` - The system config (on-device only) used to rebuild the task.
+    /// * `client_manager` - The client manager entry to attach to the task.
+    /// * `upload_resume` - Whether to resume an upload from its persisted state.
+    ///
+    /// # Returns
+    /// `Ok(task)` sharing the cached or freshly built handle.
+    ///
+    /// # Errors
+    /// Returns `Err(ErrorCode::TaskNotFound)` when neither the config nor the
+    /// info can be loaded. Returns `Err(ErrorCode::TaskStateErr)` when the
+    /// persisted state is `Removed`. Otherwise propagates the error from
+    /// `RequestTask::new_by_info`.
     pub(crate) fn get_task(
         &self,
         task_id: u32,
@@ -676,43 +945,72 @@ impl RequestDb {
     }
 }
 
+// SAFETY: RequestDb is safe to share across threads because the only
+// non-Send/Sync field is the raw `RequestDataBase` pointer (oh) or the
+// rusqlite Connection (not-oh), both of which are guarded by the surrounding
+// Mutex-protected cache and only accessed through pinned borrows that the
+// caller synchronizes.
 unsafe impl Send for RequestDb {}
 unsafe impl Sync for RequestDb {}
 
 #[cfg(feature = "oh")]
 
+// FFI declarations into the C++ RequestDataBase implementation. These link
+// against symbols defined in the on-device native library and are only
+// available under the `oh` feature.
 extern "C" {
+    // Frees a CTaskConfig struct previously returned by QueryTaskConfig.
     fn DeleteCTaskConfig(ptr: *const CTaskConfig);
+    // Frees a CTaskInfo struct previously returned by GetTaskInfo.
     fn DeleteCTaskInfo(ptr: *const CTaskInfo);
+    // Loads the runtime info for a task, returning a borrowed CTaskInfo pointer.
     fn GetTaskInfo(task_id: u32) -> *const CTaskInfo;
+    // Loads the config for a task, returning a borrowed CTaskConfig pointer.
     fn QueryTaskConfig(task_id: u32) -> *const CTaskConfig;
+    // Persists a new task record from its C info and config structs.
     fn RecordRequestTask(info: *const CTaskInfo, config: *const CTaskConfig) -> bool;
+    // Persists updated progress info for an existing task.
     fn UpdateRequestTask(id: u32, info: *const CUpdateInfo) -> bool;
+    // Updates only the modification timestamp of a task.
     fn UpdateRequestTaskTime(task_id: u32, taskTime: u64) -> bool;
 }
 
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {
+    /// Scheduling-relevant subset of a task used by the QoS scheduler.
+    ///
+    /// Shared between Rust and the C++ engine through the cxx bridge to rank
+    /// tasks for execution.
     #[derive(Clone, Debug, Copy)]
     pub(crate) struct TaskQosInfo {
+        /// The task identifier.
         pub(crate) task_id: u32,
+        /// Task action (upload/download), mirrored from the config.
         pub(crate) action: u8,
+        /// Execution mode (foreground/background), mirrored from the config.
         pub(crate) mode: u8,
+        /// Current task state.
         pub(crate) state: u8,
+        /// Scheduling priority, higher means more urgent.
         pub(crate) priority: u32,
     }
 
     unsafe extern "C++" {
         include!("c_request_database.h");
         type RequestDataBase;
+        // Constructs (or retrieves) the RequestDataBase instance for the given path.
         fn GetDatabaseInstance(path: &str, encrypt: bool) -> *mut RequestDataBase;
+        // Executes a SQL statement with no return rows; returns 0 on success.
         fn ExecuteSql(self: Pin<&mut RequestDataBase>, sql: &str) -> i32;
+        // Runs a query whose first column is an integer, appending rows to `v`.
         fn QueryInteger(self: Pin<&mut RequestDataBase>, sql: &str, v: &mut Vec<i64>) -> i32;
+        // Runs a QoS query returning multiple TaskQosInfo rows into `v`.
         fn GetAppTaskQosInfos(
             self: Pin<&mut RequestDataBase>,
             sql: &str,
             v: &mut Vec<TaskQosInfo>,
         ) -> i32;
+        // Runs a QoS query filling a single TaskQosInfo out-param.
         fn GetTaskQosInfo(self: Pin<&mut RequestDataBase>, sql: &str, res: &mut TaskQosInfo)
             -> i32;
     }

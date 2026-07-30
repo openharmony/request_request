@@ -11,6 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! File index validation for task configuration.
+//!
+//! Ensures the index is zero for downloads and within the file spec count for uploads.
+
 use request_core::config::{Action, TaskConfig};
 
 use crate::verify::ConfigVerifier;

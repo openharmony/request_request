@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Task information definitions.
+//!
+//! Defines `TaskInfo`, `CommonTaskInfo`, `State`, `InfoSet`, and dump types
+//! that describe a task's runtime state, progress, and metadata, along with
+//! helpers to build FFI-compatible data sets and notification payloads.
+
 use std::collections::HashMap;
 
 /// Task state enumeration.

@@ -93,6 +93,7 @@ mod test {
     // @tc.expect: New counter should not be active
     // @tc.type: FUNC
     // @tc.require: issues#ICN16H
+    /// Verifies that a newly created counter reports itself as not active.
     #[test]
     fn ut_active_counter_new_001() {
         let counter = ActiveCounter::new();
@@ -108,6 +109,7 @@ mod test {
     // @tc.expect: Counter should be active after increment
     // @tc.type: FUNC
     // @tc.require: issues#ICN16H
+    /// Verifies that a single increment marks the counter as active.
     #[test]
     fn ut_active_counter_increment_001() {
         let counter = ActiveCounter::new();
@@ -125,6 +127,7 @@ mod test {
     // @tc.expect: Counter should not be active after decrement
     // @tc.type: FUNC
     // @tc.require: issues#ICN16H
+    /// Verifies that a decrement following an increment returns the counter to inactive.
     #[test]
     fn ut_active_counter_decrement_001() {
         let counter = ActiveCounter::new();
@@ -142,6 +145,7 @@ mod test {
     // @tc.expect: Counter should remain active with count > 1
     // @tc.type: FUNC
     // @tc.require: issues#ICN16H
+    /// Verifies that multiple increments keep the counter in the active state.
     #[test]
     fn ut_active_counter_multiple_increments_001() {
         let counter = ActiveCounter::new();
@@ -161,6 +165,7 @@ mod test {
     // @tc.expect: Counter should not be active after sufficient decrements
     // @tc.type: FUNC
     // @tc.require: issues#ICN16H
+    /// Verifies that an equal number of decrements cancels out prior increments.
     #[test]
     fn ut_active_counter_multiple_decrements_001() {
         let counter = ActiveCounter::new();
@@ -183,6 +188,7 @@ mod test {
     // (underflow)
     // @tc.type: FUNC
     // @tc.require: issues#ICN16H
+    /// Verifies underflow behavior when decrementing a counter that is already at zero.
     #[test]
     fn ut_active_counter_decrement_below_zero_001() {
         let counter = ActiveCounter::new();
@@ -200,6 +206,7 @@ mod test {
     // @tc.expect: Counter should be thread-safe and maintain consistency
     // @tc.type: FUNC
     // @tc.require: issues#ICN16H
+    /// Verifies thread-safe concurrent increments and decrements from multiple threads.
     #[test]
     fn sdv_active_counter_concurrent_access_001() {
         let counter = Arc::new(ActiveCounter::new());
@@ -246,6 +253,7 @@ mod test {
     // @tc.expect: Cloned counter should share the same underlying state
     // @tc.type: FUNC
     // @tc.require: issues#ICN16H
+    /// Verifies that a cloned counter shares the same underlying state as the original.
     #[test]
     fn ut_active_counter_clone_behavior_001() {
         let counter1 = ActiveCounter::new();
@@ -269,6 +277,7 @@ mod test {
     // @tc.expect: Counter should handle large counts correctly
     // @tc.type: FUNC
     // @tc.require: issues#ICN16H
+    /// Verifies counter behavior with a large number of increment and decrement operations.
     #[test]
     fn ut_active_counter_large_count_001() {
         let counter = ActiveCounter::new();

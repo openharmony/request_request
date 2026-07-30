@@ -121,9 +121,9 @@ impl DownloadTask {
     /// Encodes the URL, sets up the download context, and spawns an asynchronous task to perform
     /// the actual download. Returns a handle that can be used to cancel the download.
     ///
-    /// # Parameters
-    /// - `request`: Download request containing URL and headers
-    /// - `callback`: Callback to receive download events
+    /// # Arguments
+    /// * `request` - Download request containing URL and headers
+    /// * `callback` - Callback to receive download events
     ///
     /// # Returns
     /// A handle that implements `CommonHandle` for download cancellation
@@ -179,11 +179,11 @@ impl DownloadTask {
 /// downloaded data through the provided callback. Supports cancellation through
 /// the abort flag.
 ///
-/// # Parameters
-/// - `url`: URL to download from
-/// - `headers`: Optional HTTP headers to include in the request
-/// - `callback`: Callback to receive download events
-/// - `abort_flag`: Flag to signal download cancellation
+/// # Arguments
+/// * `url` - URL to download from
+/// * `headers` - Optional HTTP headers to include in the request
+/// * `callback` - Callback to receive download events
+/// * `abort_flag` - Flag to signal download cancellation
 ///
 /// # Returns
 /// `Ok(())` if the download completed successfully, otherwise an error
@@ -262,8 +262,8 @@ pub struct CancelHandle {
 impl CancelHandle {
     /// Creates a new cancel handle with the specified atomic flag.
     ///
-    /// # Parameters
-    /// - `inner`: Atomic flag used to signal cancellation
+    /// # Arguments
+    /// * `inner` - Atomic flag used to signal cancellation
     fn new(inner: Arc<AtomicBool>) -> Self {
         Self {
             inner,

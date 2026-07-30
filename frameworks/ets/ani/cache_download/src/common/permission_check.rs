@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Permission verification for the cache download ANI crate.
+//!
+//! Exposes C++ permission checks (INTERNET and GET_NETWORK_INFO) to Rust via a
+//! CXX bridge bound to `OHOS::Request::permission_verification`.
+
 pub use ffi::*;
 
 // CXX bridge module for FFI bindings to C++ code

@@ -97,8 +97,8 @@ impl RequestProxy {
 
     /// Deletes an existing notification group.
     ///
-    /// # Parameters
-    /// - `group_id`: Unique identifier of the notification group to delete
+    /// # Arguments
+    /// * `group_id` - Unique identifier of the notification group to delete
     ///
     /// # Returns
     /// - `Ok(())` on success
@@ -128,10 +128,10 @@ impl RequestProxy {
 
     /// Attaches download tasks to a notification group.
     ///
-    /// # Parameters
-    /// - `group_id`: Unique identifier of the notification group to attach
+    /// # Arguments
+    /// * `group_id` - Unique identifier of the notification group to attach
     ///   tasks to
-    /// - `task_ids`: List of task IDs to attach to the notification group
+    /// * `task_ids` - List of task IDs to attach to the notification group
     ///
     /// # Returns
     /// - `Ok(())` on success

@@ -34,8 +34,8 @@ use crate::wrapper::ffi::{NewDirectoryMonitor, StartObserve};
 /// necessary infrastructure for monitoring image file deletions to maintain
 /// cache consistency.
 ///
-/// # Parameters
-/// - `path`: Path to the image directory to monitor for deletion events
+/// # Arguments
+/// * `path` - Path to the image directory to monitor for deletion events
 ///
 /// # Examples
 ///
@@ -60,9 +60,9 @@ pub fn observe_image_file_delete(path: String) {
 /// system's directory monitoring capabilities. The directory monitor is set up
 /// to rebuild the directory structure when changes are detected.
 ///
-/// # Parameters
-/// - `curr`: Current directory path to monitor
-/// - `history`: History directory manager for handling directory changes
+/// # Arguments
+/// * `curr` - Current directory path to monitor
+/// * `history` - History directory manager for handling directory changes
 ///
 /// # Safety
 /// Spawns a background thread that runs indefinitely until the program

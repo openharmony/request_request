@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Registration of network observers with the native net manager.
+//!
+//! Provides `NetRegistrar`, which collects `Observer` implementations and
+//! registers or unregisters them as a group via the FFI wrapper, plus the
+//! associated register/unregister error types.
+
 use std::sync::{Arc, Mutex};
 
 use cxx::UniquePtr;

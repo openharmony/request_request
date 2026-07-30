@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Locale-aware percentage formatting.
+//!
+//! Computes a percentage from current and total progress values and formats
+//! it with a locale-aware decimal separator based on the system language.
+
 use super::ffi::GetSystemLanguage;
 
 // Language codes that use comma as decimal separator for percentage

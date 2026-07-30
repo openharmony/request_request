@@ -11,6 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! HTTP method validation for task configuration.
+//!
+//! Downloads accept only `GET` or `POST`; uploads accept only `PUT` or `POST`.
+
 use request_core::config::{Action, TaskConfig};
 
 use crate::verify::ConfigVerifier;

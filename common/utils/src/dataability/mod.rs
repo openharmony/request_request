@@ -10,6 +10,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+//! DataAbility helper module.
+//!
+//! Re-exports the `DataAbilityOpenFile` wrapper from the `wrapper` submodule
+//! for opening files through the OpenHarmony DataAbility framework.
+
 pub mod wrapper;
 
 pub use wrapper::DataAbilityOpenFile;

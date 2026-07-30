@@ -23,10 +23,10 @@ use crate::utils::c_wrapper::CStringWrapper;
 /// This function validates whether the given application has permission to access
 /// the specified URL based on the provided domain type policy.
 ///
-/// # Parameters
-/// - `app_id`: The identifier of the application requesting access
-/// - `domain_type`: The type of domain being checked (e.g., "network", "download", etc.)
-/// - `url`: The URL being accessed that needs validation
+/// # Arguments
+/// * `app_id` - The identifier of the application requesting access
+/// * `domain_type` - The type of domain being checked (e.g., "network", "download", etc.)
+/// * `url` - The URL being accessed that needs validation
 ///
 /// # Returns
 /// - `Some(true)` if the application is allowed to access the URL
@@ -66,9 +66,9 @@ pub(crate) fn check_url_domain(app_id: &str, domain_type: &str, url: &str) -> Op
 // - Callers must ensure proper string lifetimes and valid pointers.
 //
 // # Returns
-// - `0`: Access allowed
-// - `1`: Access denied
-// - Any other value: Error or unexpected result
+// * `0` - Access allowed
+// * `1` - Access denied
+// * Any other value - Error or unexpected result
 extern "C" {
     pub(crate) fn PolicyCheckUrlDomain(
         app_id: CStringWrapper,

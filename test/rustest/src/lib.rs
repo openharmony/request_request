@@ -23,6 +23,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+//! Rust integration test harness for the download request service.
+//!
+//! Provides a `RequestAgent` that drives the download service over IPC,
+//! opens a unix-domain channel, and deserializes response and notify messages
+//! for assertion in end-to-end tests.
+
 #![allow(unused)]
 #![allow(missing_docs)]
 #![cfg(feature = "oh")]

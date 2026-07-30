@@ -40,7 +40,9 @@ pub(crate) static mut SYSTEM_CONFIG_MANAGER: MaybeUninit<SystemConfigManager> =
 ///
 /// This structure is responsible for interacting with `System Ability Manager`.
 pub struct RequestAbility {
+    /// Channel sender used to dispatch schedule and task events to the task manager.
     task_manager: Mutex<Option<TaskManagerTx>>,
+    /// Counter tracking in-flight operations, used to decide whether the service can idle.
     active_counter: ActiveCounter,
 }
 
@@ -53,6 +55,17 @@ impl RequestAbility {
         }
     }
 
+    /// Initializes the runtime subsystems and publishes the request service.
+    ///
+    /// Installs a panic hook, builds the global ylong runtime, and initializes
+    /// the run-count manager, client manager, system config manager, and task
+    /// manager. Subscribes to the app manager service and finally publishes the
+    /// `RequestServiceStub` so that the system ability manager can route
+    /// requests to it.
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - System ability handler used to publish the service stub.
     fn init(&self, handler: Handler) {
         info!("ability init");
 
@@ -118,6 +131,16 @@ impl RequestAbility {
 }
 
 impl Ability for RequestAbility {
+    /// Handles system ability start triggered by an on-demand reason.
+    ///
+    /// When the reason is a user-removed event, the tasks belonging to that
+    /// user are cleaned up. Afterwards the service is initialized and the
+    /// update policy is applied.
+    ///
+    /// # Arguments
+    ///
+    /// * `reason` - The on-demand reason that triggered the start.
+    /// * `handler` - System ability handler used to initialize the service.
     fn on_start_with_reason(
         &self,
         reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason,
@@ -139,6 +162,14 @@ impl Ability for RequestAbility {
         let _ = update_policy(INIT_POLICY);
     }
 
+    /// Handles the system ability becoming active.
+    ///
+    /// Sends a restart-countdown schedule event to the task manager so that
+    /// pending retry timers are refreshed.
+    ///
+    /// # Arguments
+    ///
+    /// * `reason` - The on-demand reason that activated the service.
     fn on_active(&self, reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason) {
         info!("on_active: {:?}", reason);
         if let Some(task_manager) = self.task_manager.lock().unwrap().as_ref() {
@@ -146,6 +177,19 @@ impl Ability for RequestAbility {
         }
     }
 
+    /// Handles the system ability entering idle, deciding whether to shut down.
+    ///
+    /// Rejects idle (returns `-1`) while there are active operations, so that
+    /// in-flight tasks are not interrupted. When idle, a shutdown schedule
+    /// event is sent to the task manager and `0` is returned.
+    ///
+    /// # Arguments
+    ///
+    /// * `reason` - The on-demand reason that prompted the idle check.
+    ///
+    /// # Returns
+    ///
+    /// `0` if the service may idle and shut down, or `-1` to reject idle.
     fn on_idle(&self, reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason) -> i32 {
         if self.active_counter.is_active() {
             info!("remote is busy reject idle, reason: {:?}", reason);
@@ -159,6 +203,16 @@ impl Ability for RequestAbility {
         }
     }
 
+    /// Handles device resource level changes reported by the system.
+    ///
+    /// Forwards the reported level to the task manager as a device event so
+    /// that running tasks can react to resource constraints.
+    ///
+    /// # Arguments
+    ///
+    /// * `change_type` - The type of resource level change.
+    /// * `level` - The new resource level.
+    /// * `action` - The action associated with the change.
     fn on_device_level_changed(&self, change_type: i32, level: i32, action: String) {
         info!(
             "on_device_level_changed type {} level {} action {}",
@@ -175,6 +229,8 @@ impl Ability for RequestAbility {
 #[link_section = ".init_array"]
 static A: extern "C" fn() = {
     #[link_section = ".text.startup"]
+    // Early initializer placed in the `.init_array` section so it runs before
+    // `main`; builds and registers the request system ability with samgr.
     extern "C" fn init() {
         info!("begin request service init");
         if let Some(system_ability) = RequestAbility::new()
@@ -190,6 +246,10 @@ static A: extern "C" fn() = {
 };
 
 // TODO: Use `SysEvent` instead.
+/// Reports a service start fault through the HiSysEvent framework.
+///
+/// Emits a `SERVICE_START_FAULT` fault event tagged with the publish-failure
+/// error code so that service start failures are visible to diagnostics.
 fn service_start_fault() {
     const DOMAIN: &str = "REQUEST";
     const SERVICE_START_FAULT: &str = "SERVICE_START_FAULT";

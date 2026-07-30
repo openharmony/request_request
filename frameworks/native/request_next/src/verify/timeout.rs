@@ -11,6 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Timeout configuration validation for task configuration.
+//!
+//! Ensures the connection and total timeouts stay within the allowed bounds.
+
 use request_core::config::TaskConfig;
 
 use crate::verify::ConfigVerifier;

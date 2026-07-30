@@ -10,6 +10,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+//! Application-level helper utilities.
+//!
+//! Re-exports the `GetCacheDir` abstraction from the `wrapper` submodule,
+//! providing access to the application cache directory.
+
 pub mod wrapper;
 
 pub use wrapper::GetCacheDir;

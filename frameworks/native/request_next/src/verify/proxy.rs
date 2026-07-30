@@ -11,6 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Proxy configuration validation for task configuration.
+//!
+//! Validates the proxy URL length, `http://` scheme, and numeric port on API10.
+
 use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;

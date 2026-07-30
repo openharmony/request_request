@@ -148,8 +148,8 @@ impl From<io::Error> for CacheDownloadError {
     ///
     /// Preserves the OS error code if available and sets the error kind to Io.
     ///
-    /// # Parameters
-    /// - `err`: The I/O error to convert
+    /// # Arguments
+    /// * `err` - The I/O error to convert
     ///
     /// # Returns
     /// A new `CacheDownloadError` with the I/O error information.
@@ -173,10 +173,10 @@ where
     /// error code and message.
     ///
     /// # Type Parameters
-    /// - `E`: Type implementing `CommonError`
+    /// * `E` - Type implementing `CommonError`
     ///
-    /// # Parameters
-    /// - `err`: Reference to the error object to convert
+    /// # Arguments
+    /// * `err` - Reference to the error object to convert
     ///
     /// # Returns
     /// A new `CacheDownloadError` with the converted error information.

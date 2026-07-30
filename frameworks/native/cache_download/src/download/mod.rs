@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Cache download task orchestration and state management.
+//!
+//! Aggregates the callback, network backend (netstack or ylong), common
+//! utilities, error, and task submodules that together drive a cache download.
+
 pub(crate) const INIT: usize = 0;
 pub(crate) const RUNNING: usize = 1;
 pub(crate) const SUCCESS: usize = 2;

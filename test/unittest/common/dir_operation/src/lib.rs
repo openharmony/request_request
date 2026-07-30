@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Crate root for the dir operation unit-test helper.
+//!
+//! Aggregates the `directory` helpers and the CXX `wrapper` that exposes them
+//! to C++ test code under the `OHOS::Request::DirOperation` namespace.
+
 #![allow(
     unknown_lints,
     static_mut_refs,

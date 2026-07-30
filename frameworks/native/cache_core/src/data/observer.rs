@@ -37,9 +37,9 @@ pub struct DirRebuilder {
 impl DirRebuilder {
     /// Creates a new DirRebuilder with the specified directories.
     ///
-    /// # Parameters
-    /// - `curr`: Path to the current cache directory
-    /// - `history`: Reference to the history directory to observe
+    /// # Arguments
+    /// * `curr` - Path to the current cache directory
+    /// * `history` - Reference to the history directory to observe
     pub fn new(curr: PathBuf, history: Arc<HistoryDir>) -> Self {
         Self { curr, history }
     }

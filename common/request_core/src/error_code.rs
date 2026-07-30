@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Error codes for the request service.
+//!
+//! This module centralizes the numeric error codes returned by the request
+//! subsystem, covering IPC, permission, parameter, file, and task states.
+
 pub const EXCEPTION_SERVICE: i32 = 13400003;
 
 // General status codes

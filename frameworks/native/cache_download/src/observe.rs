@@ -35,8 +35,8 @@ impl network::Observer for NetObserver {
     /// and triggers a reset of all download tasks in the cache download
     /// service.
     ///
-    /// # Parameters
-    /// - `net_id`: Identifier of the newly available network
+    /// # Arguments
+    /// * `net_id` - Identifier of the newly available network
     fn net_available(&self, net_id: i32) {
         info!("net available, net_id: {}", net_id);
         // Reset all tasks when network becomes available to resume paused downloads

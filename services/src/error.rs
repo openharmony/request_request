@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Error types for the request service.
+//!
+//! Defines `ErrorCode` (numeric codes mapped to SDK error values) and
+//! `ServiceError` (an error enum wrapping I/O errors and error codes) used
+//! throughout the service for result propagation and error reporting.
+
 use core::fmt;
 use std::io;
 

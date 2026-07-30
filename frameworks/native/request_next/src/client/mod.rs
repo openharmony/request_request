@@ -215,19 +215,19 @@ impl<'a> RequestClient<'a> {
     /// task creation request to the service. Automatically reopens the
     /// channel if needed.
     ///
-    /// # Parameters
-    /// - `context`: Application context for path validation
-    /// - `version`: API version to determine path handling
-    /// - `config`: Task configuration including URL, headers, etc.
-    /// - `save_as`: Path where the downloaded file should be saved
-    /// - `overwrite`: Whether to overwrite existing files
+    /// # Arguments
+    /// * `context` - Application context for path validation
+    /// * `version` - API version to determine path handling
+    /// * `config` - Task configuration including URL, headers, etc.
+    /// * `save_as` - Path where the downloaded file should be saved
+    /// * `overwrite` - Whether to overwrite existing files
     ///
     /// # Returns
     /// A task ID on success, or a `CreateTaskError` on failure
     ///
     /// # Errors
-    /// - `CreateTaskError::DownloadPath`: If path validation fails
-    /// - `CreateTaskError::Code`: If task creation fails for other reasons
+    /// * `CreateTaskError::DownloadPath` - If path validation fails
+    /// * `CreateTaskError::Code` - If task creation fails for other reasons
     ///
     /// # Notes
     /// The function name contains a typo (`crate_task` instead of
@@ -340,8 +340,8 @@ impl<'a> RequestClient<'a> {
 
     /// Starts a download task with the specified ID.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task to start
+    /// # Arguments
+    /// * `task_id` - ID of the task to start
     ///
     /// # Returns
     /// `Ok(())` on success, or an error code on failure
@@ -351,8 +351,8 @@ impl<'a> RequestClient<'a> {
 
     /// Pauses a running download task.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task to pause
+    /// # Arguments
+    /// * `task_id` - ID of the task to pause
     ///
     /// # Returns
     /// `Ok(())` on success, or an error code on failure
@@ -362,8 +362,8 @@ impl<'a> RequestClient<'a> {
 
     /// Resumes a paused download task.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task to resume
+    /// # Arguments
+    /// * `task_id` - ID of the task to resume
     ///
     /// # Returns
     /// `Ok(())` on success, or an error code on failure
@@ -373,8 +373,8 @@ impl<'a> RequestClient<'a> {
 
     /// Removes a download task and its associated files.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task to remove
+    /// # Arguments
+    /// * `task_id` - ID of the task to remove
     ///
     /// # Returns
     /// `Ok(())` on success, or an error code on failure
@@ -385,8 +385,8 @@ impl<'a> RequestClient<'a> {
 
     /// Stops a running download task without removing files.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task to stop
+    /// # Arguments
+    /// * `task_id` - ID of the task to stop
     ///
     /// # Returns
     /// `Ok(())` on success, or an error code on failure
@@ -396,9 +396,9 @@ impl<'a> RequestClient<'a> {
 
     /// Sets the maximum download speed for a task.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task to configure
-    /// - `speed`: Maximum speed limit in bytes per second
+    /// # Arguments
+    /// * `task_id` - ID of the task to configure
+    /// * `speed` - Maximum speed limit in bytes per second
     ///
     /// # Returns
     /// `Ok(())` on success, or an error code on failure
@@ -419,9 +419,9 @@ impl<'a> RequestClient<'a> {
 
     /// Registers a callback for task status updates.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task to monitor
-    /// - `callback`: Callback to receive status updates
+    /// # Arguments
+    /// * `task_id` - ID of the task to monitor
+    /// * `callback` - Callback to receive status updates
     pub fn register_callback(
         &self,
         task_id: i64,
@@ -441,8 +441,8 @@ impl<'a> RequestClient<'a> {
 
     /// Retrieves information about a specific task.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task to query
+    /// # Arguments
+    /// * `task_id` - ID of the task to query
     ///
     /// # Returns
     /// Task information on success, or an error code on failure
@@ -452,8 +452,8 @@ impl<'a> RequestClient<'a> {
 
     /// Searches for tasks matching the specified filter.
     ///
-    /// # Parameters
-    /// - `keyword`: Search filter defining the search criteria
+    /// # Arguments
+    /// * `keyword` - Search filter defining the search criteria
     ///
     /// # Returns
     /// A list of matching task IDs on success, or an error code on failure

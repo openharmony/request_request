@@ -11,6 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Description field validation for task configuration.
+//!
+//! Ensures the description length does not exceed the maximum allowed limit on API10.
+
 use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;

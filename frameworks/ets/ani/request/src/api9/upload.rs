@@ -95,7 +95,7 @@ pub fn check_config(
 
 /// Creates an upload task with the given configuration.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `context` - The application context
 /// * `config` - The upload configuration containing URL, file path, etc.
@@ -187,7 +187,7 @@ pub fn upload_file(env: &AniEnv, context: AniRef, seq: i64) -> Result<UploadTask
 
 /// Deletes an upload task.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `this` - The upload task to delete
 ///

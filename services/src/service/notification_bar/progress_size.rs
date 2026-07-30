@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Locale-aware file size formatting.
+//!
+//! Converts a byte count into a human-readable string (B/KB/MB/GB) with
+//! locale-specific thousand separators, decimal points, and unit labels
+//! determined by the system language.
+
 use super::ffi::GetSystemLanguage;
 
 // Language codes that use comma as thousand separator

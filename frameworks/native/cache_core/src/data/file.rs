@@ -69,9 +69,9 @@ static INIT_CURR: Once = Once::new();
 /// Sets up the history directory with the provided `HistoryDir` instance and
 /// starts directory observation using the given spawner function.
 ///
-/// # Parameters
-/// - `history`: The history directory to use for cache storage
-/// - `spawner`: Function to spawn directory observation process
+/// # Arguments
+/// * `history` - The history directory to use for cache storage
+/// * `spawner` - Function to spawn directory observation process
 ///
 /// # Safety
 /// This function is thread-safe and will only initialize the history directory
@@ -185,9 +185,9 @@ impl FileStoreDir {
 
     /// Sets the history directory for file caching.
     ///
-    /// # Parameters
-    /// - `history`: The history directory to use
-    /// - `spawner`: Function to spawn directory observation process
+    /// # Arguments
+    /// * `history` - The history directory to use
+    /// * `spawner` - Function to spawn directory observation process
     pub fn set_history_dir(
         &mut self,
         history: Arc<HistoryDir>,
@@ -198,8 +198,8 @@ impl FileStoreDir {
 
     /// Sets the current directory for file caching.
     ///
-    /// # Parameters
-    /// - `curr`: Path to the current directory
+    /// # Arguments
+    /// * `curr` - Path to the current directory
     pub fn set_curr_dir(&mut self, curr: PathBuf) {
         self.curr = Some(curr);
     }
@@ -243,8 +243,8 @@ impl FileStoreDir {
     ///
     /// Ensures the directory exists before joining.
     ///
-    /// # Parameters
-    /// - `path`: Path to join with the current directory
+    /// # Arguments
+    /// * `path` - Path to join with the current directory
     ///
     /// # Returns
     /// Joined path if the directory exists, None otherwise
@@ -285,9 +285,9 @@ pub(crate) struct DirObservSpawner {
 impl DirObservSpawner {
     /// Creates a new DirObservSpawner.
     ///
-    /// # Parameters
-    /// - `history`: History directory to observe
-    /// - `spawner`: Function to spawn directory observation process
+    /// # Arguments
+    /// * `history` - History directory to observe
+    /// * `spawner` - Function to spawn directory observation process
     pub(crate) fn new(history: Arc<HistoryDir>, spawner: fn(PathBuf, Arc<HistoryDir>)) -> Self {
         Self { history, spawner }
     }
@@ -312,8 +312,8 @@ impl DirObservSpawner {
     ///
     /// Starts the directory observation process for the history directory.
     ///
-    /// # Parameters
-    /// - `curr`: Current directory path to pass to the spawner
+    /// # Arguments
+    /// * `curr` - Current directory path to pass to the spawner
     pub fn spawn_observe(&self, curr: PathBuf) {
         let mut is_observe = self.history.is_observe.lock().unwrap();
         if !*is_observe {
@@ -338,8 +338,8 @@ pub struct HistoryDir {
 impl HistoryDir {
     /// Creates a new HistoryDir with the specified path.
     ///
-    /// # Parameters
-    /// - `dir`: Path to the history directory
+    /// # Arguments
+    /// * `dir` - Path to the history directory
     pub fn new(dir: PathBuf) -> Self {
         Self {
             dir,
@@ -391,20 +391,24 @@ impl HistoryDir {
 /// This struct manages a cache file associated with a task ID, handling
 /// creation, access, and cleanup of the cache file.
 pub(crate) struct FileCache {
+    /// Size of the cached file content in bytes.
     size: u64,
     /// ID of the task associated with this cache
     task_id: TaskId,
 }
 
 impl FileCache {
+    /// Creates a new `FileCache` for the given task and size.
     pub(crate) fn new(task_id: TaskId, size: u64) -> Self {
         Self { size, task_id }
     }
 
+    /// Returns the cached file size in bytes.
     pub(crate) fn size(&self) -> u64 {
         self.size
     }
 
+    /// Returns the task ID associated with this cache.
     pub(crate) fn task_id(&self) -> &TaskId {
         &self.task_id
     }
@@ -434,9 +438,9 @@ impl FileCache {
     /// Writes data to a temporary file and then renames it with the finish
     /// suffix to indicate it's complete.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task to create the file for
-    /// - `cache`: RAM cache to write to disk
+    /// # Arguments
+    /// * `task_id` - ID of the task to create the file for
+    /// * `cache` - RAM cache to write to disk
     ///
     /// # Returns
     /// `Ok(())` if successful, `Err(io::Error)` if any file operation fails
@@ -459,6 +463,14 @@ impl FileCache {
         ))
     }
 
+    /// Opens the cache file for the given task for reading.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task whose cache file should be opened.
+    ///
+    /// # Errors
+    /// Returns `io::Error` if the cache directory is not initialized or the
+    /// file cannot be opened.
     pub(crate) fn open(task_id: &TaskId) -> Result<File, io::Error> {
         if let Some(path) = Self::path(task_id) {
             OpenOptions::new().read(true).open(path)
@@ -467,6 +479,15 @@ impl FileCache {
         }
     }
 
+    /// Reads a task's cache file into a RAM cache and registers it with the
+    /// cache manager.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task whose cache file should be read.
+    /// * `handle` - Cache manager used to allocate the RAM cache.
+    ///
+    /// # Errors
+    /// Returns `io::Error` if the file cannot be opened or read.
     pub(crate) fn read(task_id: &TaskId, handle: &'static CacheManager) -> io::Result<RamCache> {
         let mut file = Self::open(task_id).map_err(|e| {
             error!("{:?} open file failed {:?}", task_id.brief(), e);
@@ -476,6 +497,15 @@ impl FileCache {
         FileCache::copy_file_to_cache(task_id, handle, &mut file, Some(size as usize))
     }
 
+    /// Reads a task's cache file into a RAM cache without registering it with
+    /// the cache manager.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task whose cache file should be read.
+    /// * `handle` - Cache manager used to allocate the RAM cache.
+    ///
+    /// # Errors
+    /// Returns `io::Error` if the file cannot be opened or read.
     pub(crate) fn read_but_not_cache(
         task_id: &TaskId,
         handle: &'static CacheManager,
@@ -487,6 +517,16 @@ impl FileCache {
         FileCache::copy_file_to_cache(task_id, handle, &mut file, None)
     }
 
+    /// Copies the contents of a file into a new RAM cache.
+    ///
+    /// # Arguments
+    /// * `task_id` - ID of the task the cache belongs to.
+    /// * `handle` - Cache manager used to allocate the RAM cache.
+    /// * `file` - File to read from.
+    /// * `size` - Expected content size, or `None` if unknown.
+    ///
+    /// # Errors
+    /// Returns `io::Error` if copying from the file fails.
     fn copy_file_to_cache(
         task_id: &TaskId,
         handle: &'static CacheManager,
@@ -503,8 +543,8 @@ impl FileCache {
 
     /// Gets the path to the cache file for the given task ID.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task to get the path for
+    /// # Arguments
+    /// * `task_id` - ID of the task to get the path for
     ///
     /// # Returns
     /// Path to the cache file if the directory exists, None otherwise
@@ -514,13 +554,18 @@ impl FileCache {
     }
 }
 
+/// Metadata for a persisted cache file.
 pub(crate) struct FileCacheInfo {
+    /// Task ID associated with the cache file.
     task_id: TaskId,
+    /// Modification time of the cache file.
     time: SystemTime,
+    /// Size of the cache file in bytes.
     size: u64,
 }
 
 impl FileCacheInfo {
+    /// Creates a new `FileCacheInfo` from the given task ID, time, and size.
     pub(crate) fn new(task_id: TaskId, time: SystemTime, size: u64) -> Self {
         Self {
             task_id,
@@ -528,22 +573,34 @@ impl FileCacheInfo {
             size,
         }
     }
+    /// Returns the task ID associated with this cache file.
     pub(crate) fn task_id(&self) -> &TaskId {
         &self.task_id
     }
+    /// Returns the modification time of this cache file.
     pub(crate) fn time(&self) -> SystemTime {
         self.time
     }
+    /// Returns the size of this cache file in bytes.
     pub(crate) fn size(&self) -> u64 {
         self.size
     }
 }
 
+/// Returns an iterator over the metadata of all valid cache files in the
+/// current store directory.
+///
+/// Returns `None` if the cache directory has not been initialized.
 pub(crate) fn get_cached_files_info() -> Option<impl Iterator<Item = FileCacheInfo>> {
     // SAFETY: This is a read-only operation to get the path
     unsafe { FILE_STORE_DIR.as_path() }.map(get_info_from_path)
 }
 
+/// Scans a directory and returns metadata for each valid cache file, sorted
+/// by modification time.
+///
+/// # Arguments
+/// * `path` - Directory to scan for cache files.
 pub(crate) fn get_info_from_path(path: &Path) -> impl Iterator<Item = FileCacheInfo> {
     // Read the directory contents
     let files = match fs::read_dir(path) {
@@ -570,6 +627,16 @@ pub(crate) fn get_info_from_path(path: &Path) -> impl Iterator<Item = FileCacheI
     v.into_iter()
 }
 
+/// Extracts cache file metadata from a directory entry.
+///
+/// Incomplete files (missing the finish suffix) are removed from disk.
+///
+/// # Arguments
+/// * `entry` - Directory entry to inspect.
+///
+/// # Errors
+/// Returns `io::Error` if the entry cannot be read, the file name is invalid
+/// UTF-8, the file is incomplete, or metadata cannot be retrieved.
 pub(crate) fn get_entry_file_info(entry: io::Result<DirEntry>) -> Result<FileCacheInfo, io::Error> {
     let entry = entry?;
     // Get the file name and validate it

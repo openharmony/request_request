@@ -42,8 +42,8 @@ impl PreloadCallback for Callback {}
 /// Creates a download request for the given URL and submits it to the cache
 /// download service with a callback. Uses the Ylong downloader implementation.
 ///
-/// # Parameters
-/// - `url`: URL of the resource to preload
+/// # Arguments
+/// * `url` - URL of the resource to preload
 fn agent_preload(url: &str) {
     let agent = CacheDownloadService::get_instance();
     let request = DownloadRequest::new(&url);
@@ -58,8 +58,8 @@ fn agent_preload(url: &str) {
 /// URLs for each iteration. This measures the performance when handling cache
 /// misses or new resources.
 ///
-/// # Parameters
-/// - `c`: Criterion benchmark context
+/// # Arguments
+/// * `c` - Criterion benchmark context
 fn preload_benchmark_different_url(c: &mut Criterion) {
     // Lazy initialization of test servers to avoid setup overhead during
     // benchmarking
@@ -90,8 +90,8 @@ fn preload_benchmark_different_url(c: &mut Criterion) {
 /// URL for each iteration. This measures the performance when handling cache
 /// hits for previously accessed resources.
 ///
-/// # Parameters
-/// - `c`: Criterion benchmark context
+/// # Arguments
+/// * `c` - Criterion benchmark context
 fn preload_benchmark_same_url(c: &mut Criterion) {
     // Lazy initialization of a single test server
     static SERVER: LazyLock<String> = LazyLock::new(|| test_server(|_| {}));

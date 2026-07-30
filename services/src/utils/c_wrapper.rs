@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! C-compatible wrappers for FFI data exchange.
+//!
+//! Defines `CStringWrapper`, `CFileSpec`, and `CFormItem` structures with
+//! `repr(C)` layout and conversion helpers to bridge `FormItem` and `FileSpec`
+//! across the Rust/C boundary.
+
 use std::ffi::c_char;
 use std::slice;
 

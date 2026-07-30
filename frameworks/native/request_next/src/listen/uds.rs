@@ -68,8 +68,8 @@ impl UdsListener {
     /// Socket from it. Converts the standard library socket to an
     /// asynchronous socket from ylong_runtime.
     ///
-    /// # Parameters
-    /// - `file`: File object representing the socket file descriptor
+    /// # Arguments
+    /// * `file` - File object representing the socket file descriptor
     ///
     /// # Returns
     /// A new `UdsListener` instance configured with the provided socket
@@ -201,11 +201,11 @@ pub enum Message {
 /// Checks the magic number, message ID, and body size to ensure message
 /// integrity. Updates the message type pointer with the extracted value.
 ///
-/// # Parameters
-/// - `uds`: Deserializer to read the message header
-/// - `size`: Size of the received message in bytes
-/// - `message_id`: Expected message ID for validation
-/// - `msg_type`: Output parameter to store the extracted message type
+/// # Arguments
+/// * `uds` - Deserializer to read the message header
+/// * `size` - Size of the received message in bytes
+/// * `message_id` - Expected message ID for validation
+/// * `msg_type` - Output parameter to store the extracted message type
 ///
 /// # Returns
 /// `true` if message validation succeeded, `false` if validation failed

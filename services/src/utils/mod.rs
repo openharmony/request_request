@@ -92,11 +92,11 @@ impl<T> Recv<T> {
 ///   this function.
 /// - The memory must remain valid until the function completes.
 ///
-/// # Parameters
+/// # Arguments
 ///
-/// - `ptr`: Pointer to the start of the array
-/// - `len`: Number of elements in the array
-/// - `func`: Conversion function to transform each element from type `A` to
+/// * `ptr` - Pointer to the start of the array
+/// * `len` - Number of elements in the array
+/// * `func` - Conversion function to transform each element from type `A` to
 ///   type `B`
 ///
 /// # Returns
@@ -181,9 +181,9 @@ pub(crate) fn get_current_duration() -> Duration {
 /// This function serializes a hash map into a string where each key-value pair
 /// is represented as "key\tvalue", with pairs separated by "\r\n".
 ///
-/// # Parameters
+/// # Arguments
 ///
-/// - `map`: The hash map to convert
+/// * `map` - The hash map to convert
 ///
 /// # Returns
 ///
@@ -225,9 +225,9 @@ pub(crate) fn hashmap_to_string(map: &HashMap<String, String>) -> String {
 /// This function deserializes a string where each key-value pair is represented
 /// as "key\tvalue", with pairs separated by "\r\n", into a hash map.
 ///
-/// # Parameters
+/// # Arguments
 ///
-/// - `str`: The string to parse, with format "key1\tvalue1\r\nkey2\tvalue2"
+/// * `str` - The string to parse, with format "key1\tvalue1\r\nkey2\tvalue2"
 ///
 /// # Returns
 ///
@@ -266,9 +266,9 @@ pub(crate) fn string_to_hashmap(str: &mut str) -> HashMap<String, String> {
 /// This function processes a string by first trimming any leading and trailing
 /// '[' and ']' characters, then splitting the remaining content by ", ".
 ///
-/// # Parameters
+/// # Arguments
 ///
-/// - `str`: The string to process, typically in format "[item1, item2, item3]"
+/// * `str` - The string to process, typically in format "[item1, item2, item3]"
 ///
 /// # Returns
 ///
@@ -293,10 +293,10 @@ pub(crate) fn split_string(str: &mut str) -> std::str::Split<'_, &str> {
 /// This function is a wrapper around `std::sync::Once::call_once` that
 /// boxes the closure to erase its type.
 ///
-/// # Parameters
+/// # Arguments
 ///
-/// - `once`: A reference to a `Once` synchronization primitive
-/// - `func`: The closure to call exactly once
+/// * `once` - A reference to a `Once` synchronization primitive
+/// * `func` - The closure to call exactly once
 ///
 /// # Examples
 ///
@@ -321,9 +321,9 @@ pub(crate) fn call_once<F: FnOnce()>(once: &Once, func: F) {
 /// This function boxes and pins the provided future before spawning it,
 /// allowing for dynamic dispatch of the future.
 ///
-/// # Parameters
+/// # Arguments
 ///
-/// - `fut`: The future to spawn
+/// * `fut` - The future to spawn
 ///
 /// # Returns
 ///
@@ -394,9 +394,9 @@ pub(crate) fn is_system_api() -> bool {
 /// specific permission by checking its token ID against the permission system
 /// through the FFI bridge to C++ code.
 ///
-/// # Parameters
+/// # Arguments
 ///
-/// - `permission`: The name of the permission to check
+/// * `permission` - The name of the permission to check
 ///
 /// # Returns
 ///
@@ -417,9 +417,9 @@ pub(crate) fn check_permission(permission: &str) -> bool {
 /// This function notifies the system policy manager about the status of tasks
 /// through the FFI bridge to C++ code.
 ///
-/// # Parameters
+/// # Arguments
 ///
-/// - `any_tasks`: Boolean indicating whether any tasks are currently active
+/// * `any_tasks` - Boolean indicating whether any tasks are currently active
 ///
 /// # Returns
 ///
@@ -458,7 +458,7 @@ pub(crate) fn is_called_by_hap() -> bool {
 /// and dots. The special value `"*"` is accepted as a wildcard meaning "all
 /// bundles".
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `name` - The bundle name to validate
 ///

@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Task event listening and observation.
+//!
+//! Aggregates the `Callback` trait and its `Observer` implementation that
+//! dispatch task lifecycle events to subscribers.
+
 mod observe;
 mod ser;
 mod uds;

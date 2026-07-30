@@ -26,7 +26,7 @@ use crate::wrapper;
 /// provided ACL entry string. ACLs provide more fine-grained access control
 /// than standard file permissions.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `target_file` - Path to the file for which to set access controls
 /// * `entry_txt` - String representation of ACL entries to apply
@@ -72,7 +72,7 @@ pub fn acl_set_access(target_file: &str, entry_txt: &str) -> Result<(), i32> {
 /// the provided ACL entry string. Default ACLs are applied to new files created
 /// within a directory.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `target_file` - Path to the file (typically a directory) for which to set default access controls
 /// * `entry_txt` - String representation of default ACL entries to apply

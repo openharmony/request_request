@@ -74,9 +74,9 @@ impl Updater {
     /// Initializes an updater with the given task ID and cache manager
     /// reference, ready to receive data for caching.
     ///
-    /// # Parameters
-    /// - `task_id`: Unique identifier for the task
-    /// - `cache_manager`: Static reference to the cache manager
+    /// # Arguments
+    /// * `task_id` - Unique identifier for the task
+    /// * `cache_manager` - Static reference to the cache manager
     ///
     /// # Returns
     /// A new Updater instance
@@ -114,11 +114,11 @@ impl Updater {
     /// any errors.
     ///
     /// # Type Parameters
-    /// - `F`: Function that returns the optional content length
+    /// * `F` - Function that returns the optional content length
     ///
-    /// # Parameters
-    /// - `data`: Data chunk to write to the cache
-    /// - `content_length`: Function that provides the total content length (if
+    /// # Arguments
+    /// * `data` - Data chunk to write to the cache
+    /// * `content_length` - Function that provides the total content length (if
     ///   known)
     pub fn cache_receive<F>(&mut self, data: &[u8], content_length: F)
     where

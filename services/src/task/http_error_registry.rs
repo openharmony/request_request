@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! HTTP error status code registry for failed tasks.
+//!
+//! Records the HTTP status code when a task fails with a protocol error and
+//! consumes it once when building the first failure notification, so the
+//! detailed HTTP message is delivered exactly once via the `onFail` callback.
+
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 

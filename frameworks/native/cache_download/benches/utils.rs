@@ -55,10 +55,10 @@ pub fn init() {
 /// a simple 200 OK response.
 ///
 /// # Type Parameters
-/// - `F`: Function to process the request lines from the client
+/// * `F` - Function to process the request lines from the client
 ///
-/// # Parameters
-/// - `f`: Callback function that processes the request lines
+/// # Arguments
+/// * `f` - Callback function that processes the request lines
 ///
 /// # Returns
 /// The URL of the running test server
@@ -98,11 +98,11 @@ where
 /// a simple HTTP 200 OK response back to the client.
 ///
 /// # Type Parameters
-/// - `F`: Function to process the request lines
+/// * `F` - Function to process the request lines
 ///
-/// # Parameters
-/// - `stream`: TCP stream representing the client connection
-/// - `task_f`: Callback function that processes the request lines
+/// # Arguments
+/// * `stream` - TCP stream representing the client connection
+/// * `task_f` - Callback function that processes the request lines
 ///
 /// # Panics
 ///

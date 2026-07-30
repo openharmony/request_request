@@ -43,17 +43,17 @@ use crate::observe::NetObserver;
 pub trait PreloadCallback: Send {
     /// Called when a download operation completes successfully.
     ///
-    /// # Parameters
-    /// - `data`: The downloaded content in RAM cache
-    /// - `task_id`: Brief identifier for the completed task
+    /// # Arguments
+    /// * `data` - The downloaded content in RAM cache
+    /// * `task_id` - Brief identifier for the completed task
     fn on_success(&mut self, data: Arc<RamCache>, task_id: &str) {}
 
     /// Called when a download operation fails.
     ///
-    /// # Parameters
-    /// - `error`: The error that caused the failure
-    /// - `info`: Download information for the failed task
-    /// - `task_id`: Brief identifier for the failed task
+    /// # Arguments
+    /// * `error` - The error that caused the failure
+    /// * `info` - Download information for the failed task
+    /// * `task_id` - Brief identifier for the failed task
     fn on_fail(&mut self, error: CacheDownloadError, info: RustDownloadInfo, task_id: &str) {}
 
     /// Called when a download operation is cancelled.
@@ -61,9 +61,9 @@ pub trait PreloadCallback: Send {
 
     /// Called periodically to report download progress.
     ///
-    /// # Parameters
-    /// - `progress`: Number of bytes downloaded so far
-    /// - `total`: Total number of bytes to download
+    /// # Arguments
+    /// * `progress` - Number of bytes downloaded so far
+    /// * `total` - Total number of bytes to download
     fn on_progress(&mut self, progress: u64, total: u64) {}
 }
 
@@ -113,8 +113,8 @@ pub struct DownloadRequest<'a> {
 impl<'a> DownloadRequest<'a> {
     /// Creates a new download request with the specified URL.
     ///
-    /// # Parameters
-    /// - `url`: The URL to download from
+    /// # Arguments
+    /// * `url` - The URL to download from
     ///
     /// # Examples
     ///
@@ -135,8 +135,8 @@ impl<'a> DownloadRequest<'a> {
 
     /// Adds HTTP headers to the download request.
     ///
-    /// # Parameters
-    /// - `headers`: Vector of (header_name, header_value) pairs
+    /// # Arguments
+    /// * `headers` - Vector of (header_name, header_value) pairs
     ///
     /// # Returns
     /// A mutable reference to self for method chaining
@@ -156,8 +156,8 @@ impl<'a> DownloadRequest<'a> {
 
     /// Sets the SSL type for the download request.
     ///
-    /// # Parameters
-    /// - `ssl_type`: The SSL type to use
+    /// # Arguments
+    /// * `ssl_type` - The SSL type to use
     ///
     /// # Returns
     /// A mutable reference to self for method chaining
@@ -168,8 +168,8 @@ impl<'a> DownloadRequest<'a> {
 
     /// Sets the path to CA certificates for SSL verification.
     ///
-    /// # Parameters
-    /// - `ca_path`: Path to CA certificate file or directory
+    /// # Arguments
+    /// * `ca_path` - Path to CA certificate file or directory
     ///
     /// # Returns
     /// A mutable reference to self for method chaining
@@ -182,8 +182,8 @@ impl<'a> DownloadRequest<'a> {
     ///
     /// This overrides the global retry configuration for this specific task.
     ///
-    /// # Parameters
-    /// - `max_retry`: Maximum number of retry attempts (0-10)
+    /// # Arguments
+    /// * `max_retry` - Maximum number of retry attempts (0-10)
     ///
     /// # Returns
     /// A mutable reference to self for method chaining
@@ -196,8 +196,8 @@ impl<'a> DownloadRequest<'a> {
     ///
     /// This overrides the global timeout configuration for this specific task.
     ///
-    /// # Parameters
-    /// - `timeout`: Network availability check timeout in seconds (0-20)
+    /// # Arguments
+    /// * `timeout` - Network availability check timeout in seconds (0-20)
     ///
     /// # Returns
     /// A mutable reference to self for method chaining
@@ -210,8 +210,8 @@ impl<'a> DownloadRequest<'a> {
     ///
     /// This overrides the global timeout configuration for this specific task.
     ///
-    /// # Parameters
-    /// - `timeout`: Complete HTTP request-response cycle timeout in seconds (minimum 1)
+    /// # Arguments
+    /// * `timeout` - Complete HTTP request-response cycle timeout in seconds (minimum 1)
     ///
     /// # Returns
     /// A mutable reference to self for method chaining
@@ -280,8 +280,8 @@ impl CacheDownloadService {
 
     /// Cancels a download task identified by URL.
     ///
-    /// # Parameters
-    /// - `url`: URL of the download task to cancel
+    /// # Arguments
+    /// * `url` - URL of the download task to cancel
     pub fn cancel(&self, url: &str) {
         let task_id = TaskId::from_url(url);
         if let Some(updater) = self.running_tasks.lock().unwrap().get(&task_id).cloned() {
@@ -301,8 +301,8 @@ impl CacheDownloadService {
 
     /// Removes a cached item identified by URL.
     ///
-    /// # Parameters
-    /// - `url`: URL of the cached item to remove
+    /// # Arguments
+    /// * `url` - URL of the cached item to remove
     pub fn remove(&self, url: &str) {
         let task_id = TaskId::from_url(url);
         self.cache_manager.remove(task_id);
@@ -310,8 +310,8 @@ impl CacheDownloadService {
 
     /// Checks if a URL is already cached.
     ///
-    /// # Parameters
-    /// - `url`: URL to check in the cache
+    /// # Arguments
+    /// * `url` - URL to check in the cache
     ///
     /// # Returns
     /// `true` if the URL is in the cache, `false` otherwise
@@ -326,11 +326,11 @@ impl CacheDownloadService {
     /// updating existing cached content, and using the provided callback
     /// for progress notifications.
     ///
-    /// # Parameters
-    /// - `request`: Download request with URL and optional configuration
-    /// - `callback`: Callback to receive download events
-    /// - `update`: Whether to update existing cached content
-    /// - `downloader`: Type of downloader to use for the operation
+    /// # Arguments
+    /// * `request` - Download request with URL and optional configuration
+    /// * `callback` - Callback to receive download events
+    /// * `update` - Whether to update existing cached content
+    /// * `downloader` - Type of downloader to use for the operation
     ///
     /// # Returns
     /// An optional task handle for controlling the download if it was
@@ -428,8 +428,8 @@ impl CacheDownloadService {
 
     /// Fetches cached content for a URL.
     ///
-    /// # Parameters
-    /// - `url`: URL of the content to fetch
+    /// # Arguments
+    /// * `url` - URL of the content to fetch
     ///
     /// # Returns
     /// An optional Arc to the cached content if found
@@ -443,9 +443,9 @@ impl CacheDownloadService {
     /// Removes the task from tracking if the sequence number matches the
     /// current task.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the completed task
-    /// - `seq`: Sequence number of the task completion
+    /// # Arguments
+    /// * `task_id` - ID of the completed task
+    /// * `seq` - Sequence number of the task completion
     pub(crate) fn task_finish(&self, task_id: &TaskId, seq: usize) {
         let Some(updater) = self.running_tasks.lock().unwrap().get(task_id).cloned() else {
             return;
@@ -459,8 +459,8 @@ impl CacheDownloadService {
 
     /// Sets the maximum file cache size.
     ///
-    /// # Parameters
-    /// - `size`: Maximum size in bytes for file cache
+    /// # Arguments
+    /// * `size` - Maximum size in bytes for file cache
     pub fn set_file_cache_size(&self, size: u64) {
         info!("set file cache size to {}", size);
         self.cache_manager.set_file_cache_size(size);
@@ -468,8 +468,8 @@ impl CacheDownloadService {
 
     /// Sets the maximum RAM cache size.
     ///
-    /// # Parameters
-    /// - `size`: Maximum size in bytes for RAM cache
+    /// # Arguments
+    /// * `size` - Maximum size in bytes for RAM cache
     pub fn set_ram_cache_size(&self, size: u64) {
         info!("set ram cache size to {}", size);
         self.cache_manager.set_ram_cache_size(size);
@@ -477,16 +477,16 @@ impl CacheDownloadService {
 
     /// Sets the maximum number of download info entries to keep.
     ///
-    /// # Parameters
-    /// - `size`: Maximum number of download info entries
+    /// # Arguments
+    /// * `size` - Maximum number of download info entries
     pub fn set_info_list_size(&self, size: u16) {
         self.info_mgr.update_info_list_size(size);
     }
 
     /// Gets download information for a URL.
     ///
-    /// # Parameters
-    /// - `url`: URL to get download information for
+    /// # Arguments
+    /// * `url` - URL to get download information for
     ///
     /// # Returns
     /// Optional download information if available
@@ -523,8 +523,8 @@ impl CacheDownloadService {
 
     /// Sets global retry options for all tasks.
     ///
-    /// # Parameters
-    /// - `max_retry`: Maximum retry count (default: 3, min: 0, max: 10)
+    /// # Arguments
+    /// * `max_retry` - Maximum retry count (default: 3, min: 0, max: 10)
     pub fn set_global_retry_options(&self, max_retry: usize) {
         let max_retry = if max_retry > 10 { 10 } else { max_retry };
         *self.global_max_retry.lock().unwrap() = max_retry;
@@ -533,9 +533,9 @@ impl CacheDownloadService {
 
     /// Sets global timeout options for all tasks.
     ///
-    /// # Parameters
-    /// - `network_check_timeout`: Network check timeout in seconds (default: 20, min: 0, max: 20)
-    /// - `http_total_timeout`: HTTP total timeout in seconds (default: 60, min: 1)
+    /// # Arguments
+    /// * `network_check_timeout` - Network check timeout in seconds (default: 20, min: 0, max: 20)
+    /// * `http_total_timeout` - HTTP total timeout in seconds (default: 60, min: 1)
     pub fn set_global_timeout_options(&self, network_check_timeout: u32, http_total_timeout: u32) {
         let network_check_timeout = if network_check_timeout > 20 {
             20
@@ -581,9 +581,9 @@ impl CacheDownloadService {
 
     /// Fetches content from cache with callback notification.
     ///
-    /// # Parameters
-    /// - `task_id`: ID of the task to fetch
-    /// - `callback`: Callback to notify on success or return on failure
+    /// # Arguments
+    /// * `task_id` - ID of the task to fetch
+    /// * `callback` - Callback to notify on success or return on failure
     ///
     /// # Returns
     /// Ok(()) if content was found and callback notified, Err(callback)

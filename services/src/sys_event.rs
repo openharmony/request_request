@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! System event reporting based on HiSysEvent.
+//!
+//! Defines the `SysEvent` builder, `EventKind` enumeration, and the `DfxCode`
+//! error code table used to report task faults, execution errors, and
+//! execution faults for diagnostics and reliability analysis.
+
 use hisysevent::{build_number_param, build_str_param, write, EventType, HiSysEventParam};
 
 const DOMAIN: &str = "REQUEST";

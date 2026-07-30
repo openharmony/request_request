@@ -51,8 +51,8 @@ mod ffi {
 /// Queries the system bundle service to get the application's index and name
 /// associated with the provided UID.
 ///
-/// # Parameters
-/// - `uid`: The user ID to query for application information
+/// # Arguments
+/// * `uid` - The user ID to query for application information
 ///
 /// # Returns
 /// - `Some((i32, String))` containing the application index and name if

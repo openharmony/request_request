@@ -11,6 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Form items verifier for task configs.
+//!
+//! On API9 the `form_items` field must not be empty for upload actions.
+
 use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;

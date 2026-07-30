@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! CXX FFI wrapper exposing directory operations to C++.
+//!
+//! Declares the Rust side of the `OHOS::Request::DirOperation` CXX bridge,
+//! forwarding create/remove/exists calls to the `directory` module helpers.
+
 use crate::directory::{create_dir, is_dir_exist, is_file_exist, remove_dir};
 
 #[cxx::bridge(namespace = "OHOS::Request::DirOperation")]

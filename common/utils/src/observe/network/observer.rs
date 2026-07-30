@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Network state change observer trait.
+//!
+//! Defines the `Observer` trait whose methods are invoked when a network
+//! becomes available, is lost, or has its capabilities changed. Default
+//! no-op implementations let consumers override only the events they need.
+
 use super::wrapper::ffi::NetInfo;
 
 /// Observer for receiving network state change notifications.

@@ -99,7 +99,7 @@ pub fn check_config(
 
 /// Creates and starts a download task with the given configuration.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `env` - The animation environment reference
 /// * `context` - The application context
@@ -203,7 +203,7 @@ pub fn download_file(
 ///
 /// Removes the specified download task from the system.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `this` - The download task to delete
 ///
@@ -245,7 +245,7 @@ pub fn delete(this: DownloadTask) -> Result<bool, BusinessError> {
 ///
 /// Pauses an active download task.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `this` - The download task to suspend
 ///
@@ -291,7 +291,7 @@ pub fn suspend(this: DownloadTask) -> Result<bool, BusinessError> {
 ///
 /// Resumes a previously paused download task.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `this` - The download task to restore
 ///
@@ -337,7 +337,7 @@ pub fn restore(this: DownloadTask) -> Result<bool, BusinessError> {
 ///
 /// Gets detailed information about the specified download task.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `this` - The download task to get information for
 ///
@@ -379,7 +379,7 @@ pub fn get_task_info(this: DownloadTask) -> Result<DownloadInfo, BusinessError> 
 /// Currently returns a static value of "application/octet-stream" for all
 /// tasks.
 ///
-/// # Parameters
+/// # Arguments
 ///
 /// * `this` - The download task to get MIME type for
 ///

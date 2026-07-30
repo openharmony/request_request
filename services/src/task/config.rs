@@ -11,6 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Task configuration definitions.
+//!
+//! Defines `TaskConfig`, `CommonTaskConfig`, `Action`, `Mode`, `NetworkConfig`,
+//! and the `ConfigBuilder` used to construct download/upload tasks, including
+//! network constraints, timeouts, and IPC serialization for cross-process
+//! delivery.
+
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::os::fd::{FromRawFd, IntoRawFd, RawFd};

@@ -11,6 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Form data structures for upload requests.
+//!
+//! Defines `FileSpec` for describing uploaded files (with optional file
+//! descriptor) and `FormItem` for key-value text fields submitted alongside
+//! file uploads.
+
 use std::fs::File;
 use std::os::fd::{IntoRawFd, RawFd};
 
@@ -38,8 +44,8 @@ pub struct FileSpec {
 impl FileSpec {
     /// Creates a new file specification for a user-provided file.
     ///
-    /// # Parameters
-    /// - `file`: The user-provided `File` object to be uploaded.
+    /// # Arguments
+    /// * `file` - The user-provided `File` object to be uploaded.
     ///
     /// # Returns
     /// A new `FileSpec` with `is_user_file` set to `true` and the file

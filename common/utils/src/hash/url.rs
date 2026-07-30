@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! URL hashing helpers.
+//!
+//! Provides a `url_hash` function that uses SHA-256 on OpenHarmony builds
+//! and a default non-cryptographic hasher on other platforms.
+
 cfg_not_ohos! {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};

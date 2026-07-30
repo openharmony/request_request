@@ -11,6 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Rust bindings for the FastFlow Runtime (FFRT).
+//!
+//! Exposes task spawning and sleep primitives backed by the underlying
+//! C++ FFRT implementation through safe wrapper types.
+
 #![allow(missing_docs)]
 mod wrapper;
 
