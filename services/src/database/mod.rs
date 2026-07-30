@@ -136,6 +136,24 @@ pub(crate) fn clear_database_by_state(pre_count: usize) -> Result<bool, ()> {
     Ok(any_remain)
 }
 
+/// Checkpoints the WAL back into the main database file.
+///
+/// Runs `PRAGMA wal_checkpoint(RESTART)`: waits for in-flight readers to finish, merges as
+/// many WAL frames as possible into the main DB, and resets the WAL file. This shrinks the
+/// `-wal` file after bulk deletes and is safe for the encrypted store. Failures are logged
+/// but do not propagate, since a missed checkpoint only leaves the WAL larger than desired.
+pub(crate) fn checkpoint_wal() {
+    // ExecuteSql is the only path that accepts this PRAGMA: Execute rejects multi-column
+    // PRAGMAs and Query rejects PRAGMA as non-query sql. TRUNCATE merges the WAL into the
+    // main DB and physically truncates -wal to 0 bytes; degrades to a plain checkpoint (no
+    // truncation) if a reader is in flight.
+    if let Err(e) = REQUEST_DB.execute_sql("PRAGMA wal_checkpoint(TRUNCATE)") {
+        error!("Failed to checkpoint WAL: {}", e);
+    } else {
+        info!("WAL checkpoint completed");
+    }
+}
+
 #[cfg(test)]
 mod ut_database {
     include!("../../tests/ut/ut_database.rs");
