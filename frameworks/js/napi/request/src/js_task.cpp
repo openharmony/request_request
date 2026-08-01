@@ -1146,6 +1146,34 @@ void JsTask::RemoveTaskContext(const std::string &tid)
     DeleteContextTaskRef(context);
 }
 
+bool JsTask::DeleteTaskRef(ContextCallbackData *data)
+{
+    if (data->context->taskRef == nullptr) {
+        return true;
+    }
+    napi_status status = napi_delete_reference(data->context->env_, data->context->taskRef);
+    if (status != napi_ok) {
+        REQUEST_HILOGE("UnrefTask delete taskRef failed");
+        return false;
+    }
+    data->context->taskRef = nullptr;
+    return true;
+}
+
+bool JsTask::DeleteBaseContextRef(ContextCallbackData *data)
+{
+    if (data->context->baseContext == nullptr) {
+        return true;
+    }
+    napi_status status = napi_delete_reference(data->context->env_, data->context->baseContext);
+    if (status != napi_ok) {
+        REQUEST_HILOGE("UnrefTask delete baseContext failed");
+        return false;
+    }
+    data->context->baseContext = nullptr;
+    return true;
+}
+
 // Release the strong reference (taskRef) to the JS Task object on the JS thread.
 // The lifetime of `data` is managed by the asynchronous callback and relies on the
 // NAPI event loop dispatching it normally. In abnormal cases the callback may not run
@@ -1162,7 +1190,8 @@ void JsTask::DeleteContextTaskRef(std::shared_ptr<ContextInfo> context)
         if (data == nullptr) {
             return;
         }
-        if (data->context == nullptr || data->context->env_ == nullptr || data->context->taskRef == nullptr) {
+        if (data->context == nullptr || data->context->env_ == nullptr ||
+            (data->context->taskRef == nullptr && data->context->baseContext == nullptr)) {
             delete data;
             return;
         }
@@ -1173,18 +1202,16 @@ void JsTask::DeleteContextTaskRef(std::shared_ptr<ContextInfo> context)
             delete data;
             return;
         }
-        status = napi_delete_reference(data->context->env_, data->context->taskRef);
-        if (status != napi_ok) {
-            delete data;
-            return;
+        bool taskRefDeleted = DeleteTaskRef(data);
+        bool baseContextDeleted = DeleteBaseContextRef(data);
+        if (!taskRefDeleted || !baseContextDeleted) {
+            REQUEST_HILOGE("UnrefTask delete reference failed");
         }
-        data->context->taskRef = nullptr;
         status = napi_close_handle_scope(data->context->env_, scope);
         if (status != napi_ok) {
             REQUEST_HILOGE("UnrefTask napi_close_handle_scope failed");
         }
         delete data;
-        return;
     };
 
     int32_t ret = napi_send_event(data->context->env_, callback, napi_eprio_high,

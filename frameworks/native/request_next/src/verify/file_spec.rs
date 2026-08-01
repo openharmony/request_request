@@ -15,9 +15,6 @@ use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;
 
-/// Verifier for the file specifications of a task config.
-///
-/// Ensures that `file_specs` is not empty when the action is an upload.
 pub struct FileSpecVerifier {}
 
 impl ConfigVerifier for FileSpecVerifier {

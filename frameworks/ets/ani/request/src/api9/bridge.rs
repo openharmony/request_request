@@ -141,10 +141,6 @@ pub struct File {
     type_: String,
 }
 
-/// Converts from API File to core FileSpec.
-///
-/// Transforms the ETS file representation into the core file specification
-/// used by the request service.
 impl From<File> for FileSpec {
     fn from(value: File) -> Self {
         FileSpec {
@@ -158,9 +154,6 @@ impl From<File> for FileSpec {
     }
 }
 
-/// Represents a request data item for form submissions.
-///
-/// Used to transfer form field data from the ETS API to the core service.
 #[ani_rs::ani(path = "@ohos.request.request.RequestDataInner")]
 pub struct RequestData {
     /// Name of the form field.
@@ -169,10 +162,9 @@ pub struct RequestData {
     value: String,
 }
 
-/// Converts from API RequestData to core FormItem.
+/// Represents the state of a task.
 ///
-/// Transforms the ETS request data representation into the core form item
-/// used for form submissions.
+/// Contains information about the current state of a task operation.
 impl From<RequestData> for FormItem {
     fn from(value: RequestData) -> Self {
         FormItem {
@@ -182,7 +174,6 @@ impl From<RequestData> for FormItem {
     }
 }
 
-/// State of an individual upload sub-task reported back to the caller.
 #[ani_rs::ani(path = "@ohos.request.request.TaskStateInner")]
 #[derive(Clone)]
 pub struct TaskState {
@@ -277,10 +268,6 @@ impl From<TaskInfo> for DownloadInfo {
     }
 }
 
-/// Converts from API UploadConfig to core TaskConfig.
-///
-/// Transforms the ETS upload configuration into the core task configuration
-/// format, setting appropriate defaults for upload operations.
 impl From<UploadConfig> for TaskConfig {
     fn from(config: UploadConfig) -> Self {
         let mut config_builder = TaskConfigBuilder::new(Version::API9);

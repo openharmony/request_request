@@ -15,9 +15,6 @@ use request_core::config::{Action, TaskConfig, Version};
 
 use crate::verify::ConfigVerifier;
 
-/// Verifier for the request data field of a task config.
-///
-/// On API10 the `data` field must be empty for upload actions.
 pub struct DataVerifier {}
 
 impl ConfigVerifier for DataVerifier {

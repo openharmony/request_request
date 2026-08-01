@@ -15,10 +15,6 @@ use request_core::config::{Action, TaskConfig};
 
 use crate::verify::ConfigVerifier;
 
-/// Verifier for the file index of a task config.
-///
-/// Ensures the index is zero for downloads and does not exceed the number of
-/// file specifications for uploads.
 pub struct IndexVerifier {}
 
 impl ConfigVerifier for IndexVerifier {

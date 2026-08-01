@@ -263,9 +263,6 @@ pub fn on_response_event(
     Ok(())
 }
 
-/// Registers a callback for task fault events.
-///
-/// Only the `"faultOccur"` event is supported.
 #[ani_rs::native]
 pub fn on_fault_event(
     env: &AniEnv,
@@ -305,9 +302,6 @@ pub fn on_fault_event(
     Ok(())
 }
 
-/// Registers a callback for task waiting events.
-///
-/// Only the `"wait"` event is supported.
 #[ani_rs::native]
 pub fn on_wait_event(
     env: &AniEnv,
@@ -350,10 +344,6 @@ pub fn on_wait_event(
     Ok(())
 }
 
-/// Unregisters a specific callback for a task event.
-///
-/// Supported `event` values are `"completed"`, `"pause"`, `"failed"`,
-/// `"remove"`, `"progress"`, and `"resume"`.
 #[ani_rs::native]
 pub fn off_event(
     env: &AniEnv,
@@ -402,9 +392,6 @@ pub fn off_event(
     Ok(())
 }
 
-/// Unregisters a specific response callback for a task.
-///
-/// Only the `"response"` event is supported.
 #[ani_rs::native]
 pub fn off_response_event(
     env: &AniEnv,
@@ -427,9 +414,6 @@ pub fn off_response_event(
     Ok(())
 }
 
-/// Unregisters a specific fault callback for a task.
-///
-/// Only the `"faultOccur"` event is supported.
 #[ani_rs::native]
 pub fn off_fault_event(
     env: &AniEnv,
@@ -452,9 +436,6 @@ pub fn off_fault_event(
     Ok(())
 }
 
-/// Unregisters a specific wait callback for a task.
-///
-/// Only the `"wait"` event is supported.
 #[ani_rs::native]
 pub fn off_wait_event(
     env: &AniEnv,
@@ -477,11 +458,6 @@ pub fn off_wait_event(
     Ok(())
 }
 
-/// Unregisters all callbacks of a given event type for a task.
-///
-/// Supported `event` values include `"completed"`, `"pause"`, `"failed"`,
-/// `"remove"`, `"progress"`, `"resume"`, `"faultOccur"`, `"response"`, and
-/// `"wait"`.
 #[ani_rs::native]
 pub fn off_events(
     env: &AniEnv,
@@ -542,7 +518,6 @@ pub fn off_events(
     Ok(())
 }
 
-/// Collection of callbacks for the various events a task can emit.
 pub struct CallbackColl {
     /// Callbacks to be executed on progress updates.
     on_progress: Mutex<Vec<GlobalRefCallback<(bridge::Progress,)>>>,
@@ -558,9 +533,7 @@ pub struct CallbackColl {
     on_fail: Mutex<Vec<GlobalRefCallback<(bridge::Progress,)>>>,
     /// Callbacks to be executed when HTTP response is received.
     on_response: Mutex<Vec<GlobalRefCallback<(bridge::HttpResponse,)>>>,
-    /// Callbacks to be executed when a fault occurs.
     on_fault: Mutex<Vec<GlobalRefCallback<(bridge::Faults,)>>>,
-    /// Callbacks to be executed when task enters waiting state.
     on_wait: Mutex<Vec<GlobalRefCallback<(bridge::WaitingReason,)>>>,
 }
 
@@ -657,13 +630,6 @@ impl request_client::Callback for CallbackColl {
         }
     }
 
-    /// Handles fault events.
-    ///
-    /// Executes all registered fault callbacks with the fault type.
-    ///
-    /// # Parameters
-    ///
-    /// * `faults` - The type of fault that occurred
     fn on_fault(&self, faults: Faults) {
         let callbacks = self.on_fault.lock().unwrap();
         for callback in callbacks.iter() {
@@ -671,13 +637,6 @@ impl request_client::Callback for CallbackColl {
         }
     }
 
-    /// Handles wait events.
-    ///
-    /// Executes all registered wait callbacks with the waiting reason.
-    ///
-    /// # Parameters
-    ///
-    /// * `waiting_reason` - The reason why the task is waiting
     fn on_wait(&self, waiting_reason: WaitingReason) {
         let callbacks = self.on_wait.lock().unwrap();
         for callback in callbacks.iter() {
@@ -713,5 +672,9 @@ impl CallbackManager {
         INSTANCE.get_or_init(|| CallbackManager {
             tasks: Mutex::new(HashMap::new()),
         })
+    }
+
+    pub fn remove_task(&self, task_id: i64) {
+        self.tasks.lock().unwrap().remove(&task_id);
     }
 }

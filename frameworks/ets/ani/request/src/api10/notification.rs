@@ -19,24 +19,9 @@ use request_utils::context::Context;
 use crate::api10::bridge::GroupConfig;
 use crate::constant::*;
 
-/// Maximum allowed length for notification titles.
 const MAX_TITLE_LENGTH: usize = 1024;
-/// Maximum allowed length for notification text content.
 const MAX_TEXT_LENGTH: usize = 3072;
 
-/// Validates notification title and text length.
-///
-/// Checks that the title and text do not exceed their maximum allowed lengths.
-///
-/// # Parameters
-///
-/// * `title` - Optional notification title to validate
-/// * `text` - Optional notification text to validate
-///
-/// # Returns
-///
-/// * `Ok(())` if both title and text are within limits
-/// * `Err(BusinessError)` if either exceeds its maximum length
 fn ParseTitleText(title: &Option<String>, text: &Option<String>) -> Result<(), BusinessError> {
     if let Some(v) = title {
         if v.len() > MAX_TITLE_LENGTH {
@@ -57,18 +42,6 @@ fn ParseTitleText(title: &Option<String>, text: &Option<String>) -> Result<(), B
     Ok(())
 }
 
-/// Validates group ID format.
-///
-/// Checks that the group ID is not empty.
-///
-/// # Parameters
-///
-/// * `gid` - Group ID to validate
-///
-/// # Returns
-///
-/// * `Ok(())` if the group ID is valid
-/// * `Err(BusinessError)` if the group ID is empty
 fn ParseGid(gid: &str) -> Result<(), BusinessError> {
     if gid.is_empty() {
         return Err(BusinessError::new(
@@ -79,12 +52,6 @@ fn ParseGid(gid: &str) -> Result<(), BusinessError> {
     Ok(())
 }
 
-/// Validates the notification configuration for a task group.
-///
-/// # Returns
-///
-/// * `Ok(())` if the configuration is valid
-/// * `Err(BusinessError)` if `visibility` is not 1, 2, or 3
 #[ani_rs::native]
 pub fn check_group_config(env: &AniEnv, config: GroupConfig) -> Result<(), BusinessError> {
     if let Some(visibility) = config.notification.visibility {
@@ -99,12 +66,6 @@ pub fn check_group_config(env: &AniEnv, config: GroupConfig) -> Result<(), Busin
     Ok(())
 }
 
-/// Creates a new task group and returns its group ID.
-///
-/// # Returns
-///
-/// * `Ok(String)` containing the new group ID
-/// * `Err(BusinessError)` if title/text validation or group creation fails
 #[ani_rs::native]
 pub fn create_group(env: &AniEnv, mut config: GroupConfig) -> Result<String, BusinessError> {
     ParseTitleText(&config.notification.title, &config.notification.text)?;
@@ -129,12 +90,6 @@ pub fn create_group(env: &AniEnv, mut config: GroupConfig) -> Result<String, Bus
         .map_err(|e| BusinessError::new_static(e, "Failed to create group"))
 }
 
-/// Attaches a list of tasks to an existing task group.
-///
-/// # Returns
-///
-/// * `Ok(())` if the tasks were successfully attached
-/// * `Err(BusinessError)` if the group ID is empty or attachment fails
 #[ani_rs::native]
 pub fn attach_group(gid: String, tids: Vec<String>) -> Result<(), BusinessError> {
     ParseGid(&gid)?;
@@ -143,12 +98,6 @@ pub fn attach_group(gid: String, tids: Vec<String>) -> Result<(), BusinessError>
         .map_err(|e| BusinessError::new_static(e, "Failed to attach group"))
 }
 
-/// Deletes an existing task group.
-///
-/// # Returns
-///
-/// * `Ok(())` if the group was successfully deleted
-/// * `Err(BusinessError)` if the group ID is empty or deletion fails
 #[ani_rs::native]
 pub fn delete_group(gid: String) -> Result<(), BusinessError> {
     ParseGid(&gid)?;

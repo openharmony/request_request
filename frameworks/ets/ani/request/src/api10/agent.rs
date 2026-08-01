@@ -29,26 +29,13 @@ use request_core::filter::SearchFilter;
 use request_utils::context::Context;
 
 use crate::api10::bridge::{Config, Filter, Task, TaskInfo};
+use crate::api10::callback::CallbackManager;
 use crate::constant::*;
 use crate::seq::TaskSeq;
 
-/// Minimum allowed length for authentication tokens (in bytes).
 const TOKEN_MIN_BYTES: usize = 8;
-/// Maximum allowed length for authentication tokens (in bytes).
 const TOKEN_MAX_BYTES: usize = 2048;
 
-/// Validates task ID format.
-///
-/// Checks that the task ID is not empty and does not exceed the maximum length.
-///
-/// # Parameters
-///
-/// * `id` - Task ID to validate
-///
-/// # Returns
-///
-/// * `Ok(())` if the task ID is valid
-/// * `Err(BusinessError)` if the task ID is empty or too long
 #[ani_rs::native]
 pub fn check_tid(id: String) -> Result<(), BusinessError> {
     if id.is_empty() {
@@ -66,18 +53,6 @@ pub fn check_tid(id: String) -> Result<(), BusinessError> {
     Ok(())
 }
 
-/// Validates authentication token format.
-///
-/// Checks that the token length is within the allowed range.
-///
-/// # Parameters
-///
-/// * `token` - Authentication token to validate
-///
-/// # Returns
-///
-/// * `Ok(())` if the token is valid
-/// * `Err(BusinessError)` if the token length is out of range
 #[ani_rs::native]
 pub fn check_token(token: String) -> Result<(), BusinessError> {
     if token.len() < TOKEN_MIN_BYTES || token.len() > TOKEN_MAX_BYTES {
@@ -90,12 +65,6 @@ pub fn check_token(token: String) -> Result<(), BusinessError> {
     Ok(())
 }
 
-/// Validates an API 10 task configuration and allocates a sequence ID.
-///
-/// # Returns
-///
-/// * `Ok(i64)` containing the generated sequence ID on success
-/// * `Err(BusinessError)` if the configuration or download path is invalid
 #[ani_rs::native]
 pub fn check_config(env: &AniEnv, context: AniRef, config: Config) -> Result<i64, BusinessError> {
     let context = AniObject::from(context);
@@ -319,7 +288,9 @@ pub fn remove(id: String) -> Result<(), BusinessError> {
     })?;
     RequestClient::get_instance()
         .remove(task_id)
-        .map_err(|e| BusinessError::new_static(e, "Failed to remove task"))
+        .map_err(|e| BusinessError::new_static(e, "Failed to remove task"))?;
+    CallbackManager::get_instance().remove_task(task_id);
+    Ok(())
 }
 
 /// Shows detailed information about a task with the specified ID.
