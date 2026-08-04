@@ -295,12 +295,14 @@ std::vector<Upload::File> JSUtil::Convert2FileVector(napi_env env, napi_value js
         }
         napi_get_element(env, jsFiles, i, &jsFile);
         if (jsFile == nullptr) {
+            napi_close_handle_scope(env, scope);
             continue;
         }
 
         Upload::File file;
         bool ret = Convert2FileL5(env, jsFile, file);
         if (!ret) {
+            napi_close_handle_scope(env, scope);
             continue;
         }
         files.push_back(file);

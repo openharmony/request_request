@@ -15,9 +15,6 @@ use request_core::config::TaskConfig;
 
 use crate::verify::ConfigVerifier;
 
-/// Verifier for the minimum speed thresholds of a task config.
-///
-/// Ensures both the minimum speed value and its duration are non-negative.
 pub struct MinSpeedVerifier {}
 
 impl ConfigVerifier for MinSpeedVerifier {

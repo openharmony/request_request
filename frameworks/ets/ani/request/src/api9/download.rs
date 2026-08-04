@@ -33,15 +33,10 @@ use request_utils::context::{is_stage_context, Context};
 
 use super::bridge::{DownloadConfig, DownloadTask};
 use crate::api9::bridge::DownloadInfo;
+use crate::api9::callback::CallbackManager;
 use crate::constant::*;
 use crate::seq::TaskSeq;
 
-/// Validates a download configuration and allocates a task sequence ID.
-///
-/// # Returns
-///
-/// * `Ok(i64)` containing the generated sequence ID on success
-/// * `Err(BusinessError)` if the configuration or download path is invalid
 #[ani_rs::native]
 pub fn check_config(
     env: &AniEnv,
@@ -229,18 +224,14 @@ pub fn download_file(
 /// ```
 #[ani_rs::native]
 pub fn delete(this: DownloadTask) -> Result<bool, BusinessError> {
-    RequestClient::get_instance()
-        .remove(this.task_id.parse().unwrap())
-        .map_err(|e| {
-            if e != ExceptionErrorCode::E_PERMISSION as i32 {
-                Ok(true)
-            } else {
-                Err(BusinessError::new(
-                    e,
-                    "Failed to delete download task".to_string(),
-                ))
-            }
-        });
+    let task_id = this.task_id.parse().unwrap();
+    match RequestClient::get_instance().remove(task_id) {
+        Err(e) if e == ExceptionErrorCode::E_PERMISSION as i32 => {
+            return Err(BusinessError::new(e, "Failed to delete download task".to_string()));
+        }
+        _ => {}
+    }
+    CallbackManager::get_instance().remove_task(task_id);
     Ok(true)
 }
 

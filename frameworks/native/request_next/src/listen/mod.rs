@@ -15,5 +15,4 @@ mod observe;
 mod ser;
 mod uds;
 
-/// Re-exports of the task event callback trait and its observer.
 pub use observe::{Callback, Observer};

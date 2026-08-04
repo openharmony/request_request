@@ -115,6 +115,8 @@ private:
     static int64_t ParseBefore(napi_env env, napi_value value);
     static int64_t ParseAfter(napi_env env, napi_value value, int64_t before);
     static void DeleteContextTaskRef(std::shared_ptr<ContextInfo> context);
+    static bool DeleteTaskRef(ContextCallbackData *data);
+    static bool DeleteBaseContextRef(ContextCallbackData *data);
     static void RegisterForegroundResume();
     static void AddTaskWhenCreate(std::shared_ptr<ContextInfo> context);
     static void AddRemoveListener(const std::shared_ptr<ContextInfo> &context);

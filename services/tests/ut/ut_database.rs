@@ -402,7 +402,7 @@ fn ut_clear_database_by_state_remain_flag() {
         .unwrap()
         .as_millis() as u64;
     let two_days_ago = current_time - MILLIS_IN_TWO_DAYS;
-
+    REQUEST_DB.execute("DELETE FROM request_task", ()).unwrap();
     REQUEST_DB
         .execute(
             "CREATE TABLE IF NOT EXISTS request_task (task_id INTEGER PRIMARY KEY, mtime INTEGER, state INTEGER)",

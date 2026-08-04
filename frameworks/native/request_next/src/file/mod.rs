@@ -21,7 +21,6 @@ use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 
 use cxx::let_cxx_string;
-/// Re-exports of the permission manager and its permission tokens.
 pub use permission::{PermissionManager, PermissionToken};
 use request_core::config::{Action, Mode, TaskConfig, Version};
 use request_core::file::FileSpec;
@@ -41,15 +40,11 @@ const AREA2: &str = "/data/storage/el2/base";
 const AREA5: &str = "/data/storage/el5/base";
 const CERTS_PATH: &str = "/data/storage/el2/base/.ohos/.request/.certs";
 
-/// Manager that validates task file paths and grants the associated file
-/// permissions.
 pub struct FileManager {
-    /// Underlying permission manager used to issue and track permission tokens.
     pub permission_manager: PermissionManager,
 }
 
 impl FileManager {
-    /// Returns the shared singleton file manager instance.
     pub fn get_instance() -> &'static Self {
         static INSTANCE: OnceLock<FileManager> = OnceLock::new();
         INSTANCE.get_or_init(|| FileManager {
@@ -57,18 +52,6 @@ impl FileManager {
         })
     }
 
-    /// Resolves and validates the file paths for a task, applying the required
-    /// access permissions and populating certificate settings.
-    ///
-    /// For downloads it processes the save-as path; for uploads it processes the
-    /// file specifications. Certificate paths and pins are filled in as needed.
-    ///
-    /// # Arguments
-    /// * `context` - Application context used for path resolution and ACL checks.
-    /// * `config` - Task configuration whose paths are resolved in place.
-    ///
-    /// # Returns
-    /// The permission tokens granted for the resolved paths, or an error code.
     pub fn apply(
         &self,
         context: Context,
@@ -183,7 +166,7 @@ impl FileManager {
         }
 
         for i in 0..len {
-            // Generate timestamp
+            // 生成时间戳
             let now = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
@@ -191,14 +174,13 @@ impl FileManager {
 
             let path = format!("{}/tmp_body_{}_{}", file_path, i, now);
 
-            // Validate path validity (simplified version; IsPathValid logic needs to be
-            // implemented)
+            // 验证路径有效性（简化版本，实际需要实现IsPathValid逻辑）
             if path.contains("..") || path.contains("//") {
                 error!("Upload IsPathValid error");
                 return Err(401); // E_PARAMETER_CHECK
             }
 
-            // Create file
+            // 创建文件
             let body_file = match std::fs::OpenOptions::new()
                 .write(true)
                 .read(true)
@@ -649,13 +631,6 @@ impl FileManager {
         config.certificate_pins = certificate_pins;
     }
 
-    /// Reads the full contents of a file into a byte vector.
-    ///
-    /// # Arguments
-    /// * `file_path` - Path of the file to read.
-    ///
-    /// # Returns
-    /// `Some(bytes)` on success, or `None` if the file cannot be read.
     pub fn read_bytes_from_file(file_path: &str) -> Option<Vec<u8>> {
         match fs::read(file_path) {
             Ok(data) => Some(data),
