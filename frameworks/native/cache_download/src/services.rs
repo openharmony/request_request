@@ -35,6 +35,9 @@ use crate::download::CacheDownloadError;
 use crate::info::RustDownloadInfo;
 use crate::observe::NetObserver;
 
+/// Max `http_total_timeout` (seconds) before the `* 1000` ms conversion overflows `u32`.
+const MAX_HTTP_TOTAL_TIMEOUT: u32 = u32::MAX / 1000;
+
 /// Trait defining callback methods for preload operations.
 ///
 /// Implementations of this trait receive notifications about various download
@@ -544,6 +547,8 @@ impl CacheDownloadService {
         };
         let http_total_timeout = if http_total_timeout < 1 {
             60
+        } else if http_total_timeout > MAX_HTTP_TOTAL_TIMEOUT {
+            MAX_HTTP_TOTAL_TIMEOUT
         } else {
             http_total_timeout
         };

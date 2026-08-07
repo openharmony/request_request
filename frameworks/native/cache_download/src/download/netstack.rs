@@ -157,7 +157,8 @@ impl DownloadTask {
             request.ca_path(ca_path);
         }
         if let Some(http_total_timeout) = http_total_timeout {
-            request.timeout(http_total_timeout * 1000);
+            // saturating_mul guards the seconds→ms conversion against overflow.
+            request.timeout(http_total_timeout.saturating_mul(1000));
         }
         request.max_retry(max_retry);
         request.network_check_timeout(network_check_timeout);
