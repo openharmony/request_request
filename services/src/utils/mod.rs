@@ -388,6 +388,30 @@ pub(crate) fn is_system_api() -> bool {
     ffi::IsSystemAPI(token_id)
 }
 
+/// Determines if the caller identified by `token_id` is an atomic service.
+///
+/// This checks whether the given token belongs to an atomic service by reading
+/// the atomic-service bit (bit 33) of the full token ID through the FFI bridge
+/// to the AccessTokenKit C++ API. The check is a pure local bitwise operation
+/// (no IPC, no permission gate).
+///
+/// # Arguments
+///
+/// * `token_id` - The caller's full token ID, obtained from
+///   `ipc::Skeleton::calling_full_token_id()` (Binder-injected, unforgeable).
+///
+/// # Returns
+///
+/// Returns `true` if the token belongs to an atomic service, otherwise `false`.
+///
+/// # Availability
+///
+/// This function is only available when the `oh` feature is enabled.
+#[cfg(feature = "oh")]
+pub(crate) fn is_calling_atomic_service(token_id: u64) -> bool {
+    ffi::IsCallingAtomicService(token_id)
+}
+
 /// Checks if the calling process has a specific permission.
 ///
 /// This function verifies whether the calling process has been granted a
@@ -504,6 +528,9 @@ mod ffi {
 
         /// Checks if a token ID has system API privileges.
         fn IsSystemAPI(token_id: u64) -> bool;
+
+        /// Checks if a token ID belongs to an atomic service.
+        fn IsCallingAtomicService(token_id: u64) -> bool;
 
         /// Checks if a token ID has a specific permission.
         fn CheckPermission(token_id: u64, permission: &str) -> bool;

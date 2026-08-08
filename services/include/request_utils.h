@@ -23,6 +23,7 @@ namespace OHOS::Request {
 int GetForegroundAbilities(rust::vec<int> &uid);
 rust::string GetCallingBundle(rust::u64 tokenId);
 bool IsSystemAPI(uint64_t tokenId);
+bool IsCallingAtomicService(uint64_t tokenId);
 bool CheckPermission(uint64_t tokenId, rust::str permission);
 bool PublishStateChangeEvent(rust::str bundleName, uint32_t taskId, int32_t state, int32_t uid);
 int32_t UpdatePolicy(bool result);
