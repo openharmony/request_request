@@ -37,7 +37,7 @@ use crate::manage::account::GetOhosAccountUid;
 use crate::manage::network::{NetworkState, NetworkType};
 use crate::utils::c_wrapper::{CFileSpec, CFormItem, CStringWrapper};
 use crate::utils::form_item::{FileSpec, FormItem};
-use crate::utils::{hashmap_to_string, query_calling_bundle};
+use crate::utils::{hashmap_to_string, is_calling_atomic_service, query_calling_bundle};
 
 // C++ bridge for exposing Rust types to C++
 #[cxx::bridge(namespace = "OHOS::Request")]
@@ -685,6 +685,29 @@ impl Deserialize for TaskConfig {
         let bundle = query_calling_bundle();
         let uid = ipc::Skeleton::calling_uid();
         let token_id = ipc::Skeleton::calling_full_token_id();
+
+        // Verify bundle_type against the trusted identity source.
+        // bundle_type is read from the IPC parcel (client-supplied, untrusted) and
+        // must match the value derived from the unforgeable Binder-injected token.
+        // A mismatch means the client forged bundle_type to bypass the atomic
+        // service URL domain policy; reject the task instead of trusting it.
+        let trusted_bundle_type: u32 = if is_calling_atomic_service(token_id) {
+            1
+        } else {
+            0
+        };
+        if bundle_type != trusted_bundle_type {
+            error!(
+                "deserialize failed: bundle_type mismatch, client={}, trusted={}, bundle={}",
+                bundle_type, trusted_bundle_type, bundle
+            );
+            sys_event!(
+                ExecFault,
+                DfxCode::INVALID_IPC_MESSAGE_A00,
+                "deserialize failed: bundle_type mismatch"
+            );
+            return Err(IpcStatusCode::Failed);
+        }
 
         // Read certificate paths with size validation
         let certs_path_size: u32 = parcel.read()?;

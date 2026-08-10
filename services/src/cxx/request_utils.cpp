@@ -89,6 +89,11 @@ bool IsSystemAPI(uint64_t tokenId)
     return TokenIdKit::IsSystemAppByFullTokenID(tokenId);
 }
 
+bool IsCallingAtomicService(uint64_t tokenId)
+{
+    return AccessTokenKit::IsAtomicServiceByFullTokenID(tokenId);
+}
+
 bool CheckPermission(uint64_t tokenId, rust::str permission)
 {
     auto perm = std::string(permission);
