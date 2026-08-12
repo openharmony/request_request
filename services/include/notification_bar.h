@@ -31,6 +31,7 @@ struct ProgressCircle;
 rust::string GetSystemResourceString(const rust::str);
 rust::string GetSystemLanguage();
 int PublishNotification(const NotifyContent &content);
+rust::string GetWantAgentBundle(rust::str wantAgent);
 
 class NotificationSubscriber : public Notification::NotificationLocalLiveViewSubscriber {
 public:

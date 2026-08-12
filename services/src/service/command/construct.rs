@@ -23,7 +23,7 @@ use crate::config::Mode;
 use crate::error::ErrorCode;
 use crate::manage::events::TaskManagerEvent;
 use crate::service::command::{set_code_with_index_other, CONSTRUCT_MAX};
-use crate::service::notification_bar::{NotificationConfig, NotificationDispatcher};
+use crate::service::notification_bar::{validate_want_agent_ownership, NotificationConfig, NotificationDispatcher};
 use crate::service::permission::PermissionChecker;
 use crate::service::RequestServiceStub;
 use crate::task::config::TaskConfig;
@@ -114,6 +114,19 @@ impl RequestServiceStub {
             debug!("Service construct: task_config constructed");
             // Extract task mode for notification configuration
             let mode = task_config.common_data.mode;
+
+            // Validate want_agent ownership before creating the task: a non-system
+            // caller may only set a want_agent whose target bundle belongs to it.
+            // task_config.bundle is filled from query_calling_bundle() during
+            // deserialization (config.rs:685), so it is the trusted caller bundle.
+            if let Some(wa) = notification_config.want_agent.as_ref() {
+                if !validate_want_agent_ownership(wa, &task_config.bundle, is_system_api) {
+                    error!("End Service construct, want_agent not owned by caller: {}", i);
+                    set_code_with_index_other(&mut vec, i, ErrorCode::ParameterCheck);
+                    continue;
+                }
+            }
+
             // Create construction event and response channel
             let (event, rx) = TaskManagerEvent::construct(task_config);
             // Send construction event to task manager
@@ -153,6 +166,7 @@ impl RequestServiceStub {
 
             // Associate notification config with the newly created task
             notification_config.task_id = task_id;
+
             // Update notification settings for this task
             NotificationDispatcher::get_instance()
                 .update_task_customized_notification(&notification_config);
