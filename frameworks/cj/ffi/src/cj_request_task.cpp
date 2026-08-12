@@ -522,11 +522,9 @@ ExceptionError CJRequestTask::On(std::string type, std::string &taskId, int64_t 
 
     void *cb = reinterpret_cast<void *>(callback);
     if (subscribeType == SubscribeType::RESPONSE) {
-        {
-            std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
-            if (responseListener_ == nullptr) {
-                responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
-            }
+        std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
+        if (responseListener_ == nullptr) {
+            responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
         }
         responseListener_->AddListener(CJLambda::Create((void (*)(CResponse progress))cb), cb);
     } else {
@@ -559,11 +557,9 @@ ExceptionError CJRequestTask::Off(std::string event, int64_t callback)
 
     CFunc cb = reinterpret_cast<CFunc>(callback);
     if (subscribeType == SubscribeType::RESPONSE) {
-        {
-            std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
-            if (responseListener_ == nullptr) {
-                responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
-            }
+        std::unique_lock<std::recursive_mutex> lock(listenerMutex_);
+        if (responseListener_ == nullptr) {
+            responseListener_ = std::make_shared<CJResponseListener>(GetTidStr());
         }
         responseListener_->RemoveListener(cb);
     } else {
