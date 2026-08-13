@@ -38,6 +38,7 @@ use super::events::{
     QueryEvent, ScheduleEvent, ServiceEvent, StateEvent, TaskEvent, TaskManagerEvent,
 };
 use crate::config::{Action, Mode};
+use crate::database::checkpoint_wal;
 use crate::database::clear_database_by_state;
 use crate::database::monitor_database;
 use crate::error::ErrorCode;
@@ -489,6 +490,10 @@ impl TaskManager {
 
         // Step 3: Clear group notification info
         NotificationDispatcher::get_instance().clear_group_info();
+
+        // Step 4: Checkpoint the WAL after all cleanup so deleted pages are merged back into
+        // the main DB and the -wal file is reset, rather than accumulating across cycles.
+        checkpoint_wal();
         true
     }
 

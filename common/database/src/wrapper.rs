@@ -278,6 +278,13 @@ pub mod ffi {
             values: UniquePtr<CxxVector<ValueObject>>,
         ) -> i32;
 
+        // ExecuteSql: path for statements (e.g. multi-column PRAGMAs) that Execute rejects
+        // due to its column-count check. Does not return rows.
+        fn ExecuteSql(
+            rdb: Pin<&mut RdbStore>,
+            sql: &str,
+        ) -> i32;
+
         fn Query(
             rdb: Pin<&mut RdbStore>,
             sql: &str,

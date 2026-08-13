@@ -57,6 +57,8 @@ pub(crate) struct DbMonitorResult {
     pub(crate) top_bundles: Vec<(String, u64)>,
     /// Whether the database size exceeds baseline.
     pub(crate) size_exceeded: bool,
+    /// Maximum headers length in the task table.
+    pub(crate) max_headers_len: u64,
 }
 
 /// Monitors database metrics and reports via system events if thresholds are exceeded.
@@ -96,7 +98,7 @@ pub(crate) fn monitor_database() {
 
     // Write the system event
     let extra_info = format!(
-        "main_size={},wal_size={},shm_size={},total_size={},records={},size_exceeded={},state_dist={},top_bundles={}",
+        "main_size={},wal_size={},shm_size={},total_size={},records={},size_exceeded={},state_dist={},top_bundles={},max_headers_len={}",
         result.db_file_size.main_size,
         result.db_file_size.wal_size,
         result.db_file_size.shm_size,
@@ -104,7 +106,8 @@ pub(crate) fn monitor_database() {
         result.total_records,
         result.size_exceeded,
         format_state_distribution(&result.state_distribution),
-        format_top_bundles(&result.top_bundles)
+        format_top_bundles(&result.top_bundles),
+        result.max_headers_len
     );
     isys_fault(DfxCode::SA_FAULT_02, extra_info.as_str());
 }
@@ -133,6 +136,7 @@ fn collect_db_metrics() -> Option<DbMonitorResult> {
             state_distribution: Vec::new(),
             top_bundles: Vec::new(),
             size_exceeded,
+            max_headers_len: 0,
         });
     }
 
@@ -144,6 +148,11 @@ fn collect_db_metrics() -> Option<DbMonitorResult> {
         }
     };
 
+    let max_headers_len = match get_max_headers_len() {
+        Some(len) => len,
+        None => return None,
+    };
+
     let state_distribution = get_state_distribution();
     let top_bundles = get_top_bundles();
 
@@ -153,6 +162,7 @@ fn collect_db_metrics() -> Option<DbMonitorResult> {
         state_distribution,
         top_bundles,
         size_exceeded,
+        max_headers_len,
     })
 }
 
@@ -211,6 +221,25 @@ fn get_total_record_count() -> Option<u64> {
     };
 
     count.next()
+}
+
+/// Gets the maximum headers length from the request_task table.
+///
+/// # Returns
+///
+/// `Some(u64)` with the maximum headers length, or `None` if the query failed.
+fn get_max_headers_len() -> Option<u64> {
+    let mut len = match REQUEST_DB.query::<u64>(
+        "SELECT COALESCE(MAX(LENGTH(headers)), 0) FROM request_task",
+        (),
+    ) {
+        Ok(rows) => rows,
+        Err(e) => {
+            error!("Failed to query max headers length: {}", e);
+            return None;
+        }
+    };
+    len.next()
 }
 
 /// Gets the distribution of tasks by state.

@@ -571,17 +571,12 @@ impl Scheduler {
         }
 
         // Check if task state needs updating
-        let should_update = match database.get_task_qos_info(task_id) {
-            Some(info) if info.state == State::Running.repr || info.state == State::Waiting.repr => true,
-            Some(info) if info.state == State::Failed.repr => false,
-            Some(_) => return,
-            // Still update if task not found in QoS system
-            None => true,
-        };
-
-        if should_update {
-            database.update_task_state(task_id, State::Failed, reason);
+        if let Some(info) = database.get_task_qos_info(task_id) {
+            if info.state != State::Running.repr && info.state != State::Waiting.repr {
+                return;
+            }
         }
+        database.update_task_state(task_id, State::Failed, reason);
 
         // Send failure notifications
         if let Some(info) = database.get_task_info(task_id) {
