@@ -29,6 +29,8 @@ static constexpr size_t FFI_MAX_RETRY_DEFAULT = std::numeric_limits<size_t>::max
 static constexpr uint32_t FFI_TIMEOUT_DEFAULT = std::numeric_limits<uint32_t>::max();
 // Sentinel value for "not set by user" in PreloadOptions
 static constexpr int32_t SENTINEL_NOT_SET = -1;
+// Max http_total_timeout (seconds) before the * 1000 ms conversion overflows u32.
+static constexpr int32_t MAX_HTTP_TOTAL_TIMEOUT = static_cast<int32_t>(UINT32_MAX / 1000);
 
 namespace OHOS::Request {
 
@@ -391,7 +393,13 @@ std::shared_ptr<PreloadHandle> Preload::load(std::string const &url, std::unique
             ffiOptions.network_check_timeout = static_cast<uint32_t>(options->timeout.networkCheckTimeout);
         }
         if (options->timeout.httpTotalTimeout != SENTINEL_NOT_SET) {
-            ffiOptions.http_total_timeout = static_cast<uint32_t>(options->timeout.httpTotalTimeout);
+            int32_t timeout = options->timeout.httpTotalTimeout;
+            if (timeout < 0) {
+                timeout = 0;
+            } else if (timeout > MAX_HTTP_TOTAL_TIMEOUT) {
+                timeout = MAX_HTTP_TOTAL_TIMEOUT;
+            }
+            ffiOptions.http_total_timeout = static_cast<uint32_t>(timeout);
         }
     }
 
