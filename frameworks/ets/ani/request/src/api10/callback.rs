@@ -489,7 +489,7 @@ pub fn off_events(
     event: String,
 ) -> Result<(), ani_rs::business_error::BusinessError> {
     let task_id = this.tid.parse().unwrap();
-    info!("off_fault_event called with event: {}", event);
+    info!("SubEvent op=off_all kit=BasicServicesKit event={}", event);
     let callback_mgr = CallbackManager::get_instance();
     match event.as_str() {
         "completed" => {

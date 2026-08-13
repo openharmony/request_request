@@ -428,6 +428,7 @@ pub fn off_fail(
 #[ani_rs::native]
 pub fn off_events(env: &AniEnv, this: DownloadTask, event: String) -> Result<(), BusinessError> {
     let task_id = this.task_id.parse().unwrap();
+    info!("SubEvent op=off_all kit=BasicServicesKit event={}", event);
     info!("off_events_uploadtask called for task_id: {}", task_id);
     let callback_mgr = CallbackManager::get_instance();
 
