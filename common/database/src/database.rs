@@ -23,7 +23,7 @@ use cxx::SharedPtr;
 
 use crate::config::OpenConfig;
 use crate::params::{FromSql, Params};
-use crate::wrapper::ffi::{self, Execute, NewRowEntity, Query};
+use crate::wrapper::ffi::{self, Execute, ExecuteSql, NewRowEntity, Query};
 use crate::wrapper::open_rdb_store;
 
 /// Success error code constant.
@@ -87,6 +87,16 @@ impl<'a> RdbStore<'a> {
     /// Returns `Ok(())` on success, or `Err` with an error code on failure
     pub fn execute<P: Params>(&self, sql: &str, values: P) -> Result<(), i32> {
         match Execute(self.inner.pin_mut(), sql, values.into_values_object()) {
+            0 => Ok(()),
+            err => Err(err),
+        }
+    }
+
+    /// Executes an SQL statement via `ExecuteSql`, which bypasses `Execute`'s column-count
+    /// check. Use this for statements `Execute` rejects, such as multi-column PRAGMAs
+    /// (e.g. `PRAGMA wal_checkpoint(TRUNCATE)`). Result rows are not returned.
+    pub fn execute_sql(&self, sql: &str) -> Result<(), i32> {
+        match ExecuteSql(self.inner.pin_mut(), sql) {
             0 => Ok(()),
             err => Err(err),
         }

@@ -127,4 +127,5 @@ fn ut_db_monitor_result_default() {
     assert!(result.state_distribution.is_empty());
     assert!(result.top_bundles.is_empty());
     assert!(!result.size_exceeded);
+    assert_eq!(result.max_headers_len, 0);
 }

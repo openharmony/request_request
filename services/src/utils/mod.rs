@@ -236,8 +236,8 @@ pub(crate) fn hashmap_to_string(map: &HashMap<String, String>) -> String {
 ///
 /// # Panics
 ///
-/// Panics if any line in the input string does not contain exactly one tab
-/// character.
+/// This function does not panic; lines without a tab character are silently
+/// skipped.
 ///
 /// # Examples
 ///
@@ -254,9 +254,9 @@ pub(crate) fn string_to_hashmap(str: &mut str) -> HashMap<String, String> {
         return map;
     }
     for item in str.split("\r\n") {
-        // Panics if the item doesn't contain exactly one tab character
-        let (k, v) = item.split_once('\t').unwrap();
-        map.insert(k.into(), v.into());
+        if let Some((k, v)) = item.split_once('\t') {
+            map.insert(k.into(), v.into());
+        }
     }
     map
 }
