@@ -25,10 +25,10 @@ use crate::config::Action;
 use crate::error::ErrorCode;
 use crate::manage::database::RequestDb;
 use crate::manage::events::TaskManagerEvent;
-use crate::service::notification_bar::NotificationDispatcher;
+use crate::service::notification_bar::{validate_want_agent_ownership, NotificationDispatcher};
 use crate::service::permission::{ManagerPermission, PermissionChecker};
 use crate::service::RequestServiceStub;
-use crate::utils::{check_permission, is_system_api};
+use crate::utils::{check_permission, is_system_api, query_calling_bundle};
 
 impl RequestServiceStub {
     /// Creates a new notification group for tasks.
@@ -75,7 +75,7 @@ impl RequestServiceStub {
 
         // Read optional intent agent with presence flag
         let want_agent = if data.read::<bool>()? {
-            Some(data.read()?)
+            Some(data.read::<String>()?)
         } else {
             None
         };
@@ -92,6 +92,18 @@ impl RequestServiceStub {
         // Record the caller UID as the group owner; attach_group / delete_group
         // verify ownership against it later.
         let uid = ipc::Skeleton::calling_uid();
+
+        // Validate want_agent ownership before persisting: a non-system caller
+        // may only set a want_agent whose target bundle belongs to it.
+        if let Some(wa) = want_agent.as_ref() {
+            let caller_bundle = query_calling_bundle();
+            if !validate_want_agent_ownership(wa, &caller_bundle, is_system_api()) {
+                error!("End Service create_group, want_agent not owned by caller");
+                reply.write(&(ErrorCode::ParameterCheck as i32))?;
+                return Ok(());
+            }
+        }
+
         let new_group_id = NotificationDispatcher::get_instance().create_group(
             gauge, title, text, want_agent, disable, visibility, uid);
         reply.write(&new_group_id.to_string())?;

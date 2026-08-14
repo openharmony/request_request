@@ -162,6 +162,9 @@ mod ffi {
         /// * `0` - If the notification was successfully published
         /// * Error code - If the publication failed
         fn PublishNotification(content: &NotifyContent) -> i32;
+
+        /// Extracts the target bundleName from a serialized want_agent string.
+        fn GetWantAgentBundle(want_agent: &str) -> String;
         
         /// Subscribes to notification bar events with the provided task manager.
         /// 
@@ -170,4 +173,56 @@ mod ffi {
         /// * `task_manager` - The task manager wrapper to handle notification interactions
         fn SubscribeNotification(task_manager: Box<TaskManagerWrapper>);
     }
+}
+
+/// Validates that a want_agent's target Ability bundle belongs to the caller.
+///
+/// System API callers (`is_system_api`) are allowed to set any want_agent
+/// (they are trusted). Non-system callers must own the target bundle: the
+/// Want's bundleName (extracted via `GetWantAgentBundle`) must match the
+/// caller's own bundle (`caller_bundle`, already resolved by the caller via
+/// `query_calling_bundle` or `TaskConfig.bundle`). This blocks a malicious app
+/// from proxying a want_agent that targets another app's Ability through the
+/// request service's SA identity at notification-trigger time.
+///
+/// # Returns
+///
+/// `true` if the caller may set this want_agent, `false` to reject.
+#[cfg(feature = "oh")]
+pub(crate) fn validate_want_agent_ownership(
+    want_agent: &str,
+    caller_bundle: &str,
+    is_system_api: bool,
+) -> bool {
+    if is_system_api {
+        debug!("want_agent allowed: system api caller");
+        return true;
+    }
+    if want_agent.is_empty() {
+        debug!("want_agent allowed: empty want_agent");
+        return true;
+    }
+    let target_bundle = ffi::GetWantAgentBundle(want_agent);
+    debug!(
+        "want_agent target: {}, caller: {}",
+        target_bundle, caller_bundle
+    );
+    check_bundle_ownership(&target_bundle, caller_bundle)
+}
+
+/// Pure-Rust bundle ownership check (no FFI), extracted for unit testing.
+///
+/// `target_bundle` empty → allow (no explicit target, implicit start).
+/// Otherwise `target_bundle == caller_bundle` → allow, else reject.
+#[cfg(feature = "oh")]
+fn check_bundle_ownership(target_bundle: &str, caller_bundle: &str) -> bool {
+    if target_bundle.is_empty() {
+        return true;
+    }
+    target_bundle == caller_bundle
+}
+
+#[cfg(test)]
+mod tests {
+    include!("../../../tests/ut/service/notification_bar/ut_validate_want_agent.rs");
 }

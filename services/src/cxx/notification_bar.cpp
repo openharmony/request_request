@@ -318,6 +318,19 @@ std::shared_ptr<OHOS::Notification::NotificationContent> LiveViewContent(const N
     return std::make_shared<Notification::NotificationContent>(liveViewContent);
 }
 
+rust::string GetWantAgentBundle(rust::str wantAgent)
+{
+    auto agent = AbilityRuntime::WantAgent::WantAgentHelper::FromString(std::string(wantAgent));
+    if (agent == nullptr) {
+        return rust::string("");
+    }
+    auto want = AbilityRuntime::WantAgent::WantAgentHelper::GetWant(agent);
+    if (want == nullptr) {
+        return rust::string("");
+    }
+    return rust::string(want->GetElement().GetBundleName());
+}
+
 int PublishNotification(const NotifyContent &content)
 {
     Notification::NotificationRequest request(content.request_id);
