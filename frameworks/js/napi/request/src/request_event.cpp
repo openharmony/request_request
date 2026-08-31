@@ -246,6 +246,10 @@ napi_value RequestEvent::Off(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
+    if (jsParam.callback == nullptr) {
+        REQUEST_HILOGI("SubEvent op=off_all kit=BasicServicesKit event=%{public}s", jsParam.type.c_str());
+    }
+
     if (jsParam.subscribeType == SubscribeType::RESPONSE) {
         jsParam.task->listenerMutex_.lock();
         if (jsParam.task->responseListener_ == nullptr) {
@@ -385,6 +389,7 @@ ExceptionError RequestEvent::ParseOnOffParameters(
         return err;
     }
     if (argc == NapiUtils::ONE_ARG) {
+        jsParam.callback = nullptr;
         return err;
     }
     valuetype = napi_undefined;
