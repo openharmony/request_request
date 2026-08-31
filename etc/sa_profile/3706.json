@@ -9,6 +9,8 @@
             "dump_level": 1,
             "min_hdi_proxy_version": [],
             "recycle-strategy": "low-memory",
+            "multi-instance": true,
+            "extension": ["download_server"],
             "start-on-demand": {
                 "allow-update": true,
                 "commonevent": [

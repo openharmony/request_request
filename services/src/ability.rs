@@ -147,6 +147,15 @@ impl Ability for RequestAbility {
         handler: Handler,
     ) {
         info!("on_start_with_reason: {:?}", reason);
+        #[cfg(feature = "multi-instance")]
+        {
+            // samgr stamps the per-user userId into the process access token
+            // (SetUserIdToAccessToken) at SA launch.
+            let user_id = crate::manage::account::get_user_id_from_token();
+            crate::database::set_current_user_id(user_id);
+            info!("multi-instance: set current user_id = {} from access token", user_id);
+            crate::database::cleanup_legacy_db();
+        }
         if reason.name == "usual.event.USER_REMOVED" {
             match reason.value.parse::<i32>() {
                 Ok(user_id) => {

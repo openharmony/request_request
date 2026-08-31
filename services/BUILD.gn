@@ -134,6 +134,10 @@ ohos_static_library("download_server_cxx") {
     defines += [ "REQUEST_TELEPHONY_CORE_SERVICE" ]
   }
 
+  if (request_multi_instance) {
+    defines += [ "SUPPORT_MULTI_INSTANCE" ]
+  }
+
   subsystem_name = "request"
   part_name = "request"
 }
@@ -156,6 +160,10 @@ ohos_rust_shared_library("download_server") {
 
   features = [ "oh" ]
 
+  if (request_multi_instance) {
+    features += [ "multi-instance" ]
+  }
+
   deps = [
     ":download_server_cxx",
     "../common/database:database_rs",
@@ -174,6 +182,11 @@ ohos_rust_shared_library("download_server") {
     "samgr:samgr_rust",
     "ylong_runtime:ylong_runtime",
   ]
+
+  if (request_multi_instance) {
+    # libc is used only by get_user_id_from_token (multi-instance cfg).
+    external_deps += [ "rust_libc:lib" ]
+  }
 
   crate_name = "download_server"
   subsystem_name = "request"

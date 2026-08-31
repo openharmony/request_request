@@ -27,6 +27,9 @@
 #include "parcel_helper.h"
 #include "request_running_task_count.h"
 #include "string_ex.h"
+#ifdef SUPPORT_MULTI_INSTANCE
+#include "multi_instance_runcount_manager.h"
+#endif
 
 namespace OHOS::Request {
 constexpr int32_t EXPECT_UID = 3815;
@@ -68,7 +71,15 @@ void RunCountNotifyStub::OnCallBack(MessageParcel &data)
     int runCount = data.ReadInt64();
     REQUEST_HILOGD("RunCount num %{public}d", runCount);
 
+#ifdef SUPPORT_MULTI_INSTANCE
+    auto callerPid = IPCSkeleton::GetCallingPid();
+    auto &mgr = MultiInstanceRunCountManager::GetInstance();
+    REQUEST_HILOGD("OnCallBack multi-instance: callerPid=%{public}d, runCount=%{public}d", callerPid, runCount);
+    mgr.SetCountByPid(callerPid, runCount);
+#else
     FwkRunningTaskCountManager::GetInstance()->SetCount(runCount);
+    REQUEST_HILOGI("OnCallBack single-instance: runCount=%{public}d", runCount);
+#endif
     FwkRunningTaskCountManager::GetInstance()->NotifyAllObservers();
 }
 

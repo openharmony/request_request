@@ -19,7 +19,8 @@
     ],
     "features": [
       "request_telephony_core_service",
-      "request_telephony_cellular_data"
+      "request_telephony_cellular_data",
+      "request_multi_instance"
     ],
     "adapted_system_type": [
       "standard"
@@ -32,6 +33,7 @@
     "deps": {
       "components": [
         "rust_cxx",
+        "rust_libc",
         "ylong_runtime",
         "ylong_http",
         "os_account",
@@ -145,6 +147,7 @@
         "//base/request/request/test/unittest/cpp_test/saTest:unittest",
         "//base/request/request/test/unittest/cpp_test/preload:unittest",
         "//base/request/request/test/unittest/cpp_test/fwkTest:unittest",
+        "//base/request/request/test/unittest/cpp_test/multiInstance:unittest",
         "//base/request/request/test/unittest/cpp_test/innerTest:unittest",
         "//base/request/request/test/unittest/cpp_test/netstack:unittest",
         "//base/request/request/test/unittest/cpp_test/inotifyImage:unittest",

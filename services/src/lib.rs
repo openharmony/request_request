@@ -69,6 +69,7 @@ mod tests {
     use super::manage::database::RequestDb;
     use super::manage::SystemConfigManager;
     use crate::ability::SYSTEM_CONFIG_MANAGER;
+    use std::sync::LazyLock;
     /// test init
     pub(crate) fn test_init() {
         static ONCE: std::sync::Once = std::sync::Once::new();
@@ -81,27 +82,20 @@ mod tests {
         unsafe { SetAccessTokenPermission() };
     }
 
-    pub(crate) fn lock_database<'a>() -> DatabaseLock<'a> {
-        let _inner = unsafe {
-            match DB_LOCK.lock() {
-                Ok(inner) => inner,
-                Err(_) => {
-                    if let Err(e) = RequestDb::get_instance().execute("DELETE FROM request_task") {
-                        error!("lock delete failed: {}", e);
-                    }
-                    DB_LOCK = std::sync::Mutex::new(());
-                    DB_LOCK.lock().unwrap()
-                }
-            }
-        };
+    pub(crate) fn lock_database() -> DatabaseLock {
+        // Thread-safe serialization for tests that share the on-disk DB.
+        // A prior test panic poisons the mutex; recover the guard instead of
+        // propagating the PoisonError, so one failing test does not cascade
+        // into every other DB test.
+        let _inner = DB_LOCK.lock().unwrap_or_else(|poison| poison.into_inner());
         DatabaseLock { _inner }
     }
 
-    pub(crate) struct DatabaseLock<'a> {
-        _inner: std::sync::MutexGuard<'a, ()>,
+    pub(crate) struct DatabaseLock {
+        _inner: std::sync::MutexGuard<'static, ()>,
     }
 
-    impl<'a> Drop for DatabaseLock<'a> {
+    impl Drop for DatabaseLock {
         fn drop(&mut self) {
             if let Err(e) = RequestDb::get_instance().execute("DELETE FROM request_task") {
                 error!("drop delete failed: {}", e);
@@ -109,7 +103,7 @@ mod tests {
         }
     }
 
-    static mut DB_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    static DB_LOCK: LazyLock<std::sync::Mutex<()>> = LazyLock::new(|| std::sync::Mutex::new(()));
 
     extern "C" {
         fn SetAccessTokenPermission();

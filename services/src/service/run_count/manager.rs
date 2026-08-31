@@ -102,6 +102,8 @@ impl RunCountManagerEntry {
         let (tx, rx) = oneshot::channel::<ErrorCode>();
         let event = RunCountEvent::Subscribe(pid, obj, tx);
         self.send_event(event);
+        // block_on waits for the worker ack; this must not run on a ylong
+        // executor thread (async-N) or it panics.
         match ylong_runtime::block_on(rx) {
             Ok(error_code) => error_code,
             Err(error) => {
@@ -225,6 +227,12 @@ impl RunCountManager {
     fn subscribe_run_count(&mut self, pid: u64, obj: RemoteObj, tx: Sender<ErrorCode>) {
         let client = Client::new(obj);
 
+        info!(
+            "RunCountManager worker subscribe: pid {}, current count {}, remotes {}",
+            pid,
+            self.count,
+            self.remotes.len()
+        );
         let _ = client.notify_run_count(self.count as i64);
         self.remotes.insert(pid, client);
 
@@ -241,8 +249,16 @@ impl RunCountManager {
     /// * `tx` - Sender channel to return the result
     fn unsubscribe_run_count(&mut self, subscribe_pid: u64, tx: Sender<ErrorCode>) {
         if self.remotes.remove(&subscribe_pid).is_some() {
+            info!(
+                "RunCountManager worker unsubscribe: pid {}",
+                subscribe_pid
+            );
             let _ = tx.send(ErrorCode::ErrOk);
         } else {
+            error!(
+                "RunCountManager worker unsubscribe: pid {} not found",
+                subscribe_pid
+            );
             let _ = tx.send(ErrorCode::Other);
         }
     }
@@ -253,17 +269,26 @@ impl RunCountManager {
     /// Updates the internal count and broadcasts the change to all registered
     /// clients. Removes any clients that fail to receive the update.
     ///
+    /// In multi-instance mode, each SA instance pushes its local count to
+    /// subscribers; RSS client aggregates across instances (per-pid).
+    ///
     /// # Arguments
     ///
-    /// * `new_count` - The new number of running tasks
+    /// * `new_count` - The new number of running tasks (local to this instance)
     fn change_run_count(&mut self, new_count: usize) {
         // Skip update if count hasn't changed to avoid unnecessary notifications
         if self.count == new_count {
             return;
         }
+        debug!(
+            "RunCountManager count change: {} -> {}",
+            self.count,
+            new_count
+        );
         self.count = new_count;
-        // Notify all clients and automatically remove any that fail to receive the
-        // update
+
+        // Notify subscribers with this instance's local count. In multi-instance
+        // mode, RSS client aggregates across all instances (per-pid SetCountByPid).
         self.remotes
             .retain(|_, remote| remote.notify_run_count(self.count as i64).is_ok());
     }
