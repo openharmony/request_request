@@ -18,12 +18,14 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <charconv>
 #include <cinttypes>
 #include <climits>
 #include <cstdio>
 #include <fstream>
 #include <ios>
 #include <string>
+#include <system_error>
 #include <vector>
 
 #include "common_timer_errors.h"
@@ -33,6 +35,23 @@
 
 namespace OHOS::Request::Upload {
 static constexpr const char *HTTP_DEFAULT_CA_PATH = "/etc/ssl/certs/cacert.pem";
+
+static bool ParseHttpStatusCode(const std::string &text, int32_t &out)
+{
+    if (text.empty()) {
+        return false;
+    }
+    const char *first = text.data();
+    const char *last = first + text.size();
+    int32_t value = 0;
+    auto [ptr, ec] = std::from_chars(first, last, value);
+    if (ec != std::errc() || ptr != last) {
+        return false;
+    }
+    out = value;
+    return true;
+}
+
 CUrlAdp::CUrlAdp(std::vector<FileData> &fileDatas, std::shared_ptr<UploadConfig> &config)
     : timerId_(0), fileDatas_(fileDatas), config_(config), isCurlGlobalInit_(false), curlMulti_(nullptr),
       isReadAbort_(false), timer_("uploadTimer")
@@ -412,7 +431,12 @@ void CUrlAdp::SplitHttpMessage(const std::string &stmp, FileData *&fData)
         const int codeLen = 3;
         std::string::size_type position = stmp.find_first_of(" ");
         std::string scode(stmp, position + 1, codeLen);
-        fData->httpCode = atol(scode.c_str());
+        int32_t code = 0;
+        if (!ParseHttpStatusCode(scode, code)) {
+            UPLOAD_HILOGE(UPLOAD_MODULE_FRAMEWORK, "invalid HTTP status: %{public}s", scode.c_str());
+        } else {
+            fData->httpCode = code;
+        }
     } else if (stmp == headEndFlag) {
         fData->headSendFlag = COLLECT_END_FLAG;
     }
