@@ -87,6 +87,8 @@ ohos_shared_library("cj_request_ffi") {
     "src/cj_response_listener.cpp",
   ]
 
+  version_script = "libcj_request_ffi.map"
+
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "request"
   part_name = "request"
