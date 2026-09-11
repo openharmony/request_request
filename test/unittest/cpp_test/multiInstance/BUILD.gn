@@ -1,0 +1,81 @@
+# Copyright (C) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/request/request/request_aafwk.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
+
+ohos_unittest("multi_instance_test") {
+  module_out_path = "request/request/request"
+
+  include_dirs = [
+    "include",
+    "../../../../frameworks/native/request/include",
+    "../../../../interfaces/inner_kits/running_count/include",
+    "../../../../common/include",
+    ".././../../../common/sys_event/include",
+  ]
+
+  sources = [
+    "../../../../common/sys_event/src/sys_event.cpp",
+    "../../../../frameworks/native/request/src/parcel_helper.cpp",
+    "../../../../frameworks/native/request/src/request_common_utils.cpp",
+    "../../../../frameworks/native/request/src/request_manager_impl.cpp",
+    "../../../../frameworks/native/request/src/request_running_task_count.cpp",
+    "../../../../frameworks/native/request/src/request_service_proxy.cpp",
+    "../../../../frameworks/native/request/src/response_message_receiver.cpp",
+    "../../../../frameworks/native/request/src/runcount_notify_stub.cpp",
+    "../../../../frameworks/native/request/src/multi_instance_runcount_manager.cpp",
+    "src/multi_instance_test.cpp",
+  ]
+
+  # multi_instance_runcount_manager.cpp only compiles under
+  # SUPPORT_MULTI_INSTANCE; enable it so the UT exercises that path regardless
+  # of the product's macro default.
+  defines = [ "SUPPORT_MULTI_INSTANCE" ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:app_manager",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "curl:curl_shared",
+    "distributed_notification_service:ans_innerkits",
+    "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "netmanager_base:net_conn_manager_if",
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
+    "relational_store:native_appdatafwk",
+    "relational_store:native_dataability",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "ability_runtime:wantagent_innerkits",
+  ]
+}
+
+group("unittest") {
+  testonly = true
+  deps = [ ":multi_instance_test" ]
+  deps += []
+}

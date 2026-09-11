@@ -458,6 +458,35 @@ impl RequestDb {
     }
 }
 
+/// Reads the current process's userId from the access token.
+///
+/// samgr stamps the per-user userId into the process access token when
+/// launching the per-user SA; read it back via one ioctl on
+/// `/dev/access_token_id`. A plain Rust fn (not a cxx bridge item) so it can be
+/// `#[cfg]`-gated freely: the cxxbridge CLI does not see rustc feature flags, so
+/// a cfg-gated bridge item would lose its C++ shim at link time.
+#[cfg(feature = "multi-instance")]
+pub(crate) fn get_user_id_from_token() -> i32 {
+    use std::os::unix::io::AsRawFd;
+
+    // ACCESS_TOKENID_GET_USERID = _IOR('A', 13, uint32_t).
+    const ACCESS_TOKENID_GET_USERID: libc::Ioctl = libc::_IOR::<u32>(b'A' as u32, 13);
+
+    let Ok(file) = std::fs::File::open("/dev/access_token_id") else {
+        return 0;
+    };
+    let mut user_id: u32 = 0;
+    // SAFETY: `file` is an open File (raw fd valid), and `&mut user_id` points
+    // to a writable u32 sized exactly as the ioctl's output arg (_IOR, fixed 4
+    // bytes). On failure ioctl returns -1 and leaves the buffer unchanged, so no
+    // uninitialized data escapes the `rc < 0` guard.
+    let rc = unsafe { libc::ioctl(file.as_raw_fd(), ACCESS_TOKENID_GET_USERID, &mut user_id) };
+    if rc < 0 {
+        return 0;
+    }
+    user_id as i32
+}
+
 // Foreign function interface for interacting with OS account services
 #[cxx::bridge(namespace = "OHOS::Request")]
 mod ffi {

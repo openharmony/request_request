@@ -66,7 +66,6 @@ impl RequestServiceStub {
 
         // Get caller's process ID for tracking
         let pid = ipc::Skeleton::calling_pid();
-        info!("Service run_count subscribe pid {}", pid);
 
         // Read remote callback object from parcel
         let obj: RemoteObj = data.read_remote()?;

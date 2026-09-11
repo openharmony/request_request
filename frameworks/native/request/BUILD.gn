@@ -67,7 +67,16 @@ ohos_shared_library("request_native") {
     "src/runcount_notify_stub.cpp",
   ]
 
+  if (request_multi_instance) {
+    sources += [ "src/multi_instance_runcount_manager.cpp" ]
+  }
+
   deps = [ "../../../common/sys_event:request_sysevent" ]
+
+  defines = []
+  if (request_multi_instance) {
+    defines += [ "SUPPORT_MULTI_INSTANCE" ]
+  }
 
   external_deps = [
     "ability_runtime:extensionkit_native",

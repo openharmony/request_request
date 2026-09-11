@@ -28,6 +28,9 @@
 #include "parcel_helper.h"
 #include "request_manager_impl.h"
 #include "runcount_notify_stub.h"
+#ifdef SUPPORT_MULTI_INSTANCE
+#include "multi_instance_runcount_manager.h"
+#endif
 
 namespace OHOS::Request {
 using namespace OHOS::HiviewDFX;
@@ -56,8 +59,12 @@ std::unique_ptr<FwkRunningTaskCountManager> &FwkRunningTaskCountManager::GetInst
 
 int FwkRunningTaskCountManager::GetCount()
 {
+#ifdef SUPPORT_MULTI_INSTANCE
+    return MultiInstanceRunCountManager::GetInstance().GetTotalCount();
+#else
     std::lock_guard<std::mutex> lock(countLock_);
     return count_;
+#endif
 }
 
 void FwkRunningTaskCountManager::SetCount(int runCount)
@@ -139,9 +146,12 @@ int32_t SubscribeRunningTaskCount(std::shared_ptr<IRunningTaskObserver> ob)
     FwkRunningTaskCountManager::GetInstance()->AttachObserver(ob);
     auto listener = RunCountNotifyStub::GetInstance();
     RequestManagerImpl::GetInstance()->SubscribeSA();
+#ifdef SUPPORT_MULTI_INSTANCE
+    int32_t ret = MultiInstanceRunCountManager::GetInstance().RestoreSubRunCount();
+#else
     int32_t ret = RequestManagerImpl::GetInstance()->SubRunCount(listener);
+#endif
     if (ret != E_OK) {
-        // IPC is failed, but observer has attached.
         REQUEST_HILOGE("Subscribe running task count failed, ret: %{public}d.", ret);
         return ret;
     }

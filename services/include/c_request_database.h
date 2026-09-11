@@ -32,7 +32,6 @@
 #include "value_object.h"
 
 namespace OHOS::Request {
-constexpr const char *DB_NAME = "/data/service/el1/public/database/request/request.db";
 constexpr int DATABASE_VERSION = 1;
 constexpr const char *REQUEST_DATABASE_VERSION_4_1_RELEASE = "API11_4.1-release";
 constexpr const char *REQUEST_DATABASE_VERSION_5_0_RELEASE = "API12_5.0-release";
@@ -142,7 +141,15 @@ struct NetworkInfo;
 struct TaskQosInfo;
 class RequestDataBase {
 public:
+    // Initializes (on first call) and returns the process-wide instance.
+    // The path is supplied by the Rust side, which derives the per-user
+    // database path; arguments of subsequent calls are ignored.
     static RequestDataBase &GetInstance(std::string path, bool encryptStatus);
+    // Returns the process-wide instance without supplying a path. If the
+    // instance is not initialized yet, derives the path from the Rust side
+    // (db_path()): the per-user path under multi-instance, the legacy
+    // shared path otherwise.
+    static RequestDataBase &GetInstance();
     RequestDataBase(const RequestDataBase &) = delete;
     RequestDataBase &operator=(const RequestDataBase &) = delete;
     bool Insert(const std::string &table, const OHOS::NativeRdb::ValuesBucket &insertValues);
@@ -161,6 +168,11 @@ private:
     RequestDataBase(std::string path, bool encryptStatus);
 
 private:
+    // Path and encrypt flag remembered from construction, so corruption
+    // recovery rebuilds the database this instance was opened with rather
+    // than a hardcoded one.
+    std::string path_;
+    bool encryptStatus_;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;
 };
 

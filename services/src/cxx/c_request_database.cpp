@@ -18,8 +18,10 @@
 #include <securec.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <iostream>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -36,6 +38,13 @@
 #include "task/info.rs.h"
 #include "task/reason.rs.h"
 namespace OHOS::Request {
+namespace {
+// Process-wide RequestDataBase storage. The instance is constructed exactly
+// once; the path comes from the first caller, which is the Rust-side
+// initializer (RequestDb::get_instance) under normal startup ordering.
+std::once_flag g_dbInitOnce;
+std::atomic<RequestDataBase *> g_dbInstance { nullptr };
+} // namespace
 
 void BuildDatabase(std::string path, bool encryptStatus, std::shared_ptr<OHOS::NativeRdb::RdbStore> &store)
 {
@@ -60,28 +69,54 @@ void BuildDatabase(std::string path, bool encryptStatus, std::shared_ptr<OHOS::N
 }
 
 RequestDataBase::RequestDataBase(std::string path, bool encryptStatus)
+    : path_(std::move(path)), encryptStatus_(encryptStatus)
 {
-    REQUEST_HILOGI("Process Get request database");
-    BuildDatabase(path, encryptStatus, store_);
+    REQUEST_HILOGI("Process Get request database, path: %{public}s", path_.c_str());
+    BuildDatabase(path_, encryptStatus_, store_);
 }
 
 void RequestDataBase::CheckAndRebuildDataBase(int errCode)
 {
     if (errCode == OHOS::NativeRdb::E_SQLITE_CORRUPT) {
-        REQUEST_HILOGE("Database corruption : %{public}d", errCode);
-        int errCode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(OHOS::Request::DB_NAME);
+        REQUEST_HILOGE("Database corruption : %{public}d, path: %{public}s", errCode, path_.c_str());
+        // Rebuild the database this instance was opened with (per-user under
+        // multi-instance); rebuilding a hardcoded path would silently point
+        // this instance at another user's (or the legacy) database.
+        int errCode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(path_);
         if (errCode != OHOS::NativeRdb::E_OK) {
             REQUEST_HILOGE("delete database failed: %{public}d", errCode);
             return;
         }
-        BuildDatabase(OHOS::Request::DB_NAME, true, store_);
+        BuildDatabase(path_, encryptStatus_, store_);
     }
 }
 
 RequestDataBase &RequestDataBase::GetInstance(std::string path, bool encryptStatus)
 {
-    static RequestDataBase requestDataBase(path, encryptStatus);
-    return requestDataBase;
+    std::call_once(g_dbInitOnce, [&]() {
+        g_dbInstance.store(new RequestDataBase(path, encryptStatus), std::memory_order_release);
+    });
+    return *g_dbInstance.load(std::memory_order_acquire);
+}
+
+RequestDataBase &RequestDataBase::GetInstance()
+{
+    RequestDataBase *instance = g_dbInstance.load(std::memory_order_acquire);
+    if (instance == nullptr) {
+        // Reached before the Rust-side initializer. Derive the path from the
+        // Rust side (db_path()): the per-user path under multi-instance, the
+        // legacy shared path otherwise — the same value the Rust initializer
+        // would pass, so the opened database is correct regardless of call
+        // order and build mode.
+        //
+        // Multi-instance ordering constraint: correctness relies on
+        // set_current_user_id (Rust) having run before the singleton is first
+        // locked; a DB touch before on_start_with_reason would lock
+        // request_0.db. Normal startup always injects the userId first, so no
+        // runtime check/log is needed here.
+        return GetInstance(std::string(db_path()), true);
+    }
+    return *instance;
 }
 
 bool RequestDataBase::Insert(const std::string &table, const OHOS::NativeRdb::ValuesBucket &insertValues)
@@ -1125,8 +1160,7 @@ bool RecordRequestTask(CTaskInfo *taskInfo, CTaskConfig *taskConfig)
         REQUEST_HILOGE("write blob data failed");
         return false;
     }
-    if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true)
-             .Insert(std::string("request_task"), insertValues)) {
+    if (!OHOS::Request::RequestDataBase::GetInstance().Insert(std::string("request_task"), insertValues)) {
         REQUEST_HILOGE("insert to request_task failed, task_id: %{public}d", taskConfig->commonData.taskId);
         return false;
     }
@@ -1149,7 +1183,7 @@ bool UpdateRequestTask(uint32_t taskId, CUpdateInfo *updateInfo)
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
-    if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true).Update(values, rdbPredicates)) {
+    if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates)) {
         REQUEST_HILOGE("update table1 failed, task_id: %{public}d", taskId);
         return false;
     }
@@ -1164,7 +1198,7 @@ bool UpdateRequestTaskTime(uint32_t taskId, uint64_t taskTime)
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
-    if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true).Update(values, rdbPredicates)) {
+    if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates)) {
         REQUEST_HILOGE("update request task time failed, task_id: %{public}d", taskId);
         return false;
     }
@@ -1181,7 +1215,7 @@ bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo)
 
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
-    if (!OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true).Update(values, rdbPredicates)) {
+    if (!OHOS::Request::RequestDataBase::GetInstance().Update(values, rdbPredicates)) {
         REQUEST_HILOGE("Change request_task state failed, taskid: %{public}d", taskId);
         return false;
     }
@@ -1190,12 +1224,11 @@ bool UpdateRequestTaskState(uint32_t taskId, CUpdateStateInfo *updateStateInfo)
 
 int GetTaskInfoInner(const OHOS::NativeRdb::RdbPredicates &rdbPredicates, TaskInfo &taskInfo)
 {
-    auto resultSet =
-        OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true)
-            .Query(rdbPredicates, { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry",
-                                      "tries", "version", "priority", "bundle", "url", "data", "token", "title",
-                                      "description", "mime_type", "state", "idx", "total_processed", "sizes",
-                                      "processed", "extras", "form_items", "file_specs", "max_speed", "task_time" });
+    auto resultSet = OHOS::Request::RequestDataBase::GetInstance().Query(rdbPredicates,
+        { "task_id", "uid", "action", "mode", "ctime", "mtime", "reason", "gauge", "retry",
+            "tries", "version", "priority", "bundle", "url", "data", "token", "title",
+            "description", "mime_type", "state", "idx", "total_processed", "sizes",
+            "processed", "extras", "form_items", "file_specs", "max_speed", "task_time" });
     if (resultSet == nullptr || resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
         REQUEST_HILOGE("result set is nullptr or go to first row failed");
         return OHOS::Request::QUERY_ERR;
@@ -1281,8 +1314,7 @@ CTaskConfig *QueryTaskConfig(uint32_t taskId)
 {
     OHOS::NativeRdb::RdbPredicates rdbPredicates("request_task");
     rdbPredicates.EqualTo("task_id", std::to_string(taskId));
-    OHOS::Request::RequestDataBase &database =
-        OHOS::Request::RequestDataBase::GetInstance(OHOS::Request::DB_NAME, true);
+    OHOS::Request::RequestDataBase &database = OHOS::Request::RequestDataBase::GetInstance();
     auto resultSet = database.Query(rdbPredicates,
         { "task_id", "uid", "token_id", "action", "mode", "cover", "network", "metered", "roaming", "retry",
             "redirect", "config_idx", "begins", "ends", "gauge", "precise", "priority", "background", "bundle", "url",

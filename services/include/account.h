@@ -15,7 +15,10 @@
 
 #ifndef ACCOUNT_H
 #define ACCOUNT_H
+#include <fcntl.h>
 #include <memory>
+#include <sys/ioctl.h>
+#include <unistd.h>
 #include <vector>
 
 #include "cxx.h"

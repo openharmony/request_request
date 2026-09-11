@@ -624,7 +624,12 @@ mod tests {
         symlink(format!("{}/real.txt", dir.0), format!("{}/link.txt", base)).unwrap();
 
         let err = open_verified(&base, &format!("{}/link.txt", base)).unwrap_err();
-        assert_eq!(err.raw_os_error(), Some(ELOOP));
+        // Accept either rejection path: O_NOFOLLOW (ELOOP) at open, or the
+        // verify_within_base fallback (PermissionDenied) on kernels that do not
+        // enforce O_NOFOLLOW for a trailing symlink.
+        let rejected = err.raw_os_error() == Some(ELOOP)
+            || err.kind() == io::ErrorKind::PermissionDenied;
+        assert!(rejected, "trailing symlink must be rejected, got {:?}", err);
     }
 
     // @tc.name: dotdot_escape_is_rejected

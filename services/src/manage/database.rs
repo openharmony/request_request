@@ -43,6 +43,7 @@ use crate::task::info::{State, TaskInfo, UpdateInfo};
 use crate::task::reason::Reason;
 use crate::task::request_task::RequestTask;
 use crate::utils::{call_once, get_current_timestamp, hashmap_to_string};
+use crate::database::db_path;
 
 /// Persistent store backing request tasks.
 ///
@@ -80,13 +81,20 @@ impl RequestDb {
         static ONCE: Once = Once::new();
 
         call_once(&ONCE, || {
+            // Test builds use a dedicated file separate from the Rust-side
+            // REQUEST_DB (notification.db) so the two connections do not share
+            // one SQLite file; production uses the per-user db_path().
             let (path, encrypt) = if cfg!(test) {
-                ("/data/test/request.db", false)
+                ("/data/test/request.db".to_string(), false)
             } else {
-                ("/data/service/el1/public/database/request/request.db", true)
+                (db_path(), true)
             };
+            info!(
+                "RequestDb get_instance path: {}, encrypt: {}",
+                path, encrypt
+            );
 
-            let inner = GetDatabaseInstance(path, encrypt);
+            let inner = GetDatabaseInstance(&path, encrypt);
             unsafe {
                 DB.write(RequestDb {
                     inner,
@@ -993,6 +1001,16 @@ mod ffi {
         pub(crate) state: u8,
         /// Scheduling priority, higher means more urgent.
         pub(crate) priority: u32,
+    }
+
+    extern "Rust" {
+        // Per-user database path derived from the process user id. Called
+        // from the C++ side when RequestDataBase is reached before the
+        // Rust-side initializer, so the C++ singleton opens the same
+        // per-user database regardless of call order.
+        // No cfg gating on this item: the cxxbridge CLI generating the C++
+        // shim does not see rustc feature flags (see account.rs bridge).
+        fn db_path() -> String;
     }
 
     unsafe extern "C++" {

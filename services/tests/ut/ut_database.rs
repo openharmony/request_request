@@ -435,3 +435,11 @@ fn ut_clear_database_by_state_remain_flag() {
         .collect();
     assert_eq!(query.len(), 3);
 }
+
+// @tc.name: ut_multi_instance_db_path_test_mode
+// @tc.desc: db_path() returns the preset test DB path under cfg!(test)
+// @tc.type: FUNC
+#[test]
+fn ut_multi_instance_db_path_test_mode() {
+    assert_eq!(db_path(), "/data/test/notification.db");
+}

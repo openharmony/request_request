@@ -174,10 +174,10 @@ fn collect_db_metrics() -> Option<DbMonitorResult> {
 ///
 /// `Some(DbFileSize)` with the file sizes in bytes, or `None` if the main file doesn't exist.
 fn get_db_size() -> Option<DbFileSize> {
-    let db_path = super::DB_PATH;
+    let db_path = super::db_path();
 
     // Main database file
-    let main_size = match std::fs::metadata(db_path) {
+    let main_size = match std::fs::metadata(&db_path) {
         Ok(metadata) => metadata.len(),
         Err(e) => {
             error!("Failed to get database metadata: {}", e);

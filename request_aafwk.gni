@@ -25,4 +25,10 @@ declare_args() {
       global_parts_info.telephony_cellular_data) {
     request_telephony_cellular_data = true
   }
+
+  # Multi-instance: enable per-user multi-SA-process on PC products.
+  # Default off; must be set together with samgr_support_multi_instance
+  # in the same product config (cross-repo gni import is not allowed
+  # by the build system, so each part declares its own feature).
+  request_multi_instance = false
 }
