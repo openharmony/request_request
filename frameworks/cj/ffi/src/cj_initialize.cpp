@@ -718,25 +718,26 @@ ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config
     ExceptionError err;
     fd = config.action == Action::UPLOAD ? open(path.c_str(), O_RDONLY) : open(path.c_str(), O_TRUNC | O_RDWR);
     if (fd >= 0) {
+        fdsan_exchange_owner_tag(fd, 0, OHOS::Request::REQUEST_FDSAN_TAG);
         REQUEST_HILOGD("File already exists");
         if (config.action == Action::UPLOAD) {
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-            close(fd);
+            fdsan_close_with_tag(fd, OHOS::Request::REQUEST_FDSAN_TAG);
             return err;
         } else {
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
         }
 
         if (config.overwrite) {
-            close(fd);
+            fdsan_close_with_tag(fd, OHOS::Request::REQUEST_FDSAN_TAG);
             return err;
         }
         if (!config.firstInit) {
             REQUEST_HILOGD("CJRequestTask config is not firstInit");
-            close(fd);
+            fdsan_close_with_tag(fd, OHOS::Request::REQUEST_FDSAN_TAG);
             return err;
         }
-        close(fd);
+        fdsan_close_with_tag(fd, OHOS::Request::REQUEST_FDSAN_TAG);
         err.code = ExceptionErrorCode::E_FILE_IO;
         err.errInfo = "Download File already exists";
         return err;
@@ -753,8 +754,9 @@ ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config
             err.errInfo = "Failed to open file errno " + std::to_string(errno);
             return err;
         }
+        fdsan_exchange_owner_tag(fd, 0, OHOS::Request::REQUEST_FDSAN_TAG);
         chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-        close(fd);
+        fdsan_close_with_tag(fd, OHOS::Request::REQUEST_FDSAN_TAG);
     }
     return err;
 }
