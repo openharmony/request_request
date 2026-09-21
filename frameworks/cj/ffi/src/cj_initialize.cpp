@@ -23,6 +23,7 @@
 #include <fstream>
 #include <regex>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "cj_request_common.h"
 #include "cj_request_task.h"
 #include "constant.h"
@@ -716,7 +717,7 @@ bool CJInitialize::InterceptData(const std::string &str, const std::string &in, 
 ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config, int32_t &fd)
 {
     ExceptionError err;
-    FILE *file = config.action == Action::UPLOAD ? fopen(path.c_str(), "r") : fopen(path.c_str(), "w+");
+    FILE *file = config.action == Action::UPLOAD ? fopen(path.c_str(), "r") : fopen(path.c_str(), "r+");
     if (file != nullptr) {
         REQUEST_HILOGD("File already exists");
         if (config.action == Action::UPLOAD) {
@@ -724,6 +725,7 @@ ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config
             fclose(file);
             return err;
         } else {
+            ftruncate(fileno(file), 0);
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
         }
 
@@ -740,9 +742,21 @@ ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config
         err.code = ExceptionErrorCode::E_FILE_IO;
         err.errInfo = "Download File already exists";
         return err;
+    } else {
+        if (config.action == Action::UPLOAD) {
+            err.code = ExceptionErrorCode::E_FILE_IO;
+            err.errInfo = "Failed to open file errno " + std::to_string(errno);
+            return err;
+        }
+        file = fopen(path.c_str(), "w+");
+        if (file == nullptr) {
+            err.code = ExceptionErrorCode::E_FILE_IO;
+            err.errInfo = "Failed to open file errno " + std::to_string(errno);
+            return err;
+        }
+        chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+        fclose(file);
     }
-    err.code = ExceptionErrorCode::E_FILE_IO;
-    err.errInfo = "Failed to open file errno " + std::to_string(errno);
     return err;
 }
 
