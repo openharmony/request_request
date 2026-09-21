@@ -16,6 +16,7 @@
 #include "cj_initialize.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <fcntl.h>
 #include <filesystem>
@@ -53,7 +54,6 @@ static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
 static constexpr uint32_t MAX_UPLOAD_FILES = 100;
 
-static constexpr uint32_t FILE_PERMISSION = 0644;
 static const mode_t WRITE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 static const mode_t READ_MODE = S_IRUSR | S_IWUSR | S_IRGRP;
 
@@ -716,48 +716,33 @@ bool CJInitialize::InterceptData(const std::string &str, const std::string &in, 
 ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config, int32_t &fd)
 {
     ExceptionError err;
-    fd = config.action == Action::UPLOAD ? open(path.c_str(), O_RDONLY) : open(path.c_str(), O_TRUNC | O_RDWR);
-    if (fd >= 0) {
-        fdsan_exchange_owner_tag(fd, 0, OHOS::Request::REQUEST_FDSAN_TAG);
+    FILE *file = config.action == Action::UPLOAD ? fopen(path.c_str(), "r") : fopen(path.c_str(), "w+");
+    if (file != nullptr) {
         REQUEST_HILOGD("File already exists");
         if (config.action == Action::UPLOAD) {
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-            fdsan_close_with_tag(fd, OHOS::Request::REQUEST_FDSAN_TAG);
+            fclose(file);
             return err;
         } else {
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
         }
 
         if (config.overwrite) {
-            fdsan_close_with_tag(fd, OHOS::Request::REQUEST_FDSAN_TAG);
+            fclose(file);
             return err;
         }
         if (!config.firstInit) {
             REQUEST_HILOGD("CJRequestTask config is not firstInit");
-            fdsan_close_with_tag(fd, OHOS::Request::REQUEST_FDSAN_TAG);
+            fclose(file);
             return err;
         }
-        fdsan_close_with_tag(fd, OHOS::Request::REQUEST_FDSAN_TAG);
+        fclose(file);
         err.code = ExceptionErrorCode::E_FILE_IO;
         err.errInfo = "Download File already exists";
         return err;
-    } else {
-        if (config.action == Action::UPLOAD) {
-            ExceptionErrorCode code = ExceptionErrorCode::E_FILE_IO;
-            err.code = ExceptionErrorCode::E_FILE_IO;
-            err.errInfo = "Failed to open file errno " + std::to_string(errno);
-            return err;
-        }
-        fd = open(path.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
-        if (fd < 0) {
-            err.code = ExceptionErrorCode::E_FILE_IO;
-            err.errInfo = "Failed to open file errno " + std::to_string(errno);
-            return err;
-        }
-        fdsan_exchange_owner_tag(fd, 0, OHOS::Request::REQUEST_FDSAN_TAG);
-        chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-        fdsan_close_with_tag(fd, OHOS::Request::REQUEST_FDSAN_TAG);
     }
+    err.code = ExceptionErrorCode::E_FILE_IO;
+    err.errInfo = "Failed to open file errno " + std::to_string(errno);
     return err;
 }
 
