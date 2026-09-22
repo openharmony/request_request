@@ -48,6 +48,7 @@ ohos_static_library("netstack_rs_cxx") {
     "netmanager_base:netsys_client",
     "netstack:http_client",
     "rust_cxx:cxx_cppdeps",
+    "c_utils:utils",
   ]
   deps = [ ":netstack_rs_cxx_gen" ]
 
