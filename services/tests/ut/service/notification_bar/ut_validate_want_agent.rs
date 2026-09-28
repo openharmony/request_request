@@ -94,3 +94,62 @@ fn ut_check_bundle_ownership_match_allowed() {
 fn ut_check_bundle_ownership_mismatch_rejected() {
     assert!(!check_bundle_ownership("com.evil.target", "com.legit.app"));
 }
+
+// @tc.name: ut_check_want_agent_meta_send_common_event_rejected
+// @tc.desc: A SEND_COMMON_EVENT want_agent is rejected even if bundle matches.
+// @tc.precon: NA
+// @tc.step: 1. Build WantAgentMeta with is_send_common_event=true and
+//           caller-owned bundle
+// @tc.step: 2. Call check_want_agent_meta
+// @tc.expect: Returns false (would act under service identity at trigger time)
+// @tc.type: FUNC
+// @tc.require: issues#WantAgentOwnership
+#[cfg(feature = "oh")]
+#[test]
+fn ut_check_want_agent_meta_send_common_event_rejected() {
+    let meta = ffi::WantAgentMeta {
+        bundle_name: String::from("com.caller"),
+        is_send_common_event: true,
+        valid: true,
+    };
+    assert!(!check_want_agent_meta(&meta, "com.caller"));
+}
+
+// @tc.name: ut_check_want_agent_meta_start_ability_match_allowed
+// @tc.desc: A START_ABILITY agent targeting the caller's own bundle is allowed.
+// @tc.precon: NA
+// @tc.step: 1. Build WantAgentMeta with is_send_common_event=false and
+//           caller-owned bundle
+// @tc.step: 2. Call check_want_agent_meta
+// @tc.expect: Returns true
+// @tc.type: FUNC
+// @tc.require: issues#WantAgentOwnership
+#[cfg(feature = "oh")]
+#[test]
+fn ut_check_want_agent_meta_start_ability_match_allowed() {
+    let meta = ffi::WantAgentMeta {
+        bundle_name: String::from("com.caller"),
+        is_send_common_event: false,
+        valid: true,
+    };
+    assert!(check_want_agent_meta(&meta, "com.caller"));
+}
+
+// @tc.name: ut_check_want_agent_meta_invalid_allowed
+// @tc.desc: An unparseable want_agent keeps the existing lenient behavior.
+// @tc.precon: NA
+// @tc.step: 1. Build WantAgentMeta with valid=false
+// @tc.step: 2. Call check_want_agent_meta
+// @tc.expect: Returns true
+// @tc.type: FUNC
+// @tc.require: issues#WantAgentOwnership
+#[cfg(feature = "oh")]
+#[test]
+fn ut_check_want_agent_meta_invalid_allowed() {
+    let meta = ffi::WantAgentMeta {
+        bundle_name: String::from(""),
+        is_send_common_event: false,
+        valid: false,
+    };
+    assert!(check_want_agent_meta(&meta, "com.caller"));
+}

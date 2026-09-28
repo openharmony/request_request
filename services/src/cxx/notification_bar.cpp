@@ -318,17 +318,34 @@ std::shared_ptr<OHOS::Notification::NotificationContent> LiveViewContent(const N
     return std::make_shared<Notification::NotificationContent>(liveViewContent);
 }
 
-rust::string GetWantAgentBundle(rust::str wantAgent)
+// Checks whether the restored want_agent is a SEND_COMMON_EVENT agent.
+static bool IsSendCommonEventAgent(
+    const std::shared_ptr<AbilityRuntime::WantAgent::WantAgent> &agent)
 {
+    if (agent == nullptr) {
+        return false;
+    }
+    return AbilityRuntime::WantAgent::WantAgentHelper::GetType(agent) ==
+           AbilityRuntime::WantAgent::WantAgentConstant::OperationType::SEND_COMMON_EVENT;
+}
+
+WantAgentMeta GetWantAgentMeta(rust::str wantAgent)
+{
+    WantAgentMeta meta;
+    meta.bundle_name = rust::String("");
+    meta.is_send_common_event = false;
+    meta.valid = false;
     auto agent = AbilityRuntime::WantAgent::WantAgentHelper::FromString(std::string(wantAgent));
     if (agent == nullptr) {
-        return rust::string("");
+        return meta;
     }
+    meta.valid = true;
+    meta.is_send_common_event = IsSendCommonEventAgent(agent);
     auto want = AbilityRuntime::WantAgent::WantAgentHelper::GetWant(agent);
-    if (want == nullptr) {
-        return rust::string("");
+    if (want != nullptr) {
+        meta.bundle_name = rust::String(want->GetElement().GetBundleName());
     }
-    return rust::string(want->GetElement().GetBundleName());
+    return meta;
 }
 
 int PublishNotification(const NotifyContent &content)
@@ -343,8 +360,13 @@ int PublishNotification(const NotifyContent &content)
         request.SetContent(NormalContent(content));
     }
     if (!content.want_agent.empty()) {
-        request.SetWantAgent(
-            OHOS::AbilityRuntime::WantAgent::WantAgentHelper::FromString(std::string(content.want_agent)));
+        auto agent = OHOS::AbilityRuntime::WantAgent::WantAgentHelper::FromString(
+            std::string(content.want_agent));
+        if (IsSendCommonEventAgent(agent)) {
+            REQUEST_HILOGE("want_agent with SEND_COMMON_EVENT is rejected on publish");
+            agent = nullptr;
+        }
+        request.SetWantAgent(agent);
     }
     return Notification::NotificationHelper::PublishNotification(request);
 }
