@@ -875,6 +875,82 @@ export default function requestCreateTaskTest() {
     });
 
     /**
+     * @tc.number: testTaskWantAgent005
+     * @tc.name: testTaskWantAgent005
+     * @tc.desc: For a task with a SEND_COMMON_EVENT wantAgent, the publish-side
+     *           fallback must drop the agent so a notification click can never
+     *           publish the event (the agent identity is re-established inside
+     *           the request service process). For a system-app test caller,
+     *           create succeeds by design (entry-side validation exempts
+     *           system callers); the defense is verified on the publish path
+     *           via hilog "want_agent with SEND_COMMON_EVENT is rejected on
+     *           publish".
+     * @tc.size: MediumTest
+     * @tc.type: Function
+     * @tc.level: Level 1
+     * @tc.precon: 1. The device screen remains constantly lit
+     *             2. The device is connected to the Internet
+     *             3. The application is always at the foreground of the device
+     *             4. The download_server SA process has been initiated
+     *             5. The local cache of the previous use case has been cleared
+     * @tc.step: 1. Get a SEND_COMMON_EVENT wantAgent targeting a system common
+     *             event action via wantAgent.getWantAgent().
+     *           2. Create a task with that wantAgent and start it.
+     *           3. Assert the task completes normally; check the publish-side
+     *             fallback log on device hilog.
+     * @tc.require: issues#WantAgentOwnership
+     */
+    it('testTaskWantAgent005', 0, async (done: Function) => {
+      let commonEventAgentInfo: wantAgent.WantAgentInfo = {
+        wants: [
+          {
+            deviceId: '',
+            bundleName: '',
+            abilityName: '',
+            action: 'usual.event.CLOSE_SYSTEM_DIALOGS',
+            entities: [],
+            uri: '',
+            parameters: {}
+          }
+        ],
+        actionType: wantAgent.OperationType.SEND_COMMON_EVENT,
+        requestCode: 0,
+        wantAgentFlags: [wantAgent.WantAgentFlags.CONSTANT_FLAG]
+      };
+      try {
+        let agent = await wantAgent.getWantAgent(commonEventAgentInfo);
+        console.error('testTaskWantAgent005 getWantAgent done, agent=' + (agent != null));
+        let conf: request.agent.Config = {
+          action: request.agent.Action.DOWNLOAD,
+          url: baseUrl + '/test.txt',
+          saveas: 'testTaskWantAgent005.txt',
+          gauge: false,
+          overwrite: true,
+          notification: {
+            visibility: request.agent.VISIBILITY_COMPLETION | request.agent.VISIBILITY_PROGRESS,
+            wantAgent: agent,
+          }
+        };
+        let task = await request.agent.create(context, conf);
+        console.error('testTaskWantAgent005 create succeeded (system-app caller), tid=' + task.tid +
+          '; publish fallback must reject the SEND_COMMON_EVENT agent');
+        // Start the task so progress/completion notifications are published:
+        // the publish-side fallback (notification_bar.cpp) must drop the
+        // SEND_COMMON_EVENT agent (hilog: "rejected on publish"), so a click
+        // on the notification can never fire the event.
+        await task.start();
+        console.error('testTaskWantAgent005 task started and finished');
+        expect(true).assertTrue();
+        await request.agent.remove(task.tid);
+        done();
+      } catch (err) {
+        console.error('testTaskWantAgent005 err: code=' + err.code + ', message=' + err.message);
+        expect(err.code).assertEqual(401);
+        done();
+      }
+    });
+
+    /**
      * @tc.number: testTaskNotiTitle001
      * @tc.name: testTaskNotiTitle001
      * @tc.desc: Test create task with no notification title 

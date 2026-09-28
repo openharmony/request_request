@@ -22,6 +22,7 @@
 #include "notification_button_option.h"
 #include "notification_helper.h"
 #include "notification_local_live_view_subscriber.h"
+#include "service/notification_bar/mod.rs.h"
 namespace OHOS::Request {
 
 struct TaskManagerWrapper;
@@ -31,7 +32,7 @@ struct ProgressCircle;
 rust::string GetSystemResourceString(const rust::str);
 rust::string GetSystemLanguage();
 int PublishNotification(const NotifyContent &content);
-rust::string GetWantAgentBundle(rust::str wantAgent);
+WantAgentMeta GetWantAgentMeta(rust::str wantAgent);
 
 class NotificationSubscriber : public Notification::NotificationLocalLiveViewSubscriber {
 public:

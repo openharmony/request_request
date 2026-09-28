@@ -75,6 +75,20 @@ mod ffi {
         total: u64,
     }
 
+    /// Metadata of a serialized want_agent, extracted on the C++ side.
+    ///
+    /// `valid == false` means the string could not be parsed into a WantAgent;
+    /// `bundle_name` is the target Ability bundle (empty for implicit start);
+    /// `is_send_common_event` distinguishes SEND_COMMON_EVENT agents, which
+    /// would act under the service identity when triggered via notification
+    /// click and are therefore rejected for third-party callers.
+    #[derive(Eq, PartialEq, Debug)]
+    struct WantAgentMeta {
+        bundle_name: String,
+        is_send_common_event: bool,
+        valid: bool,
+    }
+
     // Rust functions exposed to C++
     extern "Rust" {
         /// Wrapper around task management functionality for notification callbacks.
@@ -163,8 +177,9 @@ mod ffi {
         /// * Error code - If the publication failed
         fn PublishNotification(content: &NotifyContent) -> i32;
 
-        /// Extracts the target bundleName from a serialized want_agent string.
-        fn GetWantAgentBundle(want_agent: &str) -> String;
+        /// Extracts metadata (target bundleName and operation type) from a
+        /// serialized want_agent string for ownership validation.
+        fn GetWantAgentMeta(want_agent: &str) -> WantAgentMeta;
         
         /// Subscribes to notification bar events with the provided task manager.
         /// 
@@ -175,15 +190,45 @@ mod ffi {
     }
 }
 
+/// Pure-Rust want_agent policy (no FFI), extracted for unit testing.
+///
+/// A SEND_COMMON_EVENT agent is rejected for non-system callers: a third-party
+/// app can publish ordinary common events by itself, and system common events
+/// are out of its reach anyway, so there is no legitimate gain from routing
+/// them through the request notification click path. Note the agent identity
+/// is re-established inside the service process at publish time, so a
+/// SEND_COMMON_EVENT agent would trigger under the service identity (uid 3815)
+/// rather than the original app identity.
+///
+/// `valid == false` keeps the existing lenient behavior for unparseable
+/// strings (same as an empty bundle today); otherwise the bundle-ownership
+/// rule of `check_bundle_ownership` still applies.
+///
+/// # Returns
+///
+/// `true` if the caller may set this want_agent, `false` to reject.
+#[cfg(feature = "oh")]
+fn check_want_agent_meta(meta: &ffi::WantAgentMeta, caller_bundle: &str) -> bool {
+    if !meta.valid {
+        return true;
+    }
+    if meta.is_send_common_event {
+        return false;
+    }
+    check_bundle_ownership(&meta.bundle_name, caller_bundle)
+}
+
 /// Validates that a want_agent's target Ability bundle belongs to the caller.
 ///
 /// System API callers (`is_system_api`) are allowed to set any want_agent
 /// (they are trusted). Non-system callers must own the target bundle: the
-/// Want's bundleName (extracted via `GetWantAgentBundle`) must match the
+/// Want's bundleName (extracted via `GetWantAgentMeta`) must match the
 /// caller's own bundle (`caller_bundle`, already resolved by the caller via
-/// `query_calling_bundle` or `TaskConfig.bundle`). This blocks a malicious app
-/// from proxying a want_agent that targets another app's Ability through the
-/// request service's SA identity at notification-trigger time.
+/// `query_calling_bundle` or `TaskConfig.bundle`). SEND_COMMON_EVENT agents
+/// are additionally rejected for non-system callers (see
+/// `check_want_agent_meta`). This blocks a malicious app from proxying a
+/// want_agent that targets another app's Ability, or a common-event action,
+/// through the request service's SA identity at notification-trigger time.
 ///
 /// # Returns
 ///
@@ -194,20 +239,20 @@ pub(crate) fn validate_want_agent_ownership(
     caller_bundle: &str,
     is_system_api: bool,
 ) -> bool {
-    if is_system_api {
-        debug!("want_agent allowed: system api caller");
-        return true;
-    }
     if want_agent.is_empty() {
         debug!("want_agent allowed: empty want_agent");
         return true;
     }
-    let target_bundle = ffi::GetWantAgentBundle(want_agent);
+    let meta = ffi::GetWantAgentMeta(want_agent);
     debug!(
-        "want_agent target: {}, caller: {}",
-        target_bundle, caller_bundle
+        "want_agent target: {}, send_common_event: {}, valid: {}, caller: {}",
+        meta.bundle_name, meta.is_send_common_event, meta.valid, caller_bundle
     );
-    check_bundle_ownership(&target_bundle, caller_bundle)
+    if is_system_api {
+        debug!("want_agent allowed: system api caller");
+        return true;
+    }
+    check_want_agent_meta(&meta, caller_bundle)
 }
 
 /// Pure-Rust bundle ownership check (no FFI), extracted for unit testing.
