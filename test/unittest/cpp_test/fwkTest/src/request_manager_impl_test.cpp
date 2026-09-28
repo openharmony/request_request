@@ -670,7 +670,7 @@ HWTEST_F(RequestManagerImplTest, SubscribeTest002, TestSize.Level1)
 HWTEST_F(RequestManagerImplTest, EnsureChannelOpenTest002, TestSize.Level1)
 {
     RequestManagerImpl::GetInstance()->msgReceiver_ =
-        std::make_shared<ResponseMessageReceiver>(RequestManagerImpl::GetInstance().get(), -1);
+        std::make_shared<ResponseMessageReceiver>(RequestManagerImpl::GetInstance(), -1);
     EXPECT_EQ(RequestManagerImpl::GetInstance()->EnsureChannelOpen(), E_OK);
     RequestManagerImpl::GetInstance()->OnChannelBroken();
 }
@@ -804,7 +804,7 @@ HWTEST_F(RequestManagerImplTest, ReopenChannel001, TestSize.Level1)
 {
     EXPECT_NE(exceptProxy, nullptr);
     RequestManagerImpl::GetInstance()->msgReceiver_ =
-        std::make_shared<ResponseMessageReceiver>(RequestManagerImpl::GetInstance().get(), -1);
+        std::make_shared<ResponseMessageReceiver>(RequestManagerImpl::GetInstance(), -1);
     EXPECT_CALL(*exceptProxy, OpenChannel(testing::_)).WillOnce(testing::Return(E_CHANNEL_NOT_OPEN));
     RequestManagerImpl::GetInstance()->ReopenChannel();
 }
