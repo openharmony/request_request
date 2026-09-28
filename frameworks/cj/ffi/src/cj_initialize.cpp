@@ -714,7 +714,7 @@ bool CJInitialize::InterceptData(const std::string &str, const std::string &in, 
     return true;
 }
 
-ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config, int32_t &fd)
+ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config)
 {
     ExceptionError err;
     FILE *file = config.action == Action::UPLOAD ? fopen(path.c_str(), "r") : fopen(path.c_str(), "r+");
@@ -815,7 +815,7 @@ ExceptionError CJInitialize::CheckFileSpec(const std::shared_ptr<OHOS::AbilityRu
             file.name = "file";
         }
 
-        err = GetFD(path, config, file.fd);
+        err = GetFD(path, config);
         if (err.code != ExceptionErrorCode::E_OK) {
             return err;
         }
