@@ -145,6 +145,7 @@ ohos_shared_library("preload_native") {
     "ipc:ipc_single",
     "netstack:http_client",
     "rust_cxx:cxx_cppdeps",
+    "c_utils:utils",
   ]
 
   subsystem_name = "request"
@@ -181,6 +182,7 @@ ohos_static_library("preload_native_static") {
     "ipc:ipc_single",
     "netstack:http_client",
     "rust_cxx:cxx_cppdeps",
+    "c_utils:utils",
   ]
 
   subsystem_name = "request"

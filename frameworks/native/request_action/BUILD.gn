@@ -58,6 +58,7 @@ ohos_shared_library("request_action") {
     "netmanager_base:net_conn_manager_if",
     "netmanager_base:net_security_config_if",
     "storage_service:storage_manager_acl",
+    "c_utils:utils",
   ]
 
   sources = [

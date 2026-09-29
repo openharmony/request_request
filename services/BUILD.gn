@@ -95,6 +95,7 @@ ohos_static_library("download_server_cxx") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "i18n:intl_util",
+    "icu:shared_icuuc",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
     "os_account:libaccountkits",

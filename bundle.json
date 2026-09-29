@@ -66,6 +66,7 @@
         "libuv",
         "resource_management",
         "i18n",
+        "icu",
         "bundle_framework",
         "runtime_core",
         "ets_frontend",

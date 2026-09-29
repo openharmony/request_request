@@ -47,6 +47,7 @@ ohos_static_library("preload_permission_cxx") {
     "access_token:libtokenid_sdk",
     "ipc:ipc_single",
     "rust_cxx:cxx_cppdeps",
+    "c_utils:utils",
   ]
   deps = [ ":preload_ets_cxx_gen" ]
 
