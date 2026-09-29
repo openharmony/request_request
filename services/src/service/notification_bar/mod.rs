@@ -80,8 +80,9 @@ mod ffi {
     /// `valid == false` means the string could not be parsed into a WantAgent;
     /// `bundle_name` is the target Ability bundle (empty for implicit start);
     /// `is_send_common_event` distinguishes SEND_COMMON_EVENT agents, which
-    /// would act under the service identity when triggered via notification
-    /// click and are therefore rejected for third-party callers.
+    /// are allowed at creation but discarded by the publish path
+    /// (PublishNotification), so the event can never be triggered from the
+    /// notification click.
     #[derive(Eq, PartialEq, Debug)]
     struct WantAgentMeta {
         bundle_name: String,
@@ -192,28 +193,26 @@ mod ffi {
 
 /// Pure-Rust want_agent policy (no FFI), extracted for unit testing.
 ///
-/// A SEND_COMMON_EVENT agent is rejected for non-system callers: a third-party
-/// app can publish ordinary common events by itself, and system common events
-/// are out of its reach anyway, so there is no legitimate gain from routing
-/// them through the request notification click path. Note the agent identity
-/// is re-established inside the service process at publish time, so a
-/// SEND_COMMON_EVENT agent would trigger under the service identity (uid 3815)
-/// rather than the original app identity.
+/// A SEND_COMMON_EVENT agent is not rejected at task creation: the caller
+/// gets no error and the task completes normally. The defense lives on the
+/// publish path — notification_bar.cpp drops the agent before attaching it
+/// to the NotificationRequest, so a click on the notification can never
+/// publish the common event (the agent identity is re-established inside
+/// the service process at publish time, uid 3815, and common events must
+/// not be reachable through that identity). Skipping the bundle-ownership
+/// check for these agents guarantees creation never fails on them either.
 ///
 /// `valid == false` keeps the existing lenient behavior for unparseable
-/// strings (same as an empty bundle today); otherwise the bundle-ownership
-/// rule of `check_bundle_ownership` still applies.
+/// strings (same as an empty bundle today); for other agent types the
+/// bundle-ownership rule of `check_bundle_ownership` applies.
 ///
 /// # Returns
 ///
 /// `true` if the caller may set this want_agent, `false` to reject.
 #[cfg(feature = "oh")]
 fn check_want_agent_meta(meta: &ffi::WantAgentMeta, caller_bundle: &str) -> bool {
-    if !meta.valid {
+    if !meta.valid || meta.is_send_common_event {
         return true;
-    }
-    if meta.is_send_common_event {
-        return false;
     }
     check_bundle_ownership(&meta.bundle_name, caller_bundle)
 }
@@ -225,10 +224,12 @@ fn check_want_agent_meta(meta: &ffi::WantAgentMeta, caller_bundle: &str) -> bool
 /// Want's bundleName (extracted via `GetWantAgentMeta`) must match the
 /// caller's own bundle (`caller_bundle`, already resolved by the caller via
 /// `query_calling_bundle` or `TaskConfig.bundle`). SEND_COMMON_EVENT agents
-/// are additionally rejected for non-system callers (see
-/// `check_want_agent_meta`). This blocks a malicious app from proxying a
-/// want_agent that targets another app's Ability, or a common-event action,
+/// are allowed at creation (no error is reported) but the publish path
+/// discards them (see `check_want_agent_meta` and the fallback in
+/// `notification_bar.cpp`), so a common-event action can never be triggered
 /// through the request service's SA identity at notification-trigger time.
+/// The entry-side ownership check blocks proxying a want_agent that targets
+/// another app's Ability.
 ///
 /// # Returns
 ///

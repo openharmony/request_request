@@ -95,24 +95,47 @@ fn ut_check_bundle_ownership_mismatch_rejected() {
     assert!(!check_bundle_ownership("com.evil.target", "com.legit.app"));
 }
 
-// @tc.name: ut_check_want_agent_meta_send_common_event_rejected
-// @tc.desc: A SEND_COMMON_EVENT want_agent is rejected even if bundle matches.
+// @tc.name: ut_check_want_agent_meta_send_common_event_allowed
+// @tc.desc: A SEND_COMMON_EVENT want_agent is allowed at creation even if the
+//           bundle matches; it is discarded on publish instead, so creation
+//           must not report an error.
 // @tc.precon: NA
 // @tc.step: 1. Build WantAgentMeta with is_send_common_event=true and
 //           caller-owned bundle
 // @tc.step: 2. Call check_want_agent_meta
-// @tc.expect: Returns false (would act under service identity at trigger time)
+// @tc.expect: Returns true (no 401; the publish path drops the agent)
 // @tc.type: FUNC
 // @tc.require: issues#WantAgentOwnership
 #[cfg(feature = "oh")]
 #[test]
-fn ut_check_want_agent_meta_send_common_event_rejected() {
+fn ut_check_want_agent_meta_send_common_event_allowed() {
     let meta = ffi::WantAgentMeta {
         bundle_name: String::from("com.caller"),
         is_send_common_event: true,
         valid: true,
     };
-    assert!(!check_want_agent_meta(&meta, "com.caller"));
+    assert!(check_want_agent_meta(&meta, "com.caller"));
+}
+
+// @tc.name: ut_check_want_agent_meta_send_common_event_foreign_bundle_allowed
+// @tc.desc: A SEND_COMMON_EVENT want_agent never fails creation, even with a
+//           foreign bundleName (the publish path drops it regardless).
+// @tc.precon: NA
+// @tc.step: 1. Build WantAgentMeta with is_send_common_event=true and a
+//           foreign bundle
+// @tc.step: 2. Call check_want_agent_meta
+// @tc.expect: Returns true (task creation must not report an error)
+// @tc.type: FUNC
+// @tc.require: issues#WantAgentOwnership
+#[cfg(feature = "oh")]
+#[test]
+fn ut_check_want_agent_meta_send_common_event_foreign_bundle_allowed() {
+    let meta = ffi::WantAgentMeta {
+        bundle_name: String::from("com.other.app"),
+        is_send_common_event: true,
+        valid: true,
+    };
+    assert!(check_want_agent_meta(&meta, "com.caller"));
 }
 
 // @tc.name: ut_check_want_agent_meta_start_ability_match_allowed
