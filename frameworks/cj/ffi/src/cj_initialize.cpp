@@ -16,12 +16,14 @@
 #include "cj_initialize.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>
 #include <regex>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "cj_request_common.h"
 #include "cj_request_task.h"
 #include "constant.h"
@@ -53,7 +55,6 @@ static constexpr uint32_t TITLE_MAXIMUM = 256;
 static constexpr uint32_t DESCRIPTION_MAXIMUM = 1024;
 static constexpr uint32_t MAX_UPLOAD_FILES = 100;
 
-static constexpr uint32_t FILE_PERMISSION = 0644;
 static const mode_t WRITE_MODE = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 static const mode_t READ_MODE = S_IRUSR | S_IWUSR | S_IRGRP;
 
@@ -713,48 +714,48 @@ bool CJInitialize::InterceptData(const std::string &str, const std::string &in, 
     return true;
 }
 
-ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config, int32_t &fd)
+ExceptionError CJInitialize::GetFD(const std::string &path, const Config &config)
 {
     ExceptionError err;
-    fd = config.action == Action::UPLOAD ? open(path.c_str(), O_RDONLY) : open(path.c_str(), O_TRUNC | O_RDWR);
-    if (fd >= 0) {
+    FILE *file = config.action == Action::UPLOAD ? fopen(path.c_str(), "r") : fopen(path.c_str(), "r+");
+    if (file != nullptr) {
         REQUEST_HILOGD("File already exists");
         if (config.action == Action::UPLOAD) {
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-            close(fd);
+            fclose(file);
             return err;
         } else {
+            ftruncate(fileno(file), 0);
             chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
         }
 
         if (config.overwrite) {
-            close(fd);
+            fclose(file);
             return err;
         }
         if (!config.firstInit) {
             REQUEST_HILOGD("CJRequestTask config is not firstInit");
-            close(fd);
+            fclose(file);
             return err;
         }
-        close(fd);
+        fclose(file);
         err.code = ExceptionErrorCode::E_FILE_IO;
         err.errInfo = "Download File already exists";
         return err;
     } else {
         if (config.action == Action::UPLOAD) {
-            ExceptionErrorCode code = ExceptionErrorCode::E_FILE_IO;
             err.code = ExceptionErrorCode::E_FILE_IO;
             err.errInfo = "Failed to open file errno " + std::to_string(errno);
             return err;
         }
-        fd = open(path.c_str(), O_CREAT | O_RDWR, FILE_PERMISSION);
-        if (fd < 0) {
+        file = fopen(path.c_str(), "w+");
+        if (file == nullptr) {
             err.code = ExceptionErrorCode::E_FILE_IO;
             err.errInfo = "Failed to open file errno " + std::to_string(errno);
             return err;
         }
         chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-        close(fd);
+        fclose(file);
     }
     return err;
 }
@@ -814,7 +815,7 @@ ExceptionError CJInitialize::CheckFileSpec(const std::shared_ptr<OHOS::AbilityRu
             file.name = "file";
         }
 
-        err = GetFD(path, config, file.fd);
+        err = GetFD(path, config);
         if (err.code != ExceptionErrorCode::E_OK) {
             return err;
         }

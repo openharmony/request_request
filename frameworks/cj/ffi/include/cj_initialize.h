@@ -80,7 +80,7 @@ public:
     static bool GetInternalPath(const std::string &fileUri,
                                 const std::shared_ptr<OHOS::AbilityRuntime::Context> &context, Config &config,
                                 std::string &filePath);
-    static ExceptionError GetFD(const std::string &path, const Config &config, int32_t &fd);
+    static ExceptionError GetFD(const std::string &path, const Config &config);
     static bool FindDir(const std::string &pathDir);
 
 private:
