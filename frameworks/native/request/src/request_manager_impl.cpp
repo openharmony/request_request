@@ -41,9 +41,11 @@
 
 namespace OHOS::Request {
 
-const std::unique_ptr<RequestManagerImpl> &RequestManagerImpl::GetInstance()
+RequestManagerImpl *RequestManagerImpl::GetInstance()
 {
-    static std::unique_ptr<RequestManagerImpl> instance(new RequestManagerImpl());
+    // Leaky singleton: must outlive static destruction because binder threads may
+    // still dispatch SA callbacks during process exit (use-after-free if freed).
+    static RequestManagerImpl *instance = new RequestManagerImpl();
     return instance;
 }
 
