@@ -877,14 +877,12 @@ export default function requestCreateTaskTest() {
     /**
      * @tc.number: testTaskWantAgent005
      * @tc.name: testTaskWantAgent005
-     * @tc.desc: For a task with a SEND_COMMON_EVENT wantAgent, the publish-side
-     *           fallback must drop the agent so a notification click can never
-     *           publish the event (the agent identity is re-established inside
-     *           the request service process). For a system-app test caller,
-     *           create succeeds by design (entry-side validation exempts
-     *           system callers); the defense is verified on the publish path
-     *           via hilog "want_agent with SEND_COMMON_EVENT is rejected on
-     *           publish".
+     * @tc.desc: For a task with a SEND_COMMON_EVENT wantAgent, creation must
+     *           succeed (no 401) and the task must complete normally. The
+     *           defense is on the publish path: notification_bar.cpp drops
+     *           the agent before SetWantAgent (hilog "want_agent with
+     *           SEND_COMMON_EVENT is rejected on publish"), so a click on
+     *           the notification can never publish the common event.
      * @tc.size: MediumTest
      * @tc.type: Function
      * @tc.level: Level 1
@@ -896,8 +894,8 @@ export default function requestCreateTaskTest() {
      * @tc.step: 1. Get a SEND_COMMON_EVENT wantAgent targeting a system common
      *             event action via wantAgent.getWantAgent().
      *           2. Create a task with that wantAgent and start it.
-     *           3. Assert the task completes normally; check the publish-side
-     *             fallback log on device hilog.
+     *           3. Assert the task completes normally with no error; check
+     *             the publish-side fallback log on device hilog.
      * @tc.require: issues#WantAgentOwnership
      */
     it('testTaskWantAgent005', 0, async (done: Function) => {
@@ -932,8 +930,8 @@ export default function requestCreateTaskTest() {
           }
         };
         let task = await request.agent.create(context, conf);
-        console.error('testTaskWantAgent005 create succeeded (system-app caller), tid=' + task.tid +
-          '; publish fallback must reject the SEND_COMMON_EVENT agent');
+        console.error('testTaskWantAgent005 create succeeded (no 401), tid=' + task.tid +
+          '; publish fallback must drop the SEND_COMMON_EVENT agent');
         // Start the task so progress/completion notifications are published:
         // the publish-side fallback (notification_bar.cpp) must drop the
         // SEND_COMMON_EVENT agent (hilog: "rejected on publish"), so a click
@@ -945,7 +943,7 @@ export default function requestCreateTaskTest() {
         done();
       } catch (err) {
         console.error('testTaskWantAgent005 err: code=' + err.code + ', message=' + err.message);
-        expect(err.code).assertEqual(401);
+        expect(false).assertTrue();
         done();
       }
     });
